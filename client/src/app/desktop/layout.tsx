@@ -1,5 +1,7 @@
 import PageLayout from '@/components/containers/page-layout';
+import Navbar from '@/components/elements/Navbar';
 import PrefetchRoutes from '@/components/elements/PrefetchRoutes';
+import Footer from '@/components/elements/footer';
 import Loading from '@/components/elements/loading';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -9,7 +11,6 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
-import BottomNavbar from './_components/bottom-navbar';
 import './globals.css';
 
 const poppins = Poppins({ weight: ['400', '500', '600', '700', '800', '900'], subsets: ['latin'] });
@@ -30,7 +31,7 @@ export default async function RootLayout({
 			<link rel='apple-touch-icon' sizes='180x180' href='/icons/apple-touch-icon.png' />
 			<link rel='icon' type='image/png' sizes='32x32' href='/icons/favicon-32x32.png' />
 			<link rel='icon' type='image/png' sizes='16x16' href='/icons/favicon-16x16.png' />
-			<body className={cn('min-h-screen min-w-screen overflow-x-hidden', poppins.className)}>
+			<body className={cn('min-h-screen min-w-screen', poppins.className)}>
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='light'
@@ -41,11 +42,12 @@ export default async function RootLayout({
 						<PrefetchRoutes />
 						<PageLayout>
 							<TooltipProvider>
+								<Navbar />
 								{/* <DotBackgroundDemo> */}
 								<Suspense fallback={<Loading />}>{children}</Suspense>
 								{/* </DotBackgroundDemo> */}
+								<Footer />
 							</TooltipProvider>
-							<BottomNavbar />
 						</PageLayout>
 						<Toaster position='top-center' />
 					</AuthProvider>

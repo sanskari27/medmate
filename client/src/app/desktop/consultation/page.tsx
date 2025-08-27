@@ -5,10 +5,10 @@ import { slugify } from '@/lib/utils';
 import { consultationFaqs } from '@/mock/faq';
 import { DoctorType } from '@/types/doctor';
 import Image from 'next/image';
-import DoctorsGrid from '../../components/elements/DoctorsGrid';
-import { DoctorsList } from '../../components/elements/DoctorsList';
-import ConsultationFilters from '../../components/elements/Filters';
-import { DOCTORS_MOCKED_DATA } from '../../mock/mockedData';
+import DoctorsGrid from '../../../components/elements/DoctorsGrid';
+import { DoctorsList } from '../../../components/elements/DoctorsList';
+import ConsultationFilters from '../../../components/elements/Filters';
+import { DOCTORS_MOCKED_DATA } from '../../../mock/mockedData';
 
 const getDoctors = async (searchParams: {
 	location?: string;
@@ -52,12 +52,12 @@ export default async function Consultation({
 		<div className='relative pt-[5%] px-[5%] md:px-[7%]'>
 			<div className='flex flex-col gap-4'>
 				<div className='flex flex-col gap-2 relative'>
-					<HighlightSection nonHighlightedText='Healthcare at Your' highlightedText='Doorstep' />
+					<HighlightSection nonHighlightedText='Healthcare at Your' highlightedText='Convenience' />
 					<div className='text-2xl font-bold text-center text-primary'>
 						Find Your Perfect Doctor
 					</div>
 					<div className='text-sm text-center text-muted-foreground'>
-						Easily schedule in-clinic consultations with trusted doctors near you.{' '}
+						Book experienced doctors for home visits in your region with just a few clicks.
 					</div>
 					<div>
 						<ConsultationFilters />
@@ -71,7 +71,8 @@ export default async function Consultation({
 							</div>
 						) : (
 							<div className='mt-6 relative'>
-								<DoctorsList doctors={doctors} appointmentType='home-visit' />
+								<h3 className='text-2xl font-bold text-center mb-4 underline'>Top Results</h3>
+								<DoctorsList doctors={doctors} appointmentType='consultation' />
 							</div>
 						)}
 					</div>

@@ -17,6 +17,8 @@ export const SERVICE_3_IMAGE = '/images/service_3.png';
 export const SERVICE_4_IMAGE = '/images/service_4.png';
 export const SERVICE_5_IMAGE = '/images/service_5.png';
 export const SERVICE_6_IMAGE = '/images/service_6.png';
+export const SettingIcon = '/svg/settings.svg';
+export const BellIcon = '/svg/bell.svg';
 
 export const Paths = {
 	LANDING: '/',
