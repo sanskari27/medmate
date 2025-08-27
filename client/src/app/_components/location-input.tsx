@@ -14,7 +14,7 @@ export default function LocationInput() {
 	};
 
 	return (
-		<div className='my-8' onClick={handleClick} ref={inputRef}>
+		<div className='my-8 shadow-lg rounded-full' onClick={handleClick} ref={inputRef}>
 			<PlaceholdersAndVanishInput placeholders={['Find By Location']} disabled />
 		</div>
 	);
