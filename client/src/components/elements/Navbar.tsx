@@ -93,7 +93,7 @@ export default function Navbar() {
 				>
 					<button className='absolute top-4 right-4' onClick={() => setIsMenuOpen(false)}>
 						<svg
-							className='h-6 w-6'
+							className='h-6 w-6 bg-white'
 							fill='none'
 							stroke='currentColor'
 							strokeWidth='2'

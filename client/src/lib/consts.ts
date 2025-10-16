@@ -1,4 +1,5 @@
 export const LOGO = '/images/medmate.webp';
+export const HERO_IMAGE = '/images/hero-image.jpg';
 export const WEAKNESS_IMAGE = '/images/weakness.svg';
 export const BACK_IN_TIME_IMAGE = '/images/back-in-time.png';
 export const COSTUMER_IMAGE = '/images/costumer.png';

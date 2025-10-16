@@ -55,9 +55,11 @@ const iconCardData = [
 export default async function Home() {
 	return (
 		<>
-			<div className='relative flex flex-col items-center justify-center text-sm px-4 md:px-16 lg:px-24 xl:px-32 bg-black text-white min-h-screen'>
+			<div
+				className={`relative flex flex-col items-center justify-center text-sm px-[5%] md:px-16 lg:px-24 xl:px-32 bg-hero-image-blurred text-white min-h-screen`}
+			>
 				<div className='absolute top-28 -z-1 left-1/4 size-40 md:size-72 bg-blue-600 blur-[300px]'></div>
-				<div className='flex items-center'>
+				<div className='flex items-center flex-col md:flex-row'>
 					<div className='flex -space-x-2 pr-3'>
 						<img
 							src='https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200'
@@ -80,7 +82,7 @@ export default async function Home() {
 							className='size-7 rounded-full border-2 border-white hover:-translate-y-0.5 transition z-[4]'
 						/>
 					</div>
-					<div>
+					<div className='flex flex-col items-center md:items-start'>
 						<svg
 							width='79'
 							height='16'
@@ -115,7 +117,7 @@ export default async function Home() {
 						</p>
 					</div>
 				</div>
-				<h1 className='text-5xl leading-[68px] md:text-6xl md:leading-[84px] font-medium max-w-3xl text-center'>
+				<h1 className='text-4xl leading-[56px] md:text-6xl md:leading-[84px] font-medium max-w-3xl text-center'>
 					Quality Healthcare,
 					<br /> Delivered to Your Doorstep
 				</h1>
@@ -132,11 +134,11 @@ export default async function Home() {
 				</div>
 			</div>
 
-			<div className='py-24 bg-slate-50 text-black'>
-				<h1 className='text-5xl font-semibold text-center mx-auto'>
+			<div className='py-24 px-[5%] bg-slate-50 text-black'>
+				<h1 className='text-3xl md:text-5xl font-semibold text-center mx-auto'>
 					Our Health, Handled by Trusted Professionals
 				</h1>
-				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+				<p className='text-lg md:text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
 					Our network of licensed doctors is available to help with everyday health issues <br /> —
 					anytime, anywhere.
 				</p>
@@ -160,7 +162,7 @@ export default async function Home() {
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
 							<h3 className='text-3xl font-bold text-slate-100'>500 +</h3>
-							<p className='text-xl font-semibold text-slate-200'>Families Cared For</p>
+							<p className='text-lg md:text-xl font-semibold text-slate-200'>Families Cared For</p>
 						</div>
 					</div>
 
@@ -170,7 +172,9 @@ export default async function Home() {
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
 							<h3 className='text-3xl font-bold text-slate-100'>50 +</h3>
-							<p className='text-xl font-semibold text-slate-200'>Certified Physicians</p>
+							<p className='text-lg md:text-xl font-semibold text-slate-200'>
+								Certified Physicians
+							</p>
 						</div>
 					</div>
 					<div className='flex flex-col items-center justify-center max-w-80'>
@@ -179,7 +183,7 @@ export default async function Home() {
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
 							<h3 className='text-3xl font-bold text-slate-100'>30 Minutes</h3>
-							<p className='text-xl font-semibold text-slate-200'>Avg. Consult Time</p>
+							<p className='text-lg md:text-xl font-semibold text-slate-200'>Avg. Consult Time</p>
 						</div>
 					</div>
 					<div className='flex flex-col items-center justify-center max-w-80'>
@@ -188,17 +192,17 @@ export default async function Home() {
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
 							<h3 className='text-3xl font-bold text-slate-100'>4.9</h3>
-							<p className='text-xl font-semibold text-slate-200'>Google Review Score</p>
+							<p className='text-lg md:text-xl font-semibold text-slate-200'>Google Review Score</p>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className='py-20 bg-slate-50 text-black'>
-				<h1 className='text-5xl font-semibold text-center mx-auto'>
+			<div className='py-20 px-[5%] bg-slate-50 text-black'>
+				<h1 className='text-3xl md:text-5xl font-semibold text-center mx-auto'>
 					Why Choose <span className='text-primary'>MedMate</span>?
 				</h1>
-				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+				<p className='text-lg md:text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
 					Delivering trusted, in-home medical care to 1,000+ families — and counting.
 				</p>
 				<div className='flex flex-col md:flex-row items-center justify-center'>
@@ -294,9 +298,9 @@ export default async function Home() {
 				</div>
 			</div>
 
-			<div className='py-20 bg-slate-50 text-black'>
+			<div className='py-20 px-[5%] bg-slate-50 text-black'>
 				<div className='flex items-center justify-center'>
-					<div className='flex flex-col md:flex-row items-center justify-around text-sm border border-gray-200 rounded-2xl m-2 max-w-[80%] w-full bg-white'>
+					<div className='flex flex-col md:flex-row items-center justify-around text-sm border border-gray-200 rounded-2xl m-2 p-2 md:max-w-[80%] w-full bg-white'>
 						<div className='flex flex-col text-center md:text-left items-center md:items-start pt-14 md:p-10'>
 							<h2 className='md:text-4xl text-2xl font-bold text-gray-800'>
 								Transparent Pricing for Quality Care
@@ -326,13 +330,13 @@ export default async function Home() {
 				</div>
 			</div>
 
-			<div className='py-20 bg-black text-white'>
+			<div className='py-20 px-[5%] bg-black text-white'>
 				<div className='flex flex-col items-center justify-center max-w-[80%] mx-auto'>
 					<div className=''>
-						<h1 className='text-5xl font-semibold text-center mx-auto'>
+						<h1 className='text-3xl md:text-5xl font-semibold text-center mx-auto'>
 							How <span className='text-primary'>MedMate</span> Works?
 						</h1>
-						<p className='text-xl text-slate-500 text-center mt-2 mx-auto'>
+						<p className='text-lg md:text-xl text-slate-500 text-center mt-2 mx-auto'>
 							Simple, reliable healthcare in four easy steps — from booking to recovery, all at your
 							doorstep.
 						</p>
@@ -368,16 +372,18 @@ export default async function Home() {
 				</div>
 			</div>
 
-			<div className='py-20 bg-slate-50 text-black'>
-				<h1 className='text-5xl font-semibold text-center mx-auto'>Frequently Asked Questions</h1>
-				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+			<div className='py-20 px-[5%] bg-slate-50 text-black'>
+				<h1 className='text-3xl md:text-5xl font-semibold text-center mx-auto'>
+					Frequently Asked Questions
+				</h1>
+				<p className='text-lg md:text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
 					Clear answers to help you understand how MedMate delivers trusted healthcare.
 				</p>
 				<FAQSection />
 			</div>
 
-			<div className='py-20 bg-slate-50 text-black'>
-				<section className="flex flex-col items-center justify-center mx-auto max-md:mx-2 max-md:px-2 max-w-5xl w-full text-center rounded-2xl py-20 md:py-24 bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/banners/image-2.png')] bg-cover bg-center bg-no-repeat">
+			<div className='py-20 px-[5%] bg-slate-50 text-black'>
+				<section className="flex flex-col items-center justify-center mx-auto px-4 md:px-0 max-w-5xl w-full text-center rounded-2xl py-20 md:py-24 bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/banners/image-2.png')] bg-cover bg-center bg-no-repeat">
 					<h1 className='text-3xl md:text-4xl font-medium text-white max-w-4xl'>
 						Start your journey to easier, better healthcare today.
 					</h1>
@@ -423,7 +429,7 @@ const HowItWorksCard = ({
 );
 
 const IconCard = ({ card }: { card: { image: string } }) => (
-	<div className='p-4  mx-auto  w-64 shrink-0'>
+	<div className='py-4 px-0 md:px-4  mx-auto w-52 md:w-64 shrink-0'>
 		<div className='flex gap-2 items-center justify-center'>
 			<img className='' src={card.image} alt='User Image' />
 		</div>

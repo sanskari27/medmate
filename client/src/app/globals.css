@@ -179,6 +179,47 @@
 	animation: marqueeScroll 15s linear infinite;
 }
 
+@media screen and (max-width: 768px) {
+	.marquee-inner {
+		animation: marqueeScroll 3s linear infinite;
+	}
+}
+
 .marquee-reverse {
 	animation-direction: reverse;
+}
+
+.bg-hero-image-blurred {
+	position: relative;
+}
+
+.bg-hero-image-blurred::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-image: url('/images/hero-image.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	z-index: -1;
+}
+
+@media (max-width: 768px) {
+	.bg-hero-image-blurred::before {
+		background-image: url('/images/hero-image-phone.jpg');
+	}
+}
+
+.bg-hero-image-blurred::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.4);
+	z-index: -1;
 }

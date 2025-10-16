@@ -56,6 +56,9 @@ const config = {
 					foreground: 'hsl(var(--card-foreground))',
 				},
 			},
+			backgroundImage: {
+				'hero-image': "url('/images/hero-image.jpg')",
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
