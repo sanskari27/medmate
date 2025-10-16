@@ -165,3 +165,20 @@
 		width: 100%;
 	}
 }
+
+@keyframes marqueeScroll {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.marquee-inner {
+	animation: marqueeScroll 15s linear infinite;
+}
+
+.marquee-reverse {
+	animation-direction: reverse;
+}

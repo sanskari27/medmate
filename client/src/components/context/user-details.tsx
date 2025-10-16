@@ -1,6 +1,5 @@
 'use client';
 
-import AuthService from '@/services/auth.service';
 import * as React from 'react';
 
 export type UserDetailsType = {
@@ -57,10 +56,7 @@ export function UserDetailsProvider({
 		setLoaded(true);
 	}, [data]);
 
-	const refreshProfile = async () => {
-		const [details] = await Promise.all([AuthService.userDetails()]);
-		setUserDetails({ ...details! });
-	};
+	const refreshProfile = async () => {};
 
 	return (
 		<UserDetailsContext.Provider

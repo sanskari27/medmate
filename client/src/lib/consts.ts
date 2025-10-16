@@ -1,22 +1,9 @@
-export const LOGO_WHITE = '/images/logo-white.svg';
-export const LOGO_PRIMARY = '/images/logo-primary.png';
-export const NOT_FOUND = '/images/not-found.svg';
-export const SLEEK_LOGO = '/images/sleek-logo.svg';
-export const SLEEK_LOGO_WHITE = '/images/sleek-logo-light.svg';
-export const SERVER_URL = process.env.NEXT_PUBLIC_API_URL;
-export const HERO_IMAGE = '/images/hero_doctor.png';
-export const LAB_AT_HOME_IMAGE = '/images/lab_at_home.png';
-export const NURSING_AT_HOME_IMAGE = '/images/nursing_at_home.png';
-export const OPD_CONSULTATION_IMAGE = '/images/opd_consultation.png';
-export const HOME_VISIT_IMAGE = '/images/home_visit.png';
-export const DOCTOR_ON_CALL_IMAGE = '/images/doctor_on_call.png';
-export const FAQ_IMG = '/images/faq_img.png';
-export const SERVICE_1_IMAGE = '/images/service_1.png';
-export const SERVICE_2_IMAGE = '/images/service_2.png';
-export const SERVICE_3_IMAGE = '/images/service_3.png';
-export const SERVICE_4_IMAGE = '/images/service_4.png';
-export const SERVICE_5_IMAGE = '/images/service_5.png';
-export const SERVICE_6_IMAGE = '/images/service_6.png';
+export const LOGO = '/images/medmate.webp';
+export const WEAKNESS_IMAGE = '/images/weakness.svg';
+export const BACK_IN_TIME_IMAGE = '/images/back-in-time.png';
+export const COSTUMER_IMAGE = '/images/costumer.png';
+export const MEDICAL_TEAM_IMAGE = '/images/medical-team.png';
+export const RATE_IMAGE = '/images/rate.png';
 
 export const Paths = {
 	LANDING: '/',

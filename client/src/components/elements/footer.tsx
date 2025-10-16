@@ -1,4 +1,4 @@
-import { SLEEK_LOGO_WHITE } from '@/lib/consts';
+import { LOGO } from '@/lib/consts';
 import { Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,13 +10,7 @@ export default function Footer() {
 			<div className='pt-16 pb-4 px-[7%]'>
 				<div className='w-full flex flex-col md:flex-row text-center md:text-left gap-12 md:gap-8 py-[1rem] justify-between'>
 					<div className='w-full md:w-1/5 flex flex-col text-center items-center justify-center md:items-start md:text-left'>
-						<Image
-							src={SLEEK_LOGO_WHITE}
-							alt='Medmate'
-							width={400}
-							height={250}
-							className='text-white'
-						/>
+						<Image src={LOGO} alt='Medmate' width={400} height={250} className='text-white' />
 					</div>
 					<div className='w-full md:w-1/5 flex flex-col items-center md:items-start text-center md:text-left gap-0'>
 						<p className='underline underline-offset-8 font-medium  text-slate-50 dark:text-slate-50'>

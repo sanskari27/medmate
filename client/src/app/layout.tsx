@@ -8,13 +8,12 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
+import { Mulish } from 'next/font/google';
 import { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
-
-const poppins = Poppins({ weight: ['400', '500', '600', '700', '800', '900'], subsets: ['latin'] });
-
+// const outfit = Outfit({ weight: ['400', '500', '600', '700', '800', '900'], subsets: ['latin'] });
+const mulish = Mulish({ weight: ['400', '500', '600', '700', '800', '900'], subsets: ['latin'] });
 export const metadata: Metadata = {
 	title: 'Medmate',
 	description: `Medmate provides businesses with advanced WhatsApp Business API solutions, enabling seamless bulk messaging, automated chatbots, and intuitive 2-way communication. Perfect for enhancing customer engagement, supporting multiple agents, and delivering personalized experiences at scale. Sign up today and revolutionize your business communication with Medmate.`,
@@ -31,7 +30,7 @@ export default async function RootLayout({
 			<link rel='apple-touch-icon' sizes='180x180' href='/icons/apple-touch-icon.png' />
 			<link rel='icon' type='image/png' sizes='32x32' href='/icons/favicon-32x32.png' />
 			<link rel='icon' type='image/png' sizes='16x16' href='/icons/favicon-16x16.png' />
-			<body className={cn('min-h-screen min-w-screen', poppins.className)}>
+			<body className={cn('min-h-screen min-w-screen', mulish.className)}>
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='light'
@@ -43,9 +42,7 @@ export default async function RootLayout({
 						<PageLayout>
 							<TooltipProvider>
 								<Navbar />
-								{/* <DotBackgroundDemo> */}
 								<Suspense fallback={<Loading />}>{children}</Suspense>
-								{/* </DotBackgroundDemo> */}
 								<Footer />
 							</TooltipProvider>
 						</PageLayout>
