@@ -4,6 +4,10 @@ export const BACK_IN_TIME_IMAGE = '/images/back-in-time.png';
 export const COSTUMER_IMAGE = '/images/costumer.png';
 export const MEDICAL_TEAM_IMAGE = '/images/medical-team.png';
 export const RATE_IMAGE = '/images/rate.png';
+export const HOUR_SERVICE_IMAGE = '/images/24-hour-service.png';
+export const FOLLOW_UP_IMAGE = '/images/medical-report.png';
+export const NO_TRAVEL_IMAGE = '/images/happy-hour.png';
+export const VERIFIED_PHYSICIANS_IMAGE = '/images/badge.png';
 
 export const Paths = {
 	LANDING: '/',

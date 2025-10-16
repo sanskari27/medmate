@@ -1,7 +1,19 @@
-import { BACK_IN_TIME_IMAGE, COSTUMER_IMAGE, MEDICAL_TEAM_IMAGE, RATE_IMAGE } from '@/lib/consts';
+/* eslint-disable @next/next/no-img-element */
+import FAQSection from '@/components/elements/FAQSection';
+import {
+	BACK_IN_TIME_IMAGE,
+	COSTUMER_IMAGE,
+	FOLLOW_UP_IMAGE,
+	HOUR_SERVICE_IMAGE,
+	MEDICAL_TEAM_IMAGE,
+	NO_TRAVEL_IMAGE,
+	RATE_IMAGE,
+	VERIFIED_PHYSICIANS_IMAGE,
+} from '@/lib/consts';
+import Image from 'next/image';
 import Link from 'next/link';
 
-const cardsData = [
+const iconCardData = [
 	{
 		image: '/images/weakness.svg',
 	},
@@ -40,11 +52,40 @@ const cardsData = [
 	},
 ];
 
+const testimonialCardData = [
+	{
+		image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200',
+		name: 'Briar Martin',
+		handle: '@neilstellar',
+		date: 'April 20, 2025',
+	},
+	{
+		image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200',
+		name: 'Avery Johnson',
+		handle: '@averywrites',
+		date: 'May 10, 2025',
+	},
+	{
+		image:
+			'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200&auto=format&fit=crop&q=60',
+		name: 'Jordan Lee',
+		handle: '@jordantalks',
+		date: 'June 5, 2025',
+	},
+	{
+		image:
+			'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=60',
+		name: 'Avery Johnson',
+		handle: '@averywrites',
+		date: 'May 10, 2025',
+	},
+];
+
 export default async function Home() {
 	return (
 		<>
 			<div className='relative flex flex-col items-center justify-center text-sm px-4 md:px-16 lg:px-24 xl:px-32 bg-black text-white min-h-screen'>
-				<div className='absolute top-28 -z-1 left-1/4 size-72 bg-blue-600 blur-[300px]'></div>
+				<div className='absolute top-28 -z-1 left-1/4 size-40 md:size-72 bg-blue-600 blur-[300px]'></div>
 				<div className='flex items-center'>
 					<div className='flex -space-x-2 pr-3'>
 						<img
@@ -132,8 +173,8 @@ export default async function Home() {
 				<div className='flex flex-wrap items-center justify-center gap-8 pt-4'>
 					<div className='marquee-row w-full mx-auto max-w-[80%] overflow-hidden relative'>
 						<div className='marquee-inner flex transform-gpu min-w-[200%] pt-10 pb-5'>
-							{[...cardsData, ...cardsData, ...cardsData].map((card, index) => (
-								<CreateCard key={index} card={card} />
+							{[...iconCardData, ...iconCardData, ...iconCardData].map((card, index) => (
+								<IconCard key={index} card={card} />
 							))}
 						</div>
 					</div>
@@ -142,14 +183,13 @@ export default async function Home() {
 
 			<div className='py-20 bg-primary'>
 				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-items-center max-w-[80%] mx-auto'>
-					<div className='size-[520px] top-0 left-1/2 -translate-x-1/2 rounded-full absolute blur-[300px] -z-10 bg-[#FBFFE1]/70'></div>
 					<div className='flex flex-col items-center justify-center max-w-80'>
 						<div className='p-6 aspect-square bg-green-100 rounded-full'>
 							<img src={COSTUMER_IMAGE} alt='Customer' width={28} height={28} />
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
-							<h3 className='text-5xl font-bold text-slate-100'>500 +</h3>
-							<p className='text-2xl font-semibold text-slate-200'>Happy Families</p>
+							<h3 className='text-3xl font-bold text-slate-100'>500 +</h3>
+							<p className='text-xl font-semibold text-slate-200'>Families Cared For</p>
 						</div>
 					</div>
 
@@ -158,8 +198,8 @@ export default async function Home() {
 							<img src={MEDICAL_TEAM_IMAGE} alt='Medical Team' width={28} height={28} />
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
-							<h3 className='text-5xl font-bold text-slate-100'>50 +</h3>
-							<p className='text-2xl font-semibold text-slate-200'>Doctors</p>
+							<h3 className='text-3xl font-bold text-slate-100'>50 +</h3>
+							<p className='text-xl font-semibold text-slate-200'>Certified Physicians</p>
 						</div>
 					</div>
 					<div className='flex flex-col items-center justify-center max-w-80'>
@@ -167,8 +207,8 @@ export default async function Home() {
 							<img src={BACK_IN_TIME_IMAGE} alt='Back in Time' width={28} height={28} />
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
-							<h3 className='text-5xl font-bold text-slate-100'>30 Minutes</h3>
-							<p className='text-2xl font-semibold text-slate-200'>Average Consultation Duration</p>
+							<h3 className='text-3xl font-bold text-slate-100'>30 Minutes</h3>
+							<p className='text-xl font-semibold text-slate-200'>Avg. Consult Time</p>
 						</div>
 					</div>
 					<div className='flex flex-col items-center justify-center max-w-80'>
@@ -176,20 +216,350 @@ export default async function Home() {
 							<img src={RATE_IMAGE} alt='Rate' width={28} height={28} />
 						</div>
 						<div className='mt-5 space-y-2 text-center'>
-							<h3 className='text-5xl font-bold text-slate-100'>4.9</h3>
-							<p className='text-2xl font-semibold text-slate-200'>Google Rating</p>
+							<h3 className='text-3xl font-bold text-slate-100'>4.9</h3>
+							<p className='text-xl font-semibold text-slate-200'>Google Review Score</p>
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div className='py-20 bg-slate-50 text-black'>
+				<h1 className='text-5xl font-semibold text-center mx-auto'>
+					Why Choose <span className='text-primary'>MedMate</span>?
+				</h1>
+				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+					Delivering trusted, in-home medical care to 1,000+ families — and counting.
+				</p>
+				<div className='flex flex-col md:flex-row items-center justify-center'>
+					<img
+						className='max-w-2xl w-full xl:-ml-32'
+						src='https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/features/group-image-1.png'
+						alt=''
+					/>
+					<div className='px-4 md:px-0'>
+						<div className={'flex items-center justify-center gap-6 max-w-md group cursor-pointer'}>
+							<div
+								className={`p-6 group-hover:bg-violet-100 border border-transparent group-hover:border-violet-300  flex gap-4 rounded-xl transition-colors`}
+							>
+								<Image
+									src={HOUR_SERVICE_IMAGE}
+									alt='Hour Service'
+									width={28}
+									height={28}
+									className='size-8 object-contain'
+								/>
+								<div className='space-y-2'>
+									<h3 className='text-base font-semibold text-slate-700'>Available 24/7</h3>
+									<p className='text-sm text-slate-600 max-w-xs'>
+										24/7 medical care — expert help whenever you need it, wherever you are.
+									</p>
+								</div>
+							</div>
+						</div>
+						<div className='flex items-center justify-center gap-6 max-w-md group cursor-pointer'>
+							<div className='p-6 group-hover:bg-green-100 border border-transparent group-hover:border-green-300 flex gap-4 rounded-xl transition-colors'>
+								<Image
+									src={FOLLOW_UP_IMAGE}
+									alt='Follow Up'
+									width={28}
+									height={28}
+									className='size-8 object-contain'
+								/>
+								<div className='space-y-2'>
+									<h3 className='text-base font-semibold text-slate-700'>Follow-Up Every 2 Days</h3>
+									<p className='text-sm text-slate-600 max-w-xs'>
+										We check in, so you don’t have to worry. Continue your care until you feel
+										better.
+									</p>
+								</div>
+							</div>
+						</div>
+						<div className='flex items-center justify-center gap-6 max-w-md group cursor-pointer'>
+							<div className='p-6 group-hover:bg-orange-100 border border-transparent group-hover:border-orange-300 flex gap-4 rounded-xl transition-colors'>
+								<Image
+									src={NO_TRAVEL_IMAGE}
+									alt='No Travel'
+									width={28}
+									height={28}
+									className='size-8 object-contain'
+								/>
+								<div className='space-y-2'>
+									<h3 className='text-base font-semibold text-slate-700'>No Travel or Waiting</h3>
+									<p className='text-sm text-slate-600 max-w-xs'>
+										Skip traffic and clinic queues. Care comes to your door, on time.
+									</p>
+								</div>
+							</div>
+						</div>
+						<div className='flex items-center justify-center gap-6 max-w-md group cursor-pointer'>
+							<div className='p-6 group-hover:bg-green-100 border border-transparent group-hover:border-green-300 flex gap-4 rounded-xl transition-colors'>
+								<Image
+									src={VERIFIED_PHYSICIANS_IMAGE}
+									alt='Verified Physicians'
+									width={28}
+									height={28}
+									className='size-8 object-contain'
+								/>
+								<div className='space-y-2'>
+									<h3 className='text-base font-semibold text-slate-700'>Verified Physicians</h3>
+									<p className='text-sm text-slate-600 max-w-xs'>
+										Experienced doctors from Medanta, Fortis, and more — professionals you can
+										trust.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div className='flex items-center gap-4 md:-mt-12 mx-auto justify-center'>
+					<Link href='/about'>
+						<button
+							type='button'
+							className='w-40 py-3 active:scale-95 transition text-sm text-white rounded-full bg-slate-700'
+						>
+							<p className='mb-0.5'>Know More</p>
+						</button>
+					</Link>
+				</div>
+			</div>
+
+			<div className='py-20 bg-slate-50 text-black'>
+				<div className='flex items-center justify-center'>
+					<div className='flex flex-col md:flex-row items-center justify-around text-sm border border-gray-200 rounded-2xl m-2 max-w-[80%] w-full bg-white'>
+						<div className='flex flex-col text-center md:text-left items-center md:items-start pt-14 md:p-10'>
+							<h2 className='md:text-4xl text-2xl font-bold text-gray-800'>
+								Transparent Pricing for Quality Care
+							</h2>
+							<p className='text-slate-500 text-lg'>
+								Affordable, clear, and upfront — starting at{' '}
+								<span className='font-bold text-black'>₹2,499</span> for a consultation.
+							</p>
+
+							<div className='flex items-center gap-4 mt-6'>
+								<div className='flex items-center gap-4 mt-8'>
+									<Link href='/book-appointment?appointment_type=home-visit'>
+										<button className='bg-blue-600 hover:bg-blue-700 text-white rounded-full px-7 h-11'>
+											Book Home Visit
+										</button>
+									</Link>
+								</div>
+							</div>
+						</div>
+
+						<img
+							className='max-w-[375px] pt-10 md:p-0'
+							src='https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/appDownload/excitedWomenImage.png'
+							alt='excitedWomenImage'
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div className='py-20'>
+				<div className='flex flex-col items-center justify-center max-w-[80%] mx-auto'>
+					<div className=''>
+						<h1 className='text-5xl font-semibold text-center mx-auto'>
+							How <span className='text-primary'>MedMate</span> Works?
+						</h1>
+						<p className='text-xl text-slate-500 text-center mt-2 mx-auto'>
+							Simple, reliable healthcare in four easy steps — from booking to recovery, all at your
+							doorstep.
+						</p>
+					</div>
+					<div className='relative flex flex-col items-center mt-36'>
+						<div
+							data-orientation='horizontal'
+							className='bg-zinc-200 dark:bg-zinc-800 shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px absolute -top-6 left-0 hidden md:block'
+						></div>
+						<div className='grid gap-4 md:grid-cols-4'>
+							<div className='relative p-4 shadow space-y-2 bg-linear-180 outline outline-zinc-100 dark:outline-zinc-800 from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 rounded-xl'>
+								<div
+									data-orientation='vertical'
+									role='none'
+									data-slot='separator-root'
+									className='shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px absolute top-6 left-0 block md:hidden'
+								></div>
+								<div className='absolute top-0 -left-[9px] z-10 flex size-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 p-1 md:-top-12 md:left-0'>
+									<span className='text-sm font-medium text-zinc-900 dark:text-white'>1</span>
+								</div>
+								<div className='pl-7 md:pl-0 py-6'>
+									<h3 className='text-base font-semibold tracking-tight text-zinc-900 dark:text-white'>
+										Schedule an Appointment
+									</h3>
+									<p className='text-sm text-zinc-500 dark:text-zinc-400 lg:text-balance'>
+										Book your visit easily through our app, call center, or website — whenever it
+										suits you.
+									</p>
+								</div>
+							</div>
+							<div className='relative p-4 shadow space-y-2 bg-linear-180 outline outline-zinc-100 dark:outline-zinc-800 from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 rounded-xl'>
+								<div
+									data-orientation='vertical'
+									role='none'
+									data-slot='separator-root'
+									className='shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px absolute top-6 left-0 block md:hidden'
+								></div>
+								<div className='absolute top-0 -left-[9px] z-10 flex size-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 p-1 md:-top-12 md:left-0'>
+									<span className='text-sm font-medium text-zinc-900 dark:text-white'>2</span>
+								</div>
+								<div className='pl-7 md:pl-0 py-6'>
+									<h3 className='text-base font-semibold tracking-tight text-zinc-900 dark:text-white'>
+										Confirm Your Visit
+									</h3>
+									<p className='text-sm text-zinc-500 dark:text-zinc-400 lg:text-balance'>
+										Receive instant confirmation and details about your upcoming doctor’s visit.
+									</p>
+								</div>
+							</div>
+							<div className='relative p-4 shadow space-y-2 bg-linear-180 outline outline-zinc-100 dark:outline-zinc-800 from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 rounded-xl'>
+								<div
+									data-orientation='vertical'
+									role='none'
+									data-slot='separator-root'
+									className='shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px absolute top-6 left-0 block md:hidden'
+								></div>
+								<div className='absolute top-0 -left-[9px] z-10 flex size-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 p-1 md:-top-12 md:left-0'>
+									<span className='text-sm font-medium text-zinc-900 dark:text-white'>3</span>
+								</div>
+								<div className='pl-7 md:pl-0 py-6'>
+									<h3 className='text-base font-semibold tracking-tight text-zinc-900 dark:text-white'>
+										Detailed Consultation
+									</h3>
+									<p className='text-sm text-zinc-500 dark:text-zinc-400 lg:text-balance'>
+										Thorough checkups with precise prescriptions and home-delivered medicines.
+									</p>
+								</div>
+							</div>
+							<div className='relative p-4 shadow space-y-2 bg-linear-180 outline outline-zinc-100 dark:outline-zinc-800 from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 rounded-xl'>
+								<div
+									data-orientation='vertical'
+									role='none'
+									data-slot='separator-root'
+									className='shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px absolute top-6 left-0 block md:hidden'
+								></div>
+								<div className='absolute top-0 -left-[9px] z-10 flex size-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 p-1 md:-top-12 md:left-0'>
+									<span className='text-sm font-medium text-zinc-900 dark:text-white'>4</span>
+								</div>
+								<div className='pl-7 md:pl-0 py-6'>
+									<h3 className='text-base font-semibold tracking-tight text-zinc-900 dark:text-white'>
+										Convenient Follow-Ups
+									</h3>
+									<p className='text-sm text-zinc-500 dark:text-zinc-400 lg:text-balance'>
+										Effortless follow-ups ensuring your health improves smoothly and fully.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div className='py-20 bg-slate-50 text-black'>
+				<h1 className='text-5xl font-semibold text-center mx-auto'>
+					What Our <span className='text-primary'>Patients Say</span>?
+				</h1>
+				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+					Don’t just take our word for it — hear directly from those we’ve cared for.
+				</p>
+				<div className='marquee-row w-full mx-auto max-w-[80%] overflow-hidden relative mt-12'>
+					<div className='marquee-inner marquee-reverse flex transform-gpu min-w-[200%] pt-10 pb-5'>
+						{[...testimonialCardData, ...testimonialCardData, ...testimonialCardData].map(
+							(card, index) => (
+								<TestimonialCard key={index} card={card} />
+							)
+						)}
+					</div>
+				</div>
+			</div>
+
+			<div className='py-20 bg-slate-50 text-black'>
+				<h1 className='text-5xl font-semibold text-center mx-auto'>Frequently Asked Questions</h1>
+				<p className='text-xl text-slate-500 text-center mt-2 max-w-3xl mx-auto'>
+					Clear answers to help you understand how MedMate delivers trusted healthcare.
+				</p>
+				<FAQSection />
+			</div>
+
+			<div className='py-20 bg-slate-50 text-black'>
+				<section className="flex flex-col items-center justify-center mx-auto max-md:mx-2 max-md:px-2 max-w-5xl w-full text-center rounded-2xl py-20 md:py-24 bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/banners/image-2.png')] bg-cover bg-center bg-no-repeat">
+					<h1 className='text-3xl md:text-4xl font-medium text-white max-w-4xl'>
+						Start your journey to easier, better healthcare today.
+					</h1>
+					<div className='h-[3px] w-64 my-1 bg-gradient-to-l from-transparent to-white'></div>
+					<p className='text-sm md:text-base text-white max-w-xl mt-6'>
+						Experience personalized healthcare designed for your convenience — expert care,
+						effortless access, and doorstep service whenever you need it. Skip the wait, embrace
+						comfort, and stay confidently cared for.
+					</p>
+					<button className='px-10 py-3 mt-4 text-sm bg-white hover:scale-105 transition duration-300 rounded-full'>
+						Book Home Visit
+					</button>
+				</section>
 			</div>
 		</>
 	);
 }
 
-const CreateCard = ({ card }: { card: { image: string } }) => (
+const IconCard = ({ card }: { card: { image: string } }) => (
 	<div className='p-4  mx-auto  w-64 shrink-0'>
 		<div className='flex gap-2 items-center justify-center'>
 			<img className='' src={card.image} alt='User Image' />
+		</div>
+	</div>
+);
+
+const TestimonialCard = ({
+	card,
+}: {
+	card: { image: string; name: string; handle: string; date: string };
+}) => (
+	<div className='p-4 rounded-lg mx-4 shadow hover:shadow-lg transition-all duration-200 w-72 shrink-0'>
+		<div className='flex gap-2'>
+			<img className='size-11 rounded-full' src={card.image} alt='User Image' />
+			<div className='flex flex-col'>
+				<div className='flex items-center gap-1'>
+					<p>{card.name}</p>
+					<svg
+						className='mt-0.5'
+						width='12'
+						height='12'
+						viewBox='0 0 12 12'
+						fill='none'
+						xmlns='http://www.w3.org/2000/svg'
+					>
+						<path
+							fillRule='evenodd'
+							clipRule='evenodd'
+							d='M4.555.72a4 4 0 0 1-.297.24c-.179.12-.38.202-.59.244a4 4 0 0 1-.38.041c-.48.039-.721.058-.922.129a1.63 1.63 0 0 0-.992.992c-.071.2-.09.441-.129.922a4 4 0 0 1-.041.38 1.6 1.6 0 0 1-.245.59 3 3 0 0 1-.239.297c-.313.368-.47.551-.56.743-.213.444-.213.96 0 1.404.09.192.247.375.56.743.125.146.187.219.24.297.12.179.202.38.244.59.018.093.026.189.041.38.039.48.058.721.129.922.163.464.528.829.992.992.2.071.441.09.922.129.191.015.287.023.38.041.21.042.411.125.59.245.078.052.151.114.297.239.368.313.551.47.743.56.444.213.96.213 1.404 0 .192-.09.375-.247.743-.56.146-.125.219-.187.297-.24.179-.12.38-.202.59-.244a4 4 0 0 1 .38-.041c.48-.039.721-.058.922-.129.464-.163.829-.528.992-.992.071-.2.09-.441.129-.922a4 4 0 0 1 .041-.38c.042-.21.125-.411.245-.59.052-.078.114-.151.239-.297.313-.368.47-.551.56-.743.213-.444.213-.96 0-1.404-.09-.192-.247-.375-.56-.743a4 4 0 0 1-.24-.297 1.6 1.6 0 0 1-.244-.59 3 3 0 0 1-.041-.38c-.039-.48-.058-.721-.129-.922a1.63 1.63 0 0 0-.992-.992c-.2-.071-.441-.09-.922-.129a4 4 0 0 1-.38-.041 1.6 1.6 0 0 1-.59-.245A3 3 0 0 1 7.445.72C7.077.407 6.894.25 6.702.16a1.63 1.63 0 0 0-1.404 0c-.192.09-.375.247-.743.56m4.07 3.998a.488.488 0 0 0-.691-.69l-2.91 2.91-.958-.957a.488.488 0 0 0-.69.69l1.302 1.302c.19.191.5.191.69 0z'
+							fill='#2196F3'
+						/>
+					</svg>
+				</div>
+				<span className='text-xs text-slate-500'>{card.handle}</span>
+			</div>
+		</div>
+		<p className='text-sm py-4 text-gray-800'>
+			Radiant made undercutting all of our competitors an absolute breeze.
+		</p>
+		<div className='flex items-center justify-between text-slate-500 text-xs'>
+			<div className='flex items-center gap-1'>
+				<span>Posted on</span>
+				<a href='https://x.com' target='_blank' className='hover:text-sky-500'>
+					<svg
+						width='11'
+						height='10'
+						viewBox='0 0 11 10'
+						fill='none'
+						xmlns='http://www.w3.org/2000/svg'
+					>
+						<path
+							d='m.027 0 4.247 5.516L0 10h.962l3.742-3.926L7.727 10H11L6.514 4.174 10.492 0H9.53L6.084 3.616 3.3 0zM1.44.688h1.504l6.64 8.624H8.082z'
+							fill='currentColor'
+						/>
+					</svg>
+				</a>
+			</div>
+			<p>{card.date}</p>
 		</div>
 	</div>
 );
