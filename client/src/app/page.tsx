@@ -3,7 +3,9 @@ import FAQSection from '@/components/elements/FAQSection';
 import {
 	BACK_IN_TIME_IMAGE,
 	COSTUMER_IMAGE,
+	EXCITED_WOMAN_IMAGE,
 	FOLLOW_UP_IMAGE,
+	GROUP_IMAGE_1,
 	HOUR_SERVICE_IMAGE,
 	MEDICAL_TEAM_IMAGE,
 	NO_TRAVEL_IMAGE,
@@ -206,10 +208,12 @@ export default async function Home() {
 					Delivering trusted, in-home medical care to 1,000+ families — and counting.
 				</p>
 				<div className='flex flex-col md:flex-row items-center justify-center'>
-					<img
+					<Image
 						className='max-w-2xl w-full xl:-ml-32'
-						src='https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/features/group-image-1.png'
+						src={GROUP_IMAGE_1}
 						alt=''
+						width={700}
+						height={700}
 					/>
 					<div className='px-4 md:px-0'>
 						<div className={'flex items-center justify-center gap-6 max-w-md group cursor-pointer'}>
@@ -321,10 +325,12 @@ export default async function Home() {
 							</div>
 						</div>
 
-						<img
+						<Image
 							className='max-w-[375px] pt-10 md:p-0'
-							src='https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/appDownload/excitedWomenImage.png'
-							alt='excitedWomenImage'
+							src={EXCITED_WOMAN_IMAGE}
+							alt='Excited Woman'
+							width={375}
+							height={375}
 						/>
 					</div>
 				</div>
@@ -383,7 +389,7 @@ export default async function Home() {
 			</div>
 
 			<div className='py-20 px-[5%] bg-slate-50 text-black'>
-				<section className="flex flex-col items-center justify-center mx-auto px-4 md:px-0 max-w-5xl w-full text-center rounded-2xl py-20 md:py-24 bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/banners/image-2.png')] bg-cover bg-center bg-no-repeat">
+				<section className='flex flex-col items-center justify-center mx-auto px-4 md:px-0 max-w-5xl w-full text-center rounded-2xl py-20 md:py-24 bg-start-journey-bg bg-cover bg-center bg-no-repeat'>
 					<h1 className='text-3xl md:text-4xl font-medium text-white max-w-4xl'>
 						Start your journey to easier, better healthcare today.
 					</h1>

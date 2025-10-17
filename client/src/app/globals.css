@@ -200,7 +200,7 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-image: url('/images/hero-image.jpg');
+	background-image: url('/images/hero-image.webp');
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -209,7 +209,7 @@
 
 @media (max-width: 768px) {
 	.bg-hero-image-blurred::before {
-		background-image: url('/images/hero-image-phone.jpg');
+		background-image: url('/images/hero-image-phone.webp');
 	}
 }
 

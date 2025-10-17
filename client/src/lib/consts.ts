@@ -1,5 +1,4 @@
 export const LOGO = '/images/medmate.webp';
-export const HERO_IMAGE = '/images/hero-image.jpg';
 export const WEAKNESS_IMAGE = '/images/weakness.svg';
 export const BACK_IN_TIME_IMAGE = '/images/back-in-time.png';
 export const COSTUMER_IMAGE = '/images/costumer.png';
@@ -9,6 +8,9 @@ export const HOUR_SERVICE_IMAGE = '/images/24-hour-service.png';
 export const FOLLOW_UP_IMAGE = '/images/medical-report.png';
 export const NO_TRAVEL_IMAGE = '/images/happy-hour.png';
 export const VERIFIED_PHYSICIANS_IMAGE = '/images/badge.png';
+export const GROUP_IMAGE_1 = '/images/group-image-1.webp';
+export const EXCITED_WOMAN_IMAGE = '/images/excited-women.webp';
+export const START_JOURNEY_BUTTON = '/images/start-journey-bg.webp';
 
 export const Paths = {
 	LANDING: '/',
