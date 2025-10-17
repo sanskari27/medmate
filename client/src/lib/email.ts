@@ -64,6 +64,7 @@ export const sendContactEmail = async (
 		firstname: string;
 		lastname: string;
 		email: string;
+		phone?: string;
 		subject: string;
 		message: string;
 	}
@@ -87,7 +88,12 @@ export const sendContactEmail = async (
 							<p style="color: #666; margin: 10px 0;"><strong>Name:</strong> ${formData.firstname} ${
 				formData.lastname
 			}</p>
-							<p style="color: #666; margin: 10px 0;"><strong>Email:</strong> ${formData.email}</p>
+						<p style="color: #666; margin: 10px 0;"><strong>Email:</strong> ${formData.email}</p>
+						${
+							formData.phone
+								? `<p style=\"color: #666; margin: 10px 0;\"><strong>Phone:</strong> ${formData.phone}</p>`
+								: ''
+						}
 							<p style="color: #666; margin: 10px 0;"><strong>Subject:</strong> ${formData.subject}</p>
 							<p style="color: #666; margin: 10px 0;"><strong>Message:</strong></p>
 							<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">

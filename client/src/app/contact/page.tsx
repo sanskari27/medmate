@@ -1,89 +1,42 @@
 /* eslint-disable @next/next/no-img-element */
+'use client';
 
 import NewsLetter from '@/components/elements/NewsLetter';
+import { apiClient } from '@/lib/apiClient';
+import { contactUsSchema, type ContactUsInput } from '@/schemas/contact-us';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
-const blogs = [
-	{
-		title: 'A Guide to Igniting Your Imagination',
-		image: 'https://readymadeui.com/Imagination.webp',
-		date: '10 FEB 2023',
-		author: 'John Doe',
-	},
-	{
-		title: 'Hacks to Supercharge Your Day',
-		image: 'https://readymadeui.com/hacks-watch.webp',
-		date: '7 JUN 2023',
-		author: 'Mark Adair',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/prediction.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food11.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-	{
-		title: 'Trends and Predictions',
-		image: 'https://readymadeui.com/images/food22.webp',
-		date: '5 OCT 2023',
-		author: 'Simon Konecki',
-	},
-];
+// blogs data removed (unused)
 
-export default async function ContactPage() {
+export default function ContactPage() {
+	const {
+		register,
+		handleSubmit,
+		reset,
+		formState: { errors, isSubmitting },
+	} = useForm<ContactUsInput>({
+		resolver: zodResolver(contactUsSchema),
+		defaultValues: {
+			fullname: '',
+			email: '',
+			phone: '',
+			subject: '',
+			message: '',
+		},
+	});
+
+	async function onSubmit(values: ContactUsInput) {
+		try {
+			await apiClient.post('/contact-us', values);
+			toast.success('Message sent successfully. We will get back to you soon.');
+			reset();
+		} catch (err: any) {
+			const msg = err?.message || err?.response?.data?.error || 'Failed to send message';
+			toast.error(msg);
+		}
+	}
 	return (
 		<>
 			<NewsLetter />
@@ -98,37 +51,74 @@ export default async function ContactPage() {
 								Have a specific inquiry Our experienced team is ready to engage with you.
 							</p>
 
-							<form>
+							<form onSubmit={handleSubmit(onSubmit)} noValidate>
 								<div className='space-y-4 mt-8'>
-									<input
-										type='text'
-										placeholder='Full Name'
-										className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
-									/>
-									<input
-										type='number'
-										placeholder='Phone No.'
-										className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
-									/>
-									<input
-										type='email'
-										placeholder='Email'
-										className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
-									/>
-									<input
-										type='text'
-										placeholder='Subject'
-										className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
-									/>
-									<textarea
-										placeholder='Write Message'
-										rows={5}
-										className='px-4 pt-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
-									></textarea>
+									<div>
+										<input
+											type='text'
+											placeholder='Full Name'
+											className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
+											{...register('fullname')}
+										/>
+										{errors.fullname && (
+											<p className='text-red-600 text-xs mt-1'>
+												{errors.fullname.message as string}
+											</p>
+										)}
+									</div>
+									<div>
+										<input
+											type='text'
+											placeholder='Phone No.'
+											className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
+											{...register('phone')}
+										/>
+										{errors.phone && (
+											<p className='text-red-600 text-xs mt-1'>{errors.phone.message as string}</p>
+										)}
+									</div>
+									<div>
+										<input
+											type='email'
+											placeholder='Email'
+											className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
+											{...register('email')}
+										/>
+										{errors.email && (
+											<p className='text-red-600 text-xs mt-1'>{errors.email.message as string}</p>
+										)}
+									</div>
+									<div>
+										<input
+											type='text'
+											placeholder='Subject'
+											className='px-4 py-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
+											{...register('subject')}
+										/>
+										{errors.subject && (
+											<p className='text-red-600 text-xs mt-1'>
+												{errors.subject.message as string}
+											</p>
+										)}
+									</div>
+									<div>
+										<textarea
+											placeholder='Write Message'
+											rows={5}
+											className='px-4 pt-3 bg-white text-slate-900 rounded-md w-full text-sm border border-gray-300 focus:border-gray-900 outline-0'
+											{...register('message')}
+										></textarea>
+										{errors.message && (
+											<p className='text-red-600 text-xs mt-1'>
+												{errors.message.message as string}
+											</p>
+										)}
+									</div>
 								</div>
 								<button
-									type='button'
-									className='mt-8 flex items-center justify-center text-sm font-medium w-full rounded-md px-4 py-3 tracking-wide text-white cursor-pointer bg-blue-600 hover:bg-blue-700 border-0'
+									type='submit'
+									disabled={isSubmitting}
+									className='mt-8 flex items-center justify-center text-sm font-medium w-full rounded-md px-4 py-3 tracking-wide text-white cursor-pointer bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed border-0'
 								>
 									<svg
 										xmlns='http://www.w3.org/2000/svg'
@@ -145,7 +135,7 @@ export default async function ContactPage() {
 											data-original='#000000'
 										/>
 									</svg>
-									Send message
+									{isSubmitting ? 'Sending...' : 'Send message'}
 								</button>
 							</form>
 

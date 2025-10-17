@@ -1,32 +1,45 @@
 'use client';
 
 import { apiClient } from '@/lib/apiClient';
+import RequestError from '@/lib/RequestError';
+import { newsletterSchema, type NewsletterInput } from '@/schemas/newsletter';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 
+interface NewsletterResponse {
+	success: boolean;
+	message: string;
+}
+
 export default function NewsLetter() {
-	const [email, setEmail] = useState('');
-	const [loading, setLoading] = useState(false);
-	const handleSubmit = async () => {
-		setLoading(true);
-		if (!email) {
-			toast.error('Please enter your email address');
-			return;
-		}
-		if (!email.includes('@')) {
-			toast.error('Please enter a valid email address');
-			return;
-		}
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+		reset,
+	} = useForm<NewsletterInput>({
+		resolver: zodResolver(newsletterSchema),
+		mode: 'onBlur',
+	});
+
+	const onSubmit = async (data: NewsletterInput) => {
 		try {
-			await new Promise((resolve) => setTimeout(resolve, 5000));
-			await apiClient.post('/newsletter', { email });
-			toast.success('Thank you for subscribing to our newsletter!');
-			setEmail('');
-		} catch (error) {
-			toast.error('Failed to subscribe to newsletter');
-		} finally {
-			setLoading(false);
+			const response = await apiClient.post<NewsletterResponse>('/newsletter', data);
+
+			if (response.success) {
+				toast.success(response.message);
+				reset();
+			} else {
+				toast.error(response.message || 'Failed to subscribe to newsletter');
+			}
+		} catch (error: any) {
+			if (error instanceof RequestError) {
+				toast.error(error.getMessage());
+				return;
+			}
+			toast.error(error?.message || 'Failed to subscribe to newsletter. Please try again later.');
 		}
 	};
 	return (
@@ -35,22 +48,26 @@ export default function NewsLetter() {
 			<h1 className='max-w-lg font-semibold text-4xl/[44px] mt-2'>
 				Subscribe to our newsletter & get the latest news
 			</h1>
-			<div className='flex items-center justify-center mt-10 border border-slate-600 focus-within:outline focus-within:outline-indigo-600 text-sm rounded-full h-14 max-w-md w-full'>
-				<input
-					type='text'
-					className='bg-transparent outline-none rounded-full px-4 h-full flex-1'
-					placeholder='Enter your email address'
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-				/>
-				<button
-					disabled={loading}
-					className='bg-indigo-600 text-white rounded-full h-11 mr-1 px-4 flex items-center justify-center'
-					onClick={handleSubmit}
-				>
-					{loading ? <Loader2 className='w-4 h-4 animate-spin' /> : 'Subscribe now'}
-				</button>
-			</div>
+			<form onSubmit={handleSubmit(onSubmit)} className='w-full max-w-md mt-10'>
+				<div className='flex items-center justify-center border border-slate-600 focus-within:outline focus-within:outline-indigo-600 text-sm rounded-full h-14 w-full'>
+					<input
+						type='email'
+						{...register('email')}
+						className='bg-transparent outline-none rounded-full px-4 h-full flex-1'
+						placeholder='Enter your email address'
+					/>
+					<button
+						type='submit'
+						disabled={isSubmitting}
+						className='bg-indigo-600 text-white rounded-full h-11 mr-1 px-4 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed'
+					>
+						{isSubmitting ? <Loader2 className='w-4 h-4 animate-spin' /> : 'Subscribe now'}
+					</button>
+				</div>
+				{errors.email && (
+					<p className='text-red-400 text-sm mt-2 text-left px-4'>{errors.email.message}</p>
+				)}
+			</form>
 		</div>
 	);
 }

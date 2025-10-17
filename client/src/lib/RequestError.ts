@@ -7,23 +7,23 @@ interface RequestErrorOptions {
 	status: number;
 }
 
-export default class RequestError extends Error {
+export default class RequestError {
 	public title: string;
 	public _message: string;
+	public message: string;
 	public error: string;
 	public status: number;
 	constructor(opts: RequestErrorOptions) {
-		super(opts.title);
 		Object.setPrototypeOf(this, RequestError.prototype);
 		this.title = opts.title;
-		this._message = opts.message;
+		this.message = opts.message;
 		this.status = opts.status;
-		this.message = `[${this.status}] ${this.title}: ${this._message}`;
+		this._message = `[${this.status}] ${this.title}: ${this.message}`;
 		this.error = opts.error;
 	}
 
 	getMessage() {
-		return this._message;
+		return this.message;
 	}
 
 	toString() {
