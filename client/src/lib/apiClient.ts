@@ -6,7 +6,10 @@ interface RequestOptions extends RequestInit {
 	userId?: string;
 }
 
-const SERVER_URL = 'http://localhost:3001/api';
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+if (!SERVER_URL) {
+	throw new Error('NEXT_PUBLIC_SERVER_URL is not set');
+}
 
 const isServer = typeof window === 'undefined';
 
