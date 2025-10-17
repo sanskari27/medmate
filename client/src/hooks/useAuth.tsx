@@ -7,6 +7,18 @@ interface User {
 	email: string;
 	name: string;
 	phoneNumber?: string;
+	firstName?: string;
+	lastName?: string;
+	phone?: string;
+	address?: {
+		street: string;
+		city: string;
+		state: string;
+		zipCode: string;
+		country: string;
+	};
+	dateOfBirth?: string;
+	gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
 	isVerified: boolean;
 	provider?: 'email' | 'google';
 	createdAt: string;
@@ -19,6 +31,7 @@ interface AuthContextType {
 	login: (userData: User) => void;
 	logout: () => Promise<void>;
 	checkAuth: () => Promise<void>;
+	loadFullProfile: () => Promise<void>;
 	updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
@@ -60,9 +73,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	};
 
+	const loadFullProfile = async () => {
+		try {
+			const response = await fetch('/api/profile/basic');
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success) {
+					setUser(data.user);
+				}
+			}
+		} catch (error) {
+			console.error('Profile load error:', error);
+		}
+	};
+
 	const updateUser = async (userData: Partial<User>) => {
 		try {
-			const response = await fetch('/api/auth/update-profile', {
+			const response = await fetch('/api/profile/basic', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -87,7 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	return (
-		<AuthContext.Provider value={{ user, loading, login, logout, checkAuth, updateUser }}>
+		<AuthContext.Provider
+			value={{ user, loading, login, logout, checkAuth, loadFullProfile, updateUser }}
+		>
 			{children}
 		</AuthContext.Provider>
 	);

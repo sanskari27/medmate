@@ -6,7 +6,7 @@ interface RequestOptions extends RequestInit {
 	userId?: string;
 }
 
-const SERVER_URL = '/api';
+const SERVER_URL = 'http://localhost:3001/api';
 
 const isServer = typeof window === 'undefined';
 
@@ -72,7 +72,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 		},
 	});
 
-	if (!['/sessions/validate-auth', '/sessions/details'].includes(path)) {
+	if (!['/auth/me'].includes(path)) {
 		debugPrint(
 			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId} - CACHE : ${
 				response.headers.get('X-Cache-Status') ?? 'HIT'

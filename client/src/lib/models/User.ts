@@ -4,6 +4,18 @@ export interface IUser {
 	email: string;
 	phoneNumber?: string;
 	name: string;
+	firstName?: string;
+	lastName?: string;
+	phone?: string;
+	address?: {
+		street: string;
+		city: string;
+		state: string;
+		zipCode: string;
+		country: string;
+	};
+	dateOfBirth?: string;
+	gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
 	otp?: string;
 	otpExpiry?: Date;
 	isVerified: boolean;
@@ -30,6 +42,48 @@ const userSchema = new mongoose.Schema<IUser>(
 		name: {
 			type: String,
 			trim: true,
+		},
+		firstName: {
+			type: String,
+			trim: true,
+		},
+		lastName: {
+			type: String,
+			trim: true,
+		},
+		phone: {
+			type: String,
+			unique: true,
+			sparse: true,
+		},
+		address: {
+			street: {
+				type: String,
+				trim: true,
+			},
+			city: {
+				type: String,
+				trim: true,
+			},
+			state: {
+				type: String,
+				trim: true,
+			},
+			zipCode: {
+				type: String,
+				trim: true,
+			},
+			country: {
+				type: String,
+				trim: true,
+			},
+		},
+		dateOfBirth: {
+			type: String,
+		},
+		gender: {
+			type: String,
+			enum: ['male', 'female', 'other', 'prefer-not-to-say'],
 		},
 		otp: {
 			type: String,
