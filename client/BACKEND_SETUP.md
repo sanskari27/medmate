@@ -14,10 +14,42 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 # Email Configuration (Resend)
 RESEND_API_KEY=your-resend-api-key
 
+# Google OAuth Configuration
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
 # Next.js Configuration
 NEXTAUTH_URL=http://localhost:3001
 NEXTAUTH_SECRET=your-nextauth-secret
 ```
+
+## Google OAuth Setup
+
+1. **Create a Google Cloud Project**:
+
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google+ API
+
+2. **Configure OAuth Consent Screen**:
+
+   - Go to "APIs & Services" > "OAuth consent screen"
+   - Choose "External" user type
+   - Fill in the required fields (App name, User support email, Developer contact)
+   - Add your domain to authorized domains
+
+3. **Create OAuth 2.0 Credentials**:
+
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs"
+   - Choose "Web application"
+   - Add authorized JavaScript origins: `http://localhost:3001`
+   - Add authorized redirect URIs: `http://localhost:3001`
+   - Copy the Client ID and Client Secret
+
+4. **Update Environment Variables**:
+   - Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` with your Client ID
+   - Add `GOOGLE_CLIENT_SECRET` with your Client Secret
 
 ## Email Setup (Resend)
 
@@ -73,13 +105,19 @@ NEXTAUTH_SECRET=your-nextauth-secret
 
    - Get current authenticated user
 
+5. **POST /api/auth/google**
+
+   - Google OAuth login
+   - Body: `{ credential: "google-id-token" }`
+
 ## Features
 
 - ✅ OTP-based authentication
+- ✅ Google OAuth login
 - ✅ Email verification using Resend
 - ✅ JWT token management
 - ✅ Secure HTTP-only cookies
-- ✅ User schema with email, phone, name
+- ✅ User schema with email, phone, name, provider
 - ✅ Toast notifications
 - ✅ Form validation
 - ✅ Loading states

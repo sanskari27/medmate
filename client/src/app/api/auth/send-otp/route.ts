@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/db';
-import { generateOTP, sendOTPEmail } from '@/lib/email';
+import { generateOTP } from '@/lib/email';
 import User from '@/lib/models/User';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -45,14 +45,14 @@ export async function POST(request: NextRequest) {
 		}
 
 		await user.save();
-		console.log('OTP for user', user.email, otp);
+		console.log('OTP for user', user.email, 'is:', otp);
 
-		// Send OTP email
-		const emailResult = await sendOTPEmail(email, otp, user.name || email);
+		// Send OTP email (disabled for now)
+		// const emailResult = await sendOTPEmail(email, otp, user.name || email);
 
-		if (!emailResult.success) {
-			return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 });
-		}
+		// if (!emailResult.success) {
+		// 	return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 });
+		// }
 
 		return NextResponse.json(
 			{

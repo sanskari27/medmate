@@ -6,8 +6,9 @@ interface User {
 	id: string;
 	email: string;
 	name: string;
-	phoneNumber: string;
+	phoneNumber?: string;
 	isVerified: boolean;
+	provider?: 'email' | 'google';
 	createdAt: string;
 	updatedAt: string;
 }

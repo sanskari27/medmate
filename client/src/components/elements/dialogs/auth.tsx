@@ -1,37 +1,148 @@
 'use client';
 
+import GoogleLoginButton from '@/components/elements/GoogleLoginButton';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-	InputOTP,
-	InputOTPGroup,
-	InputOTPSeparator,
-	InputOTPSlot,
-} from '@/components/ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2, Mail, RotateCcw, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
 
-export default function AuthDialog({ children }: { children: React.ReactNode }) {
-	const { login } = useAuth();
-	const [screen, setScreen] = useState<'details' | 'pin'>('details');
+const loginSchema = z.object({
+	email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+});
+
+const otpSchema = z.object({
+	otp: z
+		.string()
+		.min(6, 'OTP must be 6 digits')
+		.max(6, 'OTP must be 6 digits')
+		.regex(/^\d{6}$/, 'OTP must contain only numbers'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type OTPFormData = z.infer<typeof otpSchema>;
+
+interface AuthDialogProps {
+	isOpen: boolean;
+	onClose: () => void;
+}
+
+export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
+	const [step, setStep] = useState<'email' | 'otp'>('email');
 	const [email, setEmail] = useState('');
-	const [pin, setPin] = useState('');
-	const [loading, setLoading] = useState(false);
-	const [isOpen, setIsOpen] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isResending, setIsResending] = useState(false);
+	const [timeLeft, setTimeLeft] = useState(60);
+	const { login } = useAuth();
 
-	async function handleSendOTP() {
-		if (!email) {
-			toast.error('Please fill in all fields');
-			return;
+	const {
+		register: registerEmail,
+		handleSubmit: handleEmailSubmit,
+		formState: { errors: emailErrors },
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(loginSchema),
+	});
+
+	const {
+		handleSubmit: handleOTPSubmit,
+		setValue: setOTPValue,
+		watch: watchOTP,
+		formState: { errors: otpErrors },
+	} = useForm<OTPFormData>({
+		resolver: zodResolver(otpSchema),
+	});
+
+	const otpValue = watchOTP('otp');
+
+	// Countdown timer
+	useEffect(() => {
+		if (timeLeft > 0 && step === 'otp') {
+			const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+			return () => clearTimeout(timer);
 		}
+	}, [timeLeft, step]);
 
-		setLoading(true);
+	// Reset state when dialog opens/closes
+	useEffect(() => {
+		if (!isOpen) {
+			setStep('email');
+			setEmail('');
+			setTimeLeft(60);
+			setIsLoading(false);
+			setIsResending(false);
+		}
+	}, [isOpen]);
+
+	const onEmailSubmit = async (data: LoginFormData) => {
+		setIsLoading(true);
+		try {
+			// Send OTP to email
+			const response = await fetch('/api/auth/send-otp', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ email: data.email }),
+			});
+
+			if (response.ok) {
+				toast.success('OTP sent! Check console for testing.');
+				setEmail(data.email);
+				setStep('otp');
+				setTimeLeft(60);
+			} else {
+				const errorData = await response.json();
+				toast.error(errorData.message || 'Failed to send OTP');
+			}
+		} catch (error) {
+			console.error('Error sending OTP:', error);
+			toast.error('Something went wrong. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const onOTPSubmit = async (data: OTPFormData) => {
+		setIsLoading(true);
+		try {
+			const response = await fetch('/api/auth/verify-otp', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					email,
+					otp: data.otp,
+				}),
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				toast.success('Login successful!');
+				login(result.user);
+				onClose();
+			} else {
+				const errorData = await response.json();
+				toast.error(errorData.message || 'Invalid OTP');
+			}
+		} catch (error) {
+			console.error('Error verifying OTP:', error);
+			toast.error('Something went wrong. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleResendOTP = async () => {
+		setIsResending(true);
 		try {
 			const response = await fetch('/api/auth/send-otp', {
 				method: 'POST',
@@ -41,135 +152,304 @@ export default function AuthDialog({ children }: { children: React.ReactNode }) 
 				body: JSON.stringify({ email }),
 			});
 
-			const data = await response.json();
-
 			if (response.ok) {
-				toast.success('OTP sent to your email!');
-				setScreen('pin');
+				toast.success('OTP resent successfully!');
+				setTimeLeft(60);
 			} else {
-				toast.error(data.error || 'Failed to send OTP');
+				const errorData = await response.json();
+				toast.error(errorData.message || 'Failed to resend OTP');
 			}
 		} catch (error) {
-			toast.error('Network error. Please try again.');
+			console.error('Error resending OTP:', error);
+			toast.error('Something went wrong. Please try again.');
 		} finally {
-			setLoading(false);
+			setIsResending(false);
 		}
-	}
+	};
 
-	async function handleVerifyOTP() {
-		if (pin.length !== 6) {
-			toast.error('Please enter a 6-digit OTP');
-			return;
+	const handleOTPChange = (value: string) => {
+		setOTPValue('otp', value);
+		// Auto-submit when OTP is complete
+		if (value.length === 6) {
+			setTimeout(() => {
+				handleOTPSubmit(onOTPSubmit)();
+			}, 500);
 		}
+	};
 
-		setLoading(true);
-		try {
-			const response = await fetch('/api/auth/verify-otp', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ email, otp: pin }),
-			});
-
-			const data = await response.json();
-
-			if (response.ok) {
-				toast.success('Login successful!');
-				login(data.user);
-				setIsOpen(false);
-				// Reset form
-				setEmail('');
-				setPin('');
-				setScreen('details');
-			} else {
-				toast.error(data.error || 'Invalid OTP');
-			}
-		} catch (error) {
-			toast.error('Network error. Please try again.');
-		} finally {
-			setLoading(false);
-		}
-	}
+	if (!isOpen) return null;
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild onClick={() => setIsOpen(true)}>
-				{children}
-			</DialogTrigger>
-			<DialogContent className='p-0 max-w-xs md:max-w-md rounded-2xl'>
-				<div className={cn('flex flex-col gap-6')}>
-					<Card>
-						<CardHeader>
-							<CardTitle className='text-center'>Login to your account</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className='flex flex-col gap-6'>
-								{screen === 'details' && (
-									<div className='grid gap-4'>
-										<div className='grid gap-2'>
-											<Label htmlFor='email'>Email</Label>
-											<Input
-												id='email'
-												type='email'
-												placeholder='m@example.com'
-												required
-												value={email}
-												onChange={(e) => setEmail(e.target.value)}
-											/>
-										</div>
-									</div>
-								)}
-								{screen === 'pin' && (
-									<div className='items-center flex flex-col gap-3'>
-										<InputOTP maxLength={6} value={pin} onChange={setPin}>
-											<InputOTPGroup>
-												<InputOTPSlot index={0} />
-												<InputOTPSlot index={1} />
-												<InputOTPSlot index={2} />
-											</InputOTPGroup>
-											<InputOTPSeparator />
-											<InputOTPGroup>
-												<InputOTPSlot index={3} />
-												<InputOTPSlot index={4} />
-												<InputOTPSlot index={5} />
-											</InputOTPGroup>
-										</InputOTP>
-										<Label htmlFor='pin'>A 6-digit OTP has been sent to your email.</Label>
-									</div>
-								)}
-								<div className='flex flex-col gap-3'>
-									<Button
-										type='submit'
-										className='w-full'
-										onClick={screen === 'details' ? handleSendOTP : handleVerifyOTP}
-										disabled={loading}
-									>
-										{loading ? 'Loading...' : screen === 'details' ? 'Send OTP' : 'Verify OTP'}
-									</Button>
-									{screen === 'details' && (
-										<>
-											<Separator />
-											<Button variant='outline' className='w-full'>
-												Login with Google
-											</Button>
-										</>
-									)}
-									{screen === 'pin' && (
-										<Button
-											variant='outline'
-											className='w-full'
-											onClick={() => setScreen('details')}
-										>
-											Back to Details
-										</Button>
-									)}
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+			<motion.div
+				initial={{ opacity: 0, scale: 0.9, y: 20 }}
+				animate={{ opacity: 1, scale: 1, y: 0 }}
+				exit={{ opacity: 0, scale: 0.9, y: 20 }}
+				transition={{ duration: 0.3, ease: 'easeOut' }}
+				className='relative w-full max-w-md mx-4'
+			>
+				<div className='bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden'>
+					{/* Close button */}
+					<Button
+						variant='ghost'
+						size='sm'
+						onClick={onClose}
+						className='absolute top-4 right-4 z-10 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800'
+					>
+						<X className='h-4 w-4' />
+					</Button>
+
+					{/* Content */}
+					<div className='p-8'>
+						<AnimatePresence mode='wait'>
+							{step === 'email' ? (
+								<motion.div
+									key='email'
+									initial={{ opacity: 0, x: 20 }}
+									animate={{ opacity: 1, x: 0 }}
+									exit={{ opacity: 0, x: -20 }}
+									transition={{ duration: 0.3 }}
+								>
+									<Card className='border-0 shadow-none'>
+										<CardHeader className='text-center pb-6'>
+											<motion.div
+												initial={{ scale: 0 }}
+												animate={{ scale: 1 }}
+												transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+												className='mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center'
+											>
+												<Mail className='h-8 w-8 text-white' />
+											</motion.div>
+											<CardTitle className='text-2xl font-bold text-gray-900 dark:text-white'>
+												Welcome Back
+											</CardTitle>
+											<CardDescription className='text-gray-600 dark:text-gray-400'>
+												Enter your email to receive a verification code
+											</CardDescription>
+										</CardHeader>
+
+										<CardContent>
+											<form onSubmit={handleEmailSubmit(onEmailSubmit)} className='space-y-6'>
+												<div className='space-y-2'>
+													<Label
+														htmlFor='email'
+														className='text-sm font-medium text-gray-700 dark:text-gray-300'
+													>
+														Email Address
+													</Label>
+													<div className='relative'>
+														<Input
+															id='email'
+															type='email'
+															placeholder='Enter your email'
+															className={`pl-10 h-12 rounded-xl border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500 ${
+																emailErrors.email
+																	? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+																	: ''
+															}`}
+															{...registerEmail('email')}
+														/>
+														<Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+													</div>
+													{emailErrors.email && (
+														<motion.p
+															initial={{ opacity: 0, y: -10 }}
+															animate={{ opacity: 1, y: 0 }}
+															className='text-sm text-red-500'
+														>
+															{emailErrors.email.message}
+														</motion.p>
+													)}
+												</div>
+
+												<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+													<Button
+														type='submit'
+														disabled={isLoading}
+														className='w-full h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl'
+													>
+														{isLoading ? (
+															<>
+																<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+																Sending OTP...
+															</>
+														) : (
+															<>
+																Send OTP
+																<ArrowRight className='ml-2 h-4 w-4' />
+															</>
+														)}
+													</Button>
+												</motion.div>
+											</form>
+
+											<div className='mt-6 space-y-4'>
+												<div className='relative'>
+													<div className='absolute inset-0 flex items-center'>
+														<span className='w-full border-t border-gray-200 dark:border-gray-700' />
+													</div>
+													<div className='relative flex justify-center text-xs uppercase'>
+														<span className='bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400'>
+															Or continue with
+														</span>
+													</div>
+												</div>
+
+												<GoogleLoginButton onSuccess={onClose} disabled={isLoading} />
+											</div>
+
+											<div className='mt-6 text-center'>
+												<p className='text-sm text-gray-500 dark:text-gray-400'>
+													We&apos;ll send you a verification code to sign in
+												</p>
+											</div>
+										</CardContent>
+									</Card>
+								</motion.div>
+							) : (
+								<motion.div
+									key='otp'
+									initial={{ opacity: 0, x: 20 }}
+									animate={{ opacity: 1, x: 0 }}
+									exit={{ opacity: 0, x: -20 }}
+									transition={{ duration: 0.3 }}
+								>
+									<Card className='border-0 shadow-none'>
+										<CardHeader className='text-center pb-6'>
+											<motion.div
+												initial={{ scale: 0 }}
+												animate={{ scale: 1 }}
+												transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+												className='mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center'
+											>
+												<CheckCircle className='h-8 w-8 text-white' />
+											</motion.div>
+											<CardTitle className='text-2xl font-bold text-gray-900 dark:text-white'>
+												Verify Your Email
+											</CardTitle>
+											<CardDescription className='text-gray-600 dark:text-gray-400'>
+												We&apos;ve sent a 6-digit code to
+												<br />
+												<span className='font-medium text-gray-900 dark:text-white'>{email}</span>
+											</CardDescription>
+										</CardHeader>
+
+										<CardContent>
+											<form onSubmit={handleOTPSubmit(onOTPSubmit)} className='space-y-6'>
+												<div className='space-y-4'>
+													<div className='flex justify-center'>
+														<InputOTP
+															maxLength={6}
+															value={otpValue}
+															onChange={handleOTPChange}
+															className='gap-2'
+														>
+															<InputOTPGroup>
+																<InputOTPSlot
+																	index={0}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+																<InputOTPSlot
+																	index={1}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+																<InputOTPSlot
+																	index={2}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+																<InputOTPSlot
+																	index={3}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+																<InputOTPSlot
+																	index={4}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+																<InputOTPSlot
+																	index={5}
+																	className='h-12 w-12 text-lg font-semibold'
+																/>
+															</InputOTPGroup>
+														</InputOTP>
+													</div>
+
+													{otpErrors.otp && (
+														<motion.p
+															initial={{ opacity: 0, y: -10 }}
+															animate={{ opacity: 1, y: 0 }}
+															className='text-sm text-red-500 text-center'
+														>
+															{otpErrors.otp.message}
+														</motion.p>
+													)}
+												</div>
+
+												<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+													<Button
+														type='submit'
+														disabled={isLoading || !otpValue || otpValue.length !== 6}
+														className='w-full h-12 rounded-xl bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl'
+													>
+														{isLoading ? (
+															<>
+																<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+																Verifying...
+															</>
+														) : (
+															'Verify OTP'
+														)}
+													</Button>
+												</motion.div>
+											</form>
+
+											<div className='mt-6 space-y-4'>
+												<div className='text-center'>
+													{timeLeft > 0 ? (
+														<p className='text-sm text-gray-500 dark:text-gray-400'>
+															Resend code in{' '}
+															<span className='font-medium text-blue-600'>{timeLeft}s</span>
+														</p>
+													) : (
+														<Button
+															variant='ghost'
+															onClick={handleResendOTP}
+															disabled={isResending}
+															className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950'
+														>
+															{isResending ? (
+																<>
+																	<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+																	Resending...
+																</>
+															) : (
+																<>
+																	<RotateCcw className='mr-2 h-4 w-4' />
+																	Resend OTP
+																</>
+															)}
+														</Button>
+													)}
+												</div>
+
+												<div className='text-center'>
+													<Button
+														variant='ghost'
+														onClick={() => setStep('email')}
+														className='text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'
+													>
+														<ArrowLeft className='mr-2 h-4 w-4' />
+														Back to email
+													</Button>
+												</div>
+											</div>
+										</CardContent>
+									</Card>
+								</motion.div>
+							)}
+						</AnimatePresence>
+					</div>
 				</div>
-			</DialogContent>
-		</Dialog>
+			</motion.div>
+		</div>
 	);
 }

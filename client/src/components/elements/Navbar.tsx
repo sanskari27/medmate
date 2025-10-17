@@ -1,7 +1,11 @@
 'use client';
+import { useAuth } from '@/hooks/useAuth';
 import { LOGO } from '@/lib/consts';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import React from 'react';
+import AuthDialog from './dialogs/auth';
+import ProfileDropdown from './ProfileDropdown';
 
 export default function Navbar() {
 	const navLinks = [
@@ -13,6 +17,8 @@ export default function Navbar() {
 
 	const [isScrolled, setIsScrolled] = React.useState(false);
 	const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+	const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
+	const { user, logout, loading: checkingAuth } = useAuth();
 
 	React.useEffect(() => {
 		const handleScroll = () => {
@@ -59,14 +65,19 @@ export default function Navbar() {
 				</div>
 
 				{/* Desktop Right */}
-				<div className='hidden md:flex items-center gap-4'>
-					<button
-						className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${
-							isScrolled ? 'text-white bg-black' : 'bg-white text-black'
-						}`}
-					>
-						Login
-					</button>
+				<div className={cn('hidden md:flex items-center gap-4', checkingAuth && 'opacity-0')}>
+					{user ? (
+						<ProfileDropdown isScrolled={isScrolled} />
+					) : (
+						<button
+							onClick={() => setIsAuthDialogOpen(true)}
+							className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${
+								isScrolled ? 'text-white bg-black' : 'bg-white text-black'
+							}`}
+						>
+							Login
+						</button>
+					)}
 				</div>
 
 				{/* Mobile Menu Button */}
@@ -110,11 +121,73 @@ export default function Navbar() {
 						</a>
 					))}
 
-					<button className='bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500'>
-						Login
-					</button>
+					{user ? (
+						<div className='flex flex-col items-center gap-4'>
+							<div className='flex items-center gap-3'>
+								<div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700'>
+									{user.name?.charAt(0).toUpperCase() || 'U'}
+								</div>
+								<div className='text-left'>
+									<p className='text-sm font-medium text-gray-900'>{user.name}</p>
+									<p className='text-xs text-gray-500'>{user.email}</p>
+								</div>
+							</div>
+							<div className='flex flex-col gap-2 w-full max-w-xs'>
+								<button
+									onClick={() => {
+										console.log('Navigate to profile');
+										setIsMenuOpen(false);
+									}}
+									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
+								>
+									Profile
+								</button>
+								<button
+									onClick={() => {
+										console.log('Navigate to bookings');
+										setIsMenuOpen(false);
+									}}
+									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
+								>
+									Recent Bookings
+								</button>
+								<button
+									onClick={() => {
+										console.log('Navigate to settings');
+										setIsMenuOpen(false);
+									}}
+									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
+								>
+									Settings
+								</button>
+								<hr className='my-2' />
+								<button
+									onClick={async () => {
+										await logout();
+										setIsMenuOpen(false);
+									}}
+									className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+								>
+									Logout
+								</button>
+							</div>
+						</div>
+					) : (
+						<button
+							onClick={() => {
+								setIsAuthDialogOpen(true);
+								setIsMenuOpen(false);
+							}}
+							className='bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500'
+						>
+							Login
+						</button>
+					)}
 				</div>
 			</nav>
+
+			{/* Auth Dialog */}
+			<AuthDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} />
 		</div>
 	);
 }
