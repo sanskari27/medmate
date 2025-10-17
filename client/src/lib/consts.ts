@@ -12,12 +12,10 @@ export const VERIFIED_PHYSICIANS_IMAGE = '/images/badge.png';
 
 export const Paths = {
 	LANDING: '/',
-	HOME_VISIT: '/home-visit',
-	CONSULTATION: '/consultation',
 	SERVICES: '/services',
-	CONTACT_US: '/contact-us',
-	PROFILE: '/profile',
-	DASHBOARD: '/dashboard',
+	ABOUT: '/about',
+	BLOG: '/blog',
+	CONTACT: '/contact',
 };
 
 export const COLORS = {
