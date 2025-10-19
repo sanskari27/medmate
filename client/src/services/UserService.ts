@@ -17,17 +17,28 @@ export default class UserService {
 
 	static async createUserByGoogle(
 		email: string,
-		googleId: string,
-		profilePicture?: string
+		details: {
+			googleId: string;
+			profilePicture?: string;
+			name?: string;
+		}
 	): Promise<IUser> {
 		let user = await this.getUserByEmail(email);
 		if (user) {
 			user.provider = 'google';
 			user.isVerified = true;
-			user.googleId = googleId;
-			user.profilePicture = profilePicture;
+			user.googleId = details.googleId;
+			user.profilePicture = details.profilePicture;
+			if (details.name) user.name = details.name;
 		} else {
-			user = new UserDB({ email, provider: 'google', googleId, profilePicture, isVerified: true });
+			user = new UserDB({
+				email,
+				provider: 'google',
+				googleId: details.googleId,
+				profilePicture: details.profilePicture,
+				name: details.name,
+				isVerified: true,
+			});
 		}
 		await user.save();
 		return user as IUser;

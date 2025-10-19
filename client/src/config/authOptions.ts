@@ -81,11 +81,15 @@ const authOptions: AuthOptions = {
 			// Create user if first login
 			if (account?.provider === 'google') {
 				await dbConnect();
-				await UserService.createUserByGoogle(
-					user.email,
-					(account?.providerAccountId ?? '') as string,
-					(profile?.picture as string) || undefined
-				);
+				const dbUser = await UserService.createUserByGoogle(user.email, {
+					googleId: (account?.providerAccountId ?? '') as string,
+					profilePicture: (profile?.picture as string) || undefined,
+					name: user.name,
+				});
+				// Update the user object with database ID and info
+				user.id = dbUser._id.toString();
+				user.name = dbUser.name || user.name;
+				user.profilePicture = dbUser.profilePicture || user.image;
 			}
 			return true;
 		},
