@@ -106,15 +106,17 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 		const res = await signIn('email-otp', {
 			email,
 			otp: data.otp,
-			redirect: true,
-			callbackUrl: '/',
+			redirect: false,
 		});
-		if (res?.error) {
+		if (res?.ok) {
+			toast.success('Login successful!');
+			onClose();
+		} else if (res?.error) {
 			toast.error(res.error);
 			setIsLoading(false);
 		} else {
-			toast.success('Login successful!');
-			onClose();
+			toast.error('Login failed. Please try again.');
+			setIsLoading(false);
 		}
 	};
 

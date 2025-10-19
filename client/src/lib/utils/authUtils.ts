@@ -22,6 +22,7 @@ export const extractAuthenticatedUserInfo = async (): Promise<IAuthenticatedUser
 			name: userId.name ?? undefined,
 		};
 	} catch (error) {
+		console.error('Error extracting authenticated user info:', error);
 		throw new UnauthorizedError();
 	}
 };
