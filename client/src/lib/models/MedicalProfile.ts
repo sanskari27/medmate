@@ -1,7 +1,8 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IMedicalProfile extends Document {
-	userId: string;
+	_id: mongoose.Schema.Types.ObjectId;
+	linkedTo: mongoose.Schema.Types.ObjectId;
 	medicalConditions: string[];
 	allergies: string[];
 	currentMedications: string[];
@@ -21,9 +22,11 @@ export interface IMedicalProfile extends Document {
 
 const medicalProfileSchema = new Schema<IMedicalProfile>(
 	{
-		userId: {
-			type: String,
+		linkedTo: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User',
 			required: true,
+			index: true,
 			unique: true,
 		},
 		medicalConditions: [
@@ -49,15 +52,18 @@ const medicalProfileSchema = new Schema<IMedicalProfile>(
 		emergencyContact: {
 			name: {
 				type: String,
-				required: true,
+				default: '',
+				trim: true,
 			},
 			relationship: {
 				type: String,
-				required: true,
+				default: '',
+				trim: true,
 			},
 			phone: {
 				type: String,
-				required: true,
+				default: '',
+				trim: true,
 			},
 		},
 		bloodType: {
@@ -84,5 +90,8 @@ const medicalProfileSchema = new Schema<IMedicalProfile>(
 	}
 );
 
-export default mongoose.models.MedicalProfile ||
+const MedicalProfileDB: Model<IMedicalProfile> =
+	mongoose.models.MedicalProfile ||
 	mongoose.model<IMedicalProfile>('MedicalProfile', medicalProfileSchema);
+
+export default MedicalProfileDB;

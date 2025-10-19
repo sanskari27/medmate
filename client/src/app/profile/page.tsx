@@ -1,13 +1,14 @@
 'use client';
 
 import { useProfileData } from '@/components/context/ProfileDataProvider';
-import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/apiClient';
 import {
 	basicProfileSchema,
 	medicalProfileSchema,
 	type BasicProfileInput,
 	type MedicalProfileInput,
-} from '@/schemas/profile';
+} from '@/lib/schemas/profile';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Heart, User } from 'lucide-react';
 import { useState } from 'react';
@@ -18,8 +19,6 @@ export default function ProfilePage() {
 	const { userProfile, medicalProfile } = useProfileData();
 	const [activeTab, setActiveTab] = useState<'basic' | 'medical'>('basic');
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	console.log('userProfile', userProfile);
-	console.log('medicalProfile', medicalProfile);
 
 	const basicForm = useForm<BasicProfileInput>({
 		resolver: zodResolver(basicProfileSchema),
@@ -77,21 +76,9 @@ export default function ProfilePage() {
 	const onBasicSubmit = async (data: BasicProfileInput) => {
 		setIsSubmitting(true);
 		try {
-			const response = await fetch('/api/profile/basic', {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(data),
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update profile');
-			}
-
+			await apiClient.patch('/profile/basic', data);
 			toast.success('Profile updated successfully!');
 		} catch (error) {
-			console.error('Profile update error:', error);
 			toast.error('Failed to update profile. Please try again.');
 		} finally {
 			setIsSubmitting(false);

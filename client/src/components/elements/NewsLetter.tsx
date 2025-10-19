@@ -2,7 +2,7 @@
 
 import { apiClient } from '@/lib/apiClient';
 import RequestError from '@/lib/RequestError';
-import { newsletterSchema, type NewsletterInput } from '@/schemas/newsletter';
+import { newsletterSchema, type NewsletterInput } from '@/lib/schemas/newsletter';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';

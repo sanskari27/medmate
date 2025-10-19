@@ -52,3 +52,10 @@ export const COLORS = {
 export const REVALIDATE_TAGS = {
 	PAGE: 'page',
 };
+
+export const JWT_SECRET = process.env.JWT_SECRET || 'medmate-secret-key';
+
+export const GOOGLE_CLIENT_ID =
+	(process.env.GOOGLE_CLIENT_ID! as string) ||
+	(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID! as string);
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET! as string;

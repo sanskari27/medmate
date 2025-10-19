@@ -107,9 +107,9 @@ export default function FAQSection() {
 							<path
 								d='M3.5 12.5V1.003S3.5.5 4 .5h11s.5.002.5.502v13s0 1.498-1.5 1.498H2s-1.5.002-1.5-1.998v-7.5S.5 5.5 1 5.5h1m4.5-2H9m-2.5 2h6m-6 2h6m-6 2h6m-6 2h6'
 								stroke='#60A5FA'
-								stroke-width='1.2'
-								stroke-linecap='round'
-								stroke-linejoin='round'
+								strokeWidth='1.2'
+								strokeLinecap='round'
+								strokeLinejoin='round'
 							/>
 						</svg>
 						View All

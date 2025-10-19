@@ -1,24 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 
-export interface IUser {
+export interface IUser extends mongoose.Document {
+	_id: mongoose.Schema.Types.ObjectId;
+	name?: string;
 	email: string;
-	phoneNumber?: string;
-	name: string;
-	firstName?: string;
-	lastName?: string;
 	phone?: string;
-	address?: {
-		street: string;
-		city: string;
-		state: string;
-		zipCode: string;
-		country: string;
-	};
-	dateOfBirth?: string;
-	gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
 	otp?: string;
 	otpExpiry?: Date;
 	isVerified: boolean;
+	profilePicture?: string;
 	googleId?: string;
 	provider?: 'email' | 'google';
 	createdAt: Date;
@@ -27,6 +17,10 @@ export interface IUser {
 
 const userSchema = new mongoose.Schema<IUser>(
 	{
+		name: {
+			type: String,
+			trim: true,
+		},
 		email: {
 			type: String,
 			required: true,
@@ -34,68 +28,30 @@ const userSchema = new mongoose.Schema<IUser>(
 			lowercase: true,
 			trim: true,
 		},
-		phoneNumber: {
-			type: String,
-			unique: true,
-			sparse: true, // Allow multiple null values
-		},
-		name: {
-			type: String,
-			trim: true,
-		},
-		firstName: {
-			type: String,
-			trim: true,
-		},
-		lastName: {
-			type: String,
-			trim: true,
-		},
 		phone: {
 			type: String,
 			unique: true,
 			sparse: true,
 		},
-		address: {
-			street: {
-				type: String,
-				trim: true,
-			},
-			city: {
-				type: String,
-				trim: true,
-			},
-			state: {
-				type: String,
-				trim: true,
-			},
-			zipCode: {
-				type: String,
-				trim: true,
-			},
-			country: {
-				type: String,
-				trim: true,
-			},
-		},
-		dateOfBirth: {
-			type: String,
-		},
-		gender: {
-			type: String,
-			enum: ['male', 'female', 'other', 'prefer-not-to-say'],
-		},
 		otp: {
 			type: String,
 			default: null,
+			select: false,
+			sparse: true,
 		},
 		otpExpiry: {
 			type: Date,
 			default: null,
+			select: false,
+			sparse: true,
 		},
 		isVerified: {
 			type: Boolean,
 			default: false,
+		},
+		profilePicture: {
+			type: String,
+			default: null,
 		},
 		googleId: {
 			type: String,
@@ -113,4 +69,6 @@ const userSchema = new mongoose.Schema<IUser>(
 	}
 );
 
-export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+const UserDB: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+
+export default UserDB;

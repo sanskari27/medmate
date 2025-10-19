@@ -3,7 +3,7 @@
 
 import NewsLetter from '@/components/elements/NewsLetter';
 import { apiClient } from '@/lib/apiClient';
-import { contactUsSchema, type ContactUsInput } from '@/schemas/contact-us';
+import { contactUsSchema, type ContactUsInput } from '@/lib/schemas/contact-us';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';

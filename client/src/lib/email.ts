@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { debugPrint } from './utils';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -46,7 +47,7 @@ export const sendOTPEmail = async (email: string, otp: string, name: string) => 
 			return { success: false, error: 'Failed to send email' };
 		}
 
-		console.log('Email sent successfully:', data);
+		debugPrint('OTP email sent successfully:', data);
 		return { success: true };
 	} catch (error) {
 		console.error('Email sending error:', error);
@@ -117,7 +118,7 @@ export const sendContactEmail = async (
 			return { success: false, error: 'Failed to send email' };
 		}
 
-		console.log('Contact form email sent successfully:', data);
+		debugPrint('Contact email sent successfully:', data);
 		return { success: true };
 	} catch (error) {
 		console.error('Contact email sending error:', error);

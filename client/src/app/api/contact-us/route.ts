@@ -1,5 +1,5 @@
 import { sendContactEmail } from '@/lib/email';
-import { contactUsSchema } from '@/schemas/contact-us';
+import { contactUsSchema } from '@/lib/schemas/contact-us';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {

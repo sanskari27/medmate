@@ -2,10 +2,10 @@
 
 import { Button } from '@/components/ui/button';
 import { useOutsideClick } from '@/hooks/use-outside-click';
-import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, LogOut, User } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -16,13 +16,14 @@ interface ProfileDropdownProps {
 export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
-	const { user, logout } = useAuth();
+	const { data: session } = useSession();
 	const router = useRouter();
+	console.log('session', session);
 
 	useOutsideClick(dropdownRef, () => setIsOpen(false));
 
 	const handleLogout = async () => {
-		await logout();
+		await signOut();
 		setIsOpen(false);
 	};
 
@@ -56,7 +57,17 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 						isScrolled ? 'bg-gray-200 text-gray-700' : 'bg-white/20 text-white'
 					)}
 				>
-					{user?.name?.charAt(0).toUpperCase() || 'U'}
+					{session?.user?.profilePicture ? (
+						<img
+							src={session?.user?.profilePicture}
+							alt='Profile Picture'
+							className='w-8 h-8 rounded-full'
+							width={32}
+							height={32}
+						/>
+					) : (
+						session?.user?.email?.charAt(0).toUpperCase() || 'U'
+					)}
 				</div>
 			</Button>
 
@@ -73,9 +84,9 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 						{/* User Info Header */}
 						<div className='px-4 py-3 border-b border-gray-100 dark:border-gray-700'>
 							<p className='text-sm font-medium text-gray-900 dark:text-white'>
-								{user?.name || 'User'}
+								{session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
 							</p>
-							<p className='text-xs text-gray-500 dark:text-gray-400'>{user?.email}</p>
+							<p className='text-xs text-gray-500 dark:text-gray-400'>{session?.user?.email}</p>
 						</div>
 
 						{/* Menu Items */}

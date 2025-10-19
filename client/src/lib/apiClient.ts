@@ -75,7 +75,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 		},
 	});
 
-	if (!['/auth/me'].includes(path)) {
+	if (!['/auth/details'].includes(path)) {
 		debugPrint(
 			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId} - CACHE : ${
 				response.headers.get('X-Cache-Status') ?? 'HIT'

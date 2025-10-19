@@ -6,10 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/lib/apiClient';
+import RequestError from '@/lib/RequestError';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, Mail, RotateCcw, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -39,9 +41,7 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 	const [step, setStep] = useState<'email' | 'otp'>('email');
 	const [email, setEmail] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
-	const [isResending, setIsResending] = useState(false);
 	const [timeLeft, setTimeLeft] = useState(60);
-	const { login } = useAuth();
 
 	const {
 		register: registerEmail,
@@ -65,7 +65,7 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 	// Countdown timer
 	useEffect(() => {
 		if (timeLeft > 0 && step === 'otp') {
-			const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+			const timer = setTimeout(() => setTimeLeft((timeLeft) => timeLeft - 1), 1000);
 			return () => clearTimeout(timer);
 		}
 	}, [timeLeft, step]);
@@ -77,34 +77,25 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 			setEmail('');
 			setTimeLeft(60);
 			setIsLoading(false);
-			setIsResending(false);
 		}
 	}, [isOpen]);
 
 	const onEmailSubmit = async (data: LoginFormData) => {
 		setIsLoading(true);
 		try {
-			// Send OTP to email
-			const response = await fetch('/api/auth/send-otp', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ email: data.email }),
+			await apiClient.post<{ success: boolean }>('/auth/send-otp', {
+				email: data.email,
 			});
-
-			if (response.ok) {
-				toast.success('OTP sent! Check console for testing.');
-				setEmail(data.email);
-				setStep('otp');
-				setTimeLeft(60);
-			} else {
-				const errorData = await response.json();
-				toast.error(errorData.message || 'Failed to send OTP');
-			}
+			toast.success('OTP sent!');
+			setEmail(data.email);
+			setStep('otp');
+			setTimeLeft(60);
 		} catch (error) {
-			console.error('Error sending OTP:', error);
-			toast.error('Something went wrong. Please try again.');
+			if (error instanceof RequestError) {
+				toast.error(error.message);
+			} else {
+				toast.error('Something went wrong. Please try again.');
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -112,59 +103,23 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
 	const onOTPSubmit = async (data: OTPFormData) => {
 		setIsLoading(true);
-		try {
-			const response = await fetch('/api/auth/verify-otp', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					email,
-					otp: data.otp,
-				}),
-			});
-
-			if (response.ok) {
-				const result = await response.json();
-				toast.success('Login successful!');
-				login(result.user);
-				onClose();
-			} else {
-				const errorData = await response.json();
-				toast.error(errorData.message || 'Invalid OTP');
-			}
-		} catch (error) {
-			console.error('Error verifying OTP:', error);
-			toast.error('Something went wrong. Please try again.');
-		} finally {
+		const res = await signIn('email-otp', {
+			email,
+			otp: data.otp,
+			redirect: true,
+			callbackUrl: '/',
+		});
+		if (res?.error) {
+			toast.error(res.error);
 			setIsLoading(false);
+		} else {
+			toast.success('Login successful!');
+			onClose();
 		}
 	};
 
 	const handleResendOTP = async () => {
-		setIsResending(true);
-		try {
-			const response = await fetch('/api/auth/send-otp', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ email }),
-			});
-
-			if (response.ok) {
-				toast.success('OTP resent successfully!');
-				setTimeLeft(60);
-			} else {
-				const errorData = await response.json();
-				toast.error(errorData.message || 'Failed to resend OTP');
-			}
-		} catch (error) {
-			console.error('Error resending OTP:', error);
-			toast.error('Something went wrong. Please try again.');
-		} finally {
-			setIsResending(false);
-		}
+		await onEmailSubmit({ email });
 	};
 
 	const handleOTPChange = (value: string) => {
@@ -295,7 +250,7 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 													</div>
 												</div>
 
-												<GoogleLoginButton onSuccess={onClose} disabled={isLoading} />
+												<GoogleLoginButton />
 											</div>
 
 											<div className='mt-6 text-center'>
@@ -413,10 +368,10 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 														<Button
 															variant='ghost'
 															onClick={handleResendOTP}
-															disabled={isResending}
+															disabled={isLoading}
 															className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950'
 														>
-															{isResending ? (
+															{isLoading ? (
 																<>
 																	<Loader2 className='mr-2 h-4 w-4 animate-spin' />
 																	Resending...

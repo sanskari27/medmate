@@ -1,11 +1,11 @@
 import PageLayout from '@/components/containers/page-layout';
+import SessionProviderWrapper from '@/components/context/SessionProviderWrapper';
 import Navbar from '@/components/elements/Navbar';
 import PrefetchRoutes from '@/components/elements/PrefetchRoutes';
 import Footer from '@/components/elements/footer';
 import Loading from '@/components/elements/loading';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Mulish } from 'next/font/google';
@@ -31,13 +31,13 @@ export default async function RootLayout({
 			<link rel='icon' type='image/png' sizes='32x32' href='/icons/favicon-32x32.png' />
 			<link rel='icon' type='image/png' sizes='16x16' href='/icons/favicon-16x16.png' />
 			<body className={cn('min-h-screen min-w-screen', mulish.className)}>
-				<ThemeProvider
-					attribute='class'
-					defaultTheme='light'
-					enableSystem
-					disableTransitionOnChange
-				>
-					<AuthProvider>
+				<SessionProviderWrapper>
+					<ThemeProvider
+						attribute='class'
+						defaultTheme='light'
+						enableSystem
+						disableTransitionOnChange
+					>
 						<PrefetchRoutes />
 						<PageLayout>
 							<TooltipProvider>
@@ -47,8 +47,8 @@ export default async function RootLayout({
 							</TooltipProvider>
 						</PageLayout>
 						<Toaster position='top-center' />
-					</AuthProvider>
-				</ThemeProvider>
+					</ThemeProvider>
+				</SessionProviderWrapper>
 			</body>
 		</html>
 	);

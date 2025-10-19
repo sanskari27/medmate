@@ -1,7 +1,7 @@
 'use client';
-import { useAuth } from '@/hooks/useAuth';
 import { LOGO } from '@/lib/consts';
 import { cn } from '@/lib/utils';
+import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import React from 'react';
 import AuthDialog from './dialogs/auth';
@@ -18,8 +18,7 @@ export default function Navbar() {
 	const [isScrolled, setIsScrolled] = React.useState(false);
 	const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 	const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
-	const { user, logout, loading: checkingAuth } = useAuth();
-
+	const { data: session, status } = useSession();
 	React.useEffect(() => {
 		const handleScroll = () => {
 			setIsScrolled(window.scrollY > 10);
@@ -65,8 +64,10 @@ export default function Navbar() {
 				</div>
 
 				{/* Desktop Right */}
-				<div className={cn('hidden md:flex items-center gap-4', checkingAuth && 'opacity-0')}>
-					{user ? (
+				<div
+					className={cn('hidden md:flex items-center gap-4', status === 'loading' && 'opacity-0')}
+				>
+					{session?.user ? (
 						<ProfileDropdown isScrolled={isScrolled} />
 					) : (
 						<button
@@ -121,41 +122,32 @@ export default function Navbar() {
 						</a>
 					))}
 
-					{user ? (
+					{session?.user ? (
 						<div className='flex flex-col items-center gap-4'>
 							<div className='flex items-center gap-3'>
 								<div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700'>
-									{user.name?.charAt(0).toUpperCase() || 'U'}
+									{session?.user.email?.charAt(0).toUpperCase() || 'U'}
 								</div>
 								<div className='text-left'>
-									<p className='text-sm font-medium text-gray-900'>{user.name}</p>
-									<p className='text-xs text-gray-500'>{user.email}</p>
+									<p className='text-sm font-medium text-gray-900'>{session?.user.name}</p>
+									<p className='text-xs text-gray-500'>{session?.user.email}</p>
 								</div>
 							</div>
 							<div className='flex flex-col gap-2 w-full max-w-xs'>
 								<button
-									onClick={() => {
-										console.log('Navigate to profile');
-										setIsMenuOpen(false);
-									}}
+									onClick={() => setIsMenuOpen(false)}
 									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
 								>
 									Profile
 								</button>
 								<button
-									onClick={() => {
-										console.log('Navigate to bookings');
-										setIsMenuOpen(false);
-									}}
+									onClick={() => setIsMenuOpen(false)}
 									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
 								>
 									Recent Bookings
 								</button>
 								<button
-									onClick={() => {
-										console.log('Navigate to settings');
-										setIsMenuOpen(false);
-									}}
+									onClick={() => setIsMenuOpen(false)}
 									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
 								>
 									Settings
@@ -163,7 +155,7 @@ export default function Navbar() {
 								<hr className='my-2' />
 								<button
 									onClick={async () => {
-										await logout();
+										await signOut();
 										setIsMenuOpen(false);
 									}}
 									className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'

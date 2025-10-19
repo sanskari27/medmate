@@ -1,6 +1,6 @@
 import dbConnect from '@/lib/db';
 import Newsletter from '@/lib/models/Newsletter';
-import { newsletterSchema } from '@/schemas/newsletter';
+import { newsletterSchema } from '@/lib/schemas/newsletter';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
