@@ -58,7 +58,7 @@ const config = {
 			},
 			backgroundImage: {
 				'hero-image': "url('/images/hero-image.jpg')",
-				'start-journey-bg': "url('/images/start-journey-bg.webp')",
+				'start-journey': "url('/images/start-journey.webp')",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
