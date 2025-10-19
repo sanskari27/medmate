@@ -14,12 +14,12 @@ import { RiShieldCheckFill } from 'react-icons/ri';
 
 // blogs data removed (unused)
 
-export default function ContactPage() {
+export default function AboutPage() {
 	return (
 		<>
 			<PageCover
 				title='Home is the New Clinic'
-				description='MedMate lets you book home visits from licensed doctors in minutes.'
+				description='MedMate brings healthcare to your doorstep. Our licensed doctors make home visits easy and convenient, ensuring quality care in minutes.'
 			/>
 			<div className='py-20 px-[5%]'>
 				<div className='max-w-6xl mx-auto'>

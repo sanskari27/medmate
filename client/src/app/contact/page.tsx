@@ -40,8 +40,8 @@ export default function ContactPage() {
 	return (
 		<>
 			<PageCover
-				title='Home is the New Clinic'
-				description='MedMate lets you book home visits from licensed doctors in minutes.'
+				title='Book a Home Visit in Minutes'
+				description='MedMate connects you with licensed doctors at your home, making healthcare fast, safe, and hassle-free.'
 			/>
 			<div className='px-[5%] py-20 '>
 				<div className='overflow-hidden max-w-6xl max-lg:max-w-2xl mx-auto'>
@@ -132,9 +132,9 @@ export default function ContactPage() {
 										viewBox='0 0 548.244 548.244'
 									>
 										<path
-											fill-rule='evenodd'
+											fillRule='evenodd'
 											d='M392.19 156.054 211.268 281.667 22.032 218.58C8.823 214.168-.076 201.775 0 187.852c.077-13.923 9.078-26.24 22.338-30.498L506.15 1.549c11.5-3.697 24.123-.663 32.666 7.88 8.542 8.543 11.577 21.165 7.879 32.666L390.89 525.906c-4.258 13.26-16.575 22.261-30.498 22.338-13.923.076-26.316-8.823-30.728-22.032l-63.393-190.153z'
-											clip-rule='evenodd'
+											clipRule='evenodd'
 											data-original='#000000'
 										/>
 									</svg>
@@ -156,7 +156,7 @@ export default function ContactPage() {
 											data-original='#000000'
 										/>
 									</svg>
-									<a href='javascript:void(0)' className='text-current text-sm ml-3'>
+									<a href='mailto:info@medmate.com' className='text-current text-sm ml-3'>
 										info@example.com
 									</a>
 								</li>
@@ -173,7 +173,7 @@ export default function ContactPage() {
 											data-original='#000000'
 										></path>
 									</svg>
-									<a href='javascript:void(0)' className='text-current text-sm ml-3'>
+									<a href='tel:+919876543210' className='text-current text-sm ml-3'>
 										+158 996 888
 									</a>
 								</li>
