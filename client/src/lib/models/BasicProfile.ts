@@ -37,7 +37,7 @@ const basicProfileSchema = new mongoose.Schema<IBasicProfile>(
 		},
 		phone: {
 			type: String,
-			unique: true,
+			required: true,
 			sparse: true, // Allow multiple null values
 		},
 		firstName: {
