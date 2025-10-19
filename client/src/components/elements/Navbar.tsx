@@ -184,7 +184,11 @@ export default function Navbar() {
 			</nav>
 
 			{/* Auth Dialog */}
-			<AuthDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} />
+			<AuthDialog
+				isOpen={isAuthDialogOpen}
+				onClose={() => setIsAuthDialogOpen(false)}
+				onSuccess={() => setIsAuthDialogOpen(false)}
+			/>
 
 			{/* Profile Modal */}
 			<ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />

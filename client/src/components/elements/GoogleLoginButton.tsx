@@ -1,8 +1,11 @@
 'use client';
 import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function GoogleLoginButton() {
+	const callbackUrl = useSearchParams().get('callbackUrl') ?? '/';
+
 	return (
 		<div className='w-full flex items-center justify-center'>
 			<button
@@ -11,6 +14,7 @@ export default function GoogleLoginButton() {
 				onClick={() =>
 					signIn('google', {
 						redirect: true,
+						callbackUrl,
 					})
 				}
 			>

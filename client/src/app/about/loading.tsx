@@ -1,5 +1,7 @@
+'use client';
+
 import Loading from '@/components/elements/loading';
 
-export default function ProfileLoadingPage() {
+export default function LoadingPage() {
 	return <Loading />;
 }

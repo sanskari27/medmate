@@ -7,6 +7,7 @@ export interface IAuthenticatedUserInfo {
 	id: Types.ObjectId;
 	email: string;
 	name?: string;
+	profilePicture?: string;
 }
 
 export const extractAuthenticatedUserInfo = async (): Promise<IAuthenticatedUserInfo> => {
@@ -20,6 +21,7 @@ export const extractAuthenticatedUserInfo = async (): Promise<IAuthenticatedUser
 			id: new Types.ObjectId(userId.id),
 			email: userId.email,
 			name: userId.name ?? undefined,
+			profilePicture: userId.profilePicture ?? undefined,
 		};
 	} catch (error) {
 		throw new UnauthorizedError();

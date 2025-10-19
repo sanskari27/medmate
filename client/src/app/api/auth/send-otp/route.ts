@@ -1,4 +1,4 @@
-import dbConnect from '@/lib/db';
+import dbConnect from '@/config/db';
 import { emailSchema } from '@/lib/schemas/common';
 import { internalServerError, validationErrors } from '@/lib/utils/errorUtils';
 import AuthService from '@/services/AuthService';

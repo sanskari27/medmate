@@ -1,4 +1,4 @@
-import dbConnect from '@/lib/db';
+import dbConnect from '@/config/db';
 import { CustomError } from '@/lib/errors';
 import { extractAuthenticatedUserInfo } from '@/lib/utils/authUtils';
 import { internalServerError, serializeError } from '@/lib/utils/errorUtils';

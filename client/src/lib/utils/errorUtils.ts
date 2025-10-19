@@ -38,6 +38,15 @@ export const internalServerError = (error?: any) => {
 	};
 };
 
+export const notFoundError = () => {
+	return {
+		success: false,
+		status: 'error',
+		title: 'NOT_FOUND',
+		message: 'The requested resource was not found.',
+	};
+};
+
 export const serializeError = (error: CustomError) => {
 	return {
 		success: false,

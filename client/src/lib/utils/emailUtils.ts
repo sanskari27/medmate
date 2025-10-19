@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { debugPrint } from './utils';
+import { debugPrint } from '../utils';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

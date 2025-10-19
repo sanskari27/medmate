@@ -63,8 +63,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 		setIsLoading(true);
 		try {
 			const [basicResponse, medicalResponse] = await Promise.all([
-				apiClient.get('/profile/basic').catch(() => ({ user: null })),
-				apiClient.get('/profile/medical').catch(() => ({ data: null })),
+				apiClient.get('/user/profile/basic').catch(() => ({ user: null })),
+				apiClient.get('/user/profile/medical').catch(() => ({ data: null })),
 			]);
 			setUserProfile((basicResponse as any).user);
 			setMedicalProfile((medicalResponse as any).data);
@@ -130,7 +130,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 	const onBasicSubmit = async (data: BasicProfileInput) => {
 		setIsSubmitting(true);
 		try {
-			await apiClient.patch('/profile/basic', data);
+			await apiClient.patch('/user/profile/basic', data);
 			toast.success('Profile updated successfully!');
 
 			// Check if name was updated and refresh session
@@ -152,7 +152,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 	const onMedicalSubmit = async (data: MedicalProfileInput) => {
 		setIsSubmitting(true);
 		try {
-			await apiClient.patch('/profile/medical', data);
+			await apiClient.patch('/user/profile/medical', data);
 			toast.success('Medical profile updated successfully!');
 		} catch (error) {
 			console.error('Medical profile update error:', error);

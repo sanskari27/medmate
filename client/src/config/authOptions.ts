@@ -1,5 +1,5 @@
+import dbConnect from '@/config/db';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '@/lib/consts';
-import dbConnect from '@/lib/db';
 import AuthService from '@/services/AuthService';
 import UserService from '@/services/UserService';
 import { Types } from 'mongoose';
@@ -38,7 +38,7 @@ const authOptions: AuthOptions = {
 	],
 	session: { strategy: 'jwt' as const },
 	pages: {
-		signIn: '/',
+		signIn: '/login',
 		error: '/',
 	},
 	callbacks: {

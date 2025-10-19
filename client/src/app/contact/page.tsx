@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import NewsLetter from '@/components/elements/NewsLetter';
+import PageCover from '@/components/elements/PageCover';
 import { apiClient } from '@/lib/apiClient';
 import { contactUsSchema, type ContactUsInput } from '@/lib/schemas/contact-us';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,7 +39,10 @@ export default function ContactPage() {
 	}
 	return (
 		<>
-			<NewsLetter />
+			<PageCover
+				title='Home is the New Clinic'
+				description='MedMate lets you book home visits from licensed doctors in minutes.'
+			/>
 			<div className='px-[5%] py-20 '>
 				<div className='overflow-hidden max-w-6xl max-lg:max-w-2xl mx-auto'>
 					<div className='grid lg:grid-cols-2 items-center gap-8'>

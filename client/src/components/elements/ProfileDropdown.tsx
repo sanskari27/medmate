@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, LogOut, User } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -20,7 +21,6 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const { data: session } = useSession();
 	const router = useRouter();
-	console.log('session', session);
 
 	useOutsideClick(dropdownRef, () => setIsOpen(false));
 
@@ -59,8 +59,8 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 					)}
 				>
 					{session?.user?.profilePicture ? (
-						<img
-							src={session?.user?.profilePicture}
+						<Image
+							src={`/api/user/avatar`}
 							alt='Profile Picture'
 							className='w-8 h-8 rounded-full'
 							width={32}

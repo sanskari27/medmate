@@ -35,9 +35,10 @@ type OTPFormData = z.infer<typeof otpSchema>;
 interface AuthDialogProps {
 	isOpen: boolean;
 	onClose: () => void;
+	onSuccess: () => void;
 }
 
-export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
+export default function AuthDialog({ isOpen, onClose, onSuccess }: AuthDialogProps) {
 	const [step, setStep] = useState<'email' | 'otp'>('email');
 	const [email, setEmail] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +111,7 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 		});
 		if (res?.ok) {
 			toast.success('Login successful!');
-			onClose();
+			onSuccess();
 		} else if (res?.error) {
 			toast.error(res.error);
 			setIsLoading(false);

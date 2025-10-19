@@ -1,10 +1,12 @@
-import dbConnect from '@/lib/db';
+import dbConnect from '@/config/db';
 import { CustomError } from '@/lib/errors';
 import { medicalProfileSchema } from '@/lib/schemas/profile';
 import { extractAuthenticatedUserInfo } from '@/lib/utils/authUtils';
 import { internalServerError, serializeError, validationErrors } from '@/lib/utils/errorUtils';
 import ProfileService from '@/services/ProfileService';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
 	try {

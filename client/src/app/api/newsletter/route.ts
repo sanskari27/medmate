@@ -1,4 +1,4 @@
-import dbConnect from '@/lib/db';
+import dbConnect from '@/config/db';
 import Newsletter from '@/lib/models/Newsletter';
 import { newsletterSchema } from '@/lib/schemas/newsletter';
 import { NextRequest, NextResponse } from 'next/server';

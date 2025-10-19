@@ -129,14 +129,14 @@ export default async function Home() {
 				</p>
 				<div className='flex items-center gap-4 mt-8'>
 					<Link href='/book-appointment?appointment_type=home-visit'>
-						<button className='bg-blue-600 hover:bg-blue-700 text-white rounded-full px-7 h-11'>
+						<button className='blue-600 hover:blue-700 text-white rounded-full px-7 h-11'>
 							Book Home Visit
 						</button>
 					</Link>
 				</div>
 			</div>
 
-			<div className='py-24 px-[5%] bg-slate-50 text-black'>
+			<div className='py-24 px-[5%] slate-50 text-black'>
 				<h1 className='text-3xl md:text-5xl font-semibold text-center mx-auto'>
 					Our Health, Handled by Trusted Professionals
 				</h1>
