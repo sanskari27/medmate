@@ -1,5 +1,6 @@
 'use client';
 
+import ProfileModal from '@/components/elements/dialogs/profile-modal';
 import { Button } from '@/components/ui/button';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ interface ProfileDropdownProps {
 
 export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const { data: session } = useSession();
 	const router = useRouter();
@@ -28,8 +30,7 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 	};
 
 	const handleProfileClick = () => {
-		// TODO: Navigate to profile page
-		router.push('/profile');
+		setIsProfileModalOpen(true);
 		setIsOpen(false);
 	};
 
@@ -121,6 +122,9 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 					</motion.div>
 				)}
 			</AnimatePresence>
+
+			{/* Profile Modal */}
+			<ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
 		</div>
 	);
 }

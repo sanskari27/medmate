@@ -5,6 +5,7 @@ import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import React from 'react';
 import AuthDialog from './dialogs/auth';
+import ProfileModal from './dialogs/profile-modal';
 import ProfileDropdown from './ProfileDropdown';
 
 export default function Navbar() {
@@ -18,6 +19,7 @@ export default function Navbar() {
 	const [isScrolled, setIsScrolled] = React.useState(false);
 	const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 	const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
+	const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
 	const { data: session, status } = useSession();
 	React.useEffect(() => {
 		const handleScroll = () => {
@@ -135,7 +137,10 @@ export default function Navbar() {
 							</div>
 							<div className='flex flex-col gap-2 w-full max-w-xs'>
 								<button
-									onClick={() => setIsMenuOpen(false)}
+									onClick={() => {
+										setIsProfileModalOpen(true);
+										setIsMenuOpen(false);
+									}}
 									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
 								>
 									Profile
@@ -180,6 +185,9 @@ export default function Navbar() {
 
 			{/* Auth Dialog */}
 			<AuthDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} />
+
+			{/* Profile Modal */}
+			<ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
 		</div>
 	);
 }
