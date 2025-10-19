@@ -13,6 +13,7 @@ export const extractAuthenticatedUserInfo = async (): Promise<IAuthenticatedUser
 	try {
 		const session = await getServerSession(authOptions);
 		const userId = session?.user;
+		console.log(userId);
 		if (!userId) {
 			throw new UnauthorizedError();
 		}
