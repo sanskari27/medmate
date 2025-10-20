@@ -64,6 +64,12 @@ const config = {
 				'contact-us': "url('/images/contact-us.webp')",
 				newsletter: "url('/images/newsletter.webp')",
 				services: "url('/images/service.webp')",
+				'doctor-at-home': "url('/images/doctor-at-home.webp')",
+				'nursing-at-home': "url('/images/nursing-at-home.webp')",
+				'diagnostic-support': "url('/images/diagnostic-support.webp')",
+				'elderly-care': "url('/images/elderly-care.webp')",
+				'chronic-disease': "url('/images/chronic-disease.webp')",
+				injections: "url('/images/injections.webp')",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
