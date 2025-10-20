@@ -43,8 +43,8 @@ async function rawRequest(path: string, options: RequestOptions): Promise<Respon
 
 async function request<T>(path: string, options: RequestOptions): Promise<T> {
 	let cookiesString: string | null = null;
-	let refreshToken = Math.random().toString(36).substring(2, 15);
-	let userId = Math.random().toString(36).substring(2, 15);
+	let refreshToken: string | undefined;
+	let userId: string | undefined;
 	if (isServer) {
 		const { cookies } = await import('next/headers');
 		const cookieStore = cookies();
@@ -52,8 +52,8 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 			.getAll()
 			.map((cookie) => `${cookie.name}=${cookie.value}`)
 			.join('; ');
-		refreshToken = cookieStore.get('refresh-cookie')?.value ?? refreshToken;
-		userId = cookieStore.get('user-id')?.value ?? userId;
+		refreshToken = cookieStore.get('refresh-cookie')?.value;
+		userId = cookieStore.get('user-id')?.value;
 	}
 
 	const response = await fetch(`${SERVER_URL}${path}`, {
@@ -77,7 +77,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 
 	if (!['/auth/details'].includes(path)) {
 		debugPrint(
-			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId} - CACHE : ${
+			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId || 'unknown'} - CACHE : ${
 				response.headers.get('X-Cache-Status') ?? 'HIT'
 			}`
 		);
@@ -91,7 +91,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 
 async function cachedRequest<T>(path: string, options: RequestOptions): Promise<T> {
 	let cookiesString: string | null = null;
-	let userId = Math.random().toString(36).substring(2, 15);
+	let userId: string | undefined;
 	if (isServer) {
 		const { cookies } = await import('next/headers');
 		const cookieStore = cookies();
@@ -99,7 +99,7 @@ async function cachedRequest<T>(path: string, options: RequestOptions): Promise<
 			.getAll()
 			.map((cookie) => `${cookie.name}=${cookie.value}`)
 			.join('; ');
-		userId = cookieStore.get('user-id')?.value ?? userId;
+		userId = cookieStore.get('user-id')?.value;
 	}
 
 	const response = await fetch(`${SERVER_URL}${path}`, {
@@ -123,7 +123,7 @@ async function cachedRequest<T>(path: string, options: RequestOptions): Promise<
 
 	if (!['/sessions/validate-auth', '/sessions/details'].includes(path)) {
 		debugPrint(
-			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId} - CACHE : ${
+			`API - [${path}] - ${getFormattedDateTimestamp()} - ${userId || 'unknown'} - CACHE : ${
 				response.headers.get('X-Cache-Status') ?? 'HIT'
 			}`
 		);
@@ -195,10 +195,10 @@ function headMethod<T>(path: string, options: RequestOptions = {}): Promise<T> {
 	});
 }
 
-async function revalidateTag(tag: string) {
+async function revalidateTag(tag: string): Promise<void> {
 	if (isServer) {
-		const { revalidateTag } = await import('next/cache');
-		revalidateTag(tag);
+		const { revalidateTag: revalidateTagFn } = await import('next/cache');
+		revalidateTagFn(tag);
 	}
 }
 

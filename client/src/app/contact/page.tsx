@@ -2,6 +2,7 @@
 'use client';
 
 import PageCover from '@/components/elements/PageCover';
+import StartJourneyCTA from '@/components/elements/StartJourneyCTA';
 import { apiClient } from '@/lib/apiClient';
 import { contactUsSchema, type ContactUsInput } from '@/lib/schemas/contact-us';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,7 +45,7 @@ export default function ContactPage() {
 				title='Book a Home Visit in Minutes'
 				description='MedMate connects you with licensed doctors at your home, making healthcare fast, safe, and hassle-free.'
 			/>
-			<div className='px-[5%] py-20 '>
+			<div className='px-[5%] py-20 bg-slate-50'>
 				<div className='overflow-hidden max-w-6xl max-lg:max-w-2xl mx-auto'>
 					<div className='grid lg:grid-cols-2 items-center gap-8'>
 						<div className='py-8 px-8 sm:px-10 bg-gray-100 rounded-3xl'>
@@ -191,6 +192,8 @@ export default function ContactPage() {
 					</div>
 				</div>
 			</div>
+
+			<StartJourneyCTA />
 		</>
 	);
 }

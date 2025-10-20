@@ -1,15 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 
-import NewsLetter from "@/components/elements/NewsLetter";
+import NewsLetter from '@/components/elements/NewsLetter';
+import StartJourneyCTA from '@/components/elements/StartJourneyCTA';
 
 const blogs = [
-	{
-		title: 'Understanding Telemedicine: The Future of Healthcare',
-		image:
-			'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
-		date: '15 JAN 2024',
-		author: 'Dr. Sarah Chen',
-	},
 	{
 		title: 'Mental Health in the Digital Age: A Medical Perspective',
 		image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop',
@@ -89,7 +83,7 @@ export default async function Blogs() {
 	return (
 		<>
 			<NewsLetter />
-			<div className='bg-white p-4 pt-12 blogs-wrapper'>
+			<div className='bg-slate-50 p-4 pt-12 blogs-wrapper'>
 				<div className='max-w-6xl mx-auto'>
 					<div className='text-center max-w-xl mx-auto'>
 						<h2 className='text-3xl font-bold text-slate-900 inline-block'>Latest Blogs</h2>
@@ -117,6 +111,8 @@ export default async function Blogs() {
 					</div>
 				</div>
 			</div>
+
+			<StartJourneyCTA />
 		</>
 	);
 }

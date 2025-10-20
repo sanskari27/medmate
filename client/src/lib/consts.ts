@@ -12,6 +12,7 @@ export const GROUP_IMAGE_1 = '/images/group-image-1.webp';
 export const EXCITED_WOMAN_IMAGE = '/images/excited-women.webp';
 export const START_JOURNEY_BUTTON = '/images/start-journey-bg.webp';
 export const TEAM_IMAGE = '/images/doctors.webp';
+export const NOT_FOUND_IMAGE = '/images/not-found.svg';
 
 export const Paths = {
 	LANDING: '/',

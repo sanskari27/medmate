@@ -3,7 +3,7 @@ import { LOGO } from '@/lib/consts';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
-import React from 'react';
+import { useEffect, useState } from 'react';
 import AuthDialog from './dialogs/auth';
 import ProfileModal from './dialogs/profile-modal';
 import ProfileDropdown from './ProfileDropdown';
@@ -13,15 +13,16 @@ export default function Navbar() {
 		{ name: 'Services', path: '/services' },
 		{ name: 'About', path: '/about' },
 		{ name: 'Blogs', path: '/blogs' },
+		{ name: 'Our Doctors', path: '/our-doctors' },
 		{ name: 'Contact', path: '/contact' },
 	];
 
-	const [isScrolled, setIsScrolled] = React.useState(false);
-	const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-	const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
-	const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
+	const [isScrolled, setIsScrolled] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+	const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 	const { data: session, status } = useSession();
-	React.useEffect(() => {
+	useEffect(() => {
 		const handleScroll = () => {
 			setIsScrolled(window.scrollY > 10);
 		};

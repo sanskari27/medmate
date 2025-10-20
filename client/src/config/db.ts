@@ -25,24 +25,39 @@ if (!global.mongoose) {
 	global.mongoose = cached;
 }
 
+// Logger helper
+const logger = {
+	info: (msg: string) => {
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`[MongoDB] ${msg}`);
+		}
+	},
+	warn: (msg: string) => {
+		console.warn(`[MongoDB] ${msg}`);
+	},
+	error: (msg: string) => {
+		console.error(`[MongoDB] ${msg}`);
+	},
+};
+
 // Connection event handlers
 function setupConnectionHandlers() {
 	mongoose.connection.on('connected', () => {
-		console.log('✅ MongoDB connected successfully');
+		logger.info('Successfully connected to MongoDB');
 	});
 
 	mongoose.connection.on('error', (err) => {
-		console.error('❌ MongoDB connection error:', err);
+		logger.error(`Connection error: ${err.message}`);
 	});
 
 	mongoose.connection.on('disconnected', () => {
-		console.warn('⚠️ MongoDB disconnected');
+		logger.warn('Disconnected from MongoDB');
 	});
 
 	// Handle process termination
 	process.on('SIGINT', async () => {
 		await mongoose.connection.close();
-		console.log('🔌 MongoDB connection closed through app termination');
+		logger.info('Connection closed due to application termination');
 		process.exit(0);
 	});
 }
@@ -58,13 +73,13 @@ async function dbConnect() {
 		const opts: mongoose.ConnectOptions = {
 			bufferCommands: false,
 			// Connection timeout settings
-			serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-			socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+			serverSelectionTimeoutMS: 5000,
+			socketTimeoutMS: 45000,
 			// Connection pool settings
-			maxPoolSize: 10, // Maintain up to 10 socket connections
-			minPoolSize: 5, // Maintain a minimum of 5 socket connections
+			maxPoolSize: 10,
+			minPoolSize: 5,
 			// Additional options for better reliability
-			heartbeatFrequencyMS: 10000, // Send a ping every 10 seconds
+			heartbeatFrequencyMS: 10000,
 		};
 
 		cached.promise = mongoose.connect(MONGODB_URI!, opts);
@@ -74,11 +89,13 @@ async function dbConnect() {
 	}
 
 	try {
-		console.log('🔄 Connecting to MongoDB...');
+		logger.info('Connecting to MongoDB...');
 		cached.conn = await cached.promise;
 		return cached.conn;
 	} catch (error) {
-		console.error('❌ Error connecting to MongoDB:', error);
+		logger.error(
+			`Error connecting to MongoDB: ${error instanceof Error ? error.message : String(error)}`
+		);
 		// Reset promise on error to allow retry
 		cached.promise = null;
 		throw error;

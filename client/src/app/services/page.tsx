@@ -2,6 +2,7 @@
 'use client';
 
 import PageCover from '@/components/elements/PageCover';
+import StartJourneyCTA from '@/components/elements/StartJourneyCTA';
 import { cn } from '@/lib/utils';
 import { HiCheckCircle } from 'react-icons/hi';
 
@@ -15,7 +16,7 @@ export default function ServicesPage() {
 				title='Quality Healthcare, Delivered at Door'
 				description='Book same-day home visits with licensed doctors. MedMate brings clinic-level care to you—safe, convenient, and personalized.'
 			/>
-			<div className='py-20 px-[5%]'>
+			<div className='py-20 px-[5%] bg-slate-50'>
 				<div className='max-w-6xl mx-auto'>
 					<div className='max-w-3xl mx-auto text-center'>
 						<h2 className='text-slate-900 text-3xl lg:text-4xl font-bold text-center mb-4 leading-relaxed'>
@@ -34,7 +35,7 @@ export default function ServicesPage() {
 					</div>
 				</div>
 			</div>
-			<div className='py-20'>
+			<div className='py-20 bg-slate-50'>
 				<ServiceCard
 					title='Doctor at home'
 					description='Get access to qualified and professional doctors in the comfort of your home. Book a medical consultation and receive expert health right at your doorstep.'
@@ -96,6 +97,7 @@ export default function ServicesPage() {
 					iconClassName='bg-injections'
 				/>
 			</div>
+			<StartJourneyCTA />
 		</>
 	);
 }

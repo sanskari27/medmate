@@ -9,6 +9,22 @@ import type { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
+interface Credentials {
+	email: string;
+	otp: string;
+}
+
+interface CustomUser {
+	id: string;
+	email: string;
+	name: string | null;
+	profilePicture?: string | null;
+}
+
+interface CustomSession extends Session {
+	user: Session['user'] & CustomUser;
+}
+
 const authOptions: AuthOptions = {
 	providers: [
 		GoogleProvider({
@@ -23,8 +39,11 @@ const authOptions: AuthOptions = {
 				email: { label: 'Email', type: 'text' },
 				otp: { label: 'OTP', type: 'text' },
 			},
-			async authorize(credentials) {
-				const { email, otp } = credentials as { email: string; otp: string };
+			async authorize(credentials: Credentials | undefined) {
+				if (!credentials) {
+					throw new Error('Missing credentials');
+				}
+				const { email, otp } = credentials;
 				await dbConnect();
 				const user = await AuthService.loginWithEmailOTP(email, otp);
 				return {
@@ -72,8 +91,8 @@ const authOptions: AuthOptions = {
 			if (session.user) {
 				session.user.id = token.id as string;
 				session.user.email = token.email as string;
-				session.user.name = token.name as string;
-				session.user.profilePicture = token.profilePicture as string;
+				session.user.name = token.name as string | null;
+				session.user.profilePicture = token.profilePicture as string | undefined;
 			}
 			return session;
 		},
@@ -89,7 +108,7 @@ const authOptions: AuthOptions = {
 				// Update the user object with database ID and info
 				user.id = dbUser._id.toString();
 				user.name = dbUser.name || user.name;
-				user.profilePicture = dbUser.profilePicture || user.image;
+				user.profilePicture = dbUser.profilePicture || (user as any).image;
 			}
 			return true;
 		},

@@ -2,6 +2,7 @@
 'use client';
 
 import PageCover from '@/components/elements/PageCover';
+import StartJourneyCTA from '@/components/elements/StartJourneyCTA';
 import { TEAM_IMAGE } from '@/lib/consts';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -204,6 +205,8 @@ export default function AboutPage() {
 					</div>
 				</div>
 			</div>
+
+			<StartJourneyCTA />
 		</>
 	);
 }

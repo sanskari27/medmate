@@ -1,7 +1,15 @@
 'use client';
 import { useState } from 'react';
 
-export default function useBoolean(defaultValue = false) {
+interface UseBooleanReturn {
+	value: boolean;
+	on: () => void;
+	off: () => void;
+	toggle: () => void;
+	set: (newValue: boolean) => void;
+}
+
+export default function useBoolean(defaultValue = false): UseBooleanReturn {
 	const [value, setValue] = useState(defaultValue);
 
 	const on = () => setValue(true);
