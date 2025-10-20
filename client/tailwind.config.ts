@@ -64,6 +64,7 @@ const config = {
 				'contact-us': "url('/images/contact-us.webp')",
 				newsletter: "url('/images/newsletter.webp')",
 				services: "url('/images/service.webp')",
+				'our-doctors': "url('/images/our-doctors.webp')",
 				'doctor-at-home': "url('/images/doctor-at-home.webp')",
 				'nursing-at-home': "url('/images/nursing-at-home.webp')",
 				'diagnostic-support': "url('/images/diagnostic-support.webp')",
