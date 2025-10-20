@@ -3,6 +3,7 @@ import { LOGO } from '@/lib/consts';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AuthDialog from './dialogs/auth';
 import ProfileModal from './dialogs/profile-modal';
@@ -17,6 +18,7 @@ export default function Navbar() {
 		{ name: 'Contact', path: '/contact' },
 	];
 
+	const pathname = usePathname();
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
@@ -31,6 +33,8 @@ export default function Navbar() {
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		return () => window.removeEventListener('scroll', handleScroll);
 	}, []);
+
+	const isActive = (path: string) => pathname === path;
 
 	return (
 		<div className='h-88 md:h-64'>
@@ -59,8 +63,12 @@ export default function Navbar() {
 							{link.name}
 							<div
 								className={`${
-									isScrolled ? 'bg-gray-700' : 'bg-white'
-								} h-0.5 w-0 group-hover:w-full transition-all duration-300`}
+									isActive(link.path)
+										? isScrolled
+											? 'w-full bg-gray-700'
+											: 'w-full bg-white'
+										: 'w-0 group-hover:w-full'
+								} h-0.5 transition-all duration-300 ${isScrolled ? 'bg-gray-700' : 'bg-white'}`}
 							/>
 						</a>
 					))}
@@ -120,7 +128,12 @@ export default function Navbar() {
 					</button>
 
 					{navLinks.map((link, i) => (
-						<a key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
+						<a
+							key={i}
+							href={link.path}
+							onClick={() => setIsMenuOpen(false)}
+							className={isActive(link.path) ? 'underline font-bold' : ''}
+						>
 							{link.name}
 						</a>
 					))}
