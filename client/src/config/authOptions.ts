@@ -14,17 +14,6 @@ interface Credentials {
 	otp: string;
 }
 
-interface CustomUser {
-	id: string;
-	email: string;
-	name: string | null;
-	profilePicture?: string | null;
-}
-
-interface CustomSession extends Session {
-	user: Session['user'] & CustomUser;
-}
-
 const authOptions: AuthOptions = {
 	providers: [
 		GoogleProvider({

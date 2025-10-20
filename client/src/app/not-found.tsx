@@ -27,7 +27,7 @@ export default function NotFound() {
 									Page Not Found
 								</h2>
 								<p className='text-slate-600 text-lg max-w-md mx-auto leading-relaxed'>
-									Sorry, the page you're looking for doesn't exist or has been moved. Let us help
+									Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved. Let us help
 									you find what you need.
 								</p>
 							</div>
@@ -50,7 +50,7 @@ export default function NotFound() {
 						<div className='bg-white rounded-lg border border-slate-200 p-6 w-full shadow-sm'>
 							<h3 className='text-lg font-semibold text-slate-900 mb-3'>Still need help?</h3>
 							<p className='text-slate-600 mb-4'>
-								Can't find what you're looking for? Get in touch with our team.
+								Can&apos;t find what you&apos;re looking for? Get in touch with our team.
 							</p>
 							<Link
 								href='/contact'
