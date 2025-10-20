@@ -5,7 +5,6 @@ import { extractAuthenticatedUserInfo } from '@/lib/utils/authUtils';
 import { internalServerError, serializeError, validationErrors } from '@/lib/utils/errorUtils';
 import ProfileService from '@/services/ProfileService';
 import UserService from '@/services/UserService';
-import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -112,12 +111,9 @@ export async function PUT(request: NextRequest) {
 			},
 		});
 	} catch (error) {
-		console.error('Update profile error:', error);
-
-		if (error instanceof jwt.JsonWebTokenError) {
-			return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+		if (error instanceof CustomError) {
+			return NextResponse.json(serializeError(error), { status: error.status });
 		}
-
-		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+		return NextResponse.json(internalServerError(error), { status: 500 });
 	}
 }

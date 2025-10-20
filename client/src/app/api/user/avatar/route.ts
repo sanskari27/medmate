@@ -1,13 +1,13 @@
-// /app/api/avatar/[userId]/route.ts
+// /app/api/avatar/route.ts
 import { extractAuthenticatedUserInfo } from '@/lib/utils/authUtils';
 import { notFoundError } from '@/lib/utils/errorUtils';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request, { params }: { params: { userId: string } }) {
-	const userInfo = await extractAuthenticatedUserInfo();
+export async function GET() {
 	try {
+		const userInfo = await extractAuthenticatedUserInfo();
 		if (!userInfo.profilePicture) {
 			return NextResponse.json(notFoundError(), { status: 404 });
 		}

@@ -10,12 +10,13 @@ export async function POST(request: NextRequest) {
 	try {
 		await dbConnect();
 
-		const { email } = await request.json();
-		const validatedData = emailSchema.safeParse(email);
+		const body = await request.json();
+		const validatedData = emailSchema.safeParse(body.email);
 		if (!validatedData.success) {
 			return NextResponse.json(validationErrors(validatedData.error), { status: 400 });
 		}
 
+		const email = validatedData.data;
 		await AuthService.sendEmailOTP(email);
 		return NextResponse.json(
 			{
