@@ -11,7 +11,7 @@ export default function NotFound() {
 					<div className='flex flex-col items-center text-center space-y-16'>
 						{/* SVG Image */}
 						<div>
-							<div className='relative w-64 h-64 md:w-[30rem] md:h-80'>
+							<div className='relative w-64 h-64 md:w-[30rem] md:h-80 mx-auto'>
 								<Image
 									src='/images/not-found.svg'
 									alt='Page not found'
@@ -27,8 +27,8 @@ export default function NotFound() {
 									Page Not Found
 								</h2>
 								<p className='text-slate-600 text-lg max-w-md mx-auto leading-relaxed'>
-									Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved. Let us help
-									you find what you need.
+									Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved. Let
+									us help you find what you need.
 								</p>
 							</div>
 						</div>

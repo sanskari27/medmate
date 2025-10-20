@@ -126,50 +126,46 @@ export default function Navbar() {
 					))}
 
 					{session?.user ? (
-						<div className='flex flex-col items-center gap-4'>
-							<div className='flex items-center gap-3'>
-								<div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700'>
-									{session?.user.email?.charAt(0).toUpperCase() || 'U'}
+						<>
+							<hr className='w-[80%] mx-[10%]' />
+							<div className='flex flex-col items-center justify-center gap-4 w-full'>
+								<div className='flex items-center gap-3'>
+									<div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700'>
+										{session?.user.email?.charAt(0).toUpperCase() || 'U'}
+									</div>
+									<div className='text-left'>
+										<p className='text-sm font-medium text-gray-900'>{session?.user.name}</p>
+										<p className='text-xs text-gray-500'>{session?.user.email}</p>
+									</div>
 								</div>
-								<div className='text-left'>
-									<p className='text-sm font-medium text-gray-900'>{session?.user.name}</p>
-									<p className='text-xs text-gray-500'>{session?.user.email}</p>
+								<div className='flex justify-center gap-2 w-full'>
+									<button
+										onClick={() => {
+											setIsProfileModalOpen(true);
+											setIsMenuOpen(false);
+										}}
+										className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
+									>
+										Profile
+									</button>
+									<button
+										onClick={() => setIsMenuOpen(false)}
+										className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
+									>
+										Recent Bookings
+									</button>
 								</div>
-							</div>
-							<div className='flex flex-col gap-2 w-full max-w-xs'>
-								<button
-									onClick={() => {
-										setIsProfileModalOpen(true);
-										setIsMenuOpen(false);
-									}}
-									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
-								>
-									Profile
-								</button>
-								<button
-									onClick={() => setIsMenuOpen(false)}
-									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
-								>
-									Recent Bookings
-								</button>
-								<button
-									onClick={() => setIsMenuOpen(false)}
-									className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
-								>
-									Settings
-								</button>
-								<hr className='my-2' />
 								<button
 									onClick={async () => {
 										await signOut();
 										setIsMenuOpen(false);
 									}}
-									className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+									className='w-full text-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
 								>
 									Logout
 								</button>
 							</div>
-						</div>
+						</>
 					) : (
 						<button
 							onClick={() => {
