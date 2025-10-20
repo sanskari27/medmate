@@ -2,8 +2,9 @@ import Loading from '@/components/elements/loading';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 export const metadata: Metadata = {
-	title: 'Contact • Medmate',
-	description: `Contact us for any questions or inquiries about our services and products.`,
+	title: 'About • Medmate',
+	description:
+		'Learn about MedMate: our mission to deliver quality home healthcare and how we operate.',
 };
 
 export default async function RootLayout({

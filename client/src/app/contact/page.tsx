@@ -158,7 +158,7 @@ export default function ContactPage() {
 										/>
 									</svg>
 									<a href='mailto:info@medmate.com' className='text-current text-sm ml-3'>
-										info@example.com
+										info@medmate.com
 									</a>
 								</li>
 								<li className='flex items-center text-blue-700 font-medium'>
@@ -175,7 +175,7 @@ export default function ContactPage() {
 										></path>
 									</svg>
 									<a href='tel:+919876543210' className='text-current text-sm ml-3'>
-										+158 996 888
+										+91 98765 43210
 									</a>
 								</li>
 							</ul>

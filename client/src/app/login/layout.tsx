@@ -13,5 +13,9 @@ export default async function Layout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	return <Suspense fallback={<Loading />}>{children}</Suspense>;
+	return (
+		<main>
+			<Suspense fallback={<Loading />}>{children}</Suspense>
+		</main>
+	);
 }

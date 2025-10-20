@@ -42,19 +42,19 @@ export default function AboutPage() {
 				</div>
 				<div className='flex items-center justify-center flex-wrap gap-6 mt-20 px-4 md:px-0'>
 					<WhyMedmateCard
-						title='Real-Time Analytics'
-						description='Get instant insights into your finances with live dashboards.'
+						title='Doctor at Home'
+						description='Licensed doctors deliver clinic‑level consultations at your doorstep.'
 						icon={<FaUserMd className='w-full h-full text-black' />}
 					/>
 					<WhyMedmateCard
-						title='Real-Time Analytics'
-						description='Get instant insights into your finances with live dashboards.'
-						icon={<FaUserMd className='w-full h-full text-black' />}
+						title='24/7 Support'
+						description='Round‑the‑clock assistance for bookings, care coordination and follow‑ups.'
+						icon={<BiSupport className='w-full h-full text-black' />}
 					/>
 					<WhyMedmateCard
-						title='Real-Time Analytics'
-						description='Get instant insights into your finances with live dashboards.'
-						icon={<FaUserMd className='w-full h-full text-black' />}
+						title='Nationwide Reach'
+						description='Expanding network to serve you wherever you are.'
+						icon={<HiOutlineGlobeAlt className='w-full h-full text-black' />}
 					/>
 				</div>
 			</div>
