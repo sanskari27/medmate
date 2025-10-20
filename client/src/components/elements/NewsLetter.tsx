@@ -43,17 +43,17 @@ export default function NewsLetter() {
 		}
 	};
 	return (
-		<div className='w-full bg-slate-900 text-center text-white py-40 px-[5%] flex flex-col items-center justify-center'>
-			<p className='text-indigo-500 font-medium'>Get updated</p>
+		<div className='w-full bg-image before:bg-newsletter text-center text-white py-[7.5rem] px-[5%] flex flex-col items-center justify-center'>
+			{/* <p className='text-slate-300 font-medium underline underline-offset-1'>Get updated</p> */}
 			<h1 className='max-w-lg font-semibold text-4xl/[44px] mt-2'>
 				Subscribe to our newsletter & get the latest news
 			</h1>
 			<form onSubmit={handleSubmit(onSubmit)} className='w-full max-w-md mt-10'>
-				<div className='flex items-center justify-center border border-slate-600 focus-within:outline focus-within:outline-indigo-600 text-sm rounded-full h-14 w-full'>
+				<div className='flex bg-slate-50/30 items-center justify-center border border-slate-600 focus-within:outline focus-within:outline-indigo-800 text-sm rounded-full h-14 w-full'>
 					<input
 						type='email'
 						{...register('email')}
-						className='bg-transparent outline-none rounded-full px-4 h-full flex-1'
+						className='bg-transparent outline-none rounded-full px-4 h-full flex-1 placeholder:text-slate-200'
 						placeholder='Enter your email address'
 					/>
 					<button
@@ -65,7 +65,7 @@ export default function NewsLetter() {
 					</button>
 				</div>
 				{errors.email && (
-					<p className='text-red-400 text-sm mt-2 text-left px-4'>{errors.email.message}</p>
+					<p className='text-red-400 text-sm mt-2 text-center px-4'>{errors.email.message}</p>
 				)}
 			</form>
 		</div>

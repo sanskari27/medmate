@@ -57,8 +57,13 @@ const config = {
 				},
 			},
 			backgroundImage: {
-				'hero-image': "url('/images/hero-image.jpg')",
+				hero: "url('/images/hero-image.webp')",
+				'hero-image-phone': "url('/images/hero-image-phone.webp')",
 				'start-journey': "url('/images/start-journey.webp')",
+				'about-us': "url('/images/about.webp')",
+				'contact-us': "url('/images/contact-us.webp')",
+				newsletter: "url('/images/newsletter.webp')",
+				services: "url('/images/service.webp')",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

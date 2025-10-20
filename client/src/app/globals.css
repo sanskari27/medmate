@@ -80,6 +80,45 @@
 	}
 }
 
+@layer utilities {
+	.absolute-fill {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+	}
+
+	.absolute-fill-bg {
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+		z-index: -1;
+	}
+
+	.bg-image {
+		position: relative;
+	}
+
+	.bg-image::before {
+		@apply absolute-fill absolute-fill-bg content-[''];
+	}
+
+	.bg-image::after {
+		@apply absolute-fill content-[''] bg-black/40 z-[-1];
+	}
+
+	.bg-hero-image::before {
+		@apply bg-hero;
+	}
+
+	@media (max-width: 768px) {
+		.bg-hero-image::before {
+			@apply bg-hero-image-phone;
+		}
+	}
+}
+
 .container-anim {
 	--uib-size: 40px;
 	--uib-color: hsl(var(--primary));
@@ -187,39 +226,4 @@
 
 .marquee-reverse {
 	animation-direction: reverse;
-}
-
-.bg-hero-image-blurred {
-	position: relative;
-}
-
-.bg-hero-image-blurred::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-image: url('/images/hero-image.webp');
-	background-size: cover;
-	background-position: center;
-	background-repeat: no-repeat;
-	z-index: -1;
-}
-
-@media (max-width: 768px) {
-	.bg-hero-image-blurred::before {
-		background-image: url('/images/hero-image-phone.webp');
-	}
-}
-
-.bg-hero-image-blurred::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.4);
-	z-index: -1;
 }

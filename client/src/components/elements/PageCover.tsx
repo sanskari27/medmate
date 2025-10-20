@@ -17,7 +17,7 @@ export default function PageCover({ title, description, className }: PageCoverPr
 			)}
 		>
 			<h1 className='max-w-2xl font-bold text-4xl/[44px] mt-2'>{title}</h1>
-			<p className='text-slate-500 mt-2 text-lg'>{description}</p>
+			<p className='text-slate-300 mt-2 text-lg max-w-3xl mx-auto'>{description}</p>
 		</div>
 	);
 }

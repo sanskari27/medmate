@@ -40,6 +40,7 @@ export default function ContactPage() {
 	return (
 		<>
 			<PageCover
+				className='bg-image before:bg-contact-us'
 				title='Book a Home Visit in Minutes'
 				description='MedMate connects you with licensed doctors at your home, making healthcare fast, safe, and hassle-free.'
 			/>

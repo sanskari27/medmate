@@ -58,7 +58,7 @@ export default async function Home() {
 	return (
 		<>
 			<div
-				className={`relative flex flex-col items-center justify-center text-sm px-[5%] md:px-16 lg:px-24 xl:px-32 bg-hero-image-blurred text-white min-h-screen`}
+				className={`relative flex flex-col items-center justify-center text-sm px-[5%] md:px-16 lg:px-24 xl:px-32 bg-image bg-hero-image text-white min-h-screen`}
 			>
 				<div className='absolute top-28 -z-1 left-1/4 size-40 md:size-72 bg-blue-600 blur-[300px]'></div>
 				<div className='flex items-center flex-col md:flex-row'>
