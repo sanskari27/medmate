@@ -124,8 +124,8 @@ const ServiceCard = ({
 		></div>
 		<div className='md:flex-1'>
 			<div className='flex flex-col px-[5%] py-16 md:px-[10%]'>
-				<h3 className='font-bold text-4xl md:text-6xl'>{title}</h3>
-				<p className='mt-6  md:text-xl'>{description}</p>
+				<h3 className='font-bold text-2xl md:text-4xl'>{title}</h3>
+				<p className='mt-6'>{description}</p>
 				<div className='mt-6'>
 					<ul className='space-y-2'>
 						{items.map((item) => (

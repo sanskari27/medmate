@@ -63,6 +63,7 @@ export default function ProfileDropdown({ isScrolled }: ProfileDropdownProps) {
 							src={`/api/user/avatar`}
 							alt='Profile Picture'
 							className='w-8 h-8 rounded-full'
+							unoptimized
 							width={32}
 							height={32}
 						/>

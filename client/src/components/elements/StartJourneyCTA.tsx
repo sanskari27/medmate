@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function StartJourneyCTA() {
 	return (
 		<div className='py-20 px-[5%] bg-slate-50 text-black'>
@@ -11,9 +13,11 @@ export default function StartJourneyCTA() {
 					access, and doorstep service whenever you need it. Skip the wait, embrace comfort, and
 					stay confidently cared for.
 				</p>
-				<button className='px-10 py-3 mt-4 text-sm bg-white hover:scale-105 transition duration-300 rounded-full'>
-					Book Home Visit
-				</button>
+				<Link href='/book-appointment?appointment_type=home-visit'>
+					<button className='px-10 py-3 mt-4 text-sm bg-white hover:scale-105 transition duration-300 rounded-full'>
+						Book Home Visit
+					</button>
+				</Link>
 			</section>
 		</div>
 	);

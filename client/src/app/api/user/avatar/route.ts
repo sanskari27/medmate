@@ -1,4 +1,3 @@
-// /app/api/avatar/route.ts
 import { extractAuthenticatedUserInfo } from '@/lib/utils/authUtils';
 import { notFoundError } from '@/lib/utils/errorUtils';
 import { NextResponse } from 'next/server';
