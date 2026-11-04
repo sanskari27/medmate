@@ -27,17 +27,23 @@ jobs:
       run:
         working-directory: packages/infra/platform
     steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
           aws-region: ap-south-1
-      - uses: hashicorp/setup-terraform@v3
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.14.8"
-      - run: terraform init -backend-config=backend.hcl
-      - run: terraform plan -input=false
-      - if: github.event_name != 'pull_request'
+      - name: Initialize Terraform
+        run: terraform init -backend-config=backend.hcl
+      - name: Plan platform changes
+        run: terraform plan -input=false
+      - name: Apply platform changes
+        if: github.event_name != 'pull_request'
         run: terraform apply -input=false -auto-approve
 
   apps:
@@ -51,15 +57,21 @@ jobs:
       run:
         working-directory: packages/infra/${{ matrix.stack }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
           aws-region: ap-south-1
-      - uses: hashicorp/setup-terraform@v3
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.14.8"
-      - run: terraform init -backend-config=backend.hcl
-      - run: terraform plan -input=false
-      - if: github.event_name != 'pull_request'
+      - name: Initialize Terraform
+        run: terraform init -backend-config=backend.hcl
+      - name: Plan ${{ matrix.stack }} changes
+        run: terraform plan -input=false
+      - name: Apply ${{ matrix.stack }} changes
+        if: github.event_name != 'pull_request'
         run: terraform apply -input=false -auto-approve

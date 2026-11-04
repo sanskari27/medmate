@@ -14,8 +14,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: python3 scripts/validate_projects.py
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Validate project contracts
+        run: python3 scripts/validate_projects.py
 
   changed:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -23,10 +25,12 @@ jobs:
     outputs:
       apps: ${{ steps.list.outputs.apps }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - id: list
+      - name: List changed applications
+        id: list
         env:
           BEFORE: ${{ github.event.before }}
         run: |
@@ -45,12 +49,16 @@ jobs:
       matrix:
         app: ${{ fromJson(needs.changed.outputs.apps) }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ap-south-1
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: python3 scripts/deploy_app.py "${{ matrix.app }}"
+      - name: Deploy ${{ matrix.app }}
+        run: python3 scripts/deploy_app.py "${{ matrix.app }}"
