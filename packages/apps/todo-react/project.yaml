@@ -1,0 +1,10 @@
+name: todo-react
+kind: react
+routing:
+  records:
+    - zone: medmatepharmacy.com
+      hosts:
+        - todo.medmatepharmacy.com
+build:
+  env:
+    VITE_API_URL: https://api.todo.medmatepharmacy.com

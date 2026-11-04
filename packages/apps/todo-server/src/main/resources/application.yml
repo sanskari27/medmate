@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+  sql:
+    init:
+      mode: always
+
+app:
+  uploads-bucket: ${APP_UPLOADS_BUCKET:}
+  uploads-prefix: ${APP_UPLOADS_PREFIX:}
+  cors-origin: ${APP_CORS_ORIGIN:https://todo.medmatepharmacy.com}

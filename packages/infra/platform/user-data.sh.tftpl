@@ -1,0 +1,83 @@
+#!/bin/bash
+set -euo pipefail
+exec > >(tee /var/log/medmate-bootstrap.log) 2>&1
+
+dnf install -y docker python3
+if ! command -v aws >/dev/null 2>&1; then
+  dnf install -y awscli
+fi
+if ! dnf install -y postgresql16; then
+  dnf install -y postgresql15
+fi
+
+systemctl enable --now docker
+for _ in $(seq 1 30); do
+  if docker info >/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+docker info >/dev/null
+
+for _ in $(seq 1 36); do
+  if aws sts get-caller-identity --region ${region} >/dev/null 2>&1; then
+    break
+  fi
+  sleep 5
+done
+aws sts get-caller-identity --region ${region} >/dev/null
+
+mkdir -p /opt/medmate/bin /opt/medmate/sites /opt/medmate/env /opt/medmate/caddy-data /opt/medmate/caddy-config
+copied=0
+for _ in $(seq 1 36); do
+  if aws s3 cp "s3://${bucket}/platform-scripts/deploy-app.sh" /opt/medmate/bin/deploy-app --region ${region} \
+    && aws s3 cp "s3://${bucket}/platform-scripts/ensure-database.sh" /opt/medmate/bin/ensure-database --region ${region}; then
+    copied=1
+    break
+  fi
+  sleep 5
+done
+if [[ "$copied" != "1" || ! -f /opt/medmate/bin/deploy-app || ! -f /opt/medmate/bin/ensure-database ]]; then
+  echo "platform scripts were not downloaded" >&2
+  exit 1
+fi
+chmod 755 /opt/medmate/bin/deploy-app /opt/medmate/bin/ensure-database
+
+cat > /opt/medmate/Caddyfile <<'EOF'
+{
+  email ops@medmatepharmacy.com
+}
+
+:80 {
+  respond "medmate platform" 200
+}
+EOF
+
+docker network create medmate >/dev/null 2>&1 || true
+docker rm -f caddy >/dev/null 2>&1 || true
+pulled=0
+for _ in $(seq 1 10); do
+  if docker pull caddy:2.8; then
+    pulled=1
+    break
+  fi
+  sleep 5
+done
+if [[ "$pulled" != "1" ]]; then
+  echo "caddy image pull failed" >&2
+  exit 1
+fi
+
+docker run -d \
+  --name caddy \
+  --restart unless-stopped \
+  --network medmate \
+  -p 80:80 \
+  -p 443:443 \
+  -v /opt/medmate/Caddyfile:/etc/caddy/Caddyfile:ro \
+  -v /opt/medmate/caddy-data:/data \
+  -v /opt/medmate/caddy-config:/config \
+  caddy:2.8 >/dev/null
+
+docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+echo "bootstrap complete"
