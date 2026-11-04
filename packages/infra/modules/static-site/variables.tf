@@ -20,3 +20,8 @@ variable "bucket_regional_domain_name" {
 variable "static_prefix" {
   type = string
 }
+
+variable "pretty_html" {
+  type    = bool
+  default = false
+}

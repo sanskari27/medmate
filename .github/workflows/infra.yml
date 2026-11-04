@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack: [todo-react, todo-server]
+        stack: [todo-react, todo-server, medmatepharmacy]
     defaults:
       run:
         working-directory: packages/infra/${{ matrix.stack }}

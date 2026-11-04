@@ -58,6 +58,13 @@ def deploy_react(project: dict) -> None:
         "--content-type", "text/html",
         "--region", REGION,
     ])
+    manifest = dist / "manifest.webmanifest"
+    if manifest.is_file():
+        run([
+            "aws", "s3", "cp", str(manifest), destination + "manifest.webmanifest",
+            "--content-type", "application/manifest+json",
+            "--region", REGION,
+        ])
     distribution_id = parameter(f"/medmate-repo/{project['name']}/distribution_id")
     run([
         "aws", "cloudfront", "create-invalidation",

@@ -4,7 +4,9 @@ locals {
       for host in record.hosts : host => record.zone_id
     }
   ]...)
-  hosts = sort(keys(local.host_zone))
+  hosts        = sort(keys(local.host_zone))
+  error_page   = var.pretty_html ? "/404.html" : "/index.html"
+  error_status = var.pretty_html ? 404 : 200
 }
 
 resource "aws_acm_certificate" "site" {
@@ -42,6 +44,31 @@ resource "aws_acm_certificate_validation" "site" {
   validation_record_fqdns = [for record in aws_route53_record.certificate : record.fqdn]
 }
 
+resource "aws_cloudfront_function" "pretty" {
+  count   = var.pretty_html ? 1 : 0
+  name    = "medmate-${var.name}-pretty"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+      if (uri === "/") {
+        request.uri = "/index.html";
+        return request;
+      }
+      var slash = uri.lastIndexOf("/");
+      var dot = uri.lastIndexOf(".");
+      if (uri.charAt(uri.length - 1) === "/") {
+        request.uri += "index.html";
+      } else if (dot < slash) {
+        request.uri += ".html";
+      }
+      return request;
+    }
+  EOF
+}
+
 resource "aws_cloudfront_origin_access_control" "site" {
   name                              = "medmate-${var.name}"
   origin_access_control_origin_type = "s3"
@@ -72,19 +99,27 @@ resource "aws_cloudfront_distribution" "site" {
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+
+    dynamic "function_association" {
+      for_each = var.pretty_html ? [1] : []
+      content {
+        event_type   = "viewer-request"
+        function_arn = aws_cloudfront_function.pretty[0].arn
+      }
+    }
   }
 
   custom_error_response {
     error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
+    response_code         = local.error_status
+    response_page_path    = local.error_page
     error_caching_min_ttl = 0
   }
 
   custom_error_response {
     error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
+    response_code         = local.error_status
+    response_page_path    = local.error_page
     error_caching_min_ttl = 0
   }
 
@@ -107,10 +142,11 @@ resource "aws_cloudfront_distribution" "site" {
 }
 
 resource "aws_route53_record" "site" {
-  for_each = local.host_zone
-  zone_id  = each.value
-  name     = each.key
-  type     = "A"
+  for_each        = local.host_zone
+  allow_overwrite = true
+  zone_id         = each.value
+  name            = each.key
+  type            = "A"
 
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name
