@@ -1,0 +1,12 @@
+name: nammamedmate
+kind: react
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - nammamedmate.com
+        - www.nammamedmate.com
+build:
+  env:
+    VITE_SITE_URL: https://www.nammamedmate.com
+    VITE_API_BASE_URL: https://api.nammamedmate.com
