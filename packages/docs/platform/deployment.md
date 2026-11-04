@@ -45,7 +45,7 @@ python3 scripts/deploy_app.py todo-server
 python3 scripts/deploy_app.py todo-react
 ```
 
-After the GitHub repository exists, set `github_repository` to `owner/name`, apply the platform again, and store the role outputs:
+After the GitHub repository exists, apply the platform with `github_repository` set to `owner/name` and the owner and repository IDs from GitHub. Actions tokens use the immutable subject `repo:owner@id/name@id`. Store the role outputs:
 
 ```bash
 gh variable set AWS_DEPLOY_ROLE_ARN --body "<deploy_role_arn>"

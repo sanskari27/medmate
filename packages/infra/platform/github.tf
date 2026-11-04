@@ -1,3 +1,9 @@
+locals {
+  github_owner = var.github_repository == "" ? "" : split("/", var.github_repository)[0]
+  github_name  = var.github_repository == "" ? "" : split("/", var.github_repository)[1]
+  github_subject = "repo:${local.github_owner}@${var.github_owner_id}/${local.github_name}@${var.github_repository_id}:*"
+}
+
 data "aws_iam_openid_connect_provider" "github" {
   count = var.github_repository == "" ? 0 : 1
   url   = "https://token.actions.githubusercontent.com"
@@ -24,7 +30,7 @@ data "aws_iam_policy_document" "github_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:*"]
+      values   = [local.github_subject]
     }
   }
 }
@@ -33,6 +39,13 @@ resource "aws_iam_role" "deploy" {
   count              = var.github_repository == "" ? 0 : 1
   name               = "medmate-gha-deploy"
   assume_role_policy = data.aws_iam_policy_document.github_trust[0].json
+
+  lifecycle {
+    precondition {
+      condition     = var.github_owner_id != "" && var.github_repository_id != ""
+      error_message = "github_owner_id and github_repository_id are required. Actions uses an immutable subject of repo:owner@id/name@id."
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "deploy" {
