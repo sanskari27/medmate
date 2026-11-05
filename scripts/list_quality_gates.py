@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Write the quality-gate matrix for the current commit.
+"""Write the quality-gate matrix for applications whose files changed.
 
-APPS, when set, is a JSON list of application names from the deploy workflow.
-Otherwise the script diffs BASE_SHA against HEAD. An application is included
-only when its project.yaml turns a gate on.
+APPS, when set, is a JSON list from the deploy workflow. It can only narrow
+the set. A gate runs when that application's directory is in the diff and its
+project.yaml turns the gate on.
 """
 
 from __future__ import annotations
@@ -15,13 +15,7 @@ import sys
 
 from medmate_contract import JAVA_VERSION, load_projects, quality_commands, repo_root, validate_projects
 
-WATCHED = (
-    ".github/workflows/quality.yml",
-    "scripts/list_quality_gates.py",
-    "scripts/medmate_contract.py",
-    "scripts/wait_for_quality.py",
-)
-
+EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 NONE = {
     "app": "-",
     "gate": "none",
@@ -35,11 +29,21 @@ NONE = {
 }
 
 
-def changed_files() -> list[str] | None:
-    """Changed paths, or None when every application should be considered."""
+def comparison_base() -> str | None:
+    """Commit to diff against, or None when this event has no app diff."""
     before = os.environ.get("BASE_SHA", "").strip()
+    event = os.environ.get("GITHUB_EVENT_NAME", "")
+    if event == "push" and (not before or set(before) <= {"0"}):
+        return EMPTY_TREE
     if not before or set(before) <= {"0"}:
         return None
+    return before
+
+
+def changed_app_names(known: list[str]) -> list[str]:
+    before = comparison_base()
+    if before is None:
+        return []
     try:
         output = subprocess.check_output(
             ["git", "diff", "--name-only", before, "HEAD"],
@@ -47,32 +51,31 @@ def changed_files() -> list[str] | None:
             text=True,
             stderr=subprocess.DEVNULL,
         )
-    except subprocess.CalledProcessError:
-        return None
-    return [line.strip() for line in output.splitlines() if line.strip()]
-
-
-def selected_names(projects: list[dict]) -> list[str]:
-    raw = os.environ.get("APPS", "").strip()
-    known = [project["name"] for project in projects]
-    if raw:
-        parsed = json.loads(raw)
-        if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
-            raise SystemExit("APPS must be a JSON list of application names")
-        unknown = sorted(set(parsed) - set(known))
-        if unknown:
-            raise SystemExit(f"unknown applications: {', '.join(unknown)}")
-        return [name for name in known if name in parsed]
-
-    files = changed_files()
-    if files is None or any(path in WATCHED or path.startswith("scripts/") for path in files):
-        return known
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"could not diff {before}..HEAD") from exc
+    files = [line.strip() for line in output.splitlines() if line.strip()]
     selected = []
     for name in known:
         prefix = f"packages/apps/{name}/"
         if any(path.startswith(prefix) for path in files):
             selected.append(name)
     return selected
+
+
+def selected_names(projects: list[dict]) -> list[str]:
+    known = [project["name"] for project in projects]
+    names = changed_app_names(known)
+    raw = os.environ.get("APPS", "").strip()
+    if not raw:
+        return names
+    parsed = json.loads(raw)
+    if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
+        raise SystemExit("APPS must be a JSON list of application names")
+    unknown = sorted(set(parsed) - set(known))
+    if unknown:
+        raise SystemExit(f"unknown applications: {', '.join(unknown)}")
+    allowed = set(parsed)
+    return [name for name in names if name in allowed]
 
 
 def entries(projects: list[dict], names: list[str]) -> list[dict]:

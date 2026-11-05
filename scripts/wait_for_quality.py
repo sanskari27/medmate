@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Block one application deploy until its quality gates have succeeded.
 
-Applications with no quality keys return immediately. Gate jobs publish a
-commit status named quality/<app>/<gate>.
+Applications with no quality keys, and applications whose files did not
+change, return immediately. Gate jobs publish a commit status named
+quality/<app>/<gate>.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import subprocess
 import sys
 import time
 
+from list_quality_gates import changed_app_names
 from medmate_contract import load_projects
 
 POLL_SECONDS = 10
@@ -54,6 +56,10 @@ def main() -> int:
     gates = project.get("quality") or []
     if not gates:
         print(f"{app}: no quality gates", flush=True)
+        return 0
+    known = [item["name"] for item in load_projects()]
+    if app not in changed_app_names(known):
+        print(f"{app}: application files did not change", flush=True)
         return 0
     if project.get("errors"):
         for error in project["errors"]:

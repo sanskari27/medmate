@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       apps:
-        description: JSON list of application names. Empty selects applications from the diff.
+        description: Optional JSON list that narrows the applications whose files changed.
         required: false
         type: string
         default: ""

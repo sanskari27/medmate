@@ -9,7 +9,7 @@ React:
 3. Sync `build.output` to `s3://medmate-repo/static-sites/<name>/`.
 4. Invalidate the CloudFront distribution in `/medmate-repo/<name>/distribution_id`.
 
-`quality` in `project.yaml` chooses the gates that must pass before that application is published. Each key is `true`. Leaving `quality` out publishes the application without those checks. React and Next.js accept `typecheck`, `lint`, `format`, and `test`. Java accepts `compile` (`mvn -B -DskipTests compile`), `test` (`mvn -B test`), and `verify` (`mvn -B verify`). `.github/workflows/quality.yml` runs the selected gates as a matrix and records `quality/<app>/<gate>` on the commit. Deploy publishes an application only after each of its gates has succeeded.
+`quality` in `project.yaml` chooses the gates that must pass before that application is published. Each key is `true`. Leaving `quality` out publishes the application without those checks. React and Next.js accept `typecheck`, `lint`, `format`, and `test`. Java accepts `compile` (`mvn -B -DskipTests compile`), `test` (`mvn -B test`), and `verify` (`mvn -B verify`). `.github/workflows/quality.yml` runs those gates only for applications whose own files changed, and records `quality/<app>/<gate>` on the commit. Deploy waits for an application's gates only in that case.
 
 Next.js and Java:
 

@@ -28,6 +28,8 @@
   <properties>
     <java.version>21</java.version>
     <aws.sdk.version>2.32.20</aws.sdk.version>
+    <!-- Boot 3.5.6 manages 1.21.3, which speaks Docker API 1.32. Current runners reject that. -->
+    <testcontainers.version>1.21.4</testcontainers.version>
   </properties>
 
   <dependencyManagement>
