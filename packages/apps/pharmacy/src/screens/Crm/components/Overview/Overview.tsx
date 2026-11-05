@@ -1,0 +1,332 @@
+import type { ReactNode } from "react";
+import { inr, timeAgo } from "@/utils";
+import { atRisk, crmMsg, refillsDue, type Patient } from "@/utils/calculations/crm";
+import {
+  Box,
+  Button,
+  Heading,
+  MonoText,
+  Pill,
+  Progress,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  Text,
+} from "@/components/atoms";
+import {
+  IconAlert,
+  IconCheck,
+  IconClock,
+  IconGift,
+  IconSparkle,
+  IconStar,
+  IconUser,
+  IconWhatsApp,
+} from "@/components/atoms";
+import { Card, CardBody } from "@/components/molecules/Card";
+import { SegmentIcon } from "@/components/molecules/EntityMark";
+import type { CrmViewProps } from "@/screens/Crm/Crm.types";
+import {
+  activePatientCount,
+  barShare,
+  feedbackScore,
+  openWhatsApp,
+  outstandingPoints,
+  segmentCounts,
+} from "@/screens/Crm/Crm.utils";
+
+import type { OverviewProps } from "./Overview.types";
+
+const card = "!rounded-md !shadow-sm";
+const crmTable =
+  "!border-separate border-spacing-0 text-[13px] [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-100 [&_tbody_tr:hover]:bg-wash-2 [&_tbody_tr:last-child_td]:!border-b-0";
+const th =
+  "!sticky !top-0 z-[1] !border-b !border-line !bg-wash-2 !px-3.5 !py-[11px] !text-[10.5px] !font-bold !uppercase !tracking-[0.07em] !whitespace-nowrap !text-muted";
+const td = "!border-b !border-line !px-3.5 !py-[11px] align-middle !text-ink-2";
+const num = `${td} !text-right !tabular-nums !text-ink`;
+
+export function Overview({ view }: OverviewProps) {
+  const dueSoon = refillsDue(view.patients, 7);
+  const risk = atRisk(view.patients);
+  const points = outstandingPoints(view.patients, view.redeemedBy);
+  const score = feedbackScore(view.crm.feedbacks);
+  const distribution = segmentCounts(view.patients);
+  const maxCount = Math.max(
+    1,
+    ...distribution.map(function count(item) {
+      return item.count;
+    }),
+  );
+
+  return (
+    <Stack gap={0}>
+      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+        <Stat
+          tone="bg-wash text-mid"
+          icon={<IconUser size={18} />}
+          label="Patients"
+          value={String(view.patients.length)}
+          detail="total on file"
+        />
+        <Stat
+          tone="bg-blue-bg text-blue"
+          icon={<IconCheck size={18} />}
+          label="Active (30d)"
+          value={String(activePatientCount(view.patients))}
+          detail="ordered recently"
+        />
+        <Stat
+          tone="bg-rose-bg text-rose"
+          icon={<IconAlert size={18} />}
+          label="At-risk"
+          value={String(risk.length)}
+          detail="churn candidates"
+        />
+        <Stat
+          tone="bg-amber-bg text-gold-d"
+          icon={<IconClock size={18} />}
+          label="Refills due (7d)"
+          value={String(dueSoon.length)}
+          detail="medicines to reorder"
+        />
+        <Stat
+          tone="bg-amber-bg text-gold-d"
+          icon={<IconGift size={18} />}
+          label="Loyalty points"
+          value={points.toLocaleString("en-IN")}
+          detail="redeemable rewards"
+        />
+        <Stat
+          tone="bg-wash text-mid"
+          icon={<IconStar size={18} />}
+          label="Avg rating"
+          value={score.average ? score.average.toFixed(1) : "—"}
+          detail="out of 5"
+        />
+      </Box>
+      <Box className="grid grid-cols-1 gap-4 min-[768px]:grid-cols-[1.5fr_1fr]">
+        <Card className={card}>
+          <CardHead title="Refills due this week" aside="chronic care" />
+          <CardBody className="!p-[18px]">
+            {dueSoon.length === 0 ? (
+              <Text className="mx-auto max-w-[340px] px-4 py-4 text-center !text-[13px] !text-muted">
+                No refills due in 7 days.
+              </Text>
+            ) : (
+              <RefillRows patients={dueSoon.slice(0, 6)} onOpen={view.openPatient} />
+            )}
+          </CardBody>
+        </Card>
+        <Card className={card}>
+          <CardHead title="Segment distribution" />
+          <CardBody className="!p-[18px]">
+            <SegmentBars rows={distribution} maxCount={maxCount} />
+          </CardBody>
+        </Card>
+      </Box>
+      <Card className={`mt-4 ${card}`}>
+        <CardHead title="At-risk / lapsed patients" aside="no purchase in 60+ days" />
+        <Box className="overflow-x-auto">
+          <Table className={crmTable}>
+            <TableHead>
+              <TableRow className="!border-0">
+                <TableHeaderCell className={th}>Patient</TableHeaderCell>
+                <TableHeaderCell className={th}>Phone</TableHeaderCell>
+                <TableHeaderCell align="right" className={th}>
+                  Orders
+                </TableHeaderCell>
+                <TableHeaderCell align="right" className={th}>
+                  Lifetime
+                </TableHeaderCell>
+                <TableHeaderCell className={th}>Last seen</TableHeaderCell>
+                <TableHeaderCell className={th}>Win back</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {risk.length === 0 ? (
+                <TableRow className="!border-0">
+                  <TableCell colSpan={6} className={td}>
+                    <Stack align="center" className="px-5 py-9 text-center text-muted">
+                      <Box className="mb-3 grid h-11 w-11 place-items-center overflow-hidden rounded-md bg-wash text-mid">
+                        <IconSparkle size={30} />
+                      </Box>
+                      <Text className="mx-auto max-w-[340px] !text-[13px] !text-muted">
+                        No at-risk patients — great retention!
+                      </Text>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <RiskRows patients={risk.slice(0, 8)} view={view} />
+              )}
+            </TableBody>
+          </Table>
+        </Box>
+      </Card>
+    </Stack>
+  );
+}
+
+function CardHead({ title, aside }: { title: string; aside?: string }) {
+  return (
+    <Stack
+      direction="row"
+      align="center"
+      justify="between"
+      wrap
+      className="gap-2.5 border-b border-line px-[18px] py-[15px]"
+    >
+      <Heading level={3} className="!text-[15px] !font-bold !tracking-normal">
+        {title}
+      </Heading>
+      {aside ? <Text className="!text-[12.5px] !text-muted">{aside}</Text> : null}
+    </Stack>
+  );
+}
+
+function Stat({
+  tone,
+  icon,
+  label,
+  value,
+  detail,
+}: {
+  tone: string;
+  icon: ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <Box className="flex h-full flex-col overflow-hidden rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${tone}`}>{icon}</Box>
+      <Text
+        variant="label"
+        className="mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted"
+      >
+        {label}
+      </Text>
+      <Text className="mt-[3px] mb-2.5 font-display !text-[26px] !font-extrabold !tracking-[-0.03em] !text-dark tabular-nums max-[767px]:!text-[22px]">
+        {value}
+      </Text>
+      <Text
+        variant="caption"
+        className="mt-auto border-t border-line pt-[9px] !text-[12px] !text-muted"
+      >
+        {detail}
+      </Text>
+    </Box>
+  );
+}
+
+function RefillRows({ patients, onOpen }: { patients: Patient[]; onOpen: (key: string) => void }) {
+  return patients.map(function renderRefill(patient) {
+    return <RefillRow key={patient.key} patient={patient} onOpen={onOpen} />;
+  });
+}
+
+function RefillRow({ patient, onOpen }: { patient: Patient; onOpen: (key: string) => void }) {
+  function handleOpen() {
+    onOpen(patient.key);
+  }
+  const daysLeft = patient.refill?.daysLeft ?? 0;
+  return (
+    <Stack
+      direction="row"
+      align="center"
+      gap={3}
+      className="cursor-pointer border-b border-line py-3 last:border-0"
+      onClick={handleOpen}
+    >
+      <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-mid">
+        <IconClock size={15} />
+      </Box>
+      <Stack className="min-w-0 flex-1 gap-0">
+        <Text className="!text-[13.5px] !font-bold !text-ink">{patient.name}</Text>
+        <Text className="!text-[12px] !text-muted">{patient.refill?.med}</Text>
+      </Stack>
+      <Pill tone={daysLeft <= 0 ? "rose" : "gold"}>
+        {daysLeft <= 0 ? "Overdue" : `${daysLeft}d`}
+      </Pill>
+    </Stack>
+  );
+}
+
+function SegmentBars({
+  rows,
+  maxCount,
+}: {
+  rows: ReturnType<typeof segmentCounts>;
+  maxCount: number;
+}) {
+  return rows.map(function renderSegment(row) {
+    return (
+      <Box key={row.segment.key} className="mb-2.5">
+        <Stack direction="row" justify="between" className="mb-1 text-[13px]">
+          <Text as="span" className="inline-flex items-center gap-1.5">
+            <SegmentIcon k={row.segment.key} size={14} /> {row.segment.label}
+          </Text>
+          <Text as="span" className="font-bold">
+            {row.count}
+          </Text>
+        </Stack>
+        <Progress className="!h-[7px] !rounded-[5px]" value={barShare(row.count, maxCount)} />
+      </Box>
+    );
+  });
+}
+
+function RiskRows({ patients, view }: { patients: Patient[]; view: CrmViewProps }) {
+  return patients.map(function renderRisk(patient) {
+    return <RiskRow key={patient.key} patient={patient} view={view} />;
+  });
+}
+
+function RiskRow({ patient, view }: { patient: Patient; view: CrmViewProps }) {
+  function handleOpen() {
+    view.openPatient(patient.key);
+  }
+  function stopRowClick(event: { stopPropagation: () => void }) {
+    event.stopPropagation();
+  }
+  function handleWinBack() {
+    openWhatsApp(patient.phone, crmMsg.winback(patient.name, view.profile.name));
+    view.logReminder({
+      custKey: patient.key,
+      custName: patient.name,
+      kind: "winback",
+      channel: "whatsapp",
+    });
+  }
+  return (
+    <TableRow className="!border-0 cursor-pointer" onClick={handleOpen}>
+      <TableCell className={td}>
+        <Stack direction="row" align="center" gap={0} className="gap-2.5">
+          <Box className="grid h-[34px] w-[34px] shrink-0 place-items-center overflow-hidden rounded-[9px] bg-wash text-mid">
+            <IconUser size={15} />
+          </Box>
+          <Text className="!font-bold !text-ink">{patient.name}</Text>
+        </Stack>
+      </TableCell>
+      <TableCell className={td}>
+        <MonoText className="!text-ink-2">{patient.phone || "—"}</MonoText>
+      </TableCell>
+      <TableCell align="right" className={`${num} !font-semibold`}>
+        {patient.orders}
+      </TableCell>
+      <TableCell align="right" className={`${num} !font-semibold`}>
+        {inr(patient.spent)}
+      </TableCell>
+      <TableCell className={td}>{timeAgo(patient.lastAt, view.now)}</TableCell>
+      <TableCell className={td} onClick={stopRowClick}>
+        <Button variant="ghost" disabled={!patient.phone} onClick={handleWinBack}>
+          <IconWhatsApp size={14} /> Win back
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
