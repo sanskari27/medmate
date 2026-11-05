@@ -10,9 +10,9 @@ import {
   IconStar,
   IconSparkle,
 } from "@/components/Icon";
-import { SegmentIcon } from "@/components/entityIcon";
+import { SegmentIcon } from "@/components/EntityIcon";
 
-import { wa } from "@/screens/Crm/components/wa";
+import { wa } from "@/screens/Crm/utils/wa";
 
 export function Overview(s: any) {
   const { patients, openPatient } = s;

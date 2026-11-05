@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, fmtDateTime, PayMode, PAY_LABEL } from "@/utils";
 import { Admission } from "@/utils/calculations/hospital";
 import { IconX, IconRupee, IconPos, IconCheck } from "@/components/Icon";
 
-import { billTotal } from "@/screens/Wards/components/billTotal";
-import { daysIn } from "@/screens/Wards/components/daysIn";
+import { billTotal } from "@/screens/Wards/utils/billTotal";
+import { daysIn } from "@/screens/Wards/utils/daysIn";
 
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];
 

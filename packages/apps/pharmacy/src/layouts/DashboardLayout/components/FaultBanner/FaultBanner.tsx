@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 
 export function FaultBanner() {
   const { formFault, clearFault } = usePharma();

@@ -1,7 +1,7 @@
 import type { SaveFault } from "@/utils";
 import type { Route } from "@/types";
 import { routeFromPath } from "@/app/routes";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type Ticket = {
   id: string;

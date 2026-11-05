@@ -1,9 +1,9 @@
-import { startOfToday } from "@/screens/Prescriptions/components/startOfToday";
+import { startOfToday } from "@/screens/Prescriptions/utils/startOfToday";
 import { RxCard } from "@/screens/Prescriptions/components/RxCard";
 import { RxDetail } from "@/screens/Prescriptions/components/RxDetail";
 import { RejectModal } from "@/screens/Prescriptions/components/RejectModal";
 import { useMemo, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   RxStatus,
   Prescription,

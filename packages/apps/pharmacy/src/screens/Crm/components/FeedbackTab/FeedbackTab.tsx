@@ -3,7 +3,7 @@ import { timeAgo } from "@/utils";
 import { Patient, crmMsg } from "@/utils/calculations/crm";
 import { IconWhatsApp, IconCheck, IconStar } from "@/components/Icon";
 
-import { wa } from "@/screens/Crm/components/wa";
+import { wa } from "@/screens/Crm/utils/wa";
 
 export function FeedbackTab(s: any) {
   const { patients, profile, crm, addFeedback } = s;

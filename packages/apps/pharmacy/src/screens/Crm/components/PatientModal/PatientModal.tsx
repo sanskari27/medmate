@@ -27,7 +27,7 @@ import {
   IconPill,
 } from "@/components/Icon";
 
-import { wa } from "@/screens/Crm/components/wa";
+import { wa } from "@/screens/Crm/utils/wa";
 import { PtSpark } from "@/screens/Crm/components/PtSpark";
 
 const GENDERS = ["Male", "Female", "Other"];

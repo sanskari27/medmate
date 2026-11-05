@@ -4,7 +4,7 @@ import { MedicineDetailModal } from "@/screens/RackMap/components/MedicineDetail
 import { AssignLocations } from "@/screens/RackMap/components/AssignLocations";
 import { LabelSheet } from "@/screens/RackMap/components/LabelSheet";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { hasLocation, groupByLocation, normalizeRack } from "@/utils";
 import {
   IconSearch,

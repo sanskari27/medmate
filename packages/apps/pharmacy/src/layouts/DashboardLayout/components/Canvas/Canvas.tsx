@@ -1,4 +1,4 @@
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import DashboardScreen from "@/screens/Dashboard";
 import PosScreen from "@/screens/Billing";
 import OrdersScreen from "@/screens/Orders";

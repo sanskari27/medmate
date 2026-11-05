@@ -1,7 +1,7 @@
 import { LicenceField } from "@/layouts/AuthLayout/components/LicenceField";
 import { FeatRow } from "@/layouts/AuthLayout/components/FeatRow";
 import { useRef, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   PHARMACY_BUSINESS_TYPES,
   REGISTRATION_TYPES,

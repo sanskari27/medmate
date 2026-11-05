@@ -3,8 +3,8 @@ import { inr, timeAgo, Sale } from "@/utils";
 import { Admission } from "@/utils/calculations/hospital";
 import { IconSearch, IconArrowRight } from "@/components/Icon";
 
-import { billTotal } from "@/screens/Wards/components/billTotal";
-import { daysIn } from "@/screens/Wards/components/daysIn";
+import { billTotal } from "@/screens/Wards/utils/billTotal";
+import { daysIn } from "@/screens/Wards/utils/daysIn";
 
 export function AdmissionsTable({
   admissions,

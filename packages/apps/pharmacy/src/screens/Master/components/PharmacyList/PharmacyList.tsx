@@ -1,6 +1,6 @@
 import { Plan } from "@/utils";
 
-import { seatText } from "@/screens/Master/components/seatText";
+import { seatText } from "@/screens/Master/utils/seatText";
 import { Table } from "@/screens/Master/components/Table";
 
 type Seats = { included: number | null; extra: number; inUse: number; limit: number | null };

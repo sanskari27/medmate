@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { fmtDateTime, inr } from "@/utils";
 import { IndentStatus } from "@/utils/calculations/hospital";
 import { reasonMeta } from "@/utils/calculations/hospitalAccount";

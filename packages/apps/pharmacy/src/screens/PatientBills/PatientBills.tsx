@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   fmtDateTime,
@@ -12,7 +12,7 @@ import {
 } from "@/utils";
 import { buildPatientLedger, PatientGroup } from "@/utils/calculations/hospital";
 import { IconSearch, IconX, IconRupee, IconCheck } from "@/components/Icon";
-import { SaleSourceIcon } from "@/components/entityIcon";
+import { SaleSourceIcon } from "@/components/EntityIcon";
 
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];
 const billTotal = (s: Sale) => computeInvoice(s.items, s.discount).payable;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/services/api/apiClient";
-import { BusinessType, usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
+import type { BusinessType } from "@/types";
 import {
   IconArrowRight,
   IconChart,

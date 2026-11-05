@@ -7,7 +7,7 @@ import { PriceListTab } from "@/screens/HospitalBilling/components/PriceListTab"
 import { SupplyModal } from "@/screens/HospitalBilling/components/SupplyModal";
 import { PaymentModal } from "@/screens/HospitalBilling/components/PaymentModal";
 import { useState, useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import {
   hospitalOutstanding,

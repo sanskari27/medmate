@@ -11,7 +11,8 @@ import {
   Prescription,
   PayMode,
 } from "@/utils";
-import { StatusPill, ChannelPill } from "@/components/bits";
+import { StatusPill } from "@/components/StatusPill";
+import { ChannelPill } from "@/components/ChannelPill";
 import {
   IconPrint,
   IconX,

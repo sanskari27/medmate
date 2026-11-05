@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { InvProduct, stockOf, hasLocation, locationCodes } from "@/utils";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 import { IconSearch, IconX, IconFolder, IconBox } from "@/components/Icon";
 
 export function RackDetailModal({

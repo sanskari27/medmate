@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { Supplier, isValidGstin } from "@/utils";
 import { IconX } from "@/components/Icon";
 

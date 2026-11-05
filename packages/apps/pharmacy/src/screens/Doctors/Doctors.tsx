@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import {
   DoctorProfile,
@@ -9,7 +9,7 @@ import {
   DoctorStatus,
 } from "@/utils/calculations/hospital";
 import { IconSearch, IconPlus, IconX, IconUpload, IconMail, IconPhone } from "@/components/Icon";
-import { Avatar } from "@/components/entityIcon";
+import { Avatar } from "@/components/EntityIcon";
 
 const TONE: Record<string, string> = { green: "pill-green", rose: "pill-rose", blue: "pill-blue" };
 

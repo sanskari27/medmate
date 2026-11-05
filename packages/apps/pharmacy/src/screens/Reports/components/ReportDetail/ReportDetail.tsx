@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import { IconPrint, IconDownload, IconChart } from "@/components/Icon";
 import { usePeriod } from "@/components/PeriodFilter";

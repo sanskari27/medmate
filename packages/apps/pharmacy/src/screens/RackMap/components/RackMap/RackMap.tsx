@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { InvProduct, stockOf, matchesLocation } from "@/utils";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 import { IconPlus, IconMap, IconHelp, IconFolder } from "@/components/Icon";
 
 export function RackMap({

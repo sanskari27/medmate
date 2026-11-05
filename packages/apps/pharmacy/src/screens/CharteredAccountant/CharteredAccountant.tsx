@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   CA_REPORT_TYPES,
   inr,
@@ -18,7 +18,7 @@ import {
   IconCalc,
   IconReceipt,
 } from "@/components/Icon";
-import { CaReportIcon } from "@/components/entityIcon";
+import { CaReportIcon } from "@/components/EntityIcon";
 
 const PERIODS = ["June 2026", "May 2026", "April 2026", "Q1 FY 2026-27", "FY 2025-26"];
 const TYPE_PILL: Record<AdvisorType, string> = { CA: "pill-blue", Accountant: "pill-green" };

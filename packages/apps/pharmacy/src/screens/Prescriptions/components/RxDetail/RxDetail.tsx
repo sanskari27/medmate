@@ -9,7 +9,7 @@ import {
   waLink,
   smsLink,
 } from "@/utils";
-import { ChannelPill } from "@/components/bits";
+import { ChannelPill } from "@/components/ChannelPill";
 import {
   IconCheck,
   IconX,
@@ -23,7 +23,7 @@ import {
   IconUser,
   IconBolt,
 } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 import RxView from "@/components/RxView";
 
 const RX_PILL: Record<RxStatus, string> = {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, mrpOf, stockOf, earliestBatch, findScan, hasLocation } from "@/utils";
 import {
   SUPPLY_REASONS,
@@ -7,12 +7,12 @@ import {
   WardSupplyItem,
 } from "@/utils/calculations/hospitalAccount";
 import { IconSearch, IconPlus, IconX, IconTag, IconCamera } from "@/components/Icon";
-import { SupplyReasonIcon } from "@/components/entityIcon";
+import { SupplyReasonIcon } from "@/components/EntityIcon";
 import WardSupplyInvoice from "@/screens/HospitalBilling/components/WardSupplyInvoice";
 import QtyBox from "@/components/QtyBox";
 
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
-import { indentToRows } from "@/screens/HospitalBilling/components/indentToRows";
+import { indentToRows } from "@/screens/HospitalBilling/utils/indentToRows";
 
 export function SupplyModal({
   mode,

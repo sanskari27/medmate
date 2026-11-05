@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import QtyBox from "@/components/QtyBox";
 import {
   CATEGORIES,
@@ -20,7 +20,8 @@ import {
   matchesLocation,
 } from "@/utils";
 import { INSURERS } from "@/utils/calculations/hospital";
-import { ScheduleTag, Thumb } from "@/components/bits";
+import { ScheduleTag } from "@/components/ScheduleTag";
+import { Thumb } from "@/components/Thumb";
 import {
   IconSearch,
   IconPrint,
@@ -41,7 +42,7 @@ import {
   IconUser,
   IconArrowRight,
 } from "@/components/Icon";
-import { CategoryIcon, SaleSourceIcon } from "@/components/entityIcon";
+import { CategoryIcon, SaleSourceIcon } from "@/components/EntityIcon";
 import Invoice from "@/components/Invoice";
 import ShareSheet from "@/components/ShareSheet";
 

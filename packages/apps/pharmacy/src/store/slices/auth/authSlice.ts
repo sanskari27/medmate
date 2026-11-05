@@ -15,7 +15,7 @@ import {
   type Subscription,
 } from "@/utils";
 import type { BusinessType } from "@/types";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export const BLANK_PROFILE: PharmacyProfile = {
   name: "",

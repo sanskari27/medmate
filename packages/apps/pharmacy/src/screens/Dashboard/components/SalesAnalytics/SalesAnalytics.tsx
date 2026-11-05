@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, catLabel, Sale, PayMode, PAY_LABEL, SaleSource, saleSourceOf } from "@/utils";
 import { IconDonut, IconBars, IconTrendUp } from "@/components/Icon";
 
-import { saleTotal } from "@/screens/Dashboard/components/saleTotal";
-import { inrK } from "@/screens/Dashboard/components/inrK";
+import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
+import { inrK } from "@/screens/Dashboard/utils/inrK";
 import { TrendChart } from "@/screens/Dashboard/components/TrendChart";
 import { DonutChart } from "@/screens/Dashboard/components/DonutChart";
 import { HBar } from "@/screens/Dashboard/components/HBar";

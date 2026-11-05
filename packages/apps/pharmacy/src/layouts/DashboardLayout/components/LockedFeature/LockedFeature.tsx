@@ -1,4 +1,5 @@
-import { usePharma, Route } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
+import type { Route } from "@/types";
 import { PLANS, inr, planPrice } from "@/utils";
 import { IconCrown, IconLock, IconCheck, IconSparkle, IconArrowRight } from "@/components/Icon";
 

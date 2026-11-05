@@ -1,4 +1,4 @@
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type ReportsState = { reportTarget: string | null };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { Ward, WardType, WARD_TYPES } from "@/utils/calculations/hospital";
 import { IconPlus, IconX } from "@/components/Icon";
 

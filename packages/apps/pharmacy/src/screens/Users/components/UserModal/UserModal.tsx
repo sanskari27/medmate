@@ -20,7 +20,7 @@ import {
   IconShare,
 } from "@/components/Icon";
 
-import { Copy } from "@/screens/Users/components/copy";
+import { Copy } from "@/screens/Users/components/Copy";
 
 const ROLES: UserRole[] = ["Owner", "Manager", "Pharmacist", "Cashier"];
 

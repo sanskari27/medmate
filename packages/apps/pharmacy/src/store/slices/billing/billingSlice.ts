@@ -1,5 +1,5 @@
 import type { PayMode, SaleSource } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type PosLine = { productId: string; qty: number; loose?: boolean; batchNo?: string };
 export type PosCustomer = {

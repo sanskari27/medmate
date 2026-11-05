@@ -9,8 +9,8 @@ import {
   IconHeart,
 } from "@/components/Icon";
 
-import { wa } from "@/screens/Crm/components/wa";
-import { sms } from "@/screens/Crm/components/sms";
+import { wa } from "@/screens/Crm/utils/wa";
+import { sms } from "@/screens/Crm/utils/sms";
 
 export function Reminders(s: any) {
   const { patients, profile, logReminder } = s;

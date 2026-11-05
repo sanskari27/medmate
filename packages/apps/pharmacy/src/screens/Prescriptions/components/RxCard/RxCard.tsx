@@ -24,7 +24,7 @@ import {
   IconStethoscope,
   IconBolt,
 } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 
 const RX_PILL: Record<RxStatus, string> = {
   pending: "pill-gold",

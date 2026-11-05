@@ -2,7 +2,7 @@ import { Directory } from "@/screens/Suppliers/components/Directory";
 import { SupplyList } from "@/screens/Suppliers/components/SupplyList";
 import { PriceCompare } from "@/screens/Suppliers/components/PriceCompare";
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 
 type Tab = "directory" | "supply" | "compare";
 

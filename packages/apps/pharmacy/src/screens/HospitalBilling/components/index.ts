@@ -9,8 +9,3 @@ export * from "./ReminderModal";
 export * from "./SupplyModal";
 export * from "./WardStockTab";
 export * from "./WardSupplyInvoice";
-export * from "./download";
-export * from "./fmtDay";
-export * from "./indentToRows";
-export * from "./norm";
-export * from "./supplyToInvoice";

@@ -1,4 +1,4 @@
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 
 import { Toast } from "@/layouts/DashboardLayout/components/Toast";
 import { FaultBanner } from "@/layouts/DashboardLayout/components/FaultBanner";

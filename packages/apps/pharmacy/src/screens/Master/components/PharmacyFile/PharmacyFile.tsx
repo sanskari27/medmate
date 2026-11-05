@@ -1,7 +1,7 @@
 import { BillingCycle, HOSPITAL_ROUTES, Plan, PREMIUM_ROUTES } from "@/utils";
 
-import { kycGaps } from "@/screens/Master/components/kycGaps";
-import { seatText } from "@/screens/Master/components/seatText";
+import { kycGaps } from "@/screens/Master/utils/kycGaps";
+import { seatText } from "@/screens/Master/utils/seatText";
 
 type Seats = { included: number | null; extra: number; inUse: number; limit: number | null };
 

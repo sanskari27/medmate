@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { api } from "@/services/api/apiClient";
 import { Plan } from "@/utils";
 
-import { plusDays } from "@/screens/Master/components/plusDays";
+import { plusDays } from "@/screens/Master/utils/plusDays";
 import { Table } from "@/screens/Master/components/Table";
-import { makeCode } from "@/screens/Master/components/makeCode";
+import { makeCode } from "@/screens/Master/utils/makeCode";
 
 type CouponRow = {
   code: string;

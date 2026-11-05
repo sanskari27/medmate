@@ -1,3 +1,3 @@
 export * from "./ShareCreds";
 export * from "./UserModal";
-export * from "./copy";
+export * from "./Copy";

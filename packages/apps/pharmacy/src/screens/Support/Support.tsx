@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { timeAgo } from "@/utils";
 import { IconSend, IconX, IconTicket } from "@/components/Icon";
 

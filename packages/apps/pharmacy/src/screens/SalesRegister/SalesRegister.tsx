@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   fmtDateTime,
@@ -13,7 +13,7 @@ import {
   saleSourceOf,
 } from "@/utils";
 import { IconSearch, IconReports, IconPrint } from "@/components/Icon";
-import { SaleSourceIcon } from "@/components/entityIcon";
+import { SaleSourceIcon } from "@/components/EntityIcon";
 import { useDateRange } from "@/components/DateRangeField";
 import { buildReportPdf } from "@/utils/pdf";
 

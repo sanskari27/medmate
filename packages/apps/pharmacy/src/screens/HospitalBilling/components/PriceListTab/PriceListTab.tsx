@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, mrpOf } from "@/utils";
 import { PriceMode } from "@/utils/calculations/hospitalAccount";
 import { IconSearch, IconX, IconLock, IconUnlock, IconKey } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 import { AdminOtpModal } from "@/screens/HospitalBilling/components/AdminOtpModal";

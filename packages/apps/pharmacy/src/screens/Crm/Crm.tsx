@@ -7,7 +7,7 @@ import { FeedbackTab } from "@/screens/Crm/components/FeedbackTab";
 import { Analytics } from "@/screens/Crm/components/Analytics";
 import { PatientModal } from "@/screens/Crm/components/PatientModal";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { custKeyOf } from "@/utils";
 import { buildPatients } from "@/utils/calculations/crm";
 

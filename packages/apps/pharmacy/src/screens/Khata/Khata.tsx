@@ -1,6 +1,6 @@
 import { KhataModal } from "@/screens/Khata/components/KhataModal";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   fmtDateTime,

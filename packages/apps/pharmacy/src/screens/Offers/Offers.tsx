@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { CATEGORIES, catLabel, Offer, OfferType, OfferScope, inr } from "@/utils";
 import { IconPlus, IconX, IconOffer, IconTag, IconGlobe } from "@/components/Icon";
 

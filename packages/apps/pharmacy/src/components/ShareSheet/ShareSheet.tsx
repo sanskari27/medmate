@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { Sale, PharmacyProfile, computeInvoice, inr } from "@/utils";
 import { buildInvoicePdf } from "@/utils/pdf";
 import {

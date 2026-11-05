@@ -1,4 +1,4 @@
-import { PharmaProvider } from "@/store/slices/session";
+import { PharmaProvider } from "@/app/providers/PharmaProvider";
 import { Frame } from "./components/Frame";
 
 export function DashboardLayout() {

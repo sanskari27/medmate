@@ -1,10 +1,10 @@
-import { ymd } from "@/screens/Employees/components/ymd";
-import { fmtDay } from "@/screens/Employees/components/fmtDay";
-import { csvCell } from "@/screens/Employees/components/csvCell";
-import { download } from "@/screens/Employees/components/download";
+import { ymd } from "@/screens/Employees/utils/ymd";
+import { fmtDay } from "@/screens/Employees/utils/fmtDay";
+import { csvCell } from "@/screens/Employees/utils/csvCell";
+import { download } from "@/screens/Employees/utils/download";
 import { EmployeeForm } from "@/screens/Employees/components/EmployeeForm";
 import { useMemo, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   Employee,
@@ -25,7 +25,7 @@ import {
   IconDoc,
   IconBriefcase,
 } from "@/components/Icon";
-import { Avatar } from "@/components/entityIcon";
+import { Avatar } from "@/components/EntityIcon";
 import EmployeeIdCard from "@/screens/Employees/components/EmployeeIdCard";
 
 export default function EmployeesScreen() {

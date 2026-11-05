@@ -19,7 +19,8 @@ import {
   productBarcode,
 } from "@/utils";
 import { barcodeSvg, saveBarcodeSvg } from "@/utils/barcode";
-import { ScheduleTag, Thumb } from "@/components/bits";
+import { ScheduleTag } from "@/components/ScheduleTag";
+import { Thumb } from "@/components/Thumb";
 import {
   IconEdit,
   IconX,
@@ -32,9 +33,9 @@ import {
   IconDownload,
 } from "@/components/Icon";
 
-import { mrpValueOf } from "@/screens/Inventory/components/mrpValueOf";
-import { soldSince } from "@/screens/Inventory/components/soldSince";
-import { lastSoldAt } from "@/screens/Inventory/components/lastSoldAt";
+import { mrpValueOf } from "@/screens/Inventory/utils/mrpValueOf";
+import { soldSince } from "@/screens/Inventory/utils/soldSince";
+import { lastSoldAt } from "@/screens/Inventory/utils/lastSoldAt";
 
 const DAY = 86400000;
 

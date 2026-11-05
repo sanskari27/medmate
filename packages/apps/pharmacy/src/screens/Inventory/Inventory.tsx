@@ -1,10 +1,10 @@
-import { mrpValueOf } from "@/screens/Inventory/components/mrpValueOf";
-import { lastSoldAt } from "@/screens/Inventory/components/lastSoldAt";
-import { needsAttention } from "@/screens/Inventory/components/needsAttention";
+import { mrpValueOf } from "@/screens/Inventory/utils/mrpValueOf";
+import { lastSoldAt } from "@/screens/Inventory/utils/lastSoldAt";
+import { needsAttention } from "@/screens/Inventory/utils/needsAttention";
 import { ProductDetailModal } from "@/screens/Inventory/components/ProductDetailModal";
 import { ProductModal } from "@/screens/Inventory/components/ProductModal";
 import { useState, useRef, useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   catLabel,
   inr,
@@ -25,7 +25,9 @@ import {
   matchesLocation,
   locationCodes,
 } from "@/utils";
-import { ScheduleTag, StockPill, Thumb } from "@/components/bits";
+import { ScheduleTag } from "@/components/ScheduleTag";
+import { StockPill } from "@/components/StockPill";
+import { Thumb } from "@/components/Thumb";
 import {
   IconSearch,
   IconEdit,

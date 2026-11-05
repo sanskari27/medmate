@@ -2,7 +2,7 @@ import { ReportHub } from "@/screens/Reports/components/ReportHub";
 import { ReportDetail } from "@/screens/Reports/components/ReportDetail";
 import { AnalyticsDashboard } from "@/screens/Reports/components/AnalyticsDashboard";
 import { useState, useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { reportById } from "@/utils/calculations/reportCatalog";
 
 type Tab = "overview" | "sales" | "products" | "accounts";

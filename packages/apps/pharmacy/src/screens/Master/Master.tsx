@@ -1,8 +1,8 @@
-import { plusDays } from "@/screens/Master/components/plusDays";
-import { subOf } from "@/screens/Master/components/subOf";
-import { renewalDue } from "@/screens/Master/components/renewalDue";
-import { kycGaps } from "@/screens/Master/components/kycGaps";
-import { seatText } from "@/screens/Master/components/seatText";
+import { plusDays } from "@/screens/Master/utils/plusDays";
+import { subOf } from "@/screens/Master/utils/subOf";
+import { renewalDue } from "@/screens/Master/utils/renewalDue";
+import { kycGaps } from "@/screens/Master/utils/kycGaps";
+import { seatText } from "@/screens/Master/utils/seatText";
 import { Dashboard } from "@/screens/Master/components/Dashboard";
 import { PharmacyList } from "@/screens/Master/components/PharmacyList";
 import { Queue } from "@/screens/Master/components/Queue";

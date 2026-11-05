@@ -12,7 +12,7 @@ import {
 } from "@/utils";
 import { IconUpload, IconIdCard, IconX, IconDoc } from "@/components/Icon";
 
-import { ymd } from "@/screens/Employees/components/ymd";
+import { ymd } from "@/screens/Employees/utils/ymd";
 import { Section } from "@/screens/Employees/components/Section";
 import { Field } from "@/screens/Employees/components/Field";
 

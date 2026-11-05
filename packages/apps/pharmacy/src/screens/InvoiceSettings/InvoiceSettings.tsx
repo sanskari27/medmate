@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   Sale,
   mrpOf,

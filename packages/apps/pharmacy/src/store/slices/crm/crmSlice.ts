@@ -1,5 +1,5 @@
 import { EMPTY_CRM, type CrmData } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type CrmState = { crm: CrmData };
 

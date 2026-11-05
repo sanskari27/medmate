@@ -10,7 +10,7 @@ import {
   IconMail,
 } from "@/components/Icon";
 
-import { copy, Copy } from "@/screens/Users/components/copy";
+import { copy, Copy } from "@/screens/Users/components/Copy";
 
 export function ShareCreds({
   user,

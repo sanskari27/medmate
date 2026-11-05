@@ -1,2 +1,2 @@
-export { commitWrite } from "./write";
-export type { WriteRequest } from "./write";
+export { commitWrite } from "./write.service";
+export type { WriteRequest } from "./write.service";

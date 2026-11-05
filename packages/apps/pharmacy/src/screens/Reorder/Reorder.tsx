@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   isLowStock,
   stockOf,
@@ -23,7 +23,7 @@ import {
   IconUpload,
 } from "@/components/Icon";
 import { downloadPoTemplate, parsePoCsv } from "@/utils/purchases";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 
 export default function ReorderScreen() {
   const {

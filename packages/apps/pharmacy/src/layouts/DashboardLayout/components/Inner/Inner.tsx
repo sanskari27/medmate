@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { usePharma, Route } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
+import type { Route } from "@/types";
 import { canSeeRoute } from "@/utils";
 import {
   IconDashboard,

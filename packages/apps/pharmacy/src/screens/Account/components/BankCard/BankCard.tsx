@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { isValidIfsc } from "@/utils";
 import { IconCheck, IconBank } from "@/components/Icon";
 
-import { bankForm } from "@/screens/Account/components/bankForm";
+import { bankForm } from "@/screens/Account/utils/bankForm";
 
 const blankBank = {
   holderName: "",

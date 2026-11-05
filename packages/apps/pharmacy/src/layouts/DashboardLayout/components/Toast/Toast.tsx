@@ -1,4 +1,4 @@
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 
 export function Toast() {
   const { toastMsg } = usePharma();

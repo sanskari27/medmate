@@ -1,7 +1,7 @@
-import { download } from "@/screens/Account/components/download";
+import { download } from "@/screens/Account/utils/download";
 import { BankCard } from "@/screens/Account/components/BankCard";
 import { Ring } from "@/screens/Account/components/Ring";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   PLANS,
   planPrice,
@@ -15,7 +15,7 @@ import {
   seatCeiling,
   UserRole,
 } from "@/utils";
-import { Route } from "@/store/slices/session";
+import type { Route } from "@/types";
 import {
   IconUsers,
   IconReceipt,

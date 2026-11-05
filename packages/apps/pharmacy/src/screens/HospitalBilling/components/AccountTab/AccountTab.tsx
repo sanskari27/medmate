@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, fmtDateTime } from "@/utils";
 import {
   CreditTerms,
@@ -12,7 +12,7 @@ import { IconReports, IconPrint, IconTag, IconAlert, IconSend, IconCheck } from 
 import { buildReportPdf } from "@/utils/pdf";
 import { useDateRange } from "@/components/DateRangeField";
 
-import { download } from "@/screens/HospitalBilling/components/download";
+import { download } from "@/screens/HospitalBilling/utils/download";
 
 type LineType = "all" | "issue" | "return" | "payment";
 

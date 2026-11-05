@@ -1,11 +1,12 @@
-import { matchRx } from "@/screens/Orders/components/matchRx";
+import { matchRx } from "@/screens/Orders/utils/matchRx";
 import { OrderDetail } from "@/screens/Orders/components/OrderDetail";
 
 export { matchRx, OrderDetail };
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, computeInvoice, timeAgo, PAY_LABEL, Sale } from "@/utils";
-import { StatusPill, ChannelPill } from "@/components/bits";
+import { StatusPill } from "@/components/StatusPill";
+import { ChannelPill } from "@/components/ChannelPill";
 import {
   IconSearch,
   IconPrint,

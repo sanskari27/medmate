@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, waLink, smsLink } from "@/utils";
 import { hospitalAging } from "@/utils/calculations/hospitalAccount";
 import { IconX, IconAlert, IconWhatsApp, IconMail, IconCheck, IconCopy } from "@/components/Icon";
 
-import { fmtDay } from "@/screens/HospitalBilling/components/fmtDay";
+import { fmtDay } from "@/screens/HospitalBilling/utils/fmtDay";
 
 export function ReminderModal({
   onClose,

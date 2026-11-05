@@ -1,6 +1,6 @@
 import { BillingCycle, Plan } from "@/utils";
 
-import { when } from "@/screens/Master/components/when";
+import { when } from "@/screens/Master/utils/when";
 import { Table } from "@/screens/Master/components/Table";
 
 type RequestRow = {

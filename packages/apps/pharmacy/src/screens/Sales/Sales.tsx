@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   computeInvoice,
@@ -13,7 +13,8 @@ import {
   Channel,
   Sale,
 } from "@/utils";
-import { StatusPill, ChannelPill } from "@/components/bits";
+import { StatusPill } from "@/components/StatusPill";
+import { ChannelPill } from "@/components/ChannelPill";
 import { useDateRange } from "@/components/DateRangeField";
 import { OrderDetail, matchRx } from "@/screens/Orders";
 import ShareSheet from "@/components/ShareSheet";

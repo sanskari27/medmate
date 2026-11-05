@@ -1,0 +1,1 @@
+export { thunkForPath } from "./thunkForPath";

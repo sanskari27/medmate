@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { Supplier, inr, allottedSupplierId } from "@/utils";
 import {
   IconPlus,

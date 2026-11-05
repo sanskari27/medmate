@@ -10,7 +10,7 @@ import type {
   WardIndent,
   WardSupply,
 } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export const BLANK_HOSPITAL: HospitalAccount = {
   name: "",

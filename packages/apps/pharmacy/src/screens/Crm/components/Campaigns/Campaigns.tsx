@@ -10,8 +10,8 @@ import {
 } from "@/utils/calculations/crm";
 import { IconWhatsApp, IconDot, IconMail } from "@/components/Icon";
 
-import { wa } from "@/screens/Crm/components/wa";
-import { sms } from "@/screens/Crm/components/sms";
+import { wa } from "@/screens/Crm/utils/wa";
+import { sms } from "@/screens/Crm/utils/sms";
 
 export function Campaigns(s: any) {
   const { patients, profile, crm, addCampaign, sales } = s;

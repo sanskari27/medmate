@@ -6,7 +6,7 @@ import {
   type Supplier,
   type SupplyEntry,
 } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type PurchasesState = {
   purchases: Purchase[];

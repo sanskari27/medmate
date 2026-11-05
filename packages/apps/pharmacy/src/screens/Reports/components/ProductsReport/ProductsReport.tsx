@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { inr, catLabel, CATEGORIES, stockOf } from "@/utils";
 import { IconSearch, IconBox } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 type PSort = "units" | "revenue" | "profit" | "margin" | "stock";
 
 export function ProductsReport({

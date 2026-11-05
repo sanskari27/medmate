@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import { wardOnHand } from "@/utils/calculations/hospitalAccount";
 

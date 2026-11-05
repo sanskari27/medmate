@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   CATEGORIES,
   catLabel,
@@ -23,8 +23,8 @@ import {
   IconBulb,
   IconCart,
 } from "@/components/Icon";
-import { CategoryIcon, monogramOf } from "@/components/entityIcon";
-import { Thumb } from "@/components/bits";
+import { CategoryIcon, monogramOf } from "@/components/EntityIcon";
+import { Thumb } from "@/components/Thumb";
 
 export default function OnlineStoreScreen() {
   const {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, computeInvoice, fmtDateTime, packDone, packTotal, packComplete, Sale } from "@/utils";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 import {
   IconX,
   IconCheck,

@@ -8,7 +8,7 @@ import {
   channelLabel,
   fmtDateTime,
 } from "@/utils";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { IconAlert } from "@/components/Icon";
 
 // A GST/VAT tax invoice — rendered on screen and printed via window.print().

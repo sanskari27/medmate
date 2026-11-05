@@ -7,5 +7,3 @@ export * from "./PatientModal";
 export * from "./Patients";
 export * from "./PtSpark";
 export * from "./Reminders";
-export * from "./sms";
-export * from "./wa";

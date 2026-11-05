@@ -1,8 +1,8 @@
-import { Copy } from "@/screens/Users/components/copy";
+import { Copy } from "@/screens/Users/components/Copy";
 import { UserModal } from "@/screens/Users/components/UserModal";
 import { ShareCreds } from "@/screens/Users/components/ShareCreds";
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { UserRole, StaffUser, seatCeiling, includedSeats, ALL_PERM_KEYS, userPerms } from "@/utils";
 import {
   IconPlus,

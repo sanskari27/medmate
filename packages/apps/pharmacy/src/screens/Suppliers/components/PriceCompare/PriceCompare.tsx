@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { SupplyEntry, inr2, effectiveSupplyPrice, schemeLabel, isDevice } from "@/utils";
 import { IconStar, IconScale, IconCash, IconTag, IconCheck } from "@/components/Icon";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 
-import { multiSourceCount } from "@/screens/Purchases/components/multiSourceCount";
+import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 
 export function PriceCompare() {
   const { supplyList, suppliers, inventory } = usePharma();

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { inr, timeAgo } from "@/utils";
 import {
   hospitalAging,
@@ -22,7 +22,7 @@ import {
   IconStore,
 } from "@/components/Icon";
 
-import { fmtDay } from "@/screens/HospitalBilling/components/fmtDay";
+import { fmtDay } from "@/screens/HospitalBilling/utils/fmtDay";
 import { IconClockLite } from "@/screens/HospitalBilling/components/IconClockLite";
 
 type Tab = "overview" | "issue" | "stock" | "account" | "prices";

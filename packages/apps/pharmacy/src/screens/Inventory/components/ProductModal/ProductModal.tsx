@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { CATEGORIES, InvProduct, Schedule, DosageForm, SCHEDULE_META } from "@/utils";
 import { IconX, IconUpload } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 
 const FORMS: DosageForm[] = [
   "Tablet",

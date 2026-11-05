@@ -1,5 +1,5 @@
 import type { Prescription } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type PrescriptionsState = { prescriptions: Prescription[] };
 

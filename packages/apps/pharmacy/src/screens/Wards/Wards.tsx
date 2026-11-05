@@ -3,7 +3,7 @@ import { WardSetupModal } from "@/screens/Wards/components/WardSetupModal";
 import { AdmitModal } from "@/screens/Wards/components/AdmitModal";
 import { AdmissionModal } from "@/screens/Wards/components/AdmissionModal";
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   WardType,
   wardBedNos,

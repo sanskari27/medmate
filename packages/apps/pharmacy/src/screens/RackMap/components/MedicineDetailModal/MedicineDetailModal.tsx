@@ -13,7 +13,8 @@ import {
   unitNoun,
   stockLabel,
 } from "@/utils";
-import { Thumb, ScheduleTag } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
+import { ScheduleTag } from "@/components/ScheduleTag";
 import { IconX, IconPin, IconBox, IconUnlock, IconReceipt, IconTag } from "@/components/Icon";
 
 export function MedicineDetailModal({

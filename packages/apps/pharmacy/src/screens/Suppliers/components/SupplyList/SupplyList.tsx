@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   SupplyEntry,
   inr2,
@@ -11,9 +11,9 @@ import {
   catLabel,
 } from "@/utils";
 import { IconPlus, IconEdit, IconReceipt, IconRefresh, IconStar } from "@/components/Icon";
-import { Thumb } from "@/components/bits";
+import { Thumb } from "@/components/Thumb";
 
-import { multiSourceCount } from "@/screens/Purchases/components/multiSourceCount";
+import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 import { SupplyModal } from "@/screens/Purchases/components/SupplyModal";
 
 export function SupplyList() {

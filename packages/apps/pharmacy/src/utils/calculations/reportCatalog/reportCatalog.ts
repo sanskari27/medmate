@@ -191,11 +191,6 @@ export const CAT_LABEL: Record<ReportCat, string> = {
   party: "Party",
 };
 
-export { runReport } from "@/screens/Reports/components/runReport";
-export { reportById } from "@/screens/Reports/components/reportById";
+export const reportById = (id: string) => REPORT_CATALOG.find((r) => r.id === id);
 
-// ── small helpers ───────────────────────────────────────────────
-
-// online COD orders not yet delivered are "outstanding" (receivable from customer)
-
-// ════════════════════════════════════════════════════════════════
+export { runReport } from "@/screens/Reports/utils/runReport";

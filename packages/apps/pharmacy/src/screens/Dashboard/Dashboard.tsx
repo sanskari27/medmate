@@ -1,8 +1,8 @@
-import { saleTotal } from "@/screens/Dashboard/components/saleTotal";
+import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
 import { Spark } from "@/screens/Dashboard/components/Spark";
 import { SalesAnalytics } from "@/screens/Dashboard/components/SalesAnalytics";
 import { useMemo } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import {
   inr,
   isLowStock,
@@ -14,7 +14,8 @@ import {
   catLabel,
   Sale,
 } from "@/utils";
-import { StatusPill, Thumb } from "@/components/bits";
+import { StatusPill } from "@/components/StatusPill";
+import { Thumb } from "@/components/Thumb";
 import {
   IconRupee,
   IconOrders,
@@ -33,7 +34,7 @@ import {
   IconStore,
   IconStar,
 } from "@/components/Icon";
-import { monogramOf } from "@/components/entityIcon";
+import { monogramOf } from "@/components/EntityIcon";
 
 const DAY_MS = 86400000;
 

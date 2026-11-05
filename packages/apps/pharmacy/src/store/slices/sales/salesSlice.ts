@@ -1,5 +1,5 @@
 import type { Offer, Sale } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type SalesState = { sales: Sale[]; offers: Offer[]; lastInvoice: Sale | null };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePharma } from "@/store/slices/session";
+import { usePharma } from "@/hooks";
 import { Department } from "@/utils/calculations/hospital";
 import { IconPlus, IconEdit, IconX } from "@/components/Icon";
 

@@ -1,5 +1,5 @@
 import type { CreditPayment, Referral } from "@/utils";
-import { createFieldSlice } from "@/app/store/createFieldSlice";
+import { createFieldSlice } from "@/store/createFieldSlice";
 
 export type CustomersState = { creditPayments: CreditPayment[]; referrals: Referral[] };
 
