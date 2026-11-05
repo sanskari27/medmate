@@ -1,0 +1,68 @@
+/* ══════════════════════════════════════════════════════════════
+   Namma MedMate — Pharmacist Dashboard (desktop)
+   Namespace: pd-   ·   Palette/fonts: MedMate Assam (greens + gold)
+   ══════════════════════════════════════════════════════════════ */
+
+.pd-root {
+  --deep:   #11331f;
+  --dark:   #1B3D29;
+  --mid:    #2F7D52;
+  --green:  #3D8B60;
+  --light:  #4A9E6E;
+  --mint:   #8FD4A8;
+  --wash:   #E6F2EB;
+  --wash2:  #F0FAF4;
+  --gold:   #D9A648;
+  --gold-d: #b9842f;
+  --rose:   #DC2626;
+  --rose-bg:#FEECEC;
+  --amber:  #E8941A;
+  --amber-bg:#FDF1DD;
+  --blue:   #2563EB;
+  --blue-bg:#E8F0FE;
+  --teal:   #1f7d8c;
+
+  --ink:    #16241c;
+  --ink-2:  #3a5346;
+  --muted:  #5d7a6b;
+  --faint:  #8AAE9A;
+  --line:   #e1ece5;
+  --line-2: #cfe0d6;
+  --paper:  #ffffff;
+  --bg:     #f1f6f2;
+  --sidebar:#10301d;
+
+  /* spacing scale */
+  --sp1: 4px;  --sp2: 8px;  --sp3: 12px; --sp4: 16px;
+  --sp5: 20px; --sp6: 24px; --sp7: 32px; --sp8: 40px;
+
+  /* radius ladder */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r:    12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+
+  /* elevation — hairline border first, shadow second */
+  --sh-sm: 0 1px 2px rgba(27,61,41,.04), 0 1px 3px rgba(27,61,41,.05);
+  --sh:    0 2px 4px rgba(27,61,41,.04), 0 8px 20px rgba(27,61,41,.06);
+  --sh-lg: 0 12px 32px rgba(27,61,41,.12), 0 2px 8px rgba(27,61,41,.05);
+
+  --focus: 0 0 0 3px rgba(47,125,82,.16);
+  --sbw: 248px;
+
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pd-root *, .pd-root *::before, .pd-root *::after { box-sizing: border-box; }
+.pd-root h1, .pd-root h2, .pd-root h3, .pd-root h4 {
+  font-family: Manrope, Inter, sans-serif; color: var(--dark);
+  margin: 0; font-weight: 800; letter-spacing: -.02em; line-height: 1.18;
+}
+.pd-root p { margin: 0; }
+.pd-root button { font-family: inherit; cursor: pointer; }
+.pd-root input, .pd-root select, .pd-root textarea { font-family: inherit; }
+.pd-mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }

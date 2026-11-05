@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { PHARMACY_URL } from "@/lib/site";
+import { API_BASE_URL } from "@/lib/site";
 
 export function BookConsult() {
   const [error, setError] = useState("");
@@ -15,7 +15,7 @@ export function BookConsult() {
     setPending(true);
     setError("");
     try {
-      const res = await fetch(`${PHARMACY_URL}/api/v1/consultations`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/consultations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

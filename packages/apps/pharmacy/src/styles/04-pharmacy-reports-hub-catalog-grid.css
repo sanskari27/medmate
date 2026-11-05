@@ -1,0 +1,46 @@
+/* ── reports hub (catalog grid) ─────────────────────────────── */
+.pd-report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 38px; }
+.pd-report-col { border-top: 1px solid var(--line); padding-top: 6px; }
+.pd-report-head { display: flex; align-items: center; gap: 7px; font-family: Manrope; font-weight: 800; font-size: 13.5px; color: var(--muted); padding: 12px 2px 8px; }
+.pd-report-row { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 9px 2px; font-size: 14px; color: var(--ink); text-align: left; border-radius: 7px; }
+.pd-report-row:hover { background: var(--wash2); padding-left: 8px; padding-right: 8px; color: var(--green); }
+.pd-report-row .nm { font-weight: 500; }
+.pd-report-row .star { color: var(--gold); font-size: 15px; }
+
+/* ── dropdown menu + icon button (Expenses) ─────────────────── */
+.pd-menu { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(20,40,30,.16); padding: 6px; }
+.pd-menu-item { display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; color: var(--ink); }
+.pd-menu-item:hover { background: var(--wash2); color: var(--green); }
+.pd-icon-btn { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 13px; padding: 4px 7px; border-radius: 7px; }
+.pd-icon-btn:hover { background: var(--rose-w); color: var(--rose); }
+
+/* ── simple date-range dropdown (shared) ────────────────────── */
+.nm-dr { position: relative; }
+.nm-dr-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px; cursor: pointer; font-size: 13.5px; color: var(--ink); font-family: inherit; min-width: 180px; }
+.nm-dr-btn .cal { font-size: 13px; }
+.nm-dr-btn .lbl { font-weight: 700; }
+.nm-dr-btn .chev { margin-left: auto; opacity: .5; font-size: 11px; }
+.nm-dr-menu { position: absolute; left: 0; top: calc(100% + 6px); z-index: 40; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 36px rgba(20,40,30,.18); padding: 6px; min-width: 300px; max-height: 340px; overflow-y: auto; }
+.nm-dr-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; background: none; border: none; cursor: pointer; padding: 9px 11px; border-radius: 8px; font-size: 13.5px; color: var(--ink); text-align: left; }
+.nm-dr-item .sub { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.nm-dr-item:hover { background: var(--wash2); }
+.nm-dr-item.on { background: var(--wash2); color: var(--green); font-weight: 700; }
+.nm-dr-custom { display: flex; align-items: center; gap: 8px; padding: 8px 11px; }
+.nm-dr-custom input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
+
+/* ── headings / sections ────────────────────────────────────── */
+.pd-sec { margin-bottom: 22px; }
+.pd-sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+.pd-sec-head h2 { font-size: 16px; }
+.pd-sec-head .sub { font-size: 12.5px; color: var(--muted); }
+
+/* ── stat cards ─────────────────────────────────────────────── */
+.pd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr)); gap: 16px; margin-bottom: 22px; }
+.pd-stat { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--sh-sm); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.pd-stat .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; margin-bottom: 0; }
+.pd-stat .lbl { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin-top: 12px; }
+.pd-stat .val { font-family: Manrope; font-size: 26px; font-weight: 800; color: var(--dark); letter-spacing: -.03em; margin-top: 3px; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.pd-stat .delta { font-size: 11.5px; font-weight: 700; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+.pd-stat .delta.up { color: var(--green); }
+.pd-stat .delta.down { color: var(--rose); }
+.pd-stat .delta.flat { color: var(--muted); }

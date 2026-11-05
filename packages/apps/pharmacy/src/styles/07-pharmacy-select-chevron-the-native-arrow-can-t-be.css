@@ -1,0 +1,50 @@
+/* Select chevron — the native arrow can't be positioned and differs per
+   platform. This one is exact: 11px from the right edge, optically centred.
+   Mirrors the `.selectbox` treatment already used elsewhere in the product. */
+.pd-select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232F7D52' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+.pd-select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231B3D29' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+.pd-select:disabled {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238AAE9A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  cursor: not-allowed;
+}
+.pd-select option { color: var(--ink); background: #fff; }
+/* compact variant for dense table/toolbar rows — keeps the chevron gutter */
+.pd-select.pd-compact { padding: 5px 30px 5px 8px; font-size: 12.5px; background-position: right 7px center; }
+.pd-input::placeholder, .pd-textarea::placeholder { color: var(--faint); }
+.pd-input:hover, .pd-select:hover, .pd-textarea:hover { border-color: #b9d0c2; }
+.pd-input:focus, .pd-select:focus, .pd-textarea:focus { border-color: var(--mid); box-shadow: var(--focus); }
+.pd-app[data-fault="gstin"] [data-field="gstin"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="phone"] [data-field="phone"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="ifsc"] [data-field="ifsc"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="otp"] [data-field="otp"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="email"] [data-field="email"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="amount"] [data-field="amount"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="rack"] [data-field="rack"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="qty"] [data-field="qty"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="doctor"] [data-field="doctor"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="ward"] [data-field="ward"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="invoiceNo"] [data-field="invoiceNo"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="name"] [data-field="name"] :is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="gstin"] [data-field="gstin"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="phone"] [data-field="phone"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="ifsc"] [data-field="ifsc"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="otp"] [data-field="otp"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="email"] [data-field="email"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="amount"] [data-field="amount"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="rack"] [data-field="rack"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="qty"] [data-field="qty"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="doctor"] [data-field="doctor"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="ward"] [data-field="ward"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="invoiceNo"] [data-field="invoiceNo"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="name"] [data-field="name"]:is(.pd-input, .pd-select, .pd-textarea, .pd-qtyinput),
+.pd-app[data-fault="qty"] [data-field="qty"].pd-qty { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(220, 38, 38, .15); }
+.pd-textarea { resize: vertical; min-height: 64px; }
+.pd-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pd-form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.pd-span2 { grid-column: span 2; }

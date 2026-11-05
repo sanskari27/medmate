@@ -1,0 +1,45 @@
+/* buttons + share */
+.pd-btn-line { background: var(--paper); border: 1px solid var(--line-2); color: var(--ink-2); }
+.pd-btn-line:hover { background: var(--wash2); color: var(--mid); border-color: var(--mid); }
+.pd-btn-wa { background: #25D366; border: 1px solid #25D366; color: #fff; }
+.pd-btn-wa:hover { filter: brightness(.95); }
+.pd-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
+.pd-cred-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.pd-cred-card { display: flex; flex-direction: column; gap: 2px; position: relative; background: var(--wash2); border: 1px solid var(--line); border-radius: 11px; padding: 11px 13px; }
+.pd-cred-card span { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pd-cred-card b { font-size: 15px; color: var(--ink); }
+.pd-cred-card .pd-copybtn { position: absolute; top: 9px; right: 9px; }
+.pd-msgbox { white-space: pre-wrap; background: #16241c; color: #d7ebe0; border-radius: 11px; padding: 13px 15px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; line-height: 1.5; max-height: 220px; overflow: auto; }
+.pd-share-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.pd-share-row .pd-btn { flex: 1; justify-content: center; min-width: 120px; }
+
+/* ── Prescriptions dashboard ── */
+.ic-teal { background: #e2f2f4; color: #1f7d8c; }
+.ic-violet { background: #efeafc; color: #6d4fc4; }
+.pd-rx-alert { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0 0; padding: 11px 15px; border-radius: 12px; border: 1px solid #f3c9c9; background: linear-gradient(100deg, #fdecec, #fff6f6); color: #a0281f; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.pd-rx-alert b { font-weight: 800; }
+.pd-rx-alert:hover { border-color: var(--rose); }
+
+.pd-rx-insights { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.pd-rx-inhead { display: flex; align-items: center; gap: 7px; font-family: Manrope, sans-serif; font-weight: 800; font-size: 13px; color: var(--mid); margin-bottom: 12px; }
+.pd-rx-splitbar { display: flex; height: 12px; border-radius: 7px; overflow: hidden; background: var(--wash); }
+.pd-rx-splitbar .dig { background: #8a6ee0; }
+.pd-rx-splitbar .upl { background: var(--mid); }
+.pd-rx-legend { display: flex; gap: 16px; margin: 9px 0 12px; font-size: 12px; color: var(--ink-2); }
+.pd-rx-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.pd-rx-legend i.dig { background: #8a6ee0; }
+.pd-rx-legend i.upl { background: var(--mid); }
+.pd-rx-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pd-rx-facts > div { display: flex; flex-direction: column; }
+.pd-rx-facts span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+.pd-rx-facts b { font-size: 15px; color: var(--ink); }
+
+.pd-rx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.pd-rxcard.overdue { border-color: #f0c4c4; box-shadow: 0 0 0 1px #f0c4c4; }
+/* Rx card anatomy — head, patient, meta, medicines, actions. Every row of cards
+   has to line up, so the head never wraps, the doctor line stays on one line,
+   and the action bar is pinned to the bottom. */
+.pd-rxcard { display: flex; flex-direction: column; }
+.pd-rxcard .pd-card-head { flex-wrap: nowrap; align-items: flex-start; }
+.pd-rxcard .pd-card-head > .pd-flex { min-width: 0; flex: 1; }
+.pd-rxcard .pd-card-head h3 { line-height: 22px; }

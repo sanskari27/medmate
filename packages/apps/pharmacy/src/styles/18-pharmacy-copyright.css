@@ -1,0 +1,57 @@
+/* copyright */
+.pd-copyright { font-size: 10px; color: rgba(255,255,255,.4); text-align: center; padding: 8px 12px 12px; letter-spacing: .01em; }
+.pd-setup .pd-copyright { color: var(--faint); }
+
+/* hospital-billing bill-to banner */
+.pd-hb-banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: var(--r-lg); background: linear-gradient(135deg, var(--wash2), #fff); border: 1px solid var(--line-2); }
+.pd-hb-banner .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--wash); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+.pd-hb-banner b { font-family: Manrope; font-weight: 800; font-size: 15px; color: var(--dark); display: block; }
+.pd-hb-banner small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; max-width: 720px; line-height: 1.45; }
+.pd-hb-due { text-align: right; flex-shrink: 0; }
+.pd-hb-due span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 700; }
+.pd-hb-due b { font-family: Manrope; font-weight: 800; font-size: 22px; color: var(--rose); }
+
+/* indent ↔ hospital-billing link */
+.pd-indent-bill { margin-top: 10px; padding: 8px 11px; border-radius: 9px; background: var(--wash2); border: 1px solid var(--line-2); font-size: 12px; color: var(--ink); }
+.pd-indent-bill b { font-family: "IBM Plex Mono", monospace; }
+
+/* pricing admin lock bar */
+.pd-lockbar { display: flex; align-items: center; gap: 13px; padding: 13px 16px; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--wash2); }
+.pd-lockbar.locked { background: var(--amber-bg); border-color: #f0d9a8; }
+.pd-lockbar .ic { font-size: 22px; flex-shrink: 0; }
+.pd-lockbar .gw { flex: 1; }
+.pd-lockbar b { font-family: Manrope; font-weight: 800; font-size: 14px; color: var(--dark); display: block; }
+.pd-lockbar small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+/* barcode scan bar + inline batch selector (POS) */
+.pd-scanbar { display: flex; align-items: center; gap: 8px; flex: 1 1 280px; background: var(--wash2); border: 1.5px solid var(--mid); border-radius: var(--r-sm); padding: 4px 6px 4px 11px; }
+.pd-scanbar .ic { font-size: 16px; }
+.pd-scanbar input { flex: 1; border: 0; background: none; outline: none; font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 6px 2px; }
+.pd-batchsel { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--mid); background: var(--wash2); border: 1px solid var(--line-2); border-radius: 6px; padding: 1px 4px; max-width: 200px; cursor: pointer; }
+
+/* search-to-add medicine picker (hospital issue/return) */
+.pd-pickbox { border: 1px solid var(--line-2); border-radius: var(--r); background: var(--wash2); padding: 8px; margin-bottom: 10px; }
+.pd-pickbox .pd-search-inline { background: #fff; }
+.pd-picklist { max-height: 230px; overflow-y: auto; margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.pd-pickitem { display: block; width: 100%; text-align: left; padding: 8px 11px; border-radius: 8px; border: 0; background: none; font-size: 13px; color: var(--ink); cursor: pointer; }
+.pd-pickitem:hover { background: #fff; }
+.pd-pickitem b { font-weight: 700; color: var(--dark); }
+
+/* ── rack & bin locations ──────────────────────────────────────── */
+.pd-rackgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-items: start; }
+.pd-rackcard { border: 1px solid var(--line); border-radius: var(--r); background: #fff; overflow: hidden; transition: box-shadow .12s, border-color .12s; }
+.pd-rackcard:hover { border-color: var(--line-2); box-shadow: 0 6px 18px rgba(27,61,41,.07); }
+.pd-rackcard-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: var(--wash2); border: 0; border-bottom: 1px solid var(--line); width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.pd-rackcard-head:hover { background: var(--wash); }
+.pd-rackcard-head .code { font-family: "IBM Plex Mono", monospace; font-weight: 800; font-size: 16px; color: var(--dark); letter-spacing: .04em; }
+.pd-rackcard-list { display: flex; flex-direction: column; }
+.pd-rackcard-list.scroll { max-height: 210px; overflow-y: auto; }
+.pd-rackcard-list.scroll.tall { max-height: 320px; }
+.pd-rackrow { display: flex; align-items: center; gap: 9px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+.pd-rackrow:last-child { border-bottom: 0; }
+.pd-rackrow.click, .pd-rackrow-main { border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; }
+.pd-rackrow.click:hover, .pd-rackrow-main:hover { background: var(--wash2); }
+.pd-rackrow-main { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; padding: 0; }
+.pd-rackrow .em { width: 30px; height: 30px; border-radius: 7px; background: var(--wash); display: grid; place-items: center; font-size: 16px; overflow: hidden; flex-shrink: 0; }
+.pd-rackrow .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-rack-preview { font-family: "IBM Plex Mono", monospace; font-weight: 800; font-size: 22px; color: var(--green); letter-spacing: .04em; line-height: 1.1; }

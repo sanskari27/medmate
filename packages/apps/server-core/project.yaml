@@ -1,0 +1,17 @@
+name: server-core
+kind: java
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - api.nammamedmate.com
+runtime:
+  port: 8080
+  healthPath: /health
+  memory: 768m
+resources:
+  database:
+    enabled: true
+    name: server_core
+  uploads:
+    enabled: true

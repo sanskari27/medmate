@@ -1,0 +1,40 @@
+/* one-line sub-note */
+/* margin-top:auto parks the sub-metric row on the card's baseline,
+   so every card in a row shares one divider line instead of leaving a void. */
+.pd-stat .split { display: block; font-size: 12px; color: var(--muted); margin-top: auto; padding-top: 9px; border-top: 1px solid var(--line); }
+/* two-metric sub-row: value over label, so a pair can never be misread */
+.pd-stat .split-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 9px; border-top: 1px solid var(--line); }
+.pd-stat .split-pair > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pd-stat .split-pair b { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 4px; }
+.pd-stat .split-pair small { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.ic-green { background: var(--wash); color: var(--mid); }
+.ic-gold  { background: var(--amber-bg); color: var(--gold-d); }
+.ic-blue  { background: var(--blue-bg); color: var(--blue); }
+.ic-rose  { background: var(--rose-bg); color: var(--rose); }
+.ic-teal  { background: #e3f3f5; color: var(--teal); }
+
+/* ── cards ──────────────────────────────────────────────────── */
+.pd-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh-sm); }
+.pd-card-pad { padding: 18px; }
+.pd-card-head { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; border-bottom: 1px solid var(--line); gap: 10px; flex-wrap: wrap; }
+.pd-card-head h3 { font-size: 15px; font-weight: 700; }
+.pd-card-head .sub { font-size: 12.5px; color: var(--muted); }
+.pd-grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
+.pd-grid-2b { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pd-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* ── tables ─────────────────────────────────────────────────── */
+.pd-tbl-wrap { overflow-x: auto; }
+.pd-tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.pd-tbl th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--wash2); position: sticky; top: 0; z-index: 1; }
+.pd-tbl td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--ink-2); }
+.pd-tbl tr:last-child td { border-bottom: 0; }
+.pd-tbl tbody tr { transition: background .1s ease; }
+.pd-tbl tbody tr:hover { background: var(--wash2); }
+.pd-tbl .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+.pd-tbl .prod { display: flex; align-items: center; gap: 10px; }
+.pd-tbl .prod .em { width: 34px; height: 34px; border-radius: 9px; background: var(--wash); display: grid; place-items: center; font-size: 17px; flex-shrink: 0; }
+.pd-tbl .prod .nm { font-weight: 700; color: var(--ink); }
+.pd-tbl .prod .sub { font-size: 11.5px; color: var(--muted); }
+.pd-tbl td.nowrap { white-space: nowrap; }
+.pd-tbl-foot { padding: 12px 16px; text-align: center; }

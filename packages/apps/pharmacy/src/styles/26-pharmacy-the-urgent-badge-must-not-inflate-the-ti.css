@@ -1,0 +1,44 @@
+/* the Urgent badge must not inflate the title line box */
+.pd-rxcard .pd-card-head .pd-pill { padding: 1px 7px; font-size: 10px; line-height: 1.2; vertical-align: middle; }
+.pd-rxcard .pd-card-pad { flex: 1; }
+.pd-rxcard .pd-modal-foot { margin-top: auto; }
+.pd-rx-kindico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.pd-rx-kindico.digital { background: #efeafc; color: #6d4fc4; }
+.pd-rx-kindico.uploaded { background: var(--wash); color: var(--mid); }
+.pd-rx-patient { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 11px; background: var(--wash2); padding: 9px 11px; cursor: pointer; margin-bottom: 10px; }
+.pd-rx-patient:hover { border-color: var(--line-2); background: var(--wash); }
+.pd-rx-patient .av { width: 32px; height: 32px; border-radius: 50%; background: var(--mid); color: #fff; font-weight: 800; display: grid; place-items: center; flex-shrink: 0; font-size: 14px; }
+.pd-rx-patient .nm { display: block; font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-rx-patient .dr { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pd-rx-sla { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--amber); background: var(--amber-bg); border-radius: 7px; padding: 4px 8px; margin-bottom: 8px; }
+.pd-rx-sla.over { color: var(--rose); background: var(--rose-bg); }
+.pd-rx-sla.ok { color: var(--mid); background: var(--wash); }
+.pd-rx-medlbl { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 6px 0 5px; }
+.pd-rx-medlbl span { font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--green); }
+.pd-rx-medrow { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; }
+.pd-rx-medrow .nm { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pd-rx-medrow .nm .em { font-size: 15px; }
+.pd-rx-medrow .st { font-weight: 700; white-space: nowrap; }
+.pd-rx-medrow .st.out { color: var(--rose); font-weight: 800; }
+.pd-schtag { font-size: 9px; font-weight: 800; color: #8a4b00; background: #fdeccb; border-radius: 4px; padding: 1px 4px; margin-left: 5px; letter-spacing: .02em; }
+.pd-rx-total { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-2); font-size: 12.5px; color: var(--muted); }
+.pd-rx-total b { font-size: 15px; color: var(--ink); font-family: Manrope, sans-serif; }
+.pd-rx-oos { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11.5px; font-weight: 600; color: var(--rose); background: var(--rose-bg); border-radius: 8px; padding: 6px 9px; }
+
+/* detail modal */
+.pd-rx-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.pd-rx-side { display: flex; flex-direction: column; gap: 12px; }
+.pd-rx-block { border: 1px solid var(--line); border-radius: 12px; padding: 12px 13px; background: var(--paper); }
+.pd-rx-blkh { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 9px; }
+.pd-rx-kv { display: flex; gap: 10px; font-size: 12.5px; padding: 2px 0; }
+.pd-rx-kv span { color: var(--muted); min-width: 66px; }
+.pd-rx-kv b { color: var(--ink); font-weight: 600; }
+.pd-rx-tl { display: flex; flex-direction: column; }
+.pd-rx-tlrow { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; padding: 3px 0; font-size: 12.5px; }
+.pd-rx-tlrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mid); justify-self: center; }
+.pd-rx-tlrow.bad .dot { background: var(--rose); }
+.pd-rx-tlrow .lb { font-weight: 600; color: var(--ink); }
+.pd-rx-tlrow .tm { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.pd-rx-mtbl td { padding: 6px 4px; font-size: 12.5px; }
+.pd-rx-mtbl tfoot td { border-top: 1px solid var(--line); }
+.pd-oos-txt { color: var(--rose); font-weight: 700; }

@@ -1,0 +1,186 @@
+import { useState } from "react";
+import { usePharma } from "@/app/session/pharmacy-provider";
+import {
+  CATEGORIES, catLabel, inr, mrpOf, sellPrice, stockOf, InvProduct, Offer, OfferType, directOfferId, directOfferOf, onlineOfferPrice,
+} from "@/domain";
+import { IconSearch, IconStore, IconX, IconGlobe, IconTag, IconBulb, IconCart } from "@/components/Icon"
+import { CategoryIcon, monogramOf } from "@/components/entityIcon";;
+import { Thumb } from "@/components/bits";
+
+export default function OnlineStoreScreen() {
+  const { inventory, offers, profile, toggleOnline, setOnlinePrice, setProductOffer, setDirectOffer, toggleStoreOpen } = usePharma();
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState("all");
+  const [editPrice, setEditPrice] = useState<InvProduct | null>(null);
+  const [directFor, setDirectFor] = useState<InvProduct | null>(null);
+  const [tab, setTab] = useState<"manage" | "preview">("manage");
+
+  const list = inventory.filter((p) => {
+    if (cat !== "all" && p.category !== cat) return false;
+    if (q && !p.name.toLowerCase().includes(q.toLowerCase())) return false;
+    return true;
+  });
+  const onlineList = inventory.filter((p) => p.online && stockOf(p) > 0);
+  const liveCount = inventory.filter((p) => p.online).length;
+  const hiddenCount = inventory.length - liveCount;
+  const offerCount = inventory.filter((p) => p.offerId && offers.find((o) => o.id === p.offerId && o.active)).length;
+  const storeOffers = offers.filter((o) => o.online && !o.id.startsWith("od-"));
+
+  return (
+    <div className="pd-canvas-wide">
+      {/* store status banner */}
+      <div className="pd-card pd-card-pad" style={{ marginBottom: 18, display: "flex", alignItems: "center", gap: 16, background: profile.storeOpen ? "linear-gradient(100deg,var(--wash),#fff)" : "var(--rose-bg)" }}>
+        <div style={{ width: 46, height: 46, borderRadius: 12, background: profile.storeOpen ? "var(--mid)" : "var(--rose)", color: "#fff", display: "grid", placeItems: "center" }}><IconStore size={24} /></div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ fontSize: 15 }}>{profile.storeOpen ? "Your online store is live" : "Online store is paused"}</h3>
+          <p className="pd-muted" style={{ fontSize: 12.5 }}>{profile.storeOpen ? `${onlineList.length} products visible to customers on the Namma MedMate app right now.` : "Customers cannot place online orders. Counter billing still works."}</p>
+        </div>
+        <button className={`pd-switch${profile.storeOpen ? " on" : ""}`} onClick={toggleStoreOpen} style={{ transform: "scale(1.2)" }} aria-label="Toggle store" />
+      </div>
+
+      <div className="pd-stats" >
+        <div className="pd-stat"><div className="ic ic-green"><IconGlobe size={18} /></div><div className="lbl">Live online</div><div className="val">{liveCount}</div><div className="split">visible to customers</div></div>
+        <div className="pd-stat"><div className="ic ic-gold"></div><div className="lbl">Hidden</div><div className="val">{hiddenCount}</div><div className="split">counter-only items</div></div>
+        <div className="pd-stat"><div className="ic ic-blue"><IconTag size={18} /></div><div className="lbl">On offer</div><div className="val">{offerCount}</div><div className="split">discounted online</div></div>
+      </div>
+
+      <div className="pd-toolbar">
+        <div className="pd-seg">
+          <button className={tab === "manage" ? "on" : ""} onClick={() => setTab("manage")}>Manage listings</button>
+          <button className={tab === "preview" ? "on" : ""} onClick={() => setTab("preview")}>Customer preview</button>
+        </div>
+        <div className="pd-spacer" />
+        <div className="pd-search-inline"><span className="ic"><IconSearch size={17} /></span><input placeholder="Search products…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+      </div>
+
+      {tab === "manage" && (
+        <>
+          <div className="pd-pos-cat" style={{ marginBottom: 14 }}>
+            <button className={`pd-chip${cat === "all" ? " on" : ""}`} onClick={() => setCat("all")}>All</button>
+            {CATEGORIES.map((c) => <button key={c.key} className={`pd-chip${cat === c.key ? " on" : ""}`} onClick={() => setCat(c.key)}><CategoryIcon k={c.key} size={15} /> {c.label}</button>)}
+          </div>
+          <div className="pd-card">
+            <div className="pd-tbl-wrap">
+              <table className="pd-tbl">
+                <thead><tr><th>Product</th><th className="num">MRP</th><th className="num">Online price</th><th>Offer</th><th className="num">Customer pays</th><th>Show online</th></tr></thead>
+                <tbody>
+                  {list.map((p) => {
+                    const price = onlineOfferPrice(p, offers);
+                    const base = sellPrice(p);
+                    const off = base - price;
+                    const direct = directOfferOf(p, offers);
+                    const out = stockOf(p) <= 0;
+                    return (
+                      <tr key={p.id} style={{ opacity: p.online ? 1 : 0.55 }}>
+                        <td><div className="prod"><span className="em"><Thumb p={p} /></span><span><span className="nm">{p.name}</span><div className="sub">{catLabel(p.category)} · {p.pack}{out ? " · out of stock" : ""}</div></span></div></td>
+                        <td className="num">{inr(mrpOf(p))}</td>
+                        <td className="num">
+                          <button className="pd-iconbtn" style={{ width: "auto", padding: "5px 10px", fontWeight: 700 }} onClick={() => setEditPrice(p)}>
+                            {p.onlinePrice ? inr(p.onlinePrice) : <span className="pd-muted">= MRP</span>}
+                          </button>
+                        </td>
+                        <td>
+                          <div className="pd-flex pd-gap6">
+                            <select className="pd-select pd-compact" style={{ maxWidth: 150 }} value={p.offerId && p.offerId !== directOfferId(p.id) ? p.offerId : ""} onChange={(e) => { const id = e.target.value; if (id) setProductOffer(p.id, id); else if (direct) setDirectOffer(p.id, direct.type, direct.value); else setProductOffer(p.id, undefined); }}>
+                              <option value="">No store offer</option>
+                              {storeOffers.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
+                            </select>
+                            <button className="pd-btn pd-btn-ghost pd-btn-sm" onClick={() => setDirectFor(p)}>{direct ? (direct.type === "pct" ? `${direct.value}%` : `₹${direct.value}`) : "Direct"}</button>
+                          </div>
+                        </td>
+                        <td className="num">
+                          {off > 0 ? <span><b style={{ color: "var(--green)" }}>{inr(price)}</b> <span className="pd-strike">{inr(base)}</span></span> : <b>{inr(price)}</b>}
+                        </td>
+                        <td><button className={`pd-switch${p.online ? " on" : ""}`} onClick={() => toggleOnline(p.id)} aria-label="Toggle online" /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="pd-muted" style={{ fontSize: 12.5, marginTop: 12 }}><IconBulb size={13} /> Turn a product off to keep it counter-only. Set an online price, attach a store offer, or use Direct for a discount on that product only.</p>
+        </>
+      )}
+
+      {tab === "preview" && (
+        <div className="pd-card pd-card-pad">
+          <div className="pd-flex" style={{ justifyContent: "space-between", marginBottom: 14 }}>
+            <div><h3 style={{ fontSize: 15 }}>{profile.name}</h3><p className="pd-muted" style={{ fontSize: 12.5 }}>As customers see it — this dashboard preview, not a separate storefront</p></div>
+          </div>
+          {onlineList.length === 0 ? (
+            <div className="pd-empty"><div className="em"><IconCart size={30} /></div><p>No products are live online yet. Toggle some on in “Manage listings”.</p></div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 14 }}>
+              {onlineList.map((p) => {
+                const price = onlineOfferPrice(p, offers);
+                const base = sellPrice(p);
+                const off = base - price;
+                return (
+                  <div key={p.id} style={{ border: "1px solid var(--line)", borderRadius: 14, padding: 12, position: "relative", background: "#fff" }}>
+                    {off > 0 && <span className="pd-pill pill-rose" style={{ position: "absolute", top: 8, left: 8 }}>{Math.round((off / base) * 100)}% OFF</span>}
+                    <div style={{ height: 70, borderRadius: 10, background: "var(--wash)", display: "grid", placeItems: "center", fontSize: 34, marginBottom: 8, overflow: "hidden" }}>{p.image ? <img className="pd-thumb" src={p.image} alt={p.name} /> : monogramOf(p.name)}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.25 }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{p.pack}</div>
+                    <div className="pd-flex" style={{ marginTop: 8, justifyContent: "space-between" }}>
+                      <span><b style={{ fontFamily: "Manrope", fontSize: 15, color: "var(--dark)" }}>{inr(price)}</b> {off > 0 && <span className="pd-strike">{inr(base)}</span>}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "var(--green)", border: "1px solid var(--mint)", borderRadius: 7, padding: "3px 8px" }}>ADD</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {editPrice && <PriceModal product={editPrice} onClose={() => setEditPrice(null)} onSave={async (price) => { const err = await setOnlinePrice(editPrice.id, price); if (!err) setEditPrice(null); }} />}
+      {directFor && <DirectModal product={directFor} offer={directOfferOf(directFor, offers)} onClose={() => setDirectFor(null)} onSave={(type, value) => { setDirectOffer(directFor.id, type, value); setDirectFor(null); }} />}
+    </div>
+  );
+}
+
+function DirectModal({ product, offer, onClose, onSave }: { product: InvProduct; offer?: Offer; onClose: () => void; onSave: (type: OfferType, value: number) => void }) {
+  const [type, setType] = useState<OfferType>(offer?.type ?? "pct");
+  const [val, setVal] = useState(offer ? String(offer.value) : "");
+  const value = Number(val) || 0;
+  return (
+    <div className="pd-modal-wrap" onClick={onClose}>
+      <div className="pd-modal" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+        <div className="pd-modal-head"><h3>Direct offer · {product.name}</h3><button className="pd-x" onClick={onClose}><IconX size={18} /></button></div>
+        <div className="pd-modal-body">
+          <p className="pd-muted" style={{ fontSize: 13, marginBottom: 14 }}>A discount for this product only. It replaces the store offer on the customer price.</p>
+          <div className="pd-grid-2">
+            <div className="pd-field"><label>Type</label>
+              <select className="pd-select" value={type} onChange={(e) => setType(e.target.value as OfferType)}><option value="pct">Percentage %</option><option value="flat">Flat ₹</option></select>
+            </div>
+            <div className="pd-field"><label>{type === "pct" ? "Percent off" : "Amount off (₹)"}</label><input className="pd-input" type="number" min={0} value={val} onChange={(e) => setVal(e.target.value)} /></div>
+          </div>
+        </div>
+        <div className="pd-modal-foot">
+          <button className="pd-btn pd-btn-ghost" onClick={() => onSave(type, 0)}>Clear</button>
+          <button className="pd-btn pd-btn-primary" disabled={value <= 0} onClick={() => onSave(type, value)}>Save offer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PriceModal({ product, onClose, onSave }: { product: InvProduct; onClose: () => void; onSave: (p: number | undefined) => void }) {
+  const [val, setVal] = useState<string>(product.onlinePrice ? String(product.onlinePrice) : "");
+  return (
+    <div className="pd-modal-wrap" onClick={onClose}>
+      <div className="pd-modal" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+        <div className="pd-modal-head"><h3>Online price · {product.name}</h3><button className="pd-x" onClick={onClose}><IconX size={18} /></button></div>
+        <div className="pd-modal-body">
+          <p className="pd-muted" style={{ fontSize: 13, marginBottom: 14 }}>Printed MRP is <b>{inr(mrpOf(product))}</b>. Set a lower online selling price, or leave blank to sell at MRP.</p>
+          <div className="pd-field" data-field="amount"><label>Online selling price (₹)</label><input className="pd-input" type="number" autoFocus value={val} onChange={(e) => setVal(e.target.value)} placeholder={String(mrpOf(product))} /></div>
+        </div>
+        <div className="pd-modal-foot">
+          <button className="pd-btn pd-btn-ghost" onClick={() => onSave(undefined)}>Reset to MRP</button>
+          <button className="pd-btn pd-btn-primary" onClick={() => onSave(val ? Number(val) : undefined)}>Save price</button>
+        </div>
+      </div>
+    </div>
+  );
+}

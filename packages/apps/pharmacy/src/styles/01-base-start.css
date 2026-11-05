@@ -1,0 +1,82 @@
+/* ============================================================
+   IHCCC — Integrated Health Command & Control Center
+   MedMate Assam design system (ported verbatim from the artifact)
+   Fonts (Inter / Manrope / IBM Plex Mono) are loaded via <link> in layout.tsx
+   ============================================================ */
+
+:root{
+  /* Brand palette */
+  --primary:#217212;      /* Primary Green */
+  --deep:#2E6524;         /* Deep Green */
+  --olive:#7C8023;        /* Olive Green */
+  --soft:#91B688;         /* Soft Green */
+  --gold:#CF9846;         /* Gold Accent */
+  --lgold:#F7DFAE;        /* Light Gold */
+  --warm:#F39A2A;         /* Warm Orange */
+  --alert:#FE8B0C;        /* Alert Orange */
+  --bg:#F6F9F8;           /* Background */
+
+  /* Derived */
+  --deep-2:#234e1c;
+  --deep-3:#1c4016;
+  --ink:#1d2a1c;          /* primary text on light */
+  --ink-2:#46594a;        /* secondary text */
+  --ink-3:#7c8c7e;        /* tertiary / captions */
+  --line:rgba(145,182,136,.28);
+  --line-2:rgba(145,182,136,.5);
+  --surface:#ffffff;
+  --surface-2:#fbfcfb;
+  --tint:#eef4ee;         /* soft green tint surface */
+  --tint-gold:#fbf3e3;
+  --tint-alert:#fdeede;
+
+  /* risk scale */
+  --r-stable:#4a9d3f;
+  --r-watch:#cf9846;
+  --r-warn:#f39a2a;
+  --r-crit:#e2542a;
+
+  /* shadow */
+  --sh-card:0 8px 24px rgba(33,114,18,.08);
+  --sh-sm:0 2px 8px rgba(33,114,18,.07);
+  --sh-pop:0 18px 48px rgba(20,60,16,.20);
+
+  /* radii */
+  --r-lg:18px;
+  --r-md:13px;
+  --r-sm:9px;
+
+  /* density-driven (overridden by [data-density]) */
+  --gap:18px;
+  --pad:18px;
+  --row-h:38px;
+  --fs-body:14px;
+
+  --font-head:'Manrope',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono','SFMono-Regular',monospace;
+}
+
+[data-density="compact"]{
+  --gap:11px; --pad:13px; --row-h:31px; --fs-body:13px;
+  --r-lg:13px; --r-md:10px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:var(--fs-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.tnum{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--font-mono)}
+h1,h2,h3,h4{font-family:var(--font-head);margin:0;color:var(--ink);letter-spacing:-.01em}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(145,182,136,.45);border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}

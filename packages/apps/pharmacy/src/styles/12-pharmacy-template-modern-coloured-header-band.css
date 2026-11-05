@@ -1,0 +1,68 @@
+/* ── template: modern (coloured header band) ── */
+.pd-inv-modern .pd-inv-top { background: var(--inv-accent); color: #fff; border: 0; padding: 16px; border-radius: 10px 10px 0 0; margin: -2px -2px 0; }
+.pd-inv-modern .pd-inv-top .ph-nm { color: #fff; }
+.pd-inv-modern .pd-inv-top .meta { color: rgba(255,255,255,.86); }
+.pd-inv-modern .pd-inv-title { color: #fff; }
+.pd-inv-modern .pd-inv-logo { background: #fff; padding: 3px; }
+.pd-inv-modern .pd-inv-tbl th { background: color-mix(in srgb, var(--inv-accent) 12%, #fff); }
+.pd-inv-modern .pd-inv-meta-grid { padding: 12px; }
+
+/* ── template: minimal (airy, thin lines) ── */
+.pd-inv-minimal { font-size: 12px; }
+.pd-inv-minimal .pd-inv-top { border-bottom: 1px solid #e6e6e6; }
+.pd-inv-minimal .pd-inv-title { color: #999; font-weight: 700; letter-spacing: .12em; font-size: 13px; }
+.pd-inv-minimal .pd-inv-tbl th { background: transparent; border-bottom: 1px solid #e6e6e6; color: #999; }
+.pd-inv-minimal .pd-inv-sum tr.grand td { border-top: 1px solid var(--inv-accent); }
+.pd-inv-minimal .pd-inv-meta-grid { border-bottom: 1px solid #f0f0f0; }
+
+/* ── template: thermal (80mm receipt) ── */
+.pd-inv-thermal { width: 300px; margin: 0 auto; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: #111; }
+.pd-inv-thermal .th-head { text-align: center; }
+.pd-inv-thermal .th-logo { height: 40px; object-fit: contain; margin-bottom: 4px; }
+.pd-inv-thermal .th-nm { font-family: Manrope, sans-serif; font-weight: 800; font-size: 15px; }
+.pd-inv-thermal .th-meta { font-size: 10px; color: #444; }
+.pd-inv-thermal .th-title { text-align: center; font-weight: 800; letter-spacing: .15em; margin: 8px 0; padding: 3px 0; border-top: 1px dashed #999; border-bottom: 1px dashed #999; }
+.pd-inv-thermal .th-rowline { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+.pd-inv-thermal .th-sep { border-top: 1px dashed #999; margin: 6px 0; }
+.pd-inv-thermal .th-item { margin: 3px 0; }
+.pd-inv-thermal .th-item-nm { font-weight: 700; }
+.pd-inv-thermal .th-item-nm small { font-weight: 400; color: #777; }
+.pd-inv-thermal .th-item-ln { display: flex; justify-content: space-between; color: #333; }
+.pd-inv-thermal .th-total { display: flex; justify-content: space-between; font-family: Manrope, sans-serif; font-weight: 800; font-size: 15px; color: var(--inv-accent); margin-top: 4px; padding-top: 4px; border-top: 2px solid var(--inv-accent); }
+.pd-inv-thermal .th-save { text-align: center; color: var(--inv-accent); font-weight: 700; margin-top: 4px; }
+.pd-inv-thermal .th-foot { text-align: center; color: #666; font-size: 10px; }
+
+/* ── invoice settings screen ── */
+.pd-inv-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); gap: 18px; align-items: start; }
+@media (max-width: 1080px) { .pd-inv-layout { grid-template-columns: 1fr; } }
+.pd-inv-settings { display: flex; flex-direction: column; gap: 16px; }
+.pd-inv-preview { position: sticky; top: 16px; }
+.pd-inv-paper { background: #fff; border-radius: 10px; padding: 20px; box-shadow: var(--sh-sm); overflow-x: auto; }
+.pd-inv-paper.thermal { padding: 18px; background: repeating-linear-gradient(#fff, #fff 22px, #fafafa 22px, #fafafa 23px); }
+.pd-tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pd-tpl { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; background: var(--paper); cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+.pd-tpl:hover { border-color: var(--line-2); background: var(--wash2); }
+.pd-tpl.on { border-color: var(--mid); box-shadow: 0 0 0 1px var(--mid); }
+.pd-tpl .nm { display: flex; align-items: center; gap: 5px; justify-content: space-between; font-weight: 800; font-size: 13px; color: var(--ink); }
+.pd-tpl .nm svg { color: var(--mid); }
+.pd-tpl .ds { font-size: 11px; color: var(--muted); }
+.pd-tpl-thumb { display: block; height: 66px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; padding: 6px; margin-bottom: 5px; }
+.tt-head { display: flex; align-items: center; gap: 5px; padding-bottom: 4px; }
+.tt-logo { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.tt-title { width: 36px; height: 6px; border-radius: 2px; display: inline-block; margin-left: auto; }
+.tt-rows { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+.tt-rows i { height: 4px; background: #ececec; border-radius: 2px; }
+.tt-total { height: 6px; width: 40%; border-radius: 2px; margin: 6px 0 0 auto; }
+.tt-receipt { display: flex; flex-direction: column; gap: 3px; width: 54px; margin: 0 auto; }
+.tt-receipt .tt-c { height: 4px; background: #e4e4e4; border-radius: 2px; width: 100%; }
+.pd-swatch { width: 30px; height: 30px; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-2); cursor: pointer; display: grid; place-items: center; color: #fff; }
+.pd-swatch.on { box-shadow: 0 0 0 2px var(--ink); }
+.pd-swatch-custom { position: relative; background: conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); overflow: hidden; }
+.pd-swatch-custom input { position: absolute; inset: -4px; opacity: 0; cursor: pointer; }
+.pd-brand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pd-brand-slot { display: flex; flex-direction: column; gap: 8px; }
+.pd-brand-slot > label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.pd-brand-box { height: 78px; border: 1px dashed var(--line-2); border-radius: 10px; display: grid; place-items: center; background: var(--wash2); overflow: hidden; }
+.pd-brand-box img { max-height: 70px; max-width: 100%; object-fit: contain; }
+.pd-brand-box .ph { color: var(--muted); }
+.pd-brand-box.stamp { background: #fbfbfb; }

@@ -1,0 +1,11 @@
+name: pharmacy
+kind: react
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - pharmacy.nammamedmate.com
+build:
+  env:
+    VITE_SITE_URL: https://pharmacy.nammamedmate.com
+    VITE_API_BASE_URL: https://api.nammamedmate.com

@@ -1,0 +1,50 @@
+/* reject modal */
+.pd-rx-reasons { display: flex; flex-direction: column; gap: 7px; }
+.pd-rx-reason { display: flex; align-items: center; gap: 7px; text-align: left; border: 1px solid var(--line-2); border-radius: 9px; padding: 9px 11px; font-family: inherit; font-size: 12.5px; color: var(--ink-2); background: var(--paper); cursor: pointer; }
+.pd-rx-reason:hover { background: var(--wash2); }
+.pd-rx-reason.on { border-color: var(--rose); background: var(--rose-bg); color: #a0281f; font-weight: 600; }
+
+/* ── Hospital billing — overview ── */
+.pd-hb-due.overdue b { color: var(--rose); }
+.pd-hb-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1080px) { .pd-hb-grid2 { grid-template-columns: 1fr; } }
+.pd-hb-cardh { display: flex; align-items: center; gap: 7px; font-family: Manrope, sans-serif; font-weight: 800; font-size: 13px; color: var(--mid); margin-bottom: 12px; }
+.pd-hb-owe { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.pd-hb-owe span { font-size: 12.5px; color: var(--muted); }
+.pd-hb-owe b { font-family: Manrope, sans-serif; font-size: 26px; }
+.pd-util { height: 10px; border-radius: 6px; background: var(--wash); overflow: hidden; }
+.pd-util > span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green), var(--mid)); }
+.pd-util.near > span { background: linear-gradient(90deg, var(--amber), var(--rose)); }
+.pd-hb-utilrow { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.pd-hb-utilrow b { color: var(--ink-2); }
+.pd-hb-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.pd-hb-mini > div { display: flex; flex-direction: column; }
+.pd-hb-mini span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
+.pd-hb-mini b { font-size: 14px; color: var(--ink); }
+.pd-hb-overdue { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: #a0281f; background: var(--rose-bg); border: 1px solid #f3c9c9; border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; }
+.pd-hb-overdue b { font-weight: 800; }
+.pd-hb-clear { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--mid); background: var(--wash); border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; }
+.pd-agebars { display: flex; flex-direction: column; gap: 9px; }
+.pd-agebar-top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+.pd-agebar-top b { font-weight: 700; }
+.pd-prog > i.over { background: var(--amber); }
+.pd-hb-mtbl td { padding: 6px 4px; font-size: 12.5px; }
+.pd-hb-flow { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 130px; padding-top: 6px; }
+.pd-hb-flowcol { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; height: 100%; }
+.pd-hb-bars { display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 100%; flex: 1; }
+.pd-hb-bars .sup, .pd-hb-bars .rec { width: 12px; border-radius: 3px 3px 0 0; min-height: 2px; }
+.pd-hb-bars .sup { background: var(--mid); }
+.pd-hb-bars .rec { background: #8a6ee0; }
+.pd-hb-flowcol small { font-size: 11px; color: var(--muted); }
+.pd-hb-acts { display: flex; flex-direction: column; }
+.pd-hb-act { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.pd-hb-act:last-child { border-bottom: 0; }
+.pd-hb-act .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--mid); }
+.pd-hb-act .dot.return { background: var(--amber); }
+.pd-hb-act .dot.payment { background: #8a6ee0; }
+.pd-hb-act .lb { flex: 1; min-width: 0; display: flex; flex-direction: column; color: var(--ink); }
+.pd-hb-act .lb small { font-size: 10.5px; color: var(--muted); }
+.pd-hb-act b { font-family: Manrope, sans-serif; }
+.pd-hb-agingline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12.5px; font-weight: 700; }
+.pd-hb-agingline .over { display: inline-flex; align-items: center; gap: 6px; color: var(--rose); }
+.pd-hb-agingline .ok { display: inline-flex; align-items: center; gap: 6px; color: var(--mid); }
