@@ -75,7 +75,7 @@ export function InventoryToolbar({
       <Stack
         direction="row"
         align="center"
-        className="max-w-[360px] min-w-[240px] flex-1 gap-2 rounded-sm border border-line-2 bg-paper px-3 py-2"
+        className="max-w-[360px] min-w-[240px] flex-1 gap-2 rounded-sm border border-line-2 bg-paper px-3 py-2 max-[767px]:min-w-0 max-[767px]:max-w-none max-[767px]:flex-[1_1_100%]"
       >
         <Box className="text-green">
           <IconSearch size={17} />

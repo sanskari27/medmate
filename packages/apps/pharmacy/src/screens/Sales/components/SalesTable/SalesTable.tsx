@@ -4,7 +4,14 @@ import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Pill } from "@/components/atoms/Pill";
 import { Stack } from "@/components/atoms/Stack";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/atoms";
 import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
 import { IconCash, IconClock, IconPrint, IconReceipt, IconShare } from "@/components/atoms/Icon";
@@ -39,7 +46,7 @@ export function SalesTable(props: SalesTableProps) {
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table className="border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
+        <Table className="border-separate border-spacing-0 [&_tr:last-child_td]:border-b-0">
           <TableHead>
             <TableRow className="border-b-0">
               <TableHeaderCell className={headCell}>Invoice</TableHeaderCell>
@@ -160,10 +167,17 @@ function SalesRecord({
     event.stopPropagation();
   }
   return (
-    <TableRow className="cursor-pointer border-b-0 transition-colors duration-100 hover:bg-wash-2" onClick={openHistory}>
+    <TableRow
+      className="cursor-pointer border-b-0 transition-colors duration-100 hover:bg-wash-2"
+      onClick={openHistory}
+    >
       <TableCell className={`${bodyCell} font-mono font-bold`}>
         {sale.id}
-        {sale.rx ? <Tag tone="rx" className="ml-[5px] border-[#f3c7c7]">Rx</Tag> : null}
+        {sale.rx ? (
+          <Tag tone="rx" className="ml-[5px] border-[#f3c7c7]">
+            Rx
+          </Tag>
+        ) : null}
       </TableCell>
       <TableCell className={`${bodyCell} whitespace-nowrap`}>
         {fmtDateTime(sale.createdAt)}
@@ -173,7 +187,11 @@ function SalesRecord({
       </TableCell>
       <TableCell className={bodyCell}>
         {sale.customer.name}
-        {sale.customer.phone ? <Text variant="caption" className="leading-[1.5]">{sale.customer.phone}</Text> : null}
+        {sale.customer.phone ? (
+          <Text variant="caption" className="leading-[1.5]">
+            {sale.customer.phone}
+          </Text>
+        ) : null}
       </TableCell>
       <TableCell className={bodyCell}>
         <ChannelPill channel={sale.channel} />
@@ -191,7 +209,7 @@ function SalesRecord({
         )}
       </TableCell>
       <TableCell className={bodyCell}>
-        <StatusPill status={sale.status} />
+        <StatusPill status={sale.status} className="gap-[5px]" />
       </TableCell>
       <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
         {inr(totals.totalTax)}

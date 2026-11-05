@@ -1,4 +1,4 @@
 export type SalesRegisterProps = {
-    enriched: any[];
-    now: number;
+  enriched: any[];
+  now: number;
 };

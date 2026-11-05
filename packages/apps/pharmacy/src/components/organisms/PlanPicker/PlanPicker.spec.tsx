@@ -7,7 +7,14 @@ describe("PlanPicker", () => {
     function onRequest() {
       return undefined;
     }
-    render(<PlanPicker cycle="monthly" currentPlan="Essential" currentCycle="monthly" onRequest={onRequest} />);
+    render(
+      <PlanPicker
+        cycle="monthly"
+        currentPlan="Essential"
+        currentCycle="monthly"
+        onRequest={onRequest}
+      />,
+    );
     expect(screen.getByText("Growth")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Current plan" })).toBeTruthy();
     expect(screen.getByText("Popular")).toBeTruthy();

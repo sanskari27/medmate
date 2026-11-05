@@ -1,5 +1,4 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { Alert } from "@/components/molecules/Alert";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -31,7 +30,6 @@ import {
 } from "@/components/atoms/Icon";
 import { Chip } from "@/components/molecules/Chip";
 import { Field } from "@/components/molecules/Field";
-import { ListRow } from "@/components/molecules/ListRow";
 import { usePharma } from "@/hooks";
 import {
   INDUSTRY_TYPES,
@@ -78,9 +76,19 @@ function WelcomeIcon({ id }: { id: (typeof WELCOME_POINTS)[number]["key"] }) {
   return <IconChart size={18} />;
 }
 
-function WelcomePoint({ id, title }: { id: (typeof WELCOME_POINTS)[number]["key"]; title: string }) {
+function WelcomePoint({
+  id,
+  title,
+}: {
+  id: (typeof WELCOME_POINTS)[number]["key"];
+  title: string;
+}) {
   return (
-    <Stack direction="row" align="center" className="gap-3 rounded-md border border-line px-3.5 py-3">
+    <Stack
+      direction="row"
+      align="center"
+      className="gap-3 rounded-md border border-line px-3.5 py-3"
+    >
       <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">
         <WelcomeIcon id={id} />
       </Box>
@@ -102,7 +110,7 @@ function StepDot({ state }: { state: "done" | "current" | "todo" }) {
   return (
     <Box
       className={cn(
-        "h-[5px] flex-1 rounded-[3px] bg-line",
+        "h-[5px] flex-1 rounded-[3px] bg-line transition-colors duration-200",
         state === "done" && "bg-light",
         state === "current" && "bg-mid",
       )}
@@ -115,9 +123,9 @@ function StepDots({ step }: { step: number }) {
     return index;
   });
   function renderDot(index: number) {
-        const state = index === step ? "current" : index < step ? "done" : "todo";
-        return <StepDot key={index} state={state} />;
-      }
+    const state = index === step ? "current" : index < step ? "done" : "todo";
+    return <StepDot key={index} state={state} />;
+  }
   return (
     <Stack direction="row" className="mt-[13px] gap-[5px]">
       {indexes.map(renderDot)}
@@ -151,12 +159,25 @@ function BusinessTypeChip({
   );
 }
 
-function BusinessTypes({ selected, onToggle }: { selected: string[]; onToggle: (label: string) => void }) {
+function BusinessTypes({
+  selected,
+  onToggle,
+}: {
+  selected: string[];
+  onToggle: (label: string) => void;
+}) {
   function renderType(type: string) {
-        return <BusinessTypeChip key={type} label={type} selected={selected.includes(type)} onToggle={onToggle} />;
-      }
+    return (
+      <BusinessTypeChip
+        key={type}
+        label={type}
+        selected={selected.includes(type)}
+        onToggle={onToggle}
+      />
+    );
+  }
   return (
-    <Stack direction="row" wrap className="gap-1.5">
+    <Stack direction="row" wrap className="mt-1.5 gap-1.5">
       {PHARMACY_BUSINESS_TYPES.map(renderType)}
     </Stack>
   );
@@ -186,8 +207,8 @@ function LogoPicker({ logo, onLogo }: { logo?: string; onLogo: (value: string) =
       <Button
         variant="ghost"
         className={cn(
-          "h-[84px] w-[84px] overflow-hidden rounded-lg border border-dashed border-line-2 p-0",
-          logo ? "bg-dark" : "bg-wash-2",
+          "h-[84px] w-[84px] overflow-hidden rounded-[14px] border border-dashed border-line-2 p-0",
+          logo ? "bg-black px-0 py-0 hover:bg-black" : "bg-wash-2 px-0 py-0 hover:bg-wash-2",
         )}
         onClick={openPicker}
       >
@@ -196,7 +217,7 @@ function LogoPicker({ logo, onLogo }: { logo?: string; onLogo: (value: string) =
         ) : (
           <Stack align="center" gap={1} className="text-muted">
             <IconUpload size={18} />
-            <Text as="span" variant="caption">
+            <Text as="span" className="text-[11px]">
               Logo
             </Text>
           </Stack>
@@ -284,36 +305,57 @@ function WizardFeat({
   onToggle: () => void;
 }) {
   return (
-    <ListRow
-      title={title}
-      subtitle={subtitle}
-      leading={<Box className="grid h-9 w-9 place-items-center rounded-sm bg-wash text-mid">{icon}</Box>}
-      trailing={<Switch checked={checked} label={title} onClick={onToggle} />}
-    />
+    <Stack
+      direction="row"
+      align="center"
+      className="mb-2.5 gap-3 rounded-md border border-line px-3.5 py-3"
+    >
+      <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">
+        {icon}
+      </Box>
+      <Stack gap={0} className="min-w-0 flex-1">
+        <Text as="span" className="text-[13.5px] font-bold text-ink">
+          {title}
+        </Text>
+        <Text as="span" className="text-xs text-muted">
+          {subtitle}
+        </Text>
+      </Stack>
+      <Switch checked={checked} label={title} onClick={onToggle} />
+    </Stack>
   );
 }
 
 function WelcomeStep() {
   return (
     <Stack align="center" className="py-3.5 text-center">
-      <Box className="inline-grid text-mid">
+      <Box className="inline-grid">
         <IconStore size={28} />
       </Box>
       <Heading level={2} className="mt-2 text-[23px]">
         Welcome to your pharmacy console
       </Heading>
       <Text className="mx-auto mt-2 max-w-[460px] text-[14px] text-muted">
-        A quick setup gets your store ready for GST billing, inventory, online orders & more. It takes about 2
-        minutes — you can change everything later in Settings.
+        A quick setup gets your store ready for GST billing, inventory, online orders & more. It
+        takes about 2 minutes — you can change everything later in Settings.
       </Text>
-      <Grid columns={2} className="mx-auto mt-5 w-full max-w-[520px] gap-2.5 text-left">
+      <Grid
+        columns={2}
+        className="mx-auto mt-5 w-full max-w-[520px] gap-2.5 !grid-cols-2 text-left"
+      >
         <WelcomePoints />
       </Grid>
     </Stack>
   );
 }
 
-function BusinessStep({ draft, update }: { draft: Draft; update: (patch: Partial<Draft>) => void }) {
+function BusinessStep({
+  draft,
+  update,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+}) {
   function onLogo(logo: string) {
     update({ logo });
   }
@@ -342,30 +384,50 @@ function BusinessStep({ draft, update }: { draft: Draft; update: (patch: Partial
     update({ email: event.target.value });
   }
   return (
-    <Stack gap={4}>
-      <Stack direction="row" align="start" gap={4}>
+    <Stack className="gap-0">
+      <Stack direction="row" align="start" gap={4} className="mb-4">
         <LogoPicker logo={draft.logo} onLogo={onLogo} />
-        <Stack gap={3} className="min-w-0 flex-1">
+        <Stack className="min-w-0 flex-1 gap-0">
           <Field label="Pharmacy name *" data-field="name">
-            <Input autoFocus value={draft.name} onChange={onName} placeholder="e.g. Sri Sai Medicals" />
+            <Input
+              autoFocus
+              value={draft.name}
+              onChange={onName}
+              placeholder="e.g. Sri Sai Medicals"
+            />
           </Field>
-          <Field label="Tagline">
-            <Input value={draft.tagline} onChange={onTagline} placeholder="Your neighbourhood pharmacy" />
+          <Field className="mt-2.5" label="Tagline">
+            <Input
+              value={draft.tagline}
+              onChange={onTagline}
+              placeholder="Your neighbourhood pharmacy"
+            />
           </Field>
         </Stack>
       </Stack>
       <Field label="Business type (select all that apply)">
         <BusinessTypes selected={draft.businessTypes} onToggle={onToggleType} />
       </Field>
-      <Grid columns={2} gap={3}>
+      <Grid columns={2} className="mt-[14px] gap-[14px] max-[767px]:!grid-cols-1">
         <Field label="Registration type *">
-          <Select value={draft.registrationType} onChange={onRegistration} options={[...SelectValues({values: REGISTRATION_TYPES})]} />
+          <Select
+            value={draft.registrationType}
+            onChange={onRegistration}
+            options={[...SelectValues({ values: REGISTRATION_TYPES })]}
+          />
         </Field>
         <Field label="Industry *">
-          <Select value={draft.industryType} onChange={onIndustry} options={[...SelectValues({values: INDUSTRY_TYPES})]} />
+          <Select
+            value={draft.industryType}
+            onChange={onIndustry}
+            options={[...SelectValues({ values: INDUSTRY_TYPES })]}
+          />
         </Field>
-        <Field label="Phone *" hint="Login uses this number, so it cannot be changed." data-field="phone">
-          <Input value={draft.phone} readOnly aria-readonly="true" className="bg-wash" />
+        <Field label="Phone *" data-field="phone">
+          <Input value={draft.phone} readOnly aria-readonly="true" className="bg-wash-2" />
+          <Text className="text-xs text-muted">
+            Login uses this number, so it cannot be changed.
+          </Text>
         </Field>
         <Field label="Email *" data-field="email">
           <Input value={draft.email} onChange={onEmail} placeholder="store@email.com" />
@@ -375,7 +437,13 @@ function BusinessStep({ draft, update }: { draft: Draft; update: (patch: Partial
   );
 }
 
-function LocationStep({ draft, update }: { draft: Draft; update: (patch: Partial<Draft>) => void }) {
+function LocationStep({
+  draft,
+  update,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+}) {
   function onAddress(event: ChangeEvent<HTMLTextAreaElement>) {
     update({ address: event.target.value });
   }
@@ -389,7 +457,7 @@ function LocationStep({ draft, update }: { draft: Draft; update: (patch: Partial
     update({ state: event.target.value });
   }
   return (
-    <Grid columns={2} gap={3}>
+    <Grid columns={2} className="gap-[14px] max-[767px]:!grid-cols-1">
       <Field label="Billing address *" className="col-span-full">
         <Textarea value={draft.address} onChange={onAddress} />
       </Field>
@@ -400,7 +468,14 @@ function LocationStep({ draft, update }: { draft: Draft; update: (patch: Partial
         <Input value={draft.pincode} onChange={onPincode} />
       </Field>
       <Field label="State *" className="col-span-full">
-        <Select value={draft.state} onChange={onState} options={[{ value: "", label: "Select state" }, ...SelectValues({values: INDIAN_STATES})]} />
+        <Select
+          value={draft.state}
+          onChange={onState}
+          options={[
+            { value: "", label: "Select state" },
+            ...SelectValues({ values: INDIAN_STATES }),
+          ]}
+        />
       </Field>
     </Grid>
   );
@@ -444,30 +519,83 @@ function TaxStep({ draft, update }: { draft: Draft; update: (patch: Partial<Draf
     update({ enableTCS: !draft.enableTCS });
   }
   return (
-    <Stack gap={2}>
-      <Grid columns={2} gap={3}>
-        <WizardLicence label="GSTIN" value={draft.gstin} file={draft.gstFile} field="gstin" onValue={onGstin} onFile={onGstFile} />
-        <WizardLicence label="PAN number" value={draft.pan} file={draft.panFile} onValue={onPan} onFile={onPanFile} />
-        <WizardLicence label="Drug Licence No. (D.L.)" value={draft.dlNo} file={draft.dlFile} onValue={onDl} onFile={onDlFile} />
-        <WizardLicence label="FSSAI Licence No." value={draft.fssai} file={draft.fssaiFile} onValue={onFssai} onFile={onFssaiFile} />
-        <WizardLicence label="Trade Licence No." value={draft.tradeNo || ""} file={draft.tradeFile} onValue={onTrade} onFile={onTradeFile} />
+    <Stack className="gap-0">
+      <Grid columns={2} className="gap-[14px] max-[767px]:!grid-cols-1">
+        <WizardLicence
+          label="GSTIN"
+          value={draft.gstin}
+          file={draft.gstFile}
+          field="gstin"
+          onValue={onGstin}
+          onFile={onGstFile}
+        />
+        <WizardLicence
+          label="PAN number"
+          value={draft.pan}
+          file={draft.panFile}
+          onValue={onPan}
+          onFile={onPanFile}
+        />
+        <WizardLicence
+          label="Drug Licence No. (D.L.)"
+          value={draft.dlNo}
+          file={draft.dlFile}
+          onValue={onDl}
+          onFile={onDlFile}
+        />
+        <WizardLicence
+          label="FSSAI Licence No."
+          value={draft.fssai}
+          file={draft.fssaiFile}
+          onValue={onFssai}
+          onFile={onFssaiFile}
+        />
+        <WizardLicence
+          label="Trade Licence No."
+          value={draft.tradeNo || ""}
+          file={draft.tradeFile}
+          onValue={onTrade}
+          onFile={onTradeFile}
+        />
       </Grid>
-      <WizardFeat icon={<IconRupee size={18} />} title="Enable TDS" subtitle="Deduct TDS on applicable purchases" checked={draft.enableTDS} onToggle={toggleTds} />
-      <WizardFeat icon={<IconRupee size={18} />} title="Enable TCS" subtitle="Collect TCS on applicable sales" checked={draft.enableTCS} onToggle={toggleTcs} />
+      <WizardFeat
+        icon={<IconRupee size={18} />}
+        title="Enable TDS"
+        subtitle="Deduct TDS on applicable purchases"
+        checked={draft.enableTDS}
+        onToggle={toggleTds}
+      />
+      <WizardFeat
+        icon={<IconRupee size={18} />}
+        title="Enable TCS"
+        subtitle="Collect TCS on applicable sales"
+        checked={draft.enableTCS}
+        onToggle={toggleTcs}
+      />
     </Stack>
   );
 }
 
-function PharmacistStep({ draft, update }: { draft: Draft; update: (patch: Partial<Draft>) => void }) {
+function PharmacistStep({
+  draft,
+  update,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+}) {
   function onPharmacist(event: ChangeEvent<HTMLInputElement>) {
     update({ pharmacist: event.target.value });
   }
   return (
-    <Stack gap={3}>
+    <Stack className="gap-[14px]">
       <Field label="Registered pharmacist *" className="col-span-full">
-        <Input value={draft.pharmacist} onChange={onPharmacist} placeholder="Name, B.Pharm (Reg. No.)" />
+        <Input
+          value={draft.pharmacist}
+          onChange={onPharmacist}
+          placeholder="Name, B.Pharm (Reg. No.)"
+        />
       </Field>
-      <Text variant="muted">
+      <Text className="text-[12.5px] text-muted">
         <IconBulb size={14} /> You can add cashiers, managers & more pharmacists later under{" "}
         <Text as="span" className="font-bold">
           Manage Users
@@ -497,7 +625,7 @@ function InvoiceStep({ draft, update }: { draft: Draft; update: (patch: Partial<
     });
   }
   return (
-    <Grid columns={2} gap={3}>
+    <Grid columns={2} className="gap-[14px] max-[767px]:!grid-cols-1">
       <Field label="Invoice number prefix *">
         <Input value={draft.invoicePrefix} onChange={onPrefix} className="font-mono" />
       </Field>
@@ -505,7 +633,11 @@ function InvoiceStep({ draft, update }: { draft: Draft; update: (patch: Partial<
         <Input ref={signRef} type="file" accept="image/*" className="sr-only" onChange={onSign} />
         {draft.signature ? (
           <Stack direction="row" align="center" gap={2}>
-            <Image src={draft.signature} alt="" className="h-10 rounded-sm border border-line p-0.5" />
+            <Image
+              src={draft.signature}
+              alt=""
+              className="h-10 rounded-sm border border-line p-0.5"
+            />
             <Button variant="ghost" size="sm" onClick={openSign}>
               Replace
             </Button>
@@ -523,7 +655,13 @@ function InvoiceStep({ draft, update }: { draft: Draft; update: (patch: Partial<
   );
 }
 
-function FeaturesStep({ draft, update }: { draft: Draft; update: (patch: Partial<Draft>) => void }) {
+function FeaturesStep({
+  draft,
+  update,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+}) {
   function toggleStore() {
     update({ storeOpen: !draft.storeOpen });
   }
@@ -537,21 +675,55 @@ function FeaturesStep({ draft, update }: { draft: Draft; update: (patch: Partial
     update({ looseDefault: !draft.looseDefault });
   }
   return (
-    <Stack gap={1}>
-      <WizardFeat icon={<IconStore size={18} />} title="Accept online orders" subtitle="List your store on the Namma MedMate customer app" checked={draft.storeOpen} onToggle={toggleStore} />
-      <WizardFeat icon={<IconKiosk size={18} />} title="Self-order kiosk" subtitle="In-store screen for customers to order themselves" checked={draft.kioskEnabled} onToggle={toggleKiosk} />
-      <WizardFeat icon={<IconReceipt size={18} />} title="e-Invoicing" subtitle="Generate IRN/e-invoices for B2B sales" checked={draft.eInvoicing} onToggle={toggleEinvoice} />
-      <WizardFeat icon={<IconInventory size={18} />} title="Loose / per-tablet selling" subtitle="Allow selling individual tablets by default (per-strip eligible items)" checked={draft.looseDefault} onToggle={toggleLoose} />
-      <ListRow
-        title="Low-stock & expiry alerts"
-        subtitle="Always on — dashboard flags items to reorder or that are expiring"
-        leading={
-          <Box className="grid h-9 w-9 place-items-center rounded-sm bg-wash text-mid">
-            <IconUsers size={18} />
-          </Box>
-        }
-        trailing={<Pill tone="green" dot>On</Pill>}
+    <Stack className="gap-0">
+      <WizardFeat
+        icon={<IconStore size={18} />}
+        title="Accept online orders"
+        subtitle="List your store on the Namma MedMate customer app"
+        checked={draft.storeOpen}
+        onToggle={toggleStore}
       />
+      <WizardFeat
+        icon={<IconKiosk size={18} />}
+        title="Self-order kiosk"
+        subtitle="In-store screen for customers to order themselves"
+        checked={draft.kioskEnabled}
+        onToggle={toggleKiosk}
+      />
+      <WizardFeat
+        icon={<IconReceipt size={18} />}
+        title="e-Invoicing"
+        subtitle="Generate IRN/e-invoices for B2B sales"
+        checked={draft.eInvoicing}
+        onToggle={toggleEinvoice}
+      />
+      <WizardFeat
+        icon={<IconInventory size={18} />}
+        title="Loose / per-tablet selling"
+        subtitle="Allow selling individual tablets by default (per-strip eligible items)"
+        checked={draft.looseDefault}
+        onToggle={toggleLoose}
+      />
+      <Stack
+        direction="row"
+        align="center"
+        className="mb-2.5 gap-3 rounded-md border border-line px-3.5 py-3 opacity-85"
+      >
+        <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">
+          <IconUsers size={18} />
+        </Box>
+        <Stack gap={0} className="min-w-0 flex-1">
+          <Text as="span" className="text-[13.5px] font-bold text-ink">
+            Low-stock & expiry alerts
+          </Text>
+          <Text as="span" className="text-xs text-muted">
+            Always on — dashboard flags items to reorder or that are expiring
+          </Text>
+        </Stack>
+        <Pill tone="green" dot>
+          On
+        </Pill>
+      </Stack>
     </Stack>
   );
 }
@@ -559,15 +731,15 @@ function FeaturesStep({ draft, update }: { draft: Draft; update: (patch: Partial
 function CatalogueStep() {
   return (
     <Stack align="center" gap={0} className="py-3.5 text-center">
-      <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
+      <Box className="inline-grid">
         <IconFolder size={28} />
       </Box>
       <Heading level={2} className="mt-2 text-[23px]">
         Your catalogue starts empty
       </Heading>
       <Text className="mx-auto mt-2 max-w-[460px] text-[14px] text-muted">
-        Add medicines under Inventory, or enter a distributor bill under Purchases and stock is created from that
-        bill. Nothing is preloaded.
+        Add medicines under Inventory, or enter a distributor bill under Purchases and stock is
+        created from that bill. Nothing is preloaded.
       </Text>
     </Stack>
   );
@@ -575,7 +747,11 @@ function CatalogueStep() {
 
 function ReviewLine({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" justify="between" className="border-b border-line py-[7px] text-[12.5px]">
+    <Stack
+      direction="row"
+      justify="between"
+      className="border-b border-line py-[7px] text-[12.5px]"
+    >
       <Text as="span" className="text-[12.5px] text-muted">
         {label}
       </Text>
@@ -594,8 +770,17 @@ function ReviewStep({ draft }: { draft: Draft }) {
   return (
     <Stack gap={4}>
       <Stack direction="row" align="center" gap={3}>
-        <Box className={cn("grid h-[52px] w-[52px] place-items-center overflow-hidden rounded-md", draft.logo ? "bg-dark" : "bg-wash")}>
-          {draft.logo ? <Image src={draft.logo} alt="" fit="contain" className="h-full w-full" /> : <IconStore size={24} />}
+        <Box
+          className={cn(
+            "grid h-[52px] w-[52px] place-items-center overflow-hidden rounded-[13px]",
+            draft.logo ? "bg-black" : "bg-wash",
+          )}
+        >
+          {draft.logo ? (
+            <Image src={draft.logo} alt="" fit="contain" className="h-full w-full" />
+          ) : (
+            <IconStore size={24} />
+          )}
         </Box>
         <Stack gap={0}>
           <Heading level={3} className="text-[18px]">
@@ -620,16 +805,28 @@ function ReviewStep({ draft }: { draft: Draft }) {
         <ReviewLine label="Loose selling" value={draft.looseDefault ? "On" : "Off"} />
         <ReviewLine label="Catalogue" value="Empty — you add stock" />
       </Box>
-      <Alert tone="green" className="text-center">
-        <Text as="span" className="text-[13px] text-mid">
-          <IconSparkle size={13} /> You’re all set! Click <Text as="span" className="font-bold">Finish setup</Text> to open your dashboard.
+      <Box className="rounded-md border border-line bg-wash-2 p-[18px] text-center shadow-sm">
+        <Text as="span" className="text-[13px] text-ink">
+          <IconSparkle size={13} /> You’re all set! Click{" "}
+          <Text as="span" className="font-bold">
+            Finish setup
+          </Text>{" "}
+          to open your dashboard.
         </Text>
-      </Alert>
+      </Box>
     </Stack>
   );
 }
 
-function StepBody({ step, draft, update }: { step: number; draft: Draft; update: (patch: Partial<Draft>) => void }) {
+function StepBody({
+  step,
+  draft,
+  update,
+}: {
+  step: number;
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+}) {
   if (step === 0) return <WelcomeStep />;
   if (step === 1) return <BusinessStep draft={draft} update={update} />;
   if (step === 2) return <LocationStep draft={draft} update={update} />;
@@ -737,16 +934,16 @@ export function SetupWizard({ className }: SetupWizardProps) {
         className,
       )}
     >
-      <Stack className="max-h-[92vh] w-full max-w-[800px] overflow-hidden rounded-[20px] bg-paper shadow-pop">
+      <Stack className="max-h-[92vh] min-h-0 w-full max-w-[800px] overflow-hidden rounded-[20px] bg-paper shadow-pop">
         <Stack className="border-b border-line px-[26px] pt-[18px] pb-[14px]">
           <Stack direction="row" align="center" justify="between">
             <Stack direction="row" align="center" gap={2}>
               <Box className="grid h-[30px] w-[30px] place-items-center rounded-sm bg-dark text-[15px] text-white">
                 ＋
               </Box>
-              <Heading level={4} className="text-[15px]">
+              <Text as="span" className="font-display text-[15px] font-bold text-dark">
                 Namma MedMate · Store setup
-              </Heading>
+              </Text>
             </Stack>
             <Text as="span" className="text-[11.5px] font-bold text-muted">
               Step {step + 1} of {STEPS.length}
@@ -758,10 +955,15 @@ export function SetupWizard({ className }: SetupWizardProps) {
           <Text className="mt-0.5 text-[12.5px] text-muted">{STEPS[step].subtitle}</Text>
           <StepDots step={step} />
         </Stack>
-        <Box className="overflow-y-auto px-[26px] py-[22px]">
+        <Box className="min-h-0 flex-1 overflow-y-auto px-[26px] py-[22px]">
           <StepBody step={step} draft={draft} update={update} />
         </Box>
-        <Stack direction="row" align="center" justify="between" className="gap-2.5 border-t border-line px-[26px] py-[14px]">
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          className="gap-2.5 border-t border-line px-[26px] py-[14px]"
+        >
           <Button variant="ghost" disabled={step === 0 || saving} onClick={onBack}>
             Back
           </Button>

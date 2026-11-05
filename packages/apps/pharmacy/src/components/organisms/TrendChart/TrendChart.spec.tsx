@@ -16,10 +16,26 @@ describe("TrendChart", () => {
       return String(value);
     }
     const { rerender } = render(
-      <TrendChart labels={["Mon"]} series={[]} type="group" valOf={valOf} fmtAxis={fmt} fmt={fmt} />,
+      <TrendChart
+        labels={["Mon"]}
+        series={[]}
+        type="group"
+        valOf={valOf}
+        fmtAxis={fmt}
+        fmt={fmt}
+      />,
     );
     expect(screen.getByText("Select at least one source above.")).toBeTruthy();
-    rerender(<TrendChart labels={["Mon", "Tue"]} series={series} type="line" valOf={valOf} fmtAxis={fmt} fmt={fmt} />);
+    rerender(
+      <TrendChart
+        labels={["Mon", "Tue"]}
+        series={series}
+        type="line"
+        valOf={valOf}
+        fmtAxis={fmt}
+        fmt={fmt}
+      />,
+    );
     expect(screen.getByRole("img")).toBeTruthy();
   });
 });

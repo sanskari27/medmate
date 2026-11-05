@@ -1,5 +1,13 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { IconCalendar } from "@/components/atoms/Icon";
@@ -11,7 +19,7 @@ import { cn } from "@/utils/className";
 import { RANGE_PRESETS, resolveRange, type RangePreset, type ResolvedRange } from "@/utils/date";
 
 const triggerVariants = cva(
-  "inline-flex h-auto min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] leading-[1.5] font-normal text-ink shadow-none hover:bg-paper active:translate-y-0",
+  "inline-flex h-auto min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] font-normal text-ink shadow-none hover:bg-paper active:translate-y-0",
 );
 
 const menuVariants = cva(
@@ -57,7 +65,15 @@ function fromYmd(value: string, end = false): number {
   const year = Number(parts[0]);
   const month = Number(parts[1]);
   const day = Number(parts[2]);
-  return new Date(year, month - 1, day, end ? 23 : 0, end ? 59 : 0, end ? 59 : 0, end ? 999 : 0).getTime();
+  return new Date(
+    year,
+    month - 1,
+    day,
+    end ? 23 : 0,
+    end ? 59 : 0,
+    end ? 59 : 0,
+    end ? 999 : 0,
+  ).getTime();
 }
 
 function PresetOption({
@@ -77,7 +93,12 @@ function PresetOption({
     onPick(presetKey);
   }
   return (
-    <Button type="button" variant="ghost" onClick={pick} className={presetOptionVariants({ selected })}>
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={pick}
+      className={presetOptionVariants({ selected })}
+    >
       <Text as="span">{label}</Text>
       {sub ? (
         <Text as="span" variant="caption" className="text-[12px] whitespace-nowrap">
@@ -175,7 +196,7 @@ export function DateRangeField({
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <Box className="text-mid">
+        <Box>
           <IconCalendar size={15} />
         </Box>
         <Text as="span" className="text-[13.5px] font-bold [line-height:normal]">

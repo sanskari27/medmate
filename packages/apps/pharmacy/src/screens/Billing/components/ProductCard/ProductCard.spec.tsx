@@ -22,7 +22,15 @@ const product = {
 
 describe("ProductCard", () => {
   it("renders the medicine name and an out-of-stock label", () => {
-    render(<ProductCard product={product} packCount={0} looseCount={0} onAddPack={ignore} onAddLoose={ignore} />);
+    render(
+      <ProductCard
+        product={product}
+        packCount={0}
+        looseCount={0}
+        onAddPack={ignore}
+        onAddLoose={ignore}
+      />,
+    );
     expect(screen.getByText("Dolo 650")).toBeTruthy();
     expect(screen.getByText("Out of stock")).toBeTruthy();
   });

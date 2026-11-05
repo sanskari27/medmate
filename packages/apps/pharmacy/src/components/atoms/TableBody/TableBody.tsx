@@ -14,5 +14,11 @@ const tableBodyVariants = cva("", {
 export type TableBodyProps = ComponentProps<"tbody"> & VariantProps<typeof tableBodyVariants>;
 
 export function TableBody({ className, align, ...props }: TableBodyProps) {
-  return <tbody data-slot="table-body" className={cn(tableBodyVariants({ align }), className)} {...props} />;
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn(tableBodyVariants({ align }), className)}
+      {...props}
+    />
+  );
 }

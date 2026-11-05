@@ -1,4 +1,4 @@
 export type PaymentModalProps = {
-    onClose: () => void;
-    outstanding: number;
+  onClose: () => void;
+  outstanding: number;
 };

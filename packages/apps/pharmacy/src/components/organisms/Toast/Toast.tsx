@@ -11,7 +11,7 @@ export function Toast({ className }: ToastProps) {
       data-slot="toast"
       role="status"
       className={cn(
-        "pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 translate-y-5 rounded-md bg-deep px-5 py-3 text-white opacity-0 shadow-pop transition",
+        "pointer-events-none fixed bottom-[26px] left-1/2 z-[200] -translate-x-1/2 translate-y-5 rounded-md bg-deep px-5 py-3 text-white opacity-0 shadow-pop transition-[opacity,transform] duration-200",
         toastMsg ? "translate-y-0 opacity-100" : "",
         className,
       )}

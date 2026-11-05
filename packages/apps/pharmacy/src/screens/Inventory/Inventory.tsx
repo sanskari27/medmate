@@ -51,9 +51,11 @@ export default function InventoryScreen() {
 
   const list = filterInventoryProducts(inventory, filter, searchQuery, now);
   const snapshot = inventorySnapshot(inventory, sales, now);
-  const detailProduct = detail ? (inventory.find(function same(product) {
-    return product.id === detail.id;
-  }) ?? detail) : null;
+  const detailProduct = detail
+    ? (inventory.find(function same(product) {
+        return product.id === detail.id;
+      }) ?? detail)
+    : null;
 
   function changeSearch(value: string) {
     setSearchQuery(value);

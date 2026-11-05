@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const inputVariants = cva(
-  "w-full text-[13.5px] leading-[1.5] text-ink outline-none transition-[border-color,box-shadow] duration-[140ms] placeholder:text-faint",
+  "w-full text-[13.5px] [line-height:normal] text-ink outline-none transition-[border-color,box-shadow] duration-[140ms] placeholder:text-faint",
   {
     variants: {
       variant: {
@@ -28,7 +28,11 @@ export type InputProps = Omit<ComponentProps<"input">, "size"> & VariantProps<ty
 
 export function Input({ className, variant, controlSize, ...props }: InputProps) {
   return (
-    <input data-slot="input" className={cn(inputVariants({ variant, controlSize }), className)} {...props} />
+    <input
+      data-slot="input"
+      className={cn(inputVariants({ variant, controlSize }), className)}
+      {...props}
+    />
   );
 }
 

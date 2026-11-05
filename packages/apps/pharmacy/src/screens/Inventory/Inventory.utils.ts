@@ -76,7 +76,11 @@ export type InventorySnapshot = {
   deadValue: number;
 };
 
-export function inventorySnapshot(inventory: InvProduct[], sales: Sale[], now: number): InventorySnapshot {
+export function inventorySnapshot(
+  inventory: InvProduct[],
+  sales: Sale[],
+  now: number,
+): InventorySnapshot {
   const deadStock = inventory.filter(function idle(product) {
     return stockOf(product) > 0 && lastSoldAt(product, sales) < now - 90 * DAY;
   });
@@ -96,7 +100,8 @@ export function inventorySnapshot(inventory: InvProduct[], sales: Sale[], now: n
     }, 0),
     totalValue,
     retailValue,
-    potentialMargin: retailValue > 0 ? Math.round(((retailValue - totalValue) / retailValue) * 100) : 0,
+    potentialMargin:
+      retailValue > 0 ? Math.round(((retailValue - totalValue) / retailValue) * 100) : 0,
     lowCount: inventory.filter(isLowStock).length,
     expiringCount: expiring.length,
     expiringValue: expiring.reduce(function addRisk(sum, product) {
@@ -181,9 +186,12 @@ function expiryKey(product: InvProduct) {
 function recentMovement(product: InvProduct, sales: Sale[]): ProductMovement[] {
   return sales
     .filter(function sold(sale) {
-      return sale.status !== "cancelled" && sale.items.some(function ofProduct(item) {
-        return item.productId === product.id;
-      });
+      return (
+        sale.status !== "cancelled" &&
+        sale.items.some(function ofProduct(item) {
+          return item.productId === product.id;
+        })
+      );
     })
     .sort(function newest(left, right) {
       return right.createdAt - left.createdAt;
@@ -193,11 +201,13 @@ function recentMovement(product: InvProduct, sales: Sale[]): ProductMovement[] {
       return {
         id: sale.id,
         at: sale.createdAt,
-        qty: sale.items.filter(function ofProduct(item) {
-          return item.productId === product.id;
-        }).reduce(function addQty(sum, item) {
-          return sum + item.qty;
-        }, 0),
+        qty: sale.items
+          .filter(function ofProduct(item) {
+            return item.productId === product.id;
+          })
+          .reduce(function addQty(sum, item) {
+            return sum + item.qty;
+          }, 0),
         channel: sale.channel,
       };
     });

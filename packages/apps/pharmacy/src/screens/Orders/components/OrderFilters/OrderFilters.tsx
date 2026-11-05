@@ -10,9 +10,23 @@ import type { OrderFiltersProps } from "./OrderFilters.types";
 
 const FILTERS: OrderFilter[] = ["all", "online", "offline", "action", "unpaid"];
 
-export function OrderFilters({ filter, counts, searchQuery, onFilter, onSearch }: OrderFiltersProps) {
+export function OrderFilters({
+  filter,
+  counts,
+  searchQuery,
+  onFilter,
+  onSearch,
+}: OrderFiltersProps) {
   function renderFilter(key: OrderFilter) {
-    return <FilterButton key={key} filterKey={key} selected={filter === key} count={counts[key]} onFilter={onFilter} />;
+    return (
+      <FilterButton
+        key={key}
+        filterKey={key}
+        selected={filter === key}
+        count={counts[key]}
+        onFilter={onFilter}
+      />
+    );
   }
   function changeSearch(event: ChangeEvent<HTMLInputElement>) {
     onSearch(event.target.value);
@@ -36,7 +50,7 @@ export function OrderFilters({ filter, counts, searchQuery, onFilter, onSearch }
           placeholder="Search invoice, customer, phone…"
           value={searchQuery}
           onChange={changeSearch}
-          className="py-0 text-[13.5px] text-ink placeholder:text-faint"
+          className="min-w-0 flex-1 py-0 text-[13.5px] text-ink placeholder:text-faint"
         />
       </Stack>
     </Stack>

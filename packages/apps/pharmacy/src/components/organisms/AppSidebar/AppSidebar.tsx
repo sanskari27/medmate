@@ -89,12 +89,12 @@ function SidebarBrand() {
   return (
     <Stack direction="row" align="center" className="gap-2.5 px-[18px] pt-[18px] pb-4">
       <BrandMark />
-      <span className="block text-[14px] leading-[1.5]">
-        <Text as="span" className="block font-display text-[15px] font-extrabold tracking-[-0.01em] text-white">
-          <Text as="span" className="text-gold">
-            Namma
-          </Text>{" "}
-          MedMate
+      <span className="block leading-[1.5]">
+        <Text
+          as="span"
+          className="block font-display text-[15px] font-extrabold tracking-[-0.01em] text-white"
+        >
+          <span className="text-gold">Namma</span> MedMate
         </Text>
         <Text as="span" className="text-[9px] font-bold tracking-[0.14em] text-mint uppercase">
           Partner Console
@@ -164,8 +164,18 @@ function SidebarNav({
 }
 
 export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebarProps) {
-  const { route, go, profile, prescriptions, sales, isHospital, wardIndents, signOut, featureLocked, me } =
-    usePharma();
+  const {
+    route,
+    go,
+    profile,
+    prescriptions,
+    sales,
+    isHospital,
+    wardIndents,
+    signOut,
+    featureLocked,
+    me,
+  } = usePharma();
   const newOrders = sales.filter(function onlineNew(sale) {
     return sale.channel === "online" && sale.status === "new";
   }).length;
@@ -203,15 +213,21 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
     <Stack
       data-slot="app-sidebar"
       className={cn(
-        "h-dvh w-[248px] shrink-0 border-r border-black/20 bg-[linear-gradient(180deg,#10301d,#0c2516)] text-white max-[1099px]:fixed max-[1099px]:z-40 max-[1099px]:-translate-x-[105%] max-[1099px]:transition-transform",
+        "h-dvh w-[248px] shrink-0 border-r border-black/20 bg-[linear-gradient(180deg,#10301d,#0c2516)] text-white motion-reduce:transition-none max-[1099px]:fixed max-[1099px]:top-0 max-[1099px]:left-0 max-[1099px]:z-40 max-[1099px]:-translate-x-[105%] max-[1099px]:transition-transform max-[1099px]:duration-[180ms] max-[1099px]:ease-[ease]",
         open && "max-[1099px]:translate-x-0",
         className,
       )}
     >
       <SidebarBrand />
       <StoreChip name={profile.name} open={profile.storeOpen} />
-      <Stack gap={0} className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5">
-        <SidebarNav entries={entries} route={route} badgeFor={badgeFor} isLocked={isLocked} onChoose={choose} />
+      <Stack data-slot="nav" gap={0} className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5">
+        <SidebarNav
+          entries={entries}
+          route={route}
+          badgeFor={badgeFor}
+          isLocked={isLocked}
+          onChoose={choose}
+        />
       </Stack>
       <Stack gap={0} className="border-t border-white/[0.09] px-3.5 pt-3.5 pb-4">
         <Stack direction="row" align="center" className="gap-2.5">
@@ -225,7 +241,10 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
             <Text as="span" className="truncate text-[12.5px] leading-[1.3] font-bold text-white">
               {profile.pharmacist.split(",")[0]}
             </Text>
-            <Text as="span" className="block text-[10.5px] leading-[1.3] font-medium text-[#ffffff73]">
+            <Text
+              as="span"
+              className="block text-[10.5px] leading-[1.3] font-medium text-[#ffffff73]"
+            >
               Registered Pharmacist
             </Text>
           </Stack>
@@ -248,7 +267,10 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
             Master portal
           </Button>
         ) : null}
-        <Text as="span" className="block w-full px-3 pt-2 pb-3 text-center text-[10px] leading-[1.5] tracking-[0.01em] text-white/40">
+        <Text
+          as="span"
+          className="block w-full px-3 pt-2 pb-3 text-center text-[10px] leading-[1.5] tracking-[0.01em] text-white/40"
+        >
           © 2026 Medmate India Technology Private Limited
         </Text>
       </Stack>

@@ -36,7 +36,7 @@ export function Progress({ className, value, tone, label, ...props }: ProgressPr
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={clampPercent(value)}
-      className={cn("h-2 overflow-hidden rounded-full bg-wash", className)}
+      className={cn("h-[7px] overflow-hidden rounded-[5px] bg-wash", className)}
       {...props}
     >
       <div className={progressVariants({ tone })} style={{ width }} />

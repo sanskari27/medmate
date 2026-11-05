@@ -13,7 +13,15 @@ describe("QuantityStepper", () => {
     const onSet = vi.fn();
     const onRemove = vi.fn();
     render(
-      <QuantityStepper qty={2} min={1} max={3} onDec={onDec} onInc={onInc} onSet={onSet} onRemove={onRemove} />,
+      <QuantityStepper
+        qty={2}
+        min={1}
+        max={3}
+        onDec={onDec}
+        onInc={onInc}
+        onSet={onSet}
+        onRemove={onRemove}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "decrease" }));
@@ -32,7 +40,9 @@ describe("QuantityStepper", () => {
   });
 
   it("disables increase at the max", () => {
-    const view = render(<QuantityStepper qty={3} max={3} onDec={vi.fn()} onInc={vi.fn()} onSet={vi.fn()} />);
+    const view = render(
+      <QuantityStepper qty={3} max={3} onDec={vi.fn()} onInc={vi.fn()} onSet={vi.fn()} />,
+    );
     const increase = view.getByRole("button", { name: "increase" }) as HTMLButtonElement;
     expect(increase.disabled).toBe(true);
   });

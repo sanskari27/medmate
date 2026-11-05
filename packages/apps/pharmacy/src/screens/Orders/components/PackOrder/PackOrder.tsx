@@ -52,7 +52,7 @@ const smBtn = "h-auto !leading-[1.5]";
 const factGrid =
   "mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line md:grid-cols-3";
 const qtyBtn =
-  "h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-0 disabled:bg-wash-2 disabled:text-mid disabled:opacity-40 disabled:shadow-none";
+  "h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-0 disabled:bg-wash-2 disabled:text-mid disabled:opacity-40 disabled:shadow-none max-md:h-9 max-md:w-9";
 
 export default function PackOrder({ saleId, onClose }: PackOrderProps) {
   const {
@@ -67,22 +67,29 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
     advanceOrder,
     toast,
   } = usePharma();
-  const sale = sales.find(function same(item) {
-    return item.id === saleId;
-  }) ?? null;
+  const sale =
+    sales.find(function same(item) {
+      return item.id === saleId;
+    }) ?? null;
   const [scan, setScan] = useState("");
   const [rider, setRider] = useState({ name: "", phone: "", vehicle: "" });
 
-  useEffect(function beginPacking() {
-    startPacking(saleId);
-  }, [saleId]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(function syncRider() {
-    const assigned = sale?.fulfillment?.rider;
-    if (!assigned) return;
-    setRider(function merge(current) {
-      return { ...current, ...assigned };
-    });
-  }, [sale?.fulfillment?.rider]);
+  useEffect(
+    function beginPacking() {
+      startPacking(saleId);
+    },
+    [saleId], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  useEffect(
+    function syncRider() {
+      const assigned = sale?.fulfillment?.rider;
+      if (!assigned) return;
+      setRider(function merge(current) {
+        return { ...current, ...assigned };
+      });
+    },
+    [sale?.fulfillment?.rider],
+  );
 
   function changeScan(event: ChangeEvent<HTMLInputElement>) {
     setScan(event.target.value);
@@ -156,7 +163,14 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
   const lines = sale.fulfillment?.lines ?? [];
   const step = packStepOf(sale.status);
   function renderLine(line: PackLine) {
-    return <PackLineRow key={line.productId} line={line} product={productOf(line.productId)} onPick={pick} />;
+    return (
+      <PackLineRow
+        key={line.productId}
+        line={line}
+        product={productOf(line.productId)}
+        onPick={pick}
+      />
+    );
   }
 
   return (
@@ -169,10 +183,16 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
         className={modalCard}
         onClick={keepOpen}
       >
-        <Stack direction="row" align="center" justify="between" className="border-b border-line px-5 py-4 print:hidden">
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          className="border-b border-line px-5 py-4 print:hidden"
+        >
           <Box>
             <Heading level={3} className="text-[17px]">
-              Pack & dispatch · <MonoText className="text-[17px] font-extrabold">{sale.id}</MonoText>
+              Pack & dispatch ·{" "}
+              <MonoText className="text-[17px] font-extrabold text-dark">{sale.id}</MonoText>
             </Heading>
             <Text variant="muted" className="mt-[3px] text-[12.5px]">
               {sale.customer.name}
@@ -214,9 +234,15 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                   value={scan}
                   onChange={changeScan}
                   onKeyDown={submitOnEnter}
-                  className="px-0.5 py-1.5 text-[13.5px] placeholder:text-faint"
+                  className="min-w-0 flex-1 px-0.5 py-1.5 text-[13.5px] placeholder:text-faint"
                 />
-                <Button variant="primary" size="sm" className={smBtn} onClick={addScan} disabled={!scan.trim()}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className={smBtn}
+                  onClick={addScan}
+                  disabled={!scan.trim()}
+                >
                   Add
                 </Button>
               </Stack>
@@ -224,14 +250,19 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                 {lines.map(renderLine)}
               </Box>
               <Text variant="muted" className="mt-2.5 text-[11.5px]">
-                Scanning deducts the exact batch from inventory automatically. Scanner not working? Use −/+ to pick
-                manually (FEFO — earliest expiry first).
+                Scanning deducts the exact batch from inventory automatically. Scanner not working?
+                Use −/+ to pick manually (FEFO — earliest expiry first).
               </Text>
             </>
           ) : null}
           {step === "handover" ? (
             <>
-              <Stack direction="row" align="center" gap={3} className="mb-4 rounded-md border border-line bg-wash-2 p-[18px] shadow-sm">
+              <Stack
+                direction="row"
+                align="center"
+                gap={3}
+                className="mb-4 rounded-md border border-line bg-wash-2 p-[18px] shadow-sm"
+              >
                 <IconBox size={24} />
                 <Box className="flex-1">
                   <Text as="span" className="text-[14px] font-bold">
@@ -239,7 +270,9 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                   </Text>
                   <Text variant="muted" className="text-[12px]">
                     {total} units sealed in a Namma MedMate packet · invoice {inr(totals.payable)}
-                    {sale.fulfillment?.sealedAt ? ` · ${fmtDateTime(sale.fulfillment.sealedAt)}` : ""}
+                    {sale.fulfillment?.sealedAt
+                      ? ` · ${fmtDateTime(sale.fulfillment.sealedAt)}`
+                      : ""}
                   </Text>
                 </Box>
                 <Button variant="ghost" size="sm" className={smBtn} onClick={printPacket}>
@@ -253,7 +286,11 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                 Assign delivery partner
               </Text>
               <Box className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-                <Field label="Delivery partner name" htmlFor="pack-rider-name" className="md:col-span-2">
+                <Field
+                  label="Delivery partner name"
+                  htmlFor="pack-rider-name"
+                  className="md:col-span-2"
+                >
                   <Input
                     id="pack-rider-name"
                     autoFocus
@@ -281,15 +318,24 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                 </Field>
               </Box>
               <Text variant="muted" className="mt-2.5 text-[12px]">
-                Match the packet&apos;s <MonoText className="text-[12px] font-bold">{sale.id}</MonoText> label to the order
+                Match the packet&apos;s{" "}
+                <MonoText className="text-[12px] font-bold">{sale.id}</MonoText> label to the order
                 before handing it over.
               </Text>
-              <Invoice sale={sale} profile={profile} className="print-area absolute top-0 -left-[99999px]" />
+              <Invoice
+                sale={sale}
+                profile={profile}
+                className="print-area absolute top-0 -left-[99999px]"
+              />
             </>
           ) : null}
           {step === "done" ? <DispatchedView sale={sale} /> : null}
         </Box>
-        <Stack direction="row" align="center" className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap">
+        <Stack
+          direction="row"
+          align="center"
+          className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap"
+        >
           <Button variant="ghost" className={footBtn} onClick={onClose}>
             Close
           </Button>
@@ -300,7 +346,12 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
             </Button>
           ) : null}
           {step === "handover" ? (
-            <Button variant="primary" className={footBtn} disabled={!rider.name.trim()} onClick={handOver}>
+            <Button
+              variant="primary"
+              className={footBtn}
+              disabled={!rider.name.trim()}
+              onClick={handOver}
+            >
               <IconTruck size={15} /> Hand to delivery partner
             </Button>
           ) : null}
@@ -383,12 +434,18 @@ function PackLineRow({
     <Stack
       direction="row"
       align="center"
-      className={cn("gap-2.5 border-b border-line px-3.5 py-2.5 last:border-b-0", full && "bg-wash-2")}
+      className={cn(
+        "gap-2.5 border-b border-line px-3.5 py-2.5 last:border-b-0",
+        full && "bg-wash-2",
+      )}
     >
       <Box className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-sm bg-wash text-[17px]">
         {product ? <Thumb p={product} /> : <IconPill size={15} />}
       </Box>
-      <Text as="span" className="block min-w-0 flex-1 truncate text-[13px] font-bold whitespace-nowrap text-ink">
+      <Text
+        as="span"
+        className="block min-w-0 flex-1 truncate text-[13px] font-bold whitespace-nowrap text-ink"
+      >
         {line.name}
         <Text as="span" className="text-[11px] font-bold text-muted">
           {line.batchNo ? ` · batch ${line.batchNo}` : product ? ` · ${product.composition}` : ""}
@@ -397,7 +454,11 @@ function PackLineRow({
       <Pill tone={full ? "green" : "gray"} className="min-w-[54px] justify-center gap-[5px]">
         {line.scanned}/{line.qty}
       </Pill>
-      <Stack direction="row" align="center" className="overflow-hidden rounded-sm border border-line-2">
+      <Stack
+        direction="row"
+        align="center"
+        className="overflow-hidden rounded-sm border border-line-2"
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -435,7 +496,12 @@ function DispatchedView({ sale }: { sale: Sale }) {
   const rider = sale.fulfillment?.rider;
   return (
     <>
-      <Stack direction="row" align="center" gap={3} className="mb-3.5 rounded-md border border-line bg-wash-2 p-[18px] shadow-sm">
+      <Stack
+        direction="row"
+        align="center"
+        gap={3}
+        className="mb-3.5 rounded-md border border-line bg-wash-2 p-[18px] shadow-sm"
+      >
         <IconTruck size={24} />
         <Box className="flex-1">
           <Text as="span" className="text-[14px] font-bold">
@@ -471,7 +537,9 @@ function DispatchedView({ sale }: { sale: Sale }) {
 function ModalMotion() {
   return (
     <style>
-      {"@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"}
+      {
+        "@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"
+      }
     </style>
   );
 }
@@ -501,7 +569,9 @@ function Fact({ label, value, mono }: { label: string; value: string; mono?: boo
       <Text variant="caption" className="text-[11px] font-semibold">
         {label}
       </Text>
-      <Text className={cn("mt-0.5 text-[12.5px] font-bold text-dark", mono && "font-mono")}>{value}</Text>
+      <Text className={cn("mt-0.5 text-[12.5px] font-bold text-dark", mono && "font-mono")}>
+        {value}
+      </Text>
     </Box>
   );
 }

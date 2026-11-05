@@ -29,7 +29,11 @@ export function togglePermission(permissions: string[], key: string): string[] {
   return [...permissions, key];
 }
 
-export function setPermissionGroup(permissions: string[], keys: string[], allSelected: boolean): string[] {
+export function setPermissionGroup(
+  permissions: string[],
+  keys: string[],
+  allSelected: boolean,
+): string[] {
   if (allSelected) {
     return permissions.filter(function omitGroup(key) {
       return !keys.includes(key);

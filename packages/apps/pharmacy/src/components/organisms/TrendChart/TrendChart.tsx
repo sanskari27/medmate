@@ -29,7 +29,13 @@ function TrendAxisLabel({
   );
 }
 
-function TrendGrid({ geometry, fmtAxis }: { geometry: TrendGeometry; fmtAxis: (value: number) => string }) {
+function TrendGrid({
+  geometry,
+  fmtAxis,
+}: {
+  geometry: TrendGeometry;
+  fmtAxis: (value: number) => string;
+}) {
   function renderGrid(fraction: number) {
     const y = geometry.padTop + geometry.plotHeight * (1 - fraction);
     return (
@@ -159,23 +165,29 @@ function TrendLine({
     return [centerX(geometry, index), valueY(geometry, valOf(item, index))] as const;
   });
   function joinPoint(point: readonly [number, number]) {
-            return point.join(",");
-          }
+    return point.join(",");
+  }
   function renderPoint(point: readonly [number, number], index: number) {
-        return (
-          <circle key={item.key + index} cx={point[0]} cy={point[1]} r={3} fill="#fff" stroke={item.color} strokeWidth={2}>
-            <title>
-              {labels[index]} · {item.label}: {fmt(valOf(item, index))}
-            </title>
-          </circle>
-        );
-      }
+    return (
+      <circle
+        key={item.key + index}
+        cx={point[0]}
+        cy={point[1]}
+        r={3}
+        fill="#fff"
+        stroke={item.color}
+        strokeWidth={2}
+      >
+        <title>
+          {labels[index]} · {item.label}: {fmt(valOf(item, index))}
+        </title>
+      </circle>
+    );
+  }
   return (
     <g>
       <polyline
-        points={points
-          .map(joinPoint)
-          .join(" ")}
+        points={points.map(joinPoint).join(" ")}
         fill="none"
         stroke={item.color}
         strokeWidth={2.4}
@@ -204,12 +216,29 @@ function TrendLines({
 }) {
   if (type !== "line") return null;
   function renderSeries(item: TrendSeries) {
-    return <TrendLine key={item.key} item={item} labels={labels} valOf={valOf} fmt={fmt} geometry={geometry} />;
+    return (
+      <TrendLine
+        key={item.key}
+        item={item}
+        labels={labels}
+        valOf={valOf}
+        fmt={fmt}
+        geometry={geometry}
+      />
+    );
   }
   return series.map(renderSeries);
 }
 
-export function TrendChart({ labels, series, type, valOf, fmtAxis, fmt, className }: TrendChartProps) {
+export function TrendChart({
+  labels,
+  series,
+  type,
+  valOf,
+  fmtAxis,
+  fmt,
+  className,
+}: TrendChartProps) {
   if (series.length === 0) {
     return (
       <Box data-slot="trend-chart" className={className}>
@@ -237,8 +266,22 @@ export function TrendChart({ labels, series, type, valOf, fmtAxis, fmt, classNam
     >
       <TrendGrid geometry={geometry} fmtAxis={fmtAxis} />
       <TrendXLabels labels={labels} geometry={geometry} />
-      <TrendBands labels={labels} series={series} type={type} valOf={valOf} fmt={fmt} geometry={geometry} />
-      <TrendLines labels={labels} series={series} type={type} valOf={valOf} fmt={fmt} geometry={geometry} />
+      <TrendBands
+        labels={labels}
+        series={series}
+        type={type}
+        valOf={valOf}
+        fmt={fmt}
+        geometry={geometry}
+      />
+      <TrendLines
+        labels={labels}
+        series={series}
+        type={type}
+        valOf={valOf}
+        fmt={fmt}
+        geometry={geometry}
+      />
     </svg>
   );
 }

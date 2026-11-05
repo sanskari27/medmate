@@ -1,4 +1,12 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -44,22 +52,31 @@ const SLIDES: { icon: Glyph; title: string; body: string }[] = [
   },
 ];
 
-const TYPES: { key: BusinessType; icon: Glyph; title: string; body: string; bullets: string[] }[] = [
-  {
-    key: "pharmacy",
-    icon: IconStore,
-    title: "Retail Pharmacy",
-    body: "Standalone medical store / chemist",
-    bullets: ["Counter & online billing", "Inventory, purchases & reorder", "Customers, khata & CRM"],
-  },
-  {
-    key: "hospital",
-    icon: IconHospital,
-    title: "Hospital Pharmacy",
-    body: "In-hospital pharmacy & IPD store",
-    bullets: ["Everything in Retail, plus:", "IPD wards & ward indents", "Departments & insurance / TPA claims"],
-  },
-];
+const TYPES: { key: BusinessType; icon: Glyph; title: string; body: string; bullets: string[] }[] =
+  [
+    {
+      key: "pharmacy",
+      icon: IconStore,
+      title: "Retail Pharmacy",
+      body: "Standalone medical store / chemist",
+      bullets: [
+        "Counter & online billing",
+        "Inventory, purchases & reorder",
+        "Customers, khata & CRM",
+      ],
+    },
+    {
+      key: "hospital",
+      icon: IconHospital,
+      title: "Hospital Pharmacy",
+      body: "In-hospital pharmacy & IPD store",
+      bullets: [
+        "Everything in Retail, plus:",
+        "IPD wards & ward indents",
+        "Departments & insurance / TPA claims",
+      ],
+    },
+  ];
 
 function GlyphView({ glyph: Icon, size }: { glyph: Glyph; size: number }) {
   return <Icon size={size} />;
@@ -72,7 +89,14 @@ function BrandLockup() {
       <Box className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white shadow-[0_8px_22px_#0000004d]">
         <svg width={30} height={30} viewBox="0 0 40 40" fill="none" aria-hidden>
           <defs>
-            <linearGradient id={gradientId} x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id={gradientId}
+              x1="6"
+              y1="4"
+              x2="34"
+              y2="36"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop stopColor="#4A9E6E" />
               <stop offset="1" stopColor="#1B3D29" />
             </linearGradient>
@@ -87,7 +111,7 @@ function BrandLockup() {
         </svg>
       </Box>
       <Stack gap={0}>
-        <Text as="span" className="block font-display text-[17px] leading-none font-extrabold text-white">
+        <Text as="span" className="block font-display text-[17px] font-extrabold text-white">
           <Text as="span" className="text-gold not-italic">
             Namma
           </Text>{" "}
@@ -103,7 +127,11 @@ function BrandLockup() {
 
 function TrustRow({ icon: Icon, label }: { icon: Glyph; label: string }) {
   return (
-    <Stack direction="row" align="center" className="gap-2.5 text-[13.5px] font-semibold text-[#ffffffeb]">
+    <Stack
+      direction="row"
+      align="center"
+      className="gap-2.5 text-[13.5px] font-semibold text-[#ffffffeb]"
+    >
       <Box className="grid h-7 w-7 place-items-center rounded-sm bg-[#ffffff1f] text-mint">
         <Icon size={16} />
       </Box>
@@ -124,14 +152,19 @@ function Aside({ type }: { type: BusinessType }) {
       />
       <BrandLockup />
       <Stack className="relative z-[1] mt-auto">
-        <Heading level={1} className="text-[34px] [line-height:1.12]! tracking-[-0.02em] text-white">
+        <Heading
+          level={1}
+          className="text-[34px] [line-height:1.12]! tracking-[-0.02em] text-white"
+        >
           Run your{hospital ? " hospital" : ""} pharmacy
           <br />
           from one screen.
         </Heading>
         <Text className="mt-3.5 max-w-[420px] text-[15px] leading-normal text-white/80">
           Billing, inventory, online orders, GST &{" "}
-          {hospital ? "IPD wards, indents and insurance claims." : "customer credit — everything in one console."}
+          {hospital
+            ? "IPD wards, indents and insurance claims."
+            : "customer credit — everything in one console."}
         </Text>
       </Stack>
       <Stack className="relative z-[1] mt-7 gap-2.5">
@@ -145,7 +178,15 @@ function Aside({ type }: { type: BusinessType }) {
   );
 }
 
-function SlideDot({ index, active, onPick }: { index: number; active: boolean; onPick: (index: number) => void }) {
+function SlideDot({
+  index,
+  active,
+  onPick,
+}: {
+  index: number;
+  active: boolean;
+  onPick: (index: number) => void;
+}) {
   function onClick() {
     onPick(index);
   }
@@ -154,7 +195,10 @@ function SlideDot({ index, active, onPick }: { index: number; active: boolean; o
       variant="link"
       aria-label={`Slide ${index + 1}`}
       onClick={onClick}
-      className={cn("h-2 rounded-full p-0", active ? "w-[22px] bg-mid" : "w-2 bg-line-2")}
+      className={cn(
+        "h-2 rounded-full p-0 transition-[width,background-color] duration-200",
+        active ? "w-[22px] bg-mid" : "w-2 bg-line-2",
+      )}
     />
   );
 }
@@ -182,8 +226,12 @@ function IntroPhase({
   const current = SLIDES[slide];
   return (
     <Stack align="center" className="text-center">
-      <Stack align="center" justify="center" className="min-h-[230px] w-full">
-        <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
+      <Stack
+        align="center"
+        justify="center"
+        className="min-h-[230px] w-full animate-[pd-ob-in_0.4s_ease] motion-reduce:animate-none"
+      >
+        <Box className="inline-grid place-items-center">
           <GlyphView glyph={current.icon} size={40} />
         </Box>
         <Heading level={2} className="mt-[18px] max-w-[360px] text-[23px]">
@@ -199,10 +247,18 @@ function IntroPhase({
       <Button size="lg" block className="mt-[22px]" onClick={onStart}>
         Get started <IconArrowRight size={16} />
       </Button>
-      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onLogin}>
+      <Button
+        variant="link"
+        className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]"
+        onClick={onLogin}
+      >
         I already have an account · Log in
       </Button>
-      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onStaff}>
+      <Button
+        variant="link"
+        className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]"
+        onClick={onStaff}
+      >
         Namma MedMate staff sign in
       </Button>
     </Stack>
@@ -246,17 +302,17 @@ function TypeCard({
       variant="ghost"
       onClick={onClick}
       className={cn(
-        "relative h-auto w-full flex-col items-stretch gap-0 rounded-md border-[1.5px] px-[18px] py-4 text-left whitespace-normal hover:border-light hover:bg-paper active:translate-y-0",
+        "relative h-auto w-full flex-col items-stretch justify-start gap-0 rounded-md border-[1.5px] px-[18px] py-4 text-left whitespace-normal hover:border-light hover:bg-paper active:translate-y-0",
         selected
-          ? "border-mid bg-wash-2 shadow-[0_0_0_3px_#2f7d521f]"
+          ? "border-mid bg-wash-2 shadow-[0_0_0_3px_#2f7d521f] hover:border-mid hover:bg-wash-2"
           : "border-line-2 bg-paper",
       )}
     >
-      <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
+      <Box className="inline-grid place-items-center">
         <GlyphView glyph={item.icon} size={30} />
       </Box>
       <Stack className="mt-1.5">
-        <Text as="span" className="font-display text-[16px] font-extrabold text-dark">
+        <Text as="span" className="font-display text-[16px] font-bold text-dark">
           {item.title}
         </Text>
         <Text as="span" className="mt-px text-[12.5px] text-muted">
@@ -288,14 +344,16 @@ function TypePhase({
   onContinue: () => void;
 }) {
   function renderType(item: (typeof TYPES)[number]) {
-          return <TypeCard key={item.key} item={item} selected={type === item.key} onSelect={onType} />;
-        }
+    return <TypeCard key={item.key} item={item} selected={type === item.key} onSelect={onType} />;
+  }
   return (
-    <Stack>
+    <Stack className="animate-[pd-ob-in_0.25s_ease] motion-reduce:animate-none">
       <Heading level={2} className="text-[24px]">
         Choose your business
       </Heading>
-      <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">This choice stays with this mobile number.</Text>
+      <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">
+        This choice stays with this mobile number.
+      </Text>
       <Stack className="gap-3">{TYPES.map(renderType)}</Stack>
       <Stack direction="row" justify="between" className="mt-[22px] gap-2.5">
         <Button variant="ghost" onClick={onBack}>
@@ -438,7 +496,13 @@ function LoginPhase({
     setPinMode(false);
     setResetPin(false);
   }
-  const heading = otpSent ? "Enter the OTP" : pinMode ? "Enter your PIN" : staff ? "Staff sign in" : "Log in to continue";
+  const heading = otpSent
+    ? "Enter the OTP"
+    : pinMode
+      ? "Enter your PIN"
+      : staff
+        ? "Staff sign in"
+        : "Log in to continue";
   const subtitle = otpSent
     ? `We sent a 6-digit code to ${phone}.`
     : pinMode
@@ -448,8 +512,11 @@ function LoginPhase({
         : "New pharmacies get a code by SMS. After that, sign in with your PIN.";
 
   return (
-    <Stack>
-      <Text as="span" className="mb-3.5 inline-block w-fit self-start rounded-[99px] bg-wash px-3 py-[5px] text-[12.5px] font-extrabold text-dark [&_svg]:inline [&_svg]:align-baseline">
+    <Stack className="animate-[pd-ob-in_0.25s_ease] motion-reduce:animate-none">
+      <Text
+        as="span"
+        className="mb-3.5 inline-block w-fit self-start rounded-[99px] bg-wash px-3 py-[5px] text-[12.5px] font-extrabold text-dark [&_svg]:inline [&_svg]:align-baseline"
+      >
         {staff ? (
           "Master"
         ) : (
@@ -463,7 +530,7 @@ function LoginPhase({
       </Heading>
       <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">{subtitle}</Text>
       {!otpSent && !pinMode ? (
-        <Stack className="gap-3">
+        <Stack className="gap-0">
           {staff ? null : (
             <Field
               label={
@@ -475,13 +542,23 @@ function LoginPhase({
               <Input
                 value={name}
                 onChange={onName}
-                placeholder={type === "hospital" ? "City Care Hospital Pharmacy" : "Sri Sai Medicals"}
+                placeholder={
+                  type === "hospital" ? "City Care Hospital Pharmacy" : "Sri Sai Medicals"
+                }
               />
             </Field>
           )}
-          <Field label="Mobile number" error={formFault?.field === "phone" ? formFault.message : undefined} data-field="phone">
+          <Field
+            className="mt-3"
+            label="Mobile number"
+            error={formFault?.field === "phone" ? formFault.message : undefined}
+            data-field="phone"
+          >
             <Stack direction="row" align="stretch" className="gap-2">
-              <Text as="span" className="grid place-items-center rounded-sm border border-line-2 bg-wash px-3.5 font-extrabold text-dark">
+              <Text
+                as="span"
+                className="grid place-items-center rounded-sm border border-line-2 bg-wash px-3.5 font-extrabold text-dark"
+              >
                 +91
               </Text>
               <Input
@@ -497,16 +574,20 @@ function LoginPhase({
               />
             </Stack>
           </Field>
-          <Button size="lg" block className="mt-[10px]" disabled={!phoneOk} onClick={continuePhone}>
+          <Button size="lg" block className="mt-[22px]" disabled={!phoneOk} onClick={continuePhone}>
             {staff ? "Send OTP" : "Continue"} <IconArrowRight size={16} />
           </Button>
         </Stack>
       ) : null}
       {pinMode && !otpSent ? (
-        <Stack gap={3}>
-          <Field label="4-digit PIN" error={formFault?.field === "pin" ? formFault.message : undefined} data-field="pin">
+        <Stack className="gap-0">
+          <Field
+            label="4-digit PIN"
+            error={formFault?.field === "pin" ? formFault.message : undefined}
+            data-field="pin"
+          >
             <Input
-              className="font-mono tracking-[0.3em]"
+              className="text-center font-mono text-[22px] font-extrabold tracking-[0.28em]"
               inputMode="numeric"
               maxLength={4}
               type="password"
@@ -518,20 +599,34 @@ function LoginPhase({
               aria-invalid={formFault?.field === "pin"}
             />
           </Field>
-          <Button size="lg" block disabled={pin.length !== 4} onClick={verify}>
+          <Button
+            size="lg"
+            block
+            className="mt-[22px]"
+            disabled={pin.length !== 4}
+            onClick={verify}
+          >
             <IconCheck size={16} /> Log in
           </Button>
-          <Button variant="link" onClick={onForgot}>
+          <Button
+            variant="link"
+            className="mt-3.5 block w-full px-1.5 py-1.5 text-center text-[13px]"
+            onClick={onForgot}
+          >
             Forgot PIN
           </Button>
         </Stack>
       ) : null}
       {otpSent ? (
-        <Stack gap={3}>
-          <Field label="6-digit OTP" error={formFault?.field === "otp" ? formFault.message : undefined} data-field="otp">
+        <Stack className="gap-0">
+          <Field
+            label="6-digit OTP"
+            error={formFault?.field === "otp" ? formFault.message : undefined}
+            data-field="otp"
+          >
             <Input
               ref={otpRef}
-              className="text-center text-[22px] font-extrabold tracking-[0.28em]"
+              className="text-center font-mono text-[22px] font-extrabold tracking-[0.28em]"
               inputMode="numeric"
               maxLength={6}
               value={otp}
@@ -547,22 +642,38 @@ function LoginPhase({
               <Text as="span" className="font-bold">
                 {demoCode}
               </Text>{" "}
-              <Button variant="link" className="inline px-1 py-0 text-[12.5px]" onClick={onFill}>
+              <Button variant="link" className="m-0 inline p-1.5 text-[13px]" onClick={onFill}>
                 Auto-fill
               </Button>
             </Text>
           ) : null}
-          <Button size="lg" block disabled={otp.replace(/\D/g, "").length !== 6} onClick={verify}>
+          <Button
+            size="lg"
+            block
+            className="mt-[22px]"
+            disabled={otp.replace(/\D/g, "").length !== 6}
+            onClick={verify}
+          >
             <IconCheck size={16} /> {staff ? "Verify & open master" : "Verify & log in"}
           </Button>
-          <Button variant="link" onClick={onChangeNumber}>
+          <Button
+            variant="link"
+            className="mt-3.5 block w-full px-1.5 py-1.5 text-center text-[13px]"
+            onClick={onChangeNumber}
+          >
             ← Change number
           </Button>
         </Stack>
       ) : null}
-      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onBack}>
-        ← Back
-      </Button>
+      <Stack direction="row" justify="center" className="mt-[18px]">
+        <Button
+          variant="link"
+          className="mt-3.5 block w-full px-1.5 py-1.5 text-center text-[13px]"
+          onClick={onBack}
+        >
+          ← Back
+        </Button>
+      </Stack>
       <Text className="mt-4 text-center text-[11px] text-faint">
         By continuing you agree to the Terms of Service & Privacy Policy.
       </Text>
@@ -617,17 +728,37 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
   }
 
   return (
-    <Stack data-slot="onboarding-carousel" direction="row" className={cn("h-screen w-full overflow-auto bg-canvas max-[767px]:h-auto max-[767px]:min-h-dvh", className)}>
+    <Stack
+      data-slot="onboarding-carousel"
+      direction="row"
+      className={cn(
+        "h-screen w-full overflow-auto bg-canvas max-[767px]:h-auto max-[767px]:min-h-dvh",
+        className,
+      )}
+    >
       <Aside type={type} />
       <Stack className="grid min-w-0 flex-1 place-items-center p-8 max-[767px]:px-4 max-[767px]:py-5">
         <Stack className="w-full max-w-[440px]">
           {phase === "intro" ? (
-            <IntroPhase slide={slide} onPick={pickSlide} onStart={start} onLogin={login} onStaff={staffLogin} />
+            <IntroPhase
+              slide={slide}
+              onPick={pickSlide}
+              onStart={start}
+              onLogin={login}
+              onStaff={staffLogin}
+            />
           ) : null}
           {phase === "type" ? (
-            <TypePhase type={type} onType={chooseType} onBack={backToIntro} onContinue={continueType} />
+            <TypePhase
+              type={type}
+              onType={chooseType}
+              onBack={backToIntro}
+              onContinue={continueType}
+            />
           ) : null}
-          {phase === "login" ? <LoginPhase staff={staff} type={type} onBack={backToIntro} onMaster={onMaster} /> : null}
+          {phase === "login" ? (
+            <LoginPhase staff={staff} type={type} onBack={backToIntro} onMaster={onMaster} />
+          ) : null}
         </Stack>
       </Stack>
     </Stack>
@@ -660,7 +791,10 @@ export function PinSetup() {
     }
   }
   return (
-    <Stack data-slot="pin-setup" className="grid h-screen w-full place-items-center overflow-auto bg-canvas p-8 max-[767px]:h-auto max-[767px]:min-h-dvh max-[767px]:px-4 max-[767px]:py-5">
+    <Stack
+      data-slot="pin-setup"
+      className="grid h-screen w-full place-items-center overflow-auto bg-canvas p-8 max-[767px]:h-auto max-[767px]:min-h-dvh max-[767px]:px-4 max-[767px]:py-5"
+    >
       <Stack className="w-full max-w-[440px]">
         <Heading level={2} className="text-[24px]">
           Create your login PIN
@@ -670,7 +804,7 @@ export function PinSetup() {
         </Text>
         <Field label="4-digit PIN" data-field="pin">
           <Input
-            className="text-center text-[22px] font-extrabold tracking-[0.28em]"
+            className="text-center font-mono text-[22px] font-extrabold tracking-[0.28em]"
             inputMode="numeric"
             maxLength={4}
             type="password"
@@ -681,9 +815,13 @@ export function PinSetup() {
             aria-invalid={formFault?.field === "pin"}
           />
         </Field>
-        <Field className="mt-3" label="Confirm PIN" error={formFault?.field === "pin" ? formFault.message : undefined}>
+        <Field
+          className="mt-3"
+          label="Confirm PIN"
+          error={formFault?.field === "pin" ? formFault.message : undefined}
+        >
           <Input
-            className="text-center text-[22px] font-extrabold tracking-[0.28em]"
+            className="text-center font-mono text-[22px] font-extrabold tracking-[0.28em]"
             inputMode="numeric"
             maxLength={4}
             type="password"
@@ -693,10 +831,20 @@ export function PinSetup() {
             placeholder="••••"
           />
         </Field>
-        <Button size="lg" block className="mt-[22px]" disabled={pin.length !== 4 || again.length !== 4} onClick={save}>
+        <Button
+          size="lg"
+          block
+          className="mt-[22px]"
+          disabled={pin.length !== 4 || again.length !== 4}
+          onClick={save}
+        >
           <IconCheck size={16} /> Save PIN
         </Button>
-        <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={signOut}>
+        <Button
+          variant="link"
+          className="mt-3.5 block w-full px-1.5 py-1.5 text-center text-[13px]"
+          onClick={signOut}
+        >
           Log out
         </Button>
       </Stack>

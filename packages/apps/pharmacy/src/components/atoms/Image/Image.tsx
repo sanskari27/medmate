@@ -20,10 +20,18 @@ const imageVariants = cva("max-w-full", {
   },
 });
 
-export type ImageProps = ComponentProps<"img"> & VariantProps<typeof imageVariants> & { alt: string };
+export type ImageProps = ComponentProps<"img"> &
+  VariantProps<typeof imageVariants> & { alt: string };
 
 export function Image({ className, fit, rounded, alt, ...props }: ImageProps) {
-  return <img data-slot="image" alt={alt} className={cn(imageVariants({ fit, rounded }), className)} {...props} />;
+  return (
+    <img
+      data-slot="image"
+      alt={alt}
+      className={cn(imageVariants({ fit, rounded }), className)}
+      {...props}
+    />
+  );
 }
 
 export { imageVariants };

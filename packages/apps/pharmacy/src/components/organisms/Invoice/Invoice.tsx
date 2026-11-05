@@ -32,9 +32,10 @@ import type { InvoiceProps } from "./Invoice.types";
 const invoiceVariants = cva("bg-paper text-ink", {
   variants: {
     template: {
-      classic: "rounded-md border border-line p-6 text-[12.5px]",
-      modern: "rounded-md border border-x border-b border-t-4 border-line border-t-dark p-6 text-[12.5px]",
-      minimal: "rounded-md border border-line p-8 text-[12.5px]",
+      classic: "rounded-md border border-line text-[12.5px]",
+      modern:
+        "rounded-md border border-x border-b border-t-4 border-line border-t-dark text-[12.5px]",
+      minimal: "rounded-md border border-line text-[12.5px]",
       thermal: "mx-auto w-[80mm] px-3 py-4 text-center font-mono text-[11px]",
     },
   },
@@ -50,14 +51,20 @@ function HsnCell({ show, value }: { show: boolean; value: string }) {
   return <TableCell>{value}</TableCell>;
 }
 
-function InvoiceItemRow({ item, index, showHsn }: { item: SaleItem; index: number; showHsn: boolean }) {
+function InvoiceItemRow({
+  item,
+  index,
+  showHsn,
+}: {
+  item: SaleItem;
+  index: number;
+  showHsn: boolean;
+}) {
   return (
     <TableRow>
       <TableCell>{index + 1}</TableCell>
       <TableCell>
-        <Text as="span" className="font-bold">
-          {item.name}
-        </Text>
+        <b className="font-bold">{item.name}</b>
       </TableCell>
       <HsnCell show={showHsn} value={item.hsn} />
       <TableCell>{item.batchNo}</TableCell>
@@ -73,7 +80,14 @@ function InvoiceItemRow({ item, index, showHsn }: { item: SaleItem; index: numbe
 
 function InvoiceItems({ items, showHsn }: { items: SaleItem[]; showHsn: boolean }) {
   return items.map(function renderItem(item, index) {
-    return <InvoiceItemRow key={item.productId + item.batchNo} item={item} index={index} showHsn={showHsn} />;
+    return (
+      <InvoiceItemRow
+        key={item.productId + item.batchNo}
+        item={item}
+        index={index}
+        showHsn={showHsn}
+      />
+    );
   });
 }
 
@@ -292,12 +306,17 @@ function PageInvoice({
   const logo = settings.showLogo && profile.logo ? profile.logo : null;
   const pending = sale.paid === false;
   return (
-    <Box data-slot="invoice" className={cn(invoiceVariants({ template: settings.template }), className)}>
+    <Box
+      data-slot="invoice"
+      className={cn(invoiceVariants({ template: settings.template }), className)}
+    >
       <Stack direction="row" justify="between" align="start" gap={4} className="mb-4">
         <Stack direction="row" gap={3}>
           {logo ? <Image src={logo} alt="logo" className="h-14 w-14 object-contain" /> : null}
           <Stack gap={1}>
-            <Heading level={3}>{profile.name}</Heading>
+            <Heading level={3} className="text-[19px] text-dark">
+              {profile.name}
+            </Heading>
             <Text variant="caption">{profile.address}</Text>
             <Text variant="caption">
               Ph: {profile.phone} · {profile.email}
@@ -315,10 +334,10 @@ function PageInvoice({
           </Stack>
         </Stack>
         <Stack align="end" gap={1}>
-          <Heading level={4} className="tracking-wide">
+          <Heading level={4} className="text-[15px] tracking-[0.05em] text-dark">
             {settings.title}
           </Heading>
-          <Text as="span" className="text-right font-bold">
+          <Text as="span" variant="caption" className="text-right font-bold text-ink">
             {sale.id}
           </Text>
           <Text variant="caption" className="text-right">
@@ -349,7 +368,7 @@ function PageInvoice({
 
       {pending ? <PendingBanner /> : null}
 
-      <Table>
+      <Table className="!border-collapse !text-[11.5px] [&_th]:!bg-wash [&_th]:!px-[9px] [&_th]:!py-[7px] [&_th]:!text-[10px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.03em] [&_td]:!px-[9px] [&_td]:!py-[7px]">
         <TableHead>
           <TableRow>
             <TableHeaderCell>#</TableHeaderCell>
@@ -407,7 +426,9 @@ function PageInvoice({
             {settings.showStamp && settings.stamp ? (
               <Image src={settings.stamp} alt="stamp" className="h-10 w-auto" />
             ) : null}
-            {profile.signature ? <Image src={profile.signature} alt="signature" className="h-10 w-auto" /> : null}
+            {profile.signature ? (
+              <Image src={profile.signature} alt="signature" className="h-10 w-auto" />
+            ) : null}
           </Stack>
           <Text variant="caption">{settings.signatory}</Text>
           <Text variant="caption">{profile.pharmacist}</Text>
@@ -420,9 +441,18 @@ function PageInvoice({
 export default function Invoice({ sale, profile, className }: InvoiceProps) {
   const { invoiceSettings } = usePharma();
   if (invoiceSettings.template === "thermal") {
-    return <ThermalInvoice sale={sale} profile={profile} settings={invoiceSettings} className={className} />;
+    return (
+      <ThermalInvoice
+        sale={sale}
+        profile={profile}
+        settings={invoiceSettings}
+        className={className}
+      />
+    );
   }
-  return <PageInvoice sale={sale} profile={profile} settings={invoiceSettings} className={className} />;
+  return (
+    <PageInvoice sale={sale} profile={profile} settings={invoiceSettings} className={className} />
+  );
 }
 
 export type { InvoiceProps };

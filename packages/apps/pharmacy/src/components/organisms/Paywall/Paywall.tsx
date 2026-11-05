@@ -3,7 +3,13 @@ import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
-import { IconArrowRight, IconCheck, IconCrown, IconLock, IconSparkle } from "@/components/atoms/Icon";
+import {
+  IconArrowRight,
+  IconCheck,
+  IconCrown,
+  IconLock,
+  IconSparkle,
+} from "@/components/atoms/Icon";
 import { usePharma } from "@/hooks";
 import type { Route } from "@/types";
 import { inr, planPrice, PLANS } from "@/utils";
@@ -79,7 +85,11 @@ export function Paywall({ route, className }: PaywallProps) {
     go("subscription");
   }
   return (
-    <Stack data-slot="paywall" align="center" className={cn("mx-auto my-9 w-full max-w-[640px] max-[767px]:my-2", className)}>
+    <Stack
+      data-slot="paywall"
+      align="center"
+      className={cn("mx-auto my-9 w-full max-w-[640px] max-[767px]:my-2", className)}
+    >
       <Stack
         align="center"
         gap={0}
@@ -102,15 +112,18 @@ export function Paywall({ route, className }: PaywallProps) {
           <Text as="span" className="text-[13.5px] leading-[1.55] font-bold text-ink">
             {subscription.plan}
           </Text>{" "}
-          plan. Billing / POS, Inventory and Purchases stay open — {meta.title} unlocks with any active paid plan
-          from{" "}
+          plan. Billing / POS, Inventory and Purchases stay open — {meta.title} unlocks with any
+          active paid plan from{" "}
           <Text as="span" className="text-[13.5px] leading-[1.55] font-bold text-ink">
             {inr(price)}/mo
           </Text>
           .
         </Text>
         {care ? (
-          <Stack align="start" className="my-[18px] min-w-[300px] max-w-full gap-[7px] rounded-md border border-line bg-wash-2 px-[18px] py-[15px] text-left">
+          <Stack
+            align="start"
+            className="my-[18px] min-w-[300px] max-w-full gap-[7px] rounded-md border border-line bg-wash-2 px-[18px] py-[15px] text-left max-[767px]:w-full max-[767px]:min-w-0"
+          >
             <PaywallFeatures features={care.features} />
           </Stack>
         ) : null}
@@ -122,7 +135,10 @@ export function Paywall({ route, className }: PaywallProps) {
             See all plans <IconArrowRight size={14} />
           </Button>
         </Stack>
-        <Text as="span" className="inline-flex items-center gap-1.5 rounded-[20px] bg-wash px-3.5 py-1.5 text-[12px] font-bold text-mid">
+        <Text
+          as="span"
+          className="inline-flex items-center gap-1.5 rounded-[20px] bg-wash px-3.5 py-1.5 text-[12px] font-bold text-mid"
+        >
           <IconCheck size={13} /> Free forever: Billing / POS · Inventory · Purchases
         </Text>
       </Stack>

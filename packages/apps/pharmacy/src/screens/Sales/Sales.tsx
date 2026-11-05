@@ -9,7 +9,15 @@ import { IconDownload, IconPrint } from "@/components/atoms/Icon";
 import { useDateRange } from "@/components/molecules";
 import { ShareSheet } from "@/components/organisms";
 import { OrderDetail, matchRx } from "@/screens/Orders";
-import { inr, type Channel, type OrderStatus, type PayMode, type PharmacyProfile, type Prescription, type Sale } from "@/utils";
+import {
+  inr,
+  type Channel,
+  type OrderStatus,
+  type PayMode,
+  type PharmacyProfile,
+  type Prescription,
+  type Sale,
+} from "@/utils";
 import type { PaidFilter, SalesSortKey } from "./Sales.types";
 import {
   downloadBlob,
@@ -25,7 +33,8 @@ import { SalesSummary } from "./components/SalesSummary";
 import { SalesTable } from "./components/SalesTable";
 
 export default function SalesScreen() {
-  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } = usePharma();
+  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } =
+    usePharma();
   const period = useDateRange(now, "last-365");
   const [searchQuery, setSearchQuery] = useState("");
   const [channel, setChannel] = useState<"all" | Channel>("all");
@@ -44,9 +53,11 @@ export default function SalesScreen() {
     period.inWindow,
   );
   const summary = summarizeSales(rows);
-  const current = view ? (sales.find(function same(sale) {
-    return sale.id === view.id;
-  }) ?? view) : null;
+  const current = view
+    ? (sales.find(function same(sale) {
+        return sale.id === view.id;
+      }) ?? view)
+    : null;
 
   function toggleSort(key: SalesSortKey) {
     const next = nextSalesSort(sort, direction, key);
@@ -117,10 +128,18 @@ export default function SalesScreen() {
         </Box>
         <Box className="flex-1" />
         {period.node as ReactNode}
-        <Button variant="ghost" className="!leading-[1.5] active:translate-y-px" onClick={exportCsv}>
+        <Button
+          variant="ghost"
+          className="!leading-[1.5] active:translate-y-px"
+          onClick={exportCsv}
+        >
           <IconDownload size={14} /> Excel
         </Button>
-        <Button variant="ghost" className="!leading-[1.5] active:translate-y-px" onClick={exportPdf}>
+        <Button
+          variant="ghost"
+          className="!leading-[1.5] active:translate-y-px"
+          onClick={exportPdf}
+        >
           <IconPrint size={15} /> PDF
         </Button>
       </Stack>

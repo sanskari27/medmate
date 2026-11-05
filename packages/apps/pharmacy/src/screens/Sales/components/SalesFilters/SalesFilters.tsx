@@ -54,10 +54,38 @@ export function SalesFilters(props: SalesFiltersProps) {
           className="py-0 placeholder:text-faint"
         />
       </Stack>
-      <Select className={`w-[130px] ${selectClass}`} value={props.channel} onChange={changeChannel} options={[{ value: "all", label: "All channels" }, { value: "online", label: "Online" }, { value: "offline", label: "Counter" }]} />
-      <Select className={`w-[120px] ${selectClass}`} value={props.payMode} onChange={changePay} options={[{ value: "all", label: "All payments" }, ...PAY_MODES.map(renderPay)]} />
-      <Select className={`w-[130px] ${selectClass}`} value={props.status} onChange={changeStatus} options={[{ value: "all", label: "All statuses" }, ...STATUSES.map(renderStatus)]} />
-      <Select className={`w-[120px] ${selectClass}`} value={props.paid} onChange={changePaid} options={[{ value: "all", label: "Paid + unpaid" }, { value: "paid", label: "Paid only" }, { value: "unpaid", label: "Unpaid only" }]} />
+      <Select
+        className={`w-[130px] ${selectClass}`}
+        value={props.channel}
+        onChange={changeChannel}
+        options={[
+          { value: "all", label: "All channels" },
+          { value: "online", label: "Online" },
+          { value: "offline", label: "Counter" },
+        ]}
+      />
+      <Select
+        className={`w-[120px] ${selectClass}`}
+        value={props.payMode}
+        onChange={changePay}
+        options={[{ value: "all", label: "All payments" }, ...PAY_MODES.map(renderPay)]}
+      />
+      <Select
+        className={`w-[130px] ${selectClass}`}
+        value={props.status}
+        onChange={changeStatus}
+        options={[{ value: "all", label: "All statuses" }, ...STATUSES.map(renderStatus)]}
+      />
+      <Select
+        className={`w-[120px] ${selectClass}`}
+        value={props.paid}
+        onChange={changePaid}
+        options={[
+          { value: "all", label: "Paid + unpaid" },
+          { value: "paid", label: "Paid only" },
+          { value: "unpaid", label: "Unpaid only" },
+        ]}
+      />
     </Stack>
   );
 }

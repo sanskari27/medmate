@@ -6,7 +6,9 @@ describe("SourceCards", () => {
   it("renders the source label", () => {
     render(
       <SourceCards
-        cards={[{ key: "counter", label: "Pharmacy Counter", short: "Counter", count: 2, amount: 10 }]}
+        cards={[
+          { key: "counter", label: "Pharmacy Counter", short: "Counter", count: 2, amount: 10 },
+        ]}
         selected="all"
         onSelect={ignore}
       />,

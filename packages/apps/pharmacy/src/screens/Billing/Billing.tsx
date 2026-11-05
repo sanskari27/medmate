@@ -31,6 +31,8 @@ import {
   billingCheckoutGates,
   billingInvoiceTitle,
   billingLineView,
+  billingSelectClass,
+  billingSelectStyle,
   filterBillingProducts,
 } from "./Billing.utils";
 import type { BillingStep } from "./Billing.types";
@@ -372,7 +374,8 @@ export default function Billing() {
                 <PayModePicker options={payOpts} selected={posPay} onSelect={setPosPay} />
                 {isInsurance ? (
                   <Select
-                    className="mb-2.5"
+                    className={cn("mb-2.5", billingSelectClass)}
+                    style={billingSelectStyle}
                     value={posInsurer}
                     onChange={changeInsurer}
                     options={[
@@ -382,7 +385,7 @@ export default function Billing() {
                   />
                 ) : null}
                 {isCredit ? (
-                  <Box className="mb-2.5 flex w-full justify-center rounded-[20px] bg-amber-bg px-[7px] py-[7px] text-center text-[12.5px] font-bold text-gold-d">
+                  <Box className="mb-2.5 flex w-full justify-center rounded-[20px] bg-amber-bg px-[7px] py-[7px] text-center text-[12.5px] font-bold whitespace-nowrap text-gold-d">
                     {creditOk
                       ? `On ${posCustomer.name.trim()}'s credit account (khata) — settled later`
                       : "Enter a customer name to give credit"}

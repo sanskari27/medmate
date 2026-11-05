@@ -15,7 +15,8 @@ import { OrderTable } from "./components/OrderTable";
 import PackOrder from "./components/PackOrder";
 
 export default function OrdersScreen() {
-  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } = usePharma();
+  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } =
+    usePharma();
   const [filter, setFilter] = useState<OrderFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<Sale | null>(null);
@@ -25,9 +26,11 @@ export default function OrdersScreen() {
 
   const list = filterOrders(sales, filter, searchQuery);
   const counts = orderCounts(sales);
-  const current = view ? (sales.find(function same(sale) {
-    return sale.id === view.id;
-  }) ?? view) : null;
+  const current = view
+    ? (sales.find(function same(sale) {
+        return sale.id === view.id;
+      }) ?? view)
+    : null;
 
   function openOrder(sale: Sale, tab: OrderTab) {
     setViewTab(tab);

@@ -1,3 +1,5 @@
 export function thermalPreviewClass(template: string) {
-  return template === "thermal" ? " !mx-auto !max-w-[320px] !font-mono !text-[12px]" : "";
+  return template === "thermal"
+    ? "!bg-[repeating-linear-gradient(#fff,#fff_22px,#fafafa_22px,#fafafa_23px)] !p-[18px]"
+    : "";
 }

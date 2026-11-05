@@ -8,7 +8,9 @@ const sale = {
   channel: "offline",
   status: "delivered",
   customer: { name: "Asha" },
-  items: [{ productId: "p", batchNo: "B1", name: "Dolo", qty: 1, price: 10, mrp: 10, gst: 5, hsn: "" }],
+  items: [
+    { productId: "p", batchNo: "B1", name: "Dolo", qty: 1, price: 10, mrp: 10, gst: 5, hsn: "" },
+  ],
   discount: 0,
   payMode: "cash",
   paid: true,

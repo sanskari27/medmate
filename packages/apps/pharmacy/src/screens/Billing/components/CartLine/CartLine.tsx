@@ -54,6 +54,7 @@ export function CartLine({
           {hasLocation(product) ? (
             <Text
               as="span"
+              title="Rack location"
               className="ml-1.5 inline-flex items-center gap-0.5 rounded-[5px] bg-wash px-[5px] py-px align-middle font-mono text-[10px] font-bold whitespace-nowrap text-mid"
             >
               <IconPin size={11} /> {product.rack}
@@ -62,7 +63,7 @@ export function CartLine({
           {loose ? <Tag className="ml-0.5">loose</Tag> : null}
           {pinned ? <Tag className="ml-0.5 bg-wash text-mid">scanned</Tag> : null}
         </Text>
-        <Text variant="caption" className="text-[11px] leading-normal">
+        <Text as="span" variant="caption" className="block text-[11px] leading-normal">
           {loose ? (
             <>
               {inr2(unit)}/{unitNoun(product)} · {product.gst}% GST ·{" "}

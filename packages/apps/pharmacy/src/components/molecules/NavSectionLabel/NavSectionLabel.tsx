@@ -4,7 +4,7 @@ import { Text } from "@/components/atoms/Text";
 import { cn } from "@/utils/className";
 
 const navSectionLabelVariants = cva(
-  "px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[#8fd4a87a] uppercase",
+  "block px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[#8fd4a87a] uppercase",
 );
 
 export type NavSectionLabelProps = ComponentProps<typeof Text>;

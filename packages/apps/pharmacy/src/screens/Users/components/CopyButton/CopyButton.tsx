@@ -18,7 +18,12 @@ export function CopyButton({ text, label }: CopyButtonProps) {
   }
 
   return (
-    <IconButton label={accessibleLabel} variant="ghost" className="h-[26px] w-[26px] rounded-[7px] border border-line bg-paper text-ink-2" onClick={handleCopy}>
+    <IconButton
+      label={accessibleLabel}
+      variant="ghost"
+      className="h-[26px] w-[26px] shrink-0 rounded-[7px] border border-line bg-paper text-ink-2 hover:border-line-2 hover:bg-wash-2 hover:text-green"
+      onClick={handleCopy}
+    >
       {copied ? <IconCheck size={13} /> : <IconCopy size={13} />}
     </IconButton>
   );

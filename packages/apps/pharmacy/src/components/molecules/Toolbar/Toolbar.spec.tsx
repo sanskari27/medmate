@@ -5,7 +5,11 @@ import { Toolbar } from "./Toolbar";
 
 describe("Toolbar", () => {
   it("renders its actions", () => {
-    render(<Toolbar><Text>Filters</Text></Toolbar>);
+    render(
+      <Toolbar>
+        <Text>Filters</Text>
+      </Toolbar>,
+    );
     expect(screen.getByText("Filters")).toBeTruthy();
   });
 });

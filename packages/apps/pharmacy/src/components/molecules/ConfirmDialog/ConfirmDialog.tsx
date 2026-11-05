@@ -11,6 +11,7 @@ export type ConfirmDialogProps = Omit<ModalProps, "children" | "footer"> & {
   body: string;
   children?: ReactNode;
   tone?: "positive" | "danger";
+  mark?: ReactNode;
 };
 
 export function ConfirmDialog({
@@ -19,6 +20,7 @@ export function ConfirmDialog({
   children,
   onClose,
   tone = "danger",
+  mark,
   className,
   overlayClassName,
 }: ConfirmDialogProps) {
@@ -27,7 +29,7 @@ export function ConfirmDialog({
     <Box
       data-slot="modal-overlay"
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]",
+        "fixed inset-0 z-[100] flex animate-[pd-fade_0.16s_ease] items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px] motion-reduce:animate-none max-[767px]:items-end max-[767px]:p-0",
         overlayClassName,
       )}
       onClick={onClose}
@@ -37,7 +39,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "flex w-full max-w-[380px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop",
+          "flex w-full max-w-[380px] animate-[pd-pop_0.2s_cubic-bezier(0.2,0.9,0.3,1.2)] flex-col overflow-hidden rounded-lg bg-paper shadow-pop motion-reduce:animate-none max-[767px]:max-h-[92dvh] max-[767px]:max-w-none max-[767px]:rounded-t-lg max-[767px]:rounded-b-none",
           className,
         )}
         onClick={stopConfirmClose}
@@ -50,15 +52,17 @@ export function ConfirmDialog({
               positive ? "bg-wash text-green" : "bg-rose-bg text-rose",
             )}
           >
-            {positive ? <IconCheck size={22} /> : <IconAlert size={22} />}
+            {mark ?? (positive ? <IconCheck size={22} /> : <IconAlert size={22} />)}
           </Box>
-          <Heading level={3} className="text-[18px]">
-            {title}
-          </Heading>
-          <Text className="max-w-[32ch] text-[13.5px] [line-height:1.45] text-muted">{body}</Text>
+          <Heading level={3}>{title}</Heading>
+          <Text>{body}</Text>
         </Stack>
         {children ? (
-          <Stack direction="row" justify="end" className="gap-2.5 px-5 pt-[18px] pb-5">
+          <Stack
+            direction="row"
+            justify="end"
+            className="gap-2.5 px-5 pt-[18px] pb-5 max-[767px]:flex-wrap max-[767px]:[&_button]:min-w-0 max-[767px]:[&_button]:flex-1"
+          >
             {children}
           </Stack>
         ) : null}

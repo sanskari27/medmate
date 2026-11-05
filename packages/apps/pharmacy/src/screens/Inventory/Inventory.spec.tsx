@@ -28,6 +28,8 @@ describe("InventoryScreen", () => {
   it("renders the empty catalogue", () => {
     render(<InventoryScreen />);
     expect(screen.getByText("Total SKUs")).toBeTruthy();
-    expect(screen.getByText("No products yet — add stock by entering a distributor purchase bill.")).toBeTruthy();
+    expect(
+      screen.getByText("No products yet — add stock by entering a distributor purchase bill."),
+    ).toBeTruthy();
   });
 });

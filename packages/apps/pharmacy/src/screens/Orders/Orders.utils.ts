@@ -1,4 +1,10 @@
-import { computeInvoice, ONLINE_FLOW, type OrderStatus, type Sale, type StatusEvent } from "@/utils";
+import {
+  computeInvoice,
+  ONLINE_FLOW,
+  type OrderStatus,
+  type Sale,
+  type StatusEvent,
+} from "@/utils";
 import type { PillTone } from "@/components/atoms/Pill";
 import type { OrderFilter } from "./Orders.types";
 
@@ -8,18 +14,26 @@ export function orderPayable(sale: Sale) {
 
 export function filterOrders(sales: Sale[], filter: OrderFilter, searchQuery: string) {
   const needle = searchQuery.trim().toLowerCase();
-  return [...sales].sort(function newest(left, right) {
-    return right.createdAt - left.createdAt;
-  }).filter(function matches(sale) {
-    if (filter === "online" && sale.channel !== "online") return false;
-    if (filter === "offline" && sale.channel !== "offline") return false;
-    if (filter === "action" && !needsAction(sale)) return false;
-    if (filter === "unpaid" && !(sale.paid === false && sale.status !== "cancelled")) return false;
-    if (needle && !`${sale.id} ${sale.customer.name} ${sale.customer.phone ?? ""}`.toLowerCase().includes(needle)) {
-      return false;
-    }
-    return true;
-  });
+  return [...sales]
+    .sort(function newest(left, right) {
+      return right.createdAt - left.createdAt;
+    })
+    .filter(function matches(sale) {
+      if (filter === "online" && sale.channel !== "online") return false;
+      if (filter === "offline" && sale.channel !== "offline") return false;
+      if (filter === "action" && !needsAction(sale)) return false;
+      if (filter === "unpaid" && !(sale.paid === false && sale.status !== "cancelled"))
+        return false;
+      if (
+        needle &&
+        !`${sale.id} ${sale.customer.name} ${sale.customer.phone ?? ""}`
+          .toLowerCase()
+          .includes(needle)
+      ) {
+        return false;
+      }
+      return true;
+    });
 }
 
 export function orderCounts(sales: Sale[]) {
@@ -41,11 +55,11 @@ export function orderCounts(sales: Sale[]) {
 export type HistoryEntry = StatusEvent & { future?: boolean };
 
 export function orderHistory(sale: Sale) {
-  const history: HistoryEntry[] = [...(sale.history ?? [{ status: sale.status, at: sale.createdAt }])].sort(
-    function oldest(left, right) {
-      return left.at - right.at;
-    },
-  );
+  const history: HistoryEntry[] = [
+    ...(sale.history ?? [{ status: sale.status, at: sale.createdAt }]),
+  ].sort(function oldest(left, right) {
+    return left.at - right.at;
+  });
   const index = ONLINE_FLOW.indexOf(sale.status);
   const future: HistoryEntry[] =
     sale.channel === "online" && sale.status !== "cancelled"
@@ -86,5 +100,8 @@ export function packRailTone(current: PackStep, key: PackStep): "done" | "on" | 
 }
 
 function needsAction(sale: Sale) {
-  return sale.channel === "online" && (sale.status === "new" || sale.status === "accepted" || sale.status === "packed");
+  return (
+    sale.channel === "online" &&
+    (sale.status === "new" || sale.status === "accepted" || sale.status === "packed")
+  );
 }

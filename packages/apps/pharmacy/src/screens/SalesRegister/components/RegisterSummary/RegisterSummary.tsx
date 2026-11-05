@@ -18,7 +18,7 @@ function Chip({ label, value }: { label: string; value: string }) {
   return (
     <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
       {label}
-      <Text as="span" className="mt-px block font-display text-[15px] font-extrabold text-dark">
+      <Text as="span" className="mt-px block font-display text-[15px] font-bold text-dark">
         {value}
       </Text>
     </Box>

@@ -17,7 +17,9 @@ const monoTextVariants = cva("font-mono text-ink tabular-nums", {
 export type MonoTextProps = ComponentProps<"span"> & VariantProps<typeof monoTextVariants>;
 
 export function MonoText({ className, size, ...props }: MonoTextProps) {
-  return <span data-slot="mono-text" className={cn(monoTextVariants({ size }), className)} {...props} />;
+  return (
+    <span data-slot="mono-text" className={cn(monoTextVariants({ size }), className)} {...props} />
+  );
 }
 
 export { monoTextVariants };

@@ -89,7 +89,8 @@ export default function ShareSheet({ sale, profile, onClose, className }: ShareS
 
   const total = inr(computeInvoice(sale.items, sale.discount).payable);
   const link = `https://bills.nammamedmate.in/${sale.id.replace(/[^A-Za-z0-9-]/g, "")}`;
-  const name = sale.customer.name && sale.customer.name !== "Walk-in" ? " " + sale.customer.name : "";
+  const name =
+    sale.customer.name && sale.customer.name !== "Walk-in" ? " " + sale.customer.name : "";
   const msg = `Hi${name}, here is your bill ${sale.id} from ${profile.name} for ${total}${sale.paid === false ? " (payment pending)" : ""}. Open the link to view & download your PDF bill: ${link}`;
   const digits = phone.replace(/\D/g, "");
   const wa = digits ? (digits.length > 10 ? digits : "91" + digits.slice(-10)) : "";
@@ -139,7 +140,12 @@ export default function ShareSheet({ sale, profile, onClose, className }: ShareS
   }
 
   const options: ShareOption[] = [
-    { kind: "whatsapp", title: "WhatsApp", subtitle: "Send bill link on WhatsApp", onClick: onWhatsApp },
+    {
+      kind: "whatsapp",
+      title: "WhatsApp",
+      subtitle: "Send bill link on WhatsApp",
+      onClick: onWhatsApp,
+    },
     { kind: "sms", title: "SMS", subtitle: "Text the bill link", onClick: onSMS },
     { kind: "email", title: "Email", subtitle: "Email the bill link", onClick: onEmail },
     { kind: "pdf", title: "Open PDF", subtitle: "Preview / save / print", onClick: openPdf },
@@ -182,8 +188,8 @@ export default function ShareSheet({ sale, profile, onClose, className }: ShareS
           </Stack>
         </Stack>
         <Text variant="caption">
-          <IconLink size={13} /> WhatsApp, SMS & Email all share a secure bill link — the customer opens it to
-          view & download the PDF. No app needed.
+          <IconLink size={13} /> WhatsApp, SMS & Email all share a secure bill link — the customer
+          opens it to view & download the PDF. No app needed.
         </Text>
       </Stack>
     </Modal>

@@ -1,8 +1,16 @@
 import type { Route } from "@/types/common.types";
 import type { PharmacyProfile, Sale, SaveFault } from "@/utils";
-import type { Campaign, CrmData, Feedback, Patient, PatientMeta, ReminderLog } from "@/utils/calculations/crm";
+import type {
+  Campaign,
+  CrmData,
+  Feedback,
+  Patient,
+  PatientMeta,
+  ReminderLog,
+} from "@/utils/calculations/crm";
 
-export type CrmTab = "overview" | "patients" | "reminders" | "loyalty" | "campaigns" | "feedback" | "analytics";
+export type CrmTab =
+  "overview" | "patients" | "reminders" | "loyalty" | "campaigns" | "feedback" | "analytics";
 
 export type CrmViewProps = {
   patients: Patient[];

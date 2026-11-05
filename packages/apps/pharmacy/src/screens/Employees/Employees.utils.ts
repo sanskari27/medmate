@@ -8,7 +8,9 @@ export function filterEmployees(employees: Employee[], filters: EmployeeFilters)
       if (filters.position !== "all" && employee.position !== filters.position) return false;
       if (filters.status !== "all" && employee.status !== filters.status) return false;
       if (!needle) return true;
-      return `${employee.id} ${employee.name} ${employee.position} ${employee.phone} ${employee.department ?? ""}`.toLowerCase().includes(needle);
+      return `${employee.id} ${employee.name} ${employee.position} ${employee.phone} ${employee.department ?? ""}`
+        .toLowerCase()
+        .includes(needle);
     })
     .sort(function byCode(left, right) {
       return left.id.localeCompare(right.id);
@@ -17,7 +19,8 @@ export function filterEmployees(employees: Employee[], filters: EmployeeFilters)
 
 export function countByPosition(employees: Employee[]): [string, number][] {
   const counts = new Map<string, number>();
-  for (const employee of employees) counts.set(employee.position, (counts.get(employee.position) ?? 0) + 1);
+  for (const employee of employees)
+    counts.set(employee.position, (counts.get(employee.position) ?? 0) + 1);
   return [...counts.entries()].sort(function byCount(left, right) {
     return right[1] - left[1];
   });
@@ -52,7 +55,13 @@ export function activeEmployeeCount(employees: Employee[]): number {
 }
 
 export function employeeDraftIsValid(draft: EmployeeDraft, ifscIsInvalid: boolean): boolean {
-  return Boolean(draft.name.trim() && draft.phone.trim() && draft.position && draft.salary >= 0 && !ifscIsInvalid);
+  return Boolean(
+    draft.name.trim() &&
+    draft.phone.trim() &&
+    draft.position &&
+    draft.salary >= 0 &&
+    !ifscIsInvalid,
+  );
 }
 
 export function csvCell(value: unknown): string {
@@ -60,7 +69,28 @@ export function csvCell(value: unknown): string {
 }
 
 export function employeesCsv(rows: Employee[]): string {
-  const head = ["Code", "Name", "Position", "Department", "Employment", "Status", "Phone", "Email", "DOB", "Joined", "Monthly salary", "PAN", "Aadhaar", "Bank", "Account name", "Account no", "IFSC", "UPI", "Emergency contact", "Address"];
+  const head = [
+    "Code",
+    "Name",
+    "Position",
+    "Department",
+    "Employment",
+    "Status",
+    "Phone",
+    "Email",
+    "DOB",
+    "Joined",
+    "Monthly salary",
+    "PAN",
+    "Aadhaar",
+    "Bank",
+    "Account name",
+    "Account no",
+    "IFSC",
+    "UPI",
+    "Emergency contact",
+    "Address",
+  ];
   const lines = rows.map(function toLine(employee) {
     return [
       employee.id,

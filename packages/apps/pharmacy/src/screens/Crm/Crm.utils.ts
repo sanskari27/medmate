@@ -14,7 +14,8 @@ import type { PatientProfileForm } from "./Crm.types";
 export function creditCustomerKeys(sales: Sale[], payments: { custKey: string }[]) {
   const keys = new Set<string>();
   for (const sale of sales) {
-    if (sale.status !== "cancelled" && sale.payMode === "credit") keys.add(custKeyOf(sale.customer));
+    if (sale.status !== "cancelled" && sale.payMode === "credit")
+      keys.add(custKeyOf(sale.customer));
   }
   for (const payment of payments) keys.add(payment.custKey);
   return keys;
@@ -76,11 +77,19 @@ export function segmentMemberCount(patients: Patient[], segment: Segment) {
 
 export function feedbackScore(feedbacks: Feedback[]) {
   const average = feedbacks.length
-    ? feedbacks.reduce(function sum(total, item) { return total + item.rating; }, 0) / feedbacks.length
+    ? feedbacks.reduce(function sum(total, item) {
+        return total + item.rating;
+      }, 0) / feedbacks.length
     : 0;
-  const promoters = feedbacks.filter(function promoter(item) { return (item.nps ?? 0) >= 9; }).length;
-  const detractors = feedbacks.filter(function detractor(item) { return (item.nps ?? 0) <= 6; }).length;
-  const nps = feedbacks.length ? Math.round(((promoters - detractors) / feedbacks.length) * 100) : 0;
+  const promoters = feedbacks.filter(function promoter(item) {
+    return (item.nps ?? 0) >= 9;
+  }).length;
+  const detractors = feedbacks.filter(function detractor(item) {
+    return (item.nps ?? 0) <= 6;
+  }).length;
+  const nps = feedbacks.length
+    ? Math.round(((promoters - detractors) / feedbacks.length) * 100)
+    : 0;
   return { average, promoters, detractors, nps };
 }
 
@@ -116,12 +125,18 @@ export function tierMemberCount(patients: Patient[], tier: string) {
 
 export function averageLifetimeValue(patients: Patient[]) {
   if (!patients.length) return 0;
-  return patients.reduce(function sum(total, patient) { return total + patient.spent; }, 0) / patients.length;
+  return (
+    patients.reduce(function sum(total, patient) {
+      return total + patient.spent;
+    }, 0) / patients.length
+  );
 }
 
 export function retentionPercent(patients: Patient[]) {
   if (!patients.length) return 0;
-  const repeat = patients.filter(function repeatBuyer(patient) { return patient.orders > 1; }).length;
+  const repeat = patients.filter(function repeatBuyer(patient) {
+    return patient.orders > 1;
+  }).length;
   return Math.round((repeat / patients.length) * 100);
 }
 
@@ -132,9 +147,11 @@ export function campaignRevenue(campaigns: Campaign[], patients: Patient[], sale
 }
 
 export function topPatientsByRfm(patients: Patient[]) {
-  return [...patients].sort(function byScore(left, right) {
-    return right.rfm.score - left.rfm.score;
-  }).slice(0, 10);
+  return [...patients]
+    .sort(function byScore(left, right) {
+      return right.rfm.score - left.rfm.score;
+    })
+    .slice(0, 10);
 }
 
 export function openWhatsApp(phone: string, text: string) {
@@ -151,7 +168,9 @@ export function patientInitials(name: string) {
   return name
     .split(" ")
     .filter(Boolean)
-    .map(function initial(word) { return word[0] ?? ""; })
+    .map(function initial(word) {
+      return word[0] ?? "";
+    })
     .slice(0, 2)
     .join("")
     .toUpperCase();
@@ -172,7 +191,12 @@ export function patientProfileForm(meta: PatientMeta | undefined): PatientProfil
 }
 
 function commaList(value: string) {
-  return value.split(",").map(function trim(part) { return part.trim(); }).filter(Boolean);
+  return value
+    .split(",")
+    .map(function trim(part) {
+      return part.trim();
+    })
+    .filter(Boolean);
 }
 
 export function patientMetaFromForm(form: PatientProfileForm): PatientMeta {
@@ -190,11 +214,17 @@ export function patientMetaFromForm(form: PatientProfileForm): PatientMeta {
 }
 
 export function loyaltyTierProgress(patient: Patient) {
-  const current = TIERS.find(function match(tier) { return tier.tier === patient.tier; });
+  const current = TIERS.find(function match(tier) {
+    return tier.tier === patient.tier;
+  });
   const currentMin = current?.min ?? 0;
   const next = [...TIERS]
-    .filter(function higher(tier) { return tier.min > patient.points; })
-    .sort(function byMin(left, right) { return left.min - right.min; })[0];
+    .filter(function higher(tier) {
+      return tier.min > patient.points;
+    })
+    .sort(function byMin(left, right) {
+      return left.min - right.min;
+    })[0];
   const progress = next
     ? Math.min(100, Math.max(0, ((patient.points - currentMin) / (next.min - currentMin)) * 100))
     : 100;
@@ -206,7 +236,9 @@ export function patientPurchases(sales: Sale[], key: string) {
     .filter(function match(sale) {
       return sale.status !== "cancelled" && custKeyOf(sale.customer) === key;
     })
-    .sort(function newest(left, right) { return right.createdAt - left.createdAt; });
+    .sort(function newest(left, right) {
+      return right.createdAt - left.createdAt;
+    });
 }
 
 export function sparklineGeometry(data: number[], width = 220, height = 40) {
@@ -219,7 +251,11 @@ export function sparklineGeometry(data: number[], width = 220, height = 40) {
       y: height - 3 - ((value - min) / range) * (height - 8),
     };
   });
-  const line = `M ${points.map(function pair(point) { return `${point.x},${point.y}`; }).join(" L ")}`;
+  const line = `M ${points
+    .map(function pair(point) {
+      return `${point.x},${point.y}`;
+    })
+    .join(" L ")}`;
   return { width, height, line, points };
 }
 

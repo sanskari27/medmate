@@ -21,8 +21,12 @@ describe("filterBillingProducts", () => {
 
 describe("billingInvoiceTitle", () => {
   it("names a credit bill and a reception bill", () => {
-    expect(billingInvoiceTitle({ id: "INV-1", payMode: "credit" })).toBe("Bill INV-1 · on credit (khata)");
-    expect(billingInvoiceTitle({ id: "INV-2", payMode: "cash", paid: false })).toBe("Bill INV-2 · sent to reception");
+    expect(billingInvoiceTitle({ id: "INV-1", payMode: "credit" })).toBe(
+      "Bill INV-1 · on credit (khata)",
+    );
+    expect(billingInvoiceTitle({ id: "INV-2", payMode: "cash", paid: false })).toBe(
+      "Bill INV-2 · sent to reception",
+    );
   });
 });
 

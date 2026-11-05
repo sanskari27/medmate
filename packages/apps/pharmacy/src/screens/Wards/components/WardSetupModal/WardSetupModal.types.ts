@@ -1,3 +1,3 @@
 export type WardSetupModalProps = {
-    onClose: () => void;
+  onClose: () => void;
 };

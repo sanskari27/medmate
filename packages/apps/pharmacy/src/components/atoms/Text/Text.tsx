@@ -29,7 +29,9 @@ export type TextProps = ComponentProps<"p"> &
 
 export function Text({ className, variant, as = "p", asChild = false, ...props }: TextProps) {
   const Comp = asChild ? Slot : as === "span" ? "span" : "p";
-  return <Comp data-slot="text" className={cn(textVariants({ variant, as }), className)} {...props} />;
+  return (
+    <Comp data-slot="text" className={cn(textVariants({ variant, as }), className)} {...props} />
+  );
 }
 
 export { textVariants };

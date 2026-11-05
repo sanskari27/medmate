@@ -31,7 +31,14 @@ const draft = doctor() as DoctorDraft;
 describe("filterDoctors", () => {
   const doctors = [
     doctor(),
-    doctor({ id: "doc-2", name: "Dr. Arun Shah", department: "OPD", status: "on-leave", specialty: "Physician", regNo: "MMC-9" }),
+    doctor({
+      id: "doc-2",
+      name: "Dr. Arun Shah",
+      department: "OPD",
+      status: "on-leave",
+      specialty: "Physician",
+      regNo: "MMC-9",
+    }),
   ];
 
   it("keeps every doctor when filters are open", () => {
@@ -39,11 +46,15 @@ describe("filterDoctors", () => {
   });
 
   it("matches name, specialty, department, registration, and qualification", () => {
-    expect(filterDoctors(doctors, { query: "kmc-123", department: "all", status: "all" })).toEqual([doctors[0]]);
+    expect(filterDoctors(doctors, { query: "kmc-123", department: "all", status: "all" })).toEqual([
+      doctors[0],
+    ]);
   });
 
   it("filters by department and status together", () => {
-    expect(filterDoctors(doctors, { query: "", department: "OPD", status: "on-leave" })).toEqual([doctors[1]]);
+    expect(filterDoctors(doctors, { query: "", department: "OPD", status: "on-leave" })).toEqual([
+      doctors[1],
+    ]);
   });
 });
 

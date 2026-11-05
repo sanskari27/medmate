@@ -8,7 +8,9 @@ describe("OnboardingCarousel", () => {
       return undefined;
     }
     render(<OnboardingCarousel onMaster={onMaster} />);
-    expect(screen.getByRole("heading", { name: "Billing, GST & inventory in one place" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Billing, GST & inventory in one place" }),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Get started" })).toBeTruthy();
   });
 });

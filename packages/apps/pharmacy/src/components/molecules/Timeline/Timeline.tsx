@@ -19,7 +19,10 @@ export type TimelineProps = Omit<ComponentProps<typeof Stack>, "children"> & {
 function TimelineRow({ item }: { item: TimelineItem }) {
   const tone = item.tone ?? "neutral";
   return (
-    <Box display="grid" className="grid-cols-[16px_1fr_auto] items-center gap-2 py-[3px] text-[12.5px]">
+    <Box
+      display="grid"
+      className="grid-cols-[16px_1fr_auto] items-center gap-2 py-[3px] text-[12.5px]"
+    >
       <Box
         className={cn(
           "h-[9px] w-[9px] justify-self-center rounded-full bg-mid",

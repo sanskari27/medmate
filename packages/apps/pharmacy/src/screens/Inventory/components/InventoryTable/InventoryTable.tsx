@@ -73,7 +73,7 @@ export function InventoryTable({
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table className="border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
+        <Table className="border-separate border-spacing-0 [&_tbody_tr]:border-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-100 [&_tbody_tr:hover]:bg-wash-2 [&_tbody:last-child_tr:last-child_td]:border-b-0">
           <TableHead>
             <TableRow>
               <TableHeaderCell className={headCell}>Product</TableHeaderCell>
@@ -212,7 +212,7 @@ function InventoryRow({
           </button>
         )}
       </TableCell>
-      <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+      <TableCell align="right" className={`${bodyCell} font-semibold`}>
         {product.batches.length}
       </TableCell>
       <TableCell className={bodyCell}>
@@ -223,10 +223,10 @@ function InventoryRow({
       <TableCell className={bodyCell}>
         <StockPill p={product} now={now} className="gap-[5px]" />
       </TableCell>
-      <TableCell align="right" className={`${bodyCell} font-bold text-ink`}>
+      <TableCell align="right" className={`${bodyCell} font-bold`}>
         {inr(mrpOf(product))}
       </TableCell>
-      <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+      <TableCell align="right" className={`${bodyCell} font-semibold`}>
         {inr(stockValue(product))}
       </TableCell>
       <TableCell className={bodyCell} onClick={stop}>

@@ -21,9 +21,19 @@ describe("prescription queue helpers", () => {
   it("filters by status, source, and search", () => {
     const rows = [
       prescription({ id: "RX-1", patient: "Asha" }),
-      prescription({ id: "RX-2", patient: "Bala", status: "approved", kind: "uploaded", uploadedAt: 20 }),
+      prescription({
+        id: "RX-2",
+        patient: "Bala",
+        status: "approved",
+        kind: "uploaded",
+        uploadedAt: 20,
+      }),
     ];
-    expect(filterPrescriptions(rows, "approved", "uploaded", "bala").map(function id(row) { return row.id; })).toEqual(["RX-2"]);
+    expect(
+      filterPrescriptions(rows, "approved", "uploaded", "bala").map(function id(row) {
+        return row.id;
+      }),
+    ).toEqual(["RX-2"]);
   });
 
   it("puts urgent prescriptions first", () => {

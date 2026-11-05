@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-[7px] border font-bold leading-[1.5] whitespace-nowrap transition-[background-color,border-color,color,box-shadow,transform] duration-[140ms] focus-visible:outline-none focus-visible:shadow-focus active:translate-y-px disabled:pointer-events-none disabled:border-transparent disabled:bg-[#e9efeb] disabled:text-faint disabled:opacity-100 disabled:shadow-none aria-disabled:pointer-events-none aria-disabled:border-transparent aria-disabled:bg-[#e9efeb] aria-disabled:text-faint aria-disabled:opacity-40 aria-disabled:shadow-none",
+  "inline-flex items-center justify-center gap-[7px] border font-bold [line-height:normal] whitespace-nowrap transition-[background-color,border-color,color,box-shadow,transform] duration-[140ms] focus-visible:outline-none focus-visible:shadow-focus active:translate-y-px disabled:pointer-events-none disabled:border-transparent disabled:bg-[#e9efeb] disabled:text-faint disabled:opacity-100 disabled:shadow-none aria-disabled:pointer-events-none aria-disabled:border-transparent aria-disabled:bg-[#e9efeb] aria-disabled:text-faint aria-disabled:opacity-40 aria-disabled:shadow-none",
   {
     variants: {
       variant: {
@@ -27,9 +27,7 @@ const buttonVariants = cva(
         false: "",
       },
     },
-    compoundVariants: [
-      { variant: "link", class: "h-auto rounded-none px-0 py-0" },
-    ],
+    compoundVariants: [{ variant: "link", class: "h-auto rounded-none px-0 py-0" }],
     defaultVariants: {
       variant: "primary",
       size: "md",

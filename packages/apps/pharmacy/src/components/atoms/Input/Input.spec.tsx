@@ -4,7 +4,7 @@ import { Input } from "./Input";
 
 describe("Input", () => {
   it("renders a input", () => {
-    render(<Input aria-label="Input"  />);
+    render(<Input aria-label="Input" />);
     expect(screen.getByLabelText("Input").tagName).toBe("INPUT");
   });
 });

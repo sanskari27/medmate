@@ -18,7 +18,8 @@ const choiceChipVariants = cva(
   },
 );
 
-export type ChoiceChipProps = ComponentProps<typeof Button> & VariantProps<typeof choiceChipVariants>;
+export type ChoiceChipProps = ComponentProps<typeof Button> &
+  VariantProps<typeof choiceChipVariants>;
 
 export function ChoiceChip({ className, selected, type = "button", ...props }: ChoiceChipProps) {
   return (

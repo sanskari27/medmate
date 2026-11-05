@@ -13,6 +13,10 @@ describe("kiosk catalog", () => {
       { online: true, category: "rx", stock: 0 },
       { online: false, category: "otc", stock: 4 },
     ];
-    expect(kioskProducts(products, "otc", function units(product) { return product.stock; })).toEqual([products[0]]);
+    expect(
+      kioskProducts(products, "otc", function units(product) {
+        return product.stock;
+      }),
+    ).toEqual([products[0]]);
   });
 });

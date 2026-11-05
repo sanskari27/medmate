@@ -1,7 +1,11 @@
 import { startOfToday } from "@/utils/date";
 import type { InvProduct, Prescription, RxStatus } from "@/utils";
 import { fmtMins, inr, rxAvailability, rxOverdue, rxTurnaroundMins } from "@/utils";
-import type { PrescriptionTimelineEvent, RxKindFilter, RxStatusFilter } from "./Prescriptions.types";
+import type {
+  PrescriptionTimelineEvent,
+  RxKindFilter,
+  RxStatusFilter,
+} from "./Prescriptions.types";
 
 const STATUS_TONE = {
   pending: "gold",
@@ -47,7 +51,11 @@ export function countPrescriptions(prescriptions: Prescription[], status: RxStat
   }).length;
 }
 
-export function prescriptionQueueMetrics(prescriptions: Prescription[], inventory: InvProduct[], now: number) {
+export function prescriptionQueueMetrics(
+  prescriptions: Prescription[],
+  inventory: InvProduct[],
+  now: number,
+) {
   const pending = prescriptions.filter(function isPending(prescription) {
     return prescription.status === "pending";
   });
@@ -78,7 +86,11 @@ export function prescriptionQueueMetrics(prescriptions: Prescription[], inventor
       return minutes != null;
     });
   const averageTurnaround = turns.length
-    ? Math.round(turns.reduce(function addMinutes(total, minutes) { return total + minutes; }, 0) / turns.length)
+    ? Math.round(
+        turns.reduce(function addMinutes(total, minutes) {
+          return total + minutes;
+        }, 0) / turns.length,
+      )
     : null;
   const byDoctor: Record<string, number> = {};
   prescriptions.forEach(function countDoctor(prescription) {
@@ -125,12 +137,14 @@ export function filterPrescriptions(
     .filter(function matches(prescription) {
       const statusMatch = status === "all" || prescription.status === status;
       const kindMatch = kind === "all" || prescription.kind === kind;
-      const text = `${prescription.id} ${prescription.patient} ${prescription.doctor}`.toLowerCase();
+      const text =
+        `${prescription.id} ${prescription.patient} ${prescription.doctor}`.toLowerCase();
       return statusMatch && kindMatch && (!needle || text.includes(needle));
     })
     .sort(function byPriority(left, right) {
       if (!!left.urgent !== !!right.urgent) return left.urgent ? -1 : 1;
-      if (left.status === "pending" && right.status === "pending") return left.uploadedAt - right.uploadedAt;
+      if (left.status === "pending" && right.status === "pending")
+        return left.uploadedAt - right.uploadedAt;
       return right.uploadedAt - left.uploadedAt;
     });
 }
@@ -140,7 +154,9 @@ export function shareWidth(count: number, max: number) {
 }
 
 export function prescriptionTimeline(prescription: Prescription): PrescriptionTimelineEvent[] {
-  const events: PrescriptionTimelineEvent[] = [{ label: "Uploaded", at: prescription.uploadedAt, tone: "done" }];
+  const events: PrescriptionTimelineEvent[] = [
+    { label: "Uploaded", at: prescription.uploadedAt, tone: "done" },
+  ];
   if (prescription.approvedAt) {
     events.push({
       label: `Approved${prescription.reviewedBy ? ` · ${prescription.reviewedBy}` : ""}`,
@@ -170,7 +186,9 @@ export function rejectedMessage(prescription: Prescription) {
 }
 
 export function notifyMessage(prescription: Prescription, billValue: number) {
-  return prescription.status === "rejected" ? rejectedMessage(prescription) : readyMessage(prescription, billValue);
+  return prescription.status === "rejected"
+    ? rejectedMessage(prescription)
+    : readyMessage(prescription, billValue);
 }
 
 export function turnaroundLabel(minutes: number | null) {

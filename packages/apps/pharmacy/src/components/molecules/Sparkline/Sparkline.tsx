@@ -1,13 +1,24 @@
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
-import { SPARK_HEIGHT, SPARK_WIDTH, sparkAreaPath, sparkLinePath, sparkPoints } from "./Sparkline.utils";
+import {
+  SPARK_HEIGHT,
+  SPARK_WIDTH,
+  sparkAreaPath,
+  sparkLinePath,
+  sparkPoints,
+} from "./Sparkline.utils";
 
 export type SparklineProps = Omit<ComponentProps<"svg">, "children"> & {
   data: number[];
   color?: string;
 };
 
-export function Sparkline({ data, color = "var(--color-mid)", className, ...props }: SparklineProps) {
+export function Sparkline({
+  data,
+  color = "var(--color-mid)",
+  className,
+  ...props
+}: SparklineProps) {
   const points = sparkPoints(data);
   const line = sparkLinePath(points);
   const area = sparkAreaPath(points);

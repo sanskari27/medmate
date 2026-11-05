@@ -16,7 +16,9 @@ describe("InventoryTable", () => {
         onGo={ignore}
       />,
     );
-    expect(screen.getByText("No products yet — add stock by entering a distributor purchase bill.")).toBeTruthy();
+    expect(
+      screen.getByText("No products yet — add stock by entering a distributor purchase bill."),
+    ).toBeTruthy();
   });
 });
 

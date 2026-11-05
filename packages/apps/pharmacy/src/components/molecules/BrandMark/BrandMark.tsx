@@ -17,7 +17,14 @@ export function BrandMark({ className, ...props }: BrandMarkProps) {
     >
       <svg width={24} height={24} viewBox="0 0 40 40" fill="none" aria-hidden>
         <defs>
-          <linearGradient id={gradientId} x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id={gradientId}
+            x1="6"
+            y1="4"
+            x2="34"
+            y2="36"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#4A9E6E" />
             <stop offset="1" stopColor="#1B3D29" />
           </linearGradient>

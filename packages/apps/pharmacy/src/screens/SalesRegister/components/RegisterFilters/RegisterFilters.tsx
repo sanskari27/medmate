@@ -50,16 +50,43 @@ export function RegisterFilters(props: RegisterFiltersProps) {
     return { value: String(name), label: String(name) };
   }
   return (
-    <Stack direction="row" align="center" wrap gap={2} className="mt-2.5 mb-4">
-      <Select value={props.payMode} onChange={changePay} options={[{ value: "all", label: "All payment modes" }, ...PAY_MODES.map(renderPay)]} />
-      <Select value={props.paid} onChange={changePaid} options={[{ value: "all", label: "Paid & Unpaid" }, { value: "paid", label: "Paid only" }, { value: "unpaid", label: "Unpaid only" }]} />
-      <Select value={props.insurer} onChange={changeInsurer} options={[{ value: "all", label: "All insurers / TPA" }, ...props.insurers.map(renderInsurer)]} />
-      <Select value={props.ward} onChange={changeWard} options={[{ value: "all", label: "All wards" }, ...props.wards.map(renderWard)]} />
+    <Stack direction="row" align="center" wrap className="mt-2.5 mb-4 gap-2.5">
+      <Select
+        className="max-[767px]:w-auto max-[767px]:max-w-full max-[767px]:flex-[1_1_140px]"
+        value={props.payMode}
+        onChange={changePay}
+        options={[{ value: "all", label: "All payment modes" }, ...PAY_MODES.map(renderPay)]}
+      />
+      <Select
+        className="max-[767px]:w-auto max-[767px]:max-w-full max-[767px]:flex-[1_1_140px]"
+        value={props.paid}
+        onChange={changePaid}
+        options={[
+          { value: "all", label: "Paid & Unpaid" },
+          { value: "paid", label: "Paid only" },
+          { value: "unpaid", label: "Unpaid only" },
+        ]}
+      />
+      <Select
+        className="max-[767px]:w-auto max-[767px]:max-w-full max-[767px]:flex-[1_1_140px]"
+        value={props.insurer}
+        onChange={changeInsurer}
+        options={[
+          { value: "all", label: "All insurers / TPA" },
+          ...props.insurers.map(renderInsurer),
+        ]}
+      />
+      <Select
+        className="max-[767px]:w-auto max-[767px]:max-w-full max-[767px]:flex-[1_1_140px]"
+        value={props.ward}
+        onChange={changeWard}
+        options={[{ value: "all", label: "All wards" }, ...props.wards.map(renderWard)]}
+      />
       <Stack
         direction="row"
         align="center"
         gap={2}
-        className="max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2"
+        className="max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-[10.5px] max-[767px]:min-w-0 max-[767px]:max-w-none max-[767px]:flex-[1_1_100%]"
       >
         <Box className="text-green">
           <IconSearch size={17} />

@@ -12,7 +12,9 @@ vi.mock("@/hooks", () => ({
 describe("Paywall", () => {
   it("explains that the route is a premium feature", () => {
     render(<Paywall route="crm" />);
-    expect(screen.getByRole("heading", { name: "CRM · Patients is a premium feature" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "CRM · Patients is a premium feature" }),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Upgrade to unlock" })).toBeTruthy();
   });
 });

@@ -9,7 +9,12 @@ export function loyaltyPoints(spent: number): number {
 export function buildCustomerDirectory(sales: Sale[]): CustomerAccount[] {
   const accounts = new Map<string, CustomerAccount>();
   for (const sale of sales) {
-    if (sale.status === "cancelled" || !sale.customer.name || sale.customer.name === "Kiosk (self-order)") continue;
+    if (
+      sale.status === "cancelled" ||
+      !sale.customer.name ||
+      sale.customer.name === "Kiosk (self-order)"
+    )
+      continue;
     const isWalkIn = sale.customer.name === "Walk-in" && !sale.customer.phone;
     const key = isWalkIn ? "walkin" : (sale.customer.phone || sale.customer.name).trim();
     const current = accounts.get(key) ?? {
@@ -71,7 +76,12 @@ export function summarizeCustomers(customers: CustomerAccount[]) {
   return { totalSpent, named, repeat, chronic };
 }
 
-export function creditOutreach(kind: "remind" | "invite", customerName: string, pharmacyName: string, outstanding: number): string {
+export function creditOutreach(
+  kind: "remind" | "invite",
+  customerName: string,
+  pharmacyName: string,
+  outstanding: number,
+): string {
   if (kind === "remind") {
     return `Hi ${customerName}, this is ${pharmacyName}. Your pending medicine credit (khata) balance is ${inr(outstanding)}. Kindly settle it at your convenience. Thank you!`;
   }
@@ -154,7 +164,18 @@ function stamp(now: number) {
 }
 
 export function exportCustomersCsv(rows: CustomerExportRow[], now: number) {
-  const head = ["Name", "Phone", "Orders", "Units", "Online orders", "Counter orders", "On chronic Rx", "Last visit", "Loyalty points", "Lifetime value (Rs)"];
+  const head = [
+    "Name",
+    "Phone",
+    "Orders",
+    "Units",
+    "Online orders",
+    "Counter orders",
+    "On chronic Rx",
+    "Last visit",
+    "Loyalty points",
+    "Lifetime value (Rs)",
+  ];
   const lines = rows.map(function toLine(customer) {
     return [
       customer.name,
@@ -178,11 +199,24 @@ export function exportCustomersCsv(rows: CustomerExportRow[], now: number) {
         .join(",");
     })
     .join("\n");
-  downloadBlob(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }), `customers-${stamp(now)}.csv`);
+  downloadBlob(
+    new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }),
+    `customers-${stamp(now)}.csv`,
+  );
 }
 
-export function exportCustomersPdf(rows: CustomerExportRow[], profile: PharmacyProfile, now: number) {
-  const headerLine = pad("Customer", 22) + pad("Phone", 16) + padLeft("Orders", 7) + padLeft("Units", 7) + padLeft("Loyalty", 9) + padLeft("Lifetime", 12);
+export function exportCustomersPdf(
+  rows: CustomerExportRow[],
+  profile: PharmacyProfile,
+  now: number,
+) {
+  const headerLine =
+    pad("Customer", 22) +
+    pad("Phone", 16) +
+    padLeft("Orders", 7) +
+    padLeft("Units", 7) +
+    padLeft("Loyalty", 9) +
+    padLeft("Lifetime", 12);
   const rowLines = rows.map(function toLine(customer) {
     return (
       pad(customer.name, 22) +
@@ -196,7 +230,8 @@ export function exportCustomersPdf(rows: CustomerExportRow[], profile: PharmacyP
   const totalSpent = rows.reduce(function addSpent(sum, customer) {
     return sum + customer.spent;
   }, 0);
-  const totalsLine = pad(`TOTAL  ${rows.length} customers`, 61) + padLeft(rupeePlain(totalSpent), 12);
+  const totalsLine =
+    pad(`TOTAL  ${rows.length} customers`, 61) + padLeft(rupeePlain(totalSpent), 12);
   const blob = buildReportPdf({
     title: "Customer Database",
     subtitle: `${rows.length} customers · lifetime value ${rupeePlain(totalSpent)}`,

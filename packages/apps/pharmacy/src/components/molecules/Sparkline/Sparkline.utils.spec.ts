@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { SPARK_HEIGHT, SPARK_WIDTH, sparkAreaPath, sparkLinePath, sparkPoints } from "./Sparkline.utils";
+import {
+  SPARK_HEIGHT,
+  SPARK_WIDTH,
+  sparkAreaPath,
+  sparkLinePath,
+  sparkPoints,
+} from "./Sparkline.utils";
 
 describe("sparkPoints", () => {
   it("pins the ends and lifts the peak", () => {

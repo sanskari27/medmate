@@ -20,7 +20,9 @@ const codeBlockVariants = cva(
 export type CodeBlockProps = ComponentProps<"pre"> & VariantProps<typeof codeBlockVariants>;
 
 export function CodeBlock({ className, size, ...props }: CodeBlockProps) {
-  return <pre data-slot="code-block" className={cn(codeBlockVariants({ size }), className)} {...props} />;
+  return (
+    <pre data-slot="code-block" className={cn(codeBlockVariants({ size }), className)} {...props} />
+  );
 }
 
 export { codeBlockVariants };

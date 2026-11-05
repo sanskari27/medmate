@@ -56,7 +56,7 @@ export function ProductCard({
       onClick={addPack}
       onKeyDown={onCardKey}
       className={cn(
-        "relative flex cursor-pointer flex-col items-stretch rounded-md border border-line bg-paper p-3 text-left transition-[border-color,box-shadow] duration-[120ms] hover:border-mint hover:shadow-sm",
+        "relative flex cursor-pointer flex-col items-stretch rounded-md border border-line bg-paper p-3 text-left transition-[border-color,box-shadow] duration-[120ms] hover:border-mint hover:shadow-sm focus-visible:shadow-focus focus-visible:outline-none",
         outOfStock && "pointer-events-none opacity-55",
       )}
     >
@@ -80,6 +80,7 @@ export function ProductCard({
         {hasLocation(product) ? (
           <Text
             as="span"
+            title="Rack location"
             className="ml-1.5 inline-flex items-center gap-0.5 rounded-[5px] bg-wash px-[5px] py-px align-middle font-mono text-[10px] font-bold whitespace-nowrap text-mid"
           >
             <IconPin size={11} /> {product.rack}
@@ -100,7 +101,7 @@ export function ProductCard({
           <Button
             variant="ghost"
             className={cn(
-              "h-auto max-w-full justify-start gap-1 overflow-hidden rounded-[7px] border-mint bg-wash px-[7px] py-1 text-[10px] leading-[1.2] font-bold text-ellipsis whitespace-nowrap text-mid hover:bg-mint hover:text-deep",
+              "h-auto max-w-full justify-start gap-1 overflow-hidden rounded-[7px] border-mint bg-wash px-[7px] py-1 text-[10px] leading-[1.2] font-bold text-ellipsis whitespace-nowrap text-mid hover:bg-mint hover:text-deep active:translate-y-0",
               looseCount > 0 &&
                 "border-mid bg-mid text-white hover:border-mid hover:bg-mid hover:text-white",
             )}

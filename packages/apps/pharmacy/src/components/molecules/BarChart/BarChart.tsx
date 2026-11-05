@@ -100,7 +100,13 @@ function linearStops(color: string): { from: string; to: string } | null {
   return { from: match[1], to: match[2] };
 }
 
-export function ColorFill({ color, className, radius = 0, width = "100%", height = "100%" }: ColorFillProps) {
+export function ColorFill({
+  color,
+  className,
+  radius = 0,
+  width = "100%",
+  height = "100%",
+}: ColorFillProps) {
   const gradientId = safeId(useId()) || "fill";
   const gradient = linearStops(color);
   return (
@@ -113,7 +119,12 @@ export function ColorFill({ color, className, radius = 0, width = "100%", height
           </linearGradient>
         </defs>
       ) : null}
-      <rect width="100%" height="100%" rx={radius} fill={gradient ? `url(#${gradientId})` : color} />
+      <rect
+        width="100%"
+        height="100%"
+        rx={radius}
+        fill={gradient ? `url(#${gradientId})` : color}
+      />
     </svg>
   );
 }
@@ -169,10 +180,15 @@ export function SegmentBar({ segments, className, onSelect }: SegmentBarProps) {
     x += width;
   }
   function renderSegment(segment: SegmentBarItem & { x: number; width: number }) {
-        return <SegmentRect key={segment.key} segment={segment} onSelect={onSelect} />;
-      }
+    return <SegmentRect key={segment.key} segment={segment} onSelect={onSelect} />;
+  }
   return (
-    <svg className={cn("block h-4 w-full", className)} viewBox="0 0 100 16" preserveAspectRatio="none" role="img">
+    <svg
+      className={cn("block h-4 w-full", className)}
+      viewBox="0 0 100 16"
+      preserveAspectRatio="none"
+      role="img"
+    >
       {placed.map(renderSegment)}
     </svg>
   );

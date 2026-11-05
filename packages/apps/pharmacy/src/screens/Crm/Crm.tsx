@@ -42,18 +42,28 @@ export default function CrmScreen() {
   const [tab, setTab] = useState<CrmTab>("overview");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const creditKeys = useMemo(function collectCreditKeys() {
-    return creditCustomerKeys(sales, creditPayments);
-  }, [sales, creditPayments]);
-  const patients = useMemo(function collectPatients() {
-    return buildPatients(sales, inventory, creditKeys, now, crm.meta);
-  }, [sales, inventory, creditKeys, now, crm.meta]);
-  const redeemedBy = useMemo(function collectRedemptions() {
-    return redeemedPointsByCustomer(crm.redemptions);
-  }, [crm.redemptions]);
-  const current = patients.find(function matchPatient(patient) {
-    return patient.key === selectedKey;
-  }) ?? null;
+  const creditKeys = useMemo(
+    function collectCreditKeys() {
+      return creditCustomerKeys(sales, creditPayments);
+    },
+    [sales, creditPayments],
+  );
+  const patients = useMemo(
+    function collectPatients() {
+      return buildPatients(sales, inventory, creditKeys, now, crm.meta);
+    },
+    [sales, inventory, creditKeys, now, crm.meta],
+  );
+  const redeemedBy = useMemo(
+    function collectRedemptions() {
+      return redeemedPointsByCustomer(crm.redemptions);
+    },
+    [crm.redemptions],
+  );
+  const current =
+    patients.find(function matchPatient(patient) {
+      return patient.key === selectedKey;
+    }) ?? null;
 
   const view: CrmViewProps = {
     patients,
@@ -78,7 +88,10 @@ export default function CrmScreen() {
   return (
     <Box className="mx-auto max-w-[1680px]">
       <Box className="mb-4">
-        <SegmentedControl label="CRM sections" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
+        <SegmentedControl
+          label="CRM sections"
+          className="!w-fit !max-w-full !flex-wrap !gap-0.5 !rounded-sm !border !border-line !bg-wash-2 !p-0.5"
+        >
           <CrmTabs tab={tab} onSelect={setTab} />
         </SegmentedControl>
       </Box>
@@ -96,7 +109,9 @@ export default function CrmScreen() {
 
 function CrmTabs({ tab, onSelect }: { tab: CrmTab; onSelect: (tab: CrmTab) => void }) {
   return TABS.map(function renderTab(item) {
-    return <CrmTabButton key={item.key} item={item} selected={tab === item.key} onSelect={onSelect} />;
+    return (
+      <CrmTabButton key={item.key} item={item} selected={tab === item.key} onSelect={onSelect} />
+    );
   });
 }
 
@@ -113,7 +128,16 @@ function CrmTabButton({
     onSelect(item.key);
   }
   return (
-    <Button size="sm" variant="ghost" className={selected ? "rounded-[6px] border-0 bg-paper px-[13px] py-1.5 text-[12.5px] font-bold text-dark shadow-sm hover:bg-paper" : "rounded-[6px] border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] font-bold text-muted shadow-none hover:bg-transparent"} onClick={handleSelect}>
+    <Button
+      size="sm"
+      variant="ghost"
+      className={
+        selected
+          ? "!rounded-[6px] !border-0 !bg-paper !px-[13px] !py-1.5 !text-[12.5px] !font-bold !text-dark !shadow-sm hover:!bg-paper"
+          : "!rounded-[6px] !border-0 !bg-transparent !px-[13px] !py-1.5 !text-[12.5px] !font-bold !text-muted !shadow-none hover:!bg-transparent"
+      }
+      onClick={handleSelect}
+    >
       {item.label}
     </Button>
   );

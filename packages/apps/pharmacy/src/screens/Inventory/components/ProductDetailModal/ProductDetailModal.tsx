@@ -113,13 +113,13 @@ export function ProductDetailModal({
             {expired ? " · exp" : months <= 4 ? ` · ${months}mo` : ""}
           </Pill>
         </TableCell>
-        <TableCell align="right" className={`${bodyCell} font-bold text-ink`}>
+        <TableCell align="right" className={`${bodyCell} font-bold`}>
           {batch.qty}
         </TableCell>
-        <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+        <TableCell align="right" className={`${bodyCell} font-semibold`}>
           {inr(batch.mrp)}
         </TableCell>
-        <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+        <TableCell align="right" className={`${bodyCell} font-semibold`}>
           {inr(batch.qty * batch.ptr)}
         </TableCell>
       </TableRow>
@@ -132,7 +132,7 @@ export function ProductDetailModal({
 
   return (
     <Box
-      className="inventory-fade fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
+      className="inventory-fade fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px] max-[767px]:items-end max-[767px]:p-0"
       onClick={onClose}
     >
       <style>{modalMotion}</style>
@@ -140,7 +140,7 @@ export function ProductDetailModal({
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
-        className="inventory-pop flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        className="inventory-pop flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop max-[767px]:max-h-[92dvh] max-[767px]:max-w-none max-[767px]:rounded-t-2xl max-[767px]:rounded-b-none"
         onClick={keepOpen}
       >
         <Stack
@@ -216,7 +216,7 @@ export function ProductDetailModal({
               <IconDownload size={14} /> Save SVG
             </Button>
           </Box>
-          <Box className="mb-3.5 grid grid-cols-4 gap-px overflow-hidden rounded-md border border-line bg-line">
+          <Box className="mb-3.5 grid grid-cols-4 gap-px overflow-hidden rounded-md border border-line bg-line max-[767px]:grid-cols-2">
             <Kpi label="In stock" value={stockLabel(product)} small />
             <Kpi label="Stock value (cost)" value={inr(insight.costValue)} />
             <Kpi label="Retail value (MRP)" value={inr(insight.retailValue)} />
@@ -243,7 +243,7 @@ export function ProductDetailModal({
                 : `Low stock — ${insight.stock} left, reorder level ${product.reorderLevel}`}
             </Pill>
           ) : null}
-          <Box className="mb-3.5 grid grid-cols-3 gap-px overflow-hidden rounded-md border border-line bg-line">
+          <Box className="mb-3.5 grid grid-cols-3 gap-px overflow-hidden rounded-md border border-line bg-line max-[767px]:grid-cols-2">
             <Fact label="Manufacturer" value={product.manufacturer} />
             <Fact label="Pack" value={product.pack} />
             <Fact label="HSN / GST" value={`${product.hsn} · ${product.gst}%`} />
@@ -267,13 +267,13 @@ export function ProductDetailModal({
             <Fact label="Reorder level" value={`${product.reorderLevel} units`} />
             <Fact label="Selling price" value={inr(sellPrice(product))} />
           </Box>
-          <Box className="grid grid-cols-[1.5fr_1fr] gap-4">
+          <Box className="grid grid-cols-[1.5fr_1fr] gap-4 max-[767px]:grid-cols-1">
             <Box>
               <Text variant="label" className={sectionLabel}>
                 Batches · stock & expiry
               </Text>
               <Box className="overflow-x-auto">
-                <Table className="border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
+                <Table className="border-separate border-spacing-0 [&_tbody_tr]:border-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-100 [&_tbody_tr:hover]:bg-wash-2 [&_tbody:last-child_tr:last-child_td]:border-b-0 [&_tfoot_td]:border-t-2 [&_tfoot_td]:border-b-0 [&_tfoot_td]:border-line-2 [&_tfoot_td]:bg-wash-2 [&_tfoot_td]:font-extrabold">
                   <TableHead>
                     <TableRow>
                       <TableHeaderCell className={headCell}>Batch</TableHeaderCell>
@@ -308,11 +308,9 @@ export function ProductDetailModal({
                         <td colSpan={2} className={footCell}>
                           Total
                         </td>
-                        <td className={cn(footCell, "text-right font-semibold text-ink tabular-nums")}>
-                          {insight.stock}
-                        </td>
-                        <td className={cn(footCell, "text-right font-semibold text-ink tabular-nums")} />
-                        <td className={cn(footCell, "text-right font-semibold text-ink tabular-nums")}>
+                        <td className={cn(footCell, "text-right tabular-nums")}>{insight.stock}</td>
+                        <td className={cn(footCell, "text-right tabular-nums")} />
+                        <td className={cn(footCell, "text-right tabular-nums")}>
                           {inr(insight.costValue)}
                         </td>
                       </tr>
@@ -352,7 +350,7 @@ export function ProductDetailModal({
         <Stack
           direction="row"
           justify="end"
-          className="gap-[10px] border-t border-line px-5 py-3.5"
+          className="gap-[10px] border-t border-line px-5 py-3.5 max-[767px]:flex-wrap max-[767px]:[&_button]:flex-1"
         >
           <Button variant="ghost" className="active:translate-y-px" onClick={onClose}>
             Close

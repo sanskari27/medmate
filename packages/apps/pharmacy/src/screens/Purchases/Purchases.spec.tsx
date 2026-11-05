@@ -4,11 +4,7 @@ import { multiSourceCount } from "./Purchases.utils";
 
 describe("Purchases", () => {
   it("counts products that have more than one supply row", () => {
-    const rows = [
-      { productId: "a" },
-      { productId: "a" },
-      { productId: "b" },
-    ] as SupplyEntry[];
+    const rows = [{ productId: "a" }, { productId: "a" }, { productId: "b" }] as SupplyEntry[];
     expect(multiSourceCount(rows)).toBe(1);
   });
 });

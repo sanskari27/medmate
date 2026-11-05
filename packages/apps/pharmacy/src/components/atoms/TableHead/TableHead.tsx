@@ -14,5 +14,11 @@ const tableHeadVariants = cva("", {
 export type TableHeadProps = ComponentProps<"thead"> & VariantProps<typeof tableHeadVariants>;
 
 export function TableHead({ className, align, ...props }: TableHeadProps) {
-  return <thead data-slot="table-head" className={cn(tableHeadVariants({ align }), className)} {...props} />;
+  return (
+    <thead
+      data-slot="table-head"
+      className={cn(tableHeadVariants({ align }), className)}
+      {...props}
+    />
+  );
 }

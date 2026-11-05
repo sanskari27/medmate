@@ -19,7 +19,10 @@ function Chip({ label, value, compact }: { label: string; value: string; compact
   return (
     <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
       {label}
-      <Text as="span" className={`mt-px block font-display font-bold text-dark ${compact ? "text-[13px]" : "text-[15px]"}`}>
+      <Text
+        as="span"
+        className={`mt-px block font-display font-bold text-dark ${compact ? "text-[13px]" : "text-[15px]"}`}
+      >
         {value}
       </Text>
     </Box>

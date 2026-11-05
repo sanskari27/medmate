@@ -27,7 +27,12 @@ function stopZoomClose(event: { stopPropagation: () => void }) {
 
 function RxMedRow({ med }: { med: RxMed }) {
   return (
-    <Stack direction="row" justify="between" gap={3} className="border-b border-dashed border-line py-1.5">
+    <Stack
+      direction="row"
+      justify="between"
+      gap={3}
+      className="border-b border-dashed border-line py-1.5"
+    >
       <Text as="span" className="font-bold">
         {med.name}
       </Text>
@@ -51,7 +56,10 @@ function DigitalRx({ rx, className }: { rx: Prescription; className?: string }) 
     openPdf(rx);
   }
   return (
-    <Box data-slot="rx-view" className={cn("overflow-hidden rounded-lg border border-line bg-wash", className)}>
+    <Box
+      data-slot="rx-view"
+      className={cn("overflow-hidden rounded-lg border border-line bg-wash", className)}
+    >
       <Stack direction="row" align="center" gap={2} className="bg-dark px-3.5 py-2.5 text-white">
         <IconPill size={16} />
         <Heading level={4} className="flex-1 text-[13.5px] text-white">
@@ -66,7 +74,10 @@ function DigitalRx({ rx, className }: { rx: Prescription; className?: string }) 
         <Text variant="caption">
           Reg. {rx.regNo ?? "—"} · Patient: {rx.patient}
         </Text>
-        <Text as="span" className="mt-1 text-[11px] font-extrabold tracking-wide text-mid uppercase">
+        <Text
+          as="span"
+          className="mt-1 text-[11px] font-extrabold tracking-wide text-mid uppercase"
+        >
           ℞ Medicines
         </Text>
         <RxMeds meds={rx.meds ?? []} />
@@ -96,7 +107,10 @@ function PdfRx({ rx, className }: { rx: Prescription; className?: string }) {
     openPdf(rx);
   }
   return (
-    <Box data-slot="rx-view" className={cn("overflow-hidden rounded-lg border border-line bg-paper", className)}>
+    <Box
+      data-slot="rx-view"
+      className={cn("overflow-hidden rounded-lg border border-line bg-paper", className)}
+    >
       <Stack direction="row" align="center" gap={2} className="bg-wash-2 px-3.5 py-2.5">
         <IconDoc size={15} />
         <Heading level={4} className="flex-1 text-[13.5px]">
@@ -117,7 +131,10 @@ function PdfRx({ rx, className }: { rx: Prescription; className?: string }) {
           </Text>
           <Text variant="caption">{rx.doctor} · tap to open</Text>
         </Stack>
-        <Text as="span" className="rounded-full bg-dark px-2.5 py-1.5 text-[11.5px] font-extrabold text-white">
+        <Text
+          as="span"
+          className="rounded-full bg-dark px-2.5 py-1.5 text-[11.5px] font-extrabold text-white"
+        >
           Open PDF
         </Text>
       </Button>
@@ -128,7 +145,15 @@ function PdfRx({ rx, className }: { rx: Prescription; className?: string }) {
   );
 }
 
-function ImageRx({ rx, compact, className }: { rx: Prescription; compact?: boolean; className?: string }) {
+function ImageRx({
+  rx,
+  compact,
+  className,
+}: {
+  rx: Prescription;
+  compact?: boolean;
+  className?: string;
+}) {
   const [zoom, setZoom] = useState(false);
   const src = rx.image || rxImageDataUrl(rx);
   function onDownload() {
@@ -142,7 +167,10 @@ function ImageRx({ rx, compact, className }: { rx: Prescription; compact?: boole
   }
   return (
     <>
-      <Box data-slot="rx-view" className={cn("overflow-hidden rounded-lg border border-line bg-paper", className)}>
+      <Box
+        data-slot="rx-view"
+        className={cn("overflow-hidden rounded-lg border border-line bg-paper", className)}
+      >
         <Stack direction="row" align="center" gap={2} className="bg-wash-2 px-3.5 py-2.5">
           <IconDoc size={15} />
           <Heading level={4} className="flex-1 text-[13.5px]">
@@ -155,7 +183,11 @@ function ImageRx({ rx, compact, className }: { rx: Prescription; compact?: boole
             Enlarge ⤢
           </Button>
         </Stack>
-        <Button variant="ghost" className="h-auto w-full rounded-none bg-canvas px-3 py-3" onClick={openZoom}>
+        <Button
+          variant="ghost"
+          className="h-auto w-full rounded-none bg-canvas px-3 py-3"
+          onClick={openZoom}
+        >
           <Image
             src={src}
             alt={`Prescription ${rx.id}`}
@@ -181,7 +213,11 @@ function ImageRx({ rx, compact, className }: { rx: Prescription; compact?: boole
             className="max-h-full max-w-full rounded-md shadow-pop"
             onClick={stopZoomClose}
           />
-          <IconButton label="Close" className="fixed top-4 right-4 rounded-full bg-paper" onClick={closeZoom}>
+          <IconButton
+            label="Close"
+            className="fixed top-4 right-4 rounded-full bg-paper"
+            onClick={closeZoom}
+          >
             <IconX size={16} />
           </IconButton>
         </Box>

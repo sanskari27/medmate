@@ -3,7 +3,7 @@ import type { HBarProps } from "./HBar.types";
 export function HBar({ label, right, pct, color }: HBarProps) {
   return (
     <div className="mb-[11px]">
-      <div className="mb-1 flex items-center justify-between text-[12.5px]">
+      <div className="mb-1 flex items-center justify-between gap-2.5 text-[12.5px]">
         <span className="font-semibold">{label}</span>
         <span className="text-muted">{right}</span>
       </div>

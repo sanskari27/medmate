@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Sale } from "@/utils";
-import { doctorLabel, filterRegister, registerTotals, salePayable, sourceTone } from "./SalesRegister.utils";
+import {
+  doctorLabel,
+  filterRegister,
+  registerTotals,
+  salePayable,
+  sourceTone,
+} from "./SalesRegister.utils";
 
 const sale = {
   id: "INV-9",

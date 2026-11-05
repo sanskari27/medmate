@@ -68,7 +68,8 @@ export function layoutBars(columns: BarColumnInput[], width = BAR_WIDTH): BarLay
     const column = columns[index];
     if (!column) continue;
     const total = totals[index] ?? 0;
-    const stackHeight = total <= 0 ? BAR_MIN_STACK : Math.max(BAR_MIN_STACK, (total / max) * plotHeight);
+    const stackHeight =
+      total <= 0 ? BAR_MIN_STACK : Math.max(BAR_MIN_STACK, (total / max) * plotHeight);
     const labelX = slot * index + slot / 2;
     const x = labelX - barWidth / 2;
     const top = BAR_HEIGHT - BAR_LABEL_BAND - stackHeight;

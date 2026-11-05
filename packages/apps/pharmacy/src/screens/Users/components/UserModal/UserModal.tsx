@@ -10,15 +10,29 @@ import {
   type UserRole,
 } from "@/utils";
 import { Box, Button, Checkbox, Input, Select, Stack, Text } from "@/components/atoms";
-import { IconAlert, IconCheck, IconEye, IconEyeOff, IconKey, IconRefresh, IconShare, IconShield } from "@/components/atoms";
+import {
+  IconAlert,
+  IconCheck,
+  IconEye,
+  IconEyeOff,
+  IconKey,
+  IconRefresh,
+  IconShare,
+  IconShield,
+} from "@/components/atoms";
 import { Field } from "@/components/molecules/Field";
 import { Modal } from "@/components/molecules/Modal";
 import { CopyButton } from "@/screens/Users/components/CopyButton";
 import { USER_ROLES } from "@/screens/Users/Users.types";
-import { groupFullyEnabled, setPermissionGroup, staffNameIsValid, togglePermission, usernameWithoutSpaces } from "@/screens/Users/Users.utils";
+import {
+  groupFullyEnabled,
+  setPermissionGroup,
+  staffNameIsValid,
+  togglePermission,
+  usernameWithoutSpaces,
+} from "@/screens/Users/Users.utils";
 
 import type { UserModalProps } from "./UserModal.types";
-
 
 export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
   const isEdit = Boolean(user);
@@ -158,41 +172,77 @@ export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
       <Box className="max-h-[60vh] overflow-y-auto">
         <Box className="grid grid-cols-2 gap-3.5">
           <Field label="Full name" htmlFor="user-name" className="col-span-2">
-            <Input id="user-name" data-field="name" value={form.name || ""} onChange={handleNameChange} placeholder="e.g. Priya Sharma" />
+            <Input
+              id="user-name"
+              data-field="name"
+              value={form.name || ""}
+              onChange={handleNameChange}
+              placeholder="e.g. Priya Sharma"
+            />
           </Field>
           <Field label="Role" htmlFor="user-role">
-            <Select id="user-role" value={form.role} disabled={isEdit && user!.role === "Owner"} onChange={handleRoleChange} options={[...RoleChoices({includeOwner: isEdit && user!.role === "Owner"})]} />
+            <Select
+              id="user-role"
+              value={form.role}
+              disabled={isEdit && user!.role === "Owner"}
+              onChange={handleRoleChange}
+              options={[...RoleChoices({ includeOwner: isEdit && user!.role === "Owner" })]}
+            />
           </Field>
           <Field label="Counter PIN" htmlFor="user-pin">
-            <Input id="user-pin" className="font-mono" maxLength={6} value={form.pin || ""} onChange={handlePinChange} />
+            <Input
+              id="user-pin"
+              className="font-mono"
+              maxLength={6}
+              value={form.pin || ""}
+              onChange={handlePinChange}
+            />
           </Field>
           <Field label="Phone" htmlFor="user-phone">
-            <Input id="user-phone" data-field="phone" value={form.phone || ""} onChange={handlePhoneChange} placeholder="+91 " />
+            <Input
+              id="user-phone"
+              data-field="phone"
+              value={form.phone || ""}
+              onChange={handlePhoneChange}
+              placeholder="+91 "
+            />
           </Field>
           <Field label="Email" htmlFor="user-email">
-            <Input id="user-email" data-field="email" value={form.email || ""} onChange={handleEmailChange} />
+            <Input
+              id="user-email"
+              data-field="email"
+              value={form.email || ""}
+              onChange={handleEmailChange}
+            />
           </Field>
         </Box>
 
-        <Stack direction="row" align="center" gap={2} className="mb-2.5 mt-5 border-b border-line pb-[7px] font-display text-[13.5px] font-extrabold text-mid">
+        <Stack
+          direction="row"
+          align="center"
+          gap={2}
+          className="mb-2.5 mt-5 border-b border-line pb-[7px] font-display text-[13.5px] font-extrabold text-mid"
+        >
           <IconKey size={15} /> Login credentials
         </Stack>
         <Box className="rounded-md border border-line bg-wash-2 p-3.5">
           <Box className="grid grid-cols-2 gap-3.5">
-            <Field label="Login ID" htmlFor="user-username">
-              <Stack direction="row" align="center" justify="between">
-                <Text as="span" className="sr-only">
-                  Login ID
-                </Text>
-              </Stack>
-              <UsernameLabel onAuto={handleAutoUsername} />
+            <Field label={<UsernameLabel onAuto={handleAutoUsername} />} htmlFor="user-username">
               <Stack direction="row" align="center" gap={2}>
-                <Input id="user-username" className="font-mono" value={form.username || ""} onChange={handleUsernameChange} placeholder="name.role" />
+                <Input
+                  id="user-username"
+                  className="font-mono"
+                  value={form.username || ""}
+                  onChange={handleUsernameChange}
+                  placeholder="name.role"
+                />
                 <CopyButton text={form.username || ""} label="login ID" />
               </Stack>
             </Field>
-            <Field label="Password" htmlFor="user-password">
-              <PasswordLabel onGenerate={handleGeneratePassword} />
+            <Field
+              label={<PasswordLabel onGenerate={handleGeneratePassword} />}
+              htmlFor="user-password"
+            >
               <Stack direction="row" align="center" gap={2}>
                 <Input
                   id="user-password"
@@ -202,7 +252,13 @@ export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
                   onChange={handlePasswordChange}
                   placeholder="Auto-generate or type"
                 />
-                <Button variant="ghost" size="sm" className="h-[26px] w-[26px] px-0" title={showPassword ? "Hide" : "Show"} onClick={handleTogglePassword}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-[26px] w-[26px] shrink-0 rounded-[7px] border border-line bg-paper px-0 text-ink-2 hover:border-line-2 hover:bg-wash-2 hover:text-green"
+                  title={showPassword ? "Hide" : "Show"}
+                  onClick={handleTogglePassword}
+                >
                   {showPassword ? <IconEyeOff size={13} /> : <IconEye size={13} />}
                 </Button>
                 <CopyButton text={form.password || ""} label="password" />
@@ -210,11 +266,17 @@ export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
             </Field>
           </Box>
           <Text variant="caption" className="mt-2.5 flex items-start gap-1.5">
-            <IconAlert size={12} /> Share the ID & password securely. Ask the user to change it after first sign-in.
+            <IconAlert size={12} /> Share the ID & password securely. Ask the user to change it
+            after first sign-in.
           </Text>
         </Box>
 
-        <Stack direction="row" align="center" gap={2} className="mb-2.5 mt-5 border-b border-line pb-[7px] font-display text-[13.5px] font-extrabold text-mid">
+        <Stack
+          direction="row"
+          align="center"
+          gap={2}
+          className="mb-2.5 mt-5 border-b border-line pb-[7px] font-display text-[13.5px] font-extrabold text-mid"
+        >
           <IconShield size={15} /> What this user can see & use
         </Stack>
         {isOwner ? (
@@ -224,13 +286,28 @@ export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
         ) : (
           <>
             <Stack direction="row" align="center" wrap gap={2} className="mb-3">
-              <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:border-mid hover:bg-wash-2 hover:text-mid"
+                onClick={handleSelectAll}
+              >
                 Select all
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleResetDefaults}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:border-mid hover:bg-wash-2 hover:text-mid"
+                onClick={handleResetDefaults}
+              >
                 Reset to {form.role} defaults
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleClearPermissions}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:border-mid hover:bg-wash-2 hover:text-mid"
+                onClick={handleClearPermissions}
+              >
                 Clear
               </Button>
               <Text as="span" className="ml-auto text-[12px] font-bold text-green">
@@ -247,17 +324,23 @@ export function UserModal({ user, onClose, onSave, onShare }: UserModalProps) {
 
 function UsernameLabel({ onAuto }: { onAuto: () => void }) {
   return (
-    <Button variant="link" className="mb-1 text-[11px] text-green" onClick={onAuto}>
-      auto
-    </Button>
+    <>
+      Login ID{" "}
+      <Button variant="link" className="text-[11px] font-bold text-green" onClick={onAuto}>
+        auto
+      </Button>
+    </>
   );
 }
 
 function PasswordLabel({ onGenerate }: { onGenerate: () => void }) {
   return (
-    <Button variant="link" className="mb-1 text-[11px] text-green" onClick={onGenerate}>
-      <IconRefresh size={11} /> generate
-    </Button>
+    <>
+      Password{" "}
+      <Button variant="link" className="text-[11px] font-bold text-green" onClick={onGenerate}>
+        <IconRefresh size={11} /> generate
+      </Button>
+    </>
   );
 }
 
@@ -280,13 +363,16 @@ function PermissionGrid({
   onChange: (patch: Partial<StaffUser>) => void;
 }) {
   function renderGroup(group: PermGroup) {
-        return <PermissionGroup key={group.group} group={group} permissions={permissions} onChange={onChange} />;
-      }
-  return (
-    <Box className="grid grid-cols-2 gap-3">
-      {PERMISSION_CATALOG.map(renderGroup)}
-    </Box>
-  );
+    return (
+      <PermissionGroup
+        key={group.group}
+        group={group}
+        permissions={permissions}
+        onChange={onChange}
+      />
+    );
+  }
+  return <Box className="grid grid-cols-2 gap-3">{PERMISSION_CATALOG.map(renderGroup)}</Box>;
 }
 
 function PermissionGroup({
@@ -308,22 +394,25 @@ function PermissionGroup({
   }
 
   function renderItem(item: PermGroup["items"][number]) {
-        return (
-          <PermissionRow
-            key={item.key}
-            label={item.label}
-            description={item.desc}
-            permissionKey={item.key}
-            checked={permissions.includes(item.key)}
-            permissions={permissions}
-            onChange={onChange}
-          />
-        );
-      }
+    return (
+      <PermissionRow
+        key={item.key}
+        label={item.label}
+        description={item.desc}
+        permissionKey={item.key}
+        checked={permissions.includes(item.key)}
+        permissions={permissions}
+        onChange={onChange}
+      />
+    );
+  }
   return (
     <Box className="rounded-md border border-line bg-paper px-3 py-2.5">
       <Stack direction="row" align="center" justify="between" className="mb-2">
-        <Text variant="caption" className="text-[10.5px] font-extrabold uppercase tracking-[0.05em]">
+        <Text
+          variant="caption"
+          className="text-[10.5px] font-extrabold uppercase tracking-[0.05em]"
+        >
           {group.group}
         </Text>
         <Button variant="link" className="text-[11px] text-green" onClick={handleGroupToggle}>
@@ -355,7 +444,13 @@ function PermissionRow({
   }
 
   return (
-    <Box className={checked ? "mb-1 rounded-[9px] border border-line-2 bg-wash-2 px-2 py-[7px]" : "mb-1 rounded-[9px] border border-transparent px-2 py-[7px]"}>
+    <Box
+      className={
+        checked
+          ? "mb-1 rounded-[9px] border border-line-2 bg-wash-2 px-2 py-[7px] hover:bg-wash-2"
+          : "mb-1 rounded-[9px] border border-transparent px-2 py-[7px] hover:bg-wash-2"
+      }
+    >
       <Checkbox checked={checked} onChange={handleToggle} aria-label={label}>
         <Stack gap={0} className="min-w-0 flex-1">
           <Text as="span" className="text-[12.5px] font-bold text-ink">

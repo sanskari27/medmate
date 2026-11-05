@@ -28,7 +28,7 @@ export function AnalyticsDonut({ rows, fmt }: { rows: DonutRow[]; fmt: (n: numbe
 
   if (total <= 0) {
     return (
-      <div className="px-5 py-[30px] text-center text-muted">
+      <div className="p-[30px] text-center text-muted">
         <p className="mx-auto max-w-[340px] text-[13px]">No data for the selected sources.</p>
       </div>
     );
@@ -46,7 +46,12 @@ export function AnalyticsDonut({ rows, fmt }: { rows: DonutRow[]; fmt: (n: numbe
           x={cx}
           y={cy - 4}
           textAnchor="middle"
-          style={{ fontFamily: "Manrope, Inter, sans-serif", fontWeight: 800, fontSize: 19, fill: "var(--color-dark)" }}
+          style={{
+            fontFamily: "Manrope, Inter, sans-serif",
+            fontWeight: 800,
+            fontSize: 19,
+            fill: "var(--color-dark)",
+          }}
         >
           {fmt(total)}
         </text>
@@ -54,16 +59,26 @@ export function AnalyticsDonut({ rows, fmt }: { rows: DonutRow[]; fmt: (n: numbe
           x={cx}
           y={cy + 15}
           textAnchor="middle"
-          style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 10, fill: "var(--color-faint)" }}
+          style={{
+            fontFamily: "Inter, system-ui, sans-serif",
+            fontSize: 10,
+            fill: "var(--color-faint)",
+          }}
         >
           total
         </text>
       </svg>
       <div className="max-w-[300px] min-w-[210px] flex-[0_1_260px] rounded-md bg-wash-2 px-3.5 py-2.5">
         {arcs.map((arc) => (
-          <div key={arc.key} className="mb-[9px] flex items-center justify-between text-[12.5px] last:mb-[9px]">
+          <div
+            key={arc.key}
+            className="mb-[9px] flex items-center justify-between gap-2.5 text-[12.5px] last:mb-[9px]"
+          >
             <span className="flex items-center gap-2 font-semibold">
-              <i className="inline-block h-[11px] w-[11px] rounded-[3px]" style={{ background: arc.color }} />
+              <i
+                className="inline-block h-[11px] w-[11px] rounded-[3px]"
+                style={{ background: arc.color }}
+              />
               {arc.label}
             </span>
             <span className="text-muted">
@@ -102,25 +117,37 @@ export function AnalyticsTrend<T extends TrendSeries>({
   const plotWidth = width - padLeft - padRight;
   const plotHeight = height - padTop - padBottom;
   const count = labels.length;
-  const rawMax = Math.max(1, ...series.flatMap((item) => labels.map((_, index) => valOf(item, index))));
+  const rawMax = Math.max(
+    1,
+    ...series.flatMap((item) => labels.map((_, index) => valOf(item, index))),
+  );
   const power = Math.pow(10, Math.floor(Math.log10(rawMax)));
   const max = Math.ceil(rawMax / power) * power || 1;
   const band = plotWidth / count;
   const centerX = (index: number) => padLeft + band * (index + 0.5);
   const valueY = (value: number) => padTop + plotHeight - (value / max) * plotHeight;
   const grid = [0, 0.25, 0.5, 0.75, 1];
-  const axisStyle = { fontFamily: "Inter, system-ui, sans-serif", fontSize: 10, fill: "var(--color-faint)" };
+  const axisStyle = {
+    fontFamily: "Inter, system-ui, sans-serif",
+    fontSize: 10,
+    fill: "var(--color-faint)",
+  };
 
   if (series.length === 0) {
     return (
-      <div className="px-5 py-[30px] text-center text-muted">
+      <div className="p-[30px] text-center text-muted">
         <p className="mx-auto max-w-[340px] text-[13px]">Select at least one source above.</p>
       </div>
     );
   }
 
   return (
-    <svg className="block h-auto w-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img">
+    <svg
+      className="block h-auto w-full"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+    >
       {grid.map((fraction) => (
         <g key={fraction}>
           <line
@@ -131,13 +158,24 @@ export function AnalyticsTrend<T extends TrendSeries>({
             stroke="var(--color-line)"
             strokeWidth={1}
           />
-          <text x={padLeft - 8} y={padTop + plotHeight * (1 - fraction) + 3.5} textAnchor="end" style={axisStyle}>
+          <text
+            x={padLeft - 8}
+            y={padTop + plotHeight * (1 - fraction) + 3.5}
+            textAnchor="end"
+            style={axisStyle}
+          >
             {fmtAxis(max * fraction)}
           </text>
         </g>
       ))}
       {labels.map((label, index) => (
-        <text key={label + index} x={centerX(index)} y={height - 9} textAnchor="middle" style={axisStyle}>
+        <text
+          key={label + index}
+          x={centerX(index)}
+          y={height - 9}
+          textAnchor="middle"
+          style={axisStyle}
+        >
           {label}
         </text>
       ))}
@@ -166,7 +204,9 @@ export function AnalyticsTrend<T extends TrendSeries>({
         })}
       {type === "line" &&
         series.map((item) => {
-          const points = labels.map((_, index) => [centerX(index), valueY(valOf(item, index))] as const);
+          const points = labels.map(
+            (_, index) => [centerX(index), valueY(valOf(item, index))] as const,
+          );
           return (
             <g key={item.key}>
               <polyline
@@ -178,7 +218,15 @@ export function AnalyticsTrend<T extends TrendSeries>({
                 strokeLinecap="round"
               />
               {points.map((point, index) => (
-                <circle key={index} cx={point[0]} cy={point[1]} r={3} fill="#fff" stroke={item.color} strokeWidth={2}>
+                <circle
+                  key={index}
+                  cx={point[0]}
+                  cy={point[1]}
+                  r={3}
+                  fill="#fff"
+                  stroke={item.color}
+                  strokeWidth={2}
+                >
                   <title>{`${labels[index]} · ${item.label}: ${fmt(valOf(item, index))}`}</title>
                 </circle>
               ))}

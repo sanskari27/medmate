@@ -5,7 +5,12 @@ import { DoctorCard } from "./DoctorCard";
 
 describe("DoctorCard", () => {
   it("shows the doctor name", () => {
-    render(<DoctorCard doctor={{ ...blankDoctor(), id: "d1", name: "Dr. Rao" }} onEdit={function edit() {}} />);
+    render(
+      <DoctorCard
+        doctor={{ ...blankDoctor(), id: "d1", name: "Dr. Rao" }}
+        onEdit={function edit() {}}
+      />,
+    );
     expect(screen.getByRole("heading", { name: "Dr. Rao" })).toBeTruthy();
   });
 });

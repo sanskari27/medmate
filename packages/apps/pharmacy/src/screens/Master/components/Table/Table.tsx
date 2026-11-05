@@ -1,26 +1,38 @@
 import type { TableProps } from "./Table.types";
-import { Box, Table as TableAtom, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
-export function Table({ columns, empty, children, }: TableProps) {
-    const count = Array.isArray(children) ? children.length : children ? 1 : 0;
-    return (<Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+import {
+  Box,
+  Table as TableAtom,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/atoms";
+export function Table({ columns, empty, children }: TableProps) {
+  const count = Array.isArray(children) ? children.length : children ? 1 : 0;
+  return (
+    <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
       <Box className="!overflow-x-auto">
-        <TableAtom className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+        <TableAtom className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!z-[1] [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:text-ink-2 [&_tr]:!border-0 [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:!bg-wash-2 [&_tbody_tr:last-child_td]:!border-b-0 [&_tfoot_td]:!border-b-0 [&_tfoot_td]:!border-t-2 [&_tfoot_td]:!border-t-line-2 [&_tfoot_td]:!bg-wash-2 [&_tfoot_td]:!font-extrabold [&_tfoot_td]:!text-ink">
           <TableHead>
-            <TableRow>
-              {columns.map(renderColumn)}
-            </TableRow>
+            <TableRow>{columns.map(renderColumn)}</TableRow>
           </TableHead>
           <TableBody>
-            {count === 0 ? (<TableRow>
+            {count === 0 ? (
+              <TableRow>
                 <TableCell colSpan={columns.length} className="!text-muted">
                   {empty}
                 </TableCell>
-              </TableRow>) : (children)}
+              </TableRow>
+            ) : (
+              children
+            )}
           </TableBody>
         </TableAtom>
       </Box>
-    </Box>);
-    function renderColumn(column: string) {
-        return (<TableHeaderCell key={column || "action"}>{column}</TableHeaderCell>);
-    }
+    </Box>
+  );
+  function renderColumn(column: string) {
+    return <TableHeaderCell key={column || "action"}>{column}</TableHeaderCell>;
+  }
 }

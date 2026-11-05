@@ -12,7 +12,11 @@ import type { PaidFilter, SalesQuery, SalesSortKey, SortDirection } from "./Sale
 
 export type SalesRow = { sale: Sale; totals: ReturnType<typeof computeInvoice> };
 
-export function selectSales(sales: Sale[], query: SalesQuery, inWindow: (createdAt: number) => boolean): SalesRow[] {
+export function selectSales(
+  sales: Sale[],
+  query: SalesQuery,
+  inWindow: (createdAt: number) => boolean,
+): SalesRow[] {
   const needle = query.searchQuery.trim().toLowerCase();
   const rows = sales
     .filter(function openInWindow(sale) {
@@ -97,9 +101,11 @@ export function salesCsv(rows: SalesRow[]) {
   });
   return [head, ...lines]
     .map(function joinRow(cells: Array<string | number>) {
-      return cells.map(function quote(cell) {
-        return `"${String(cell).replace(/"/g, '""')}"`;
-      }).join(",");
+      return cells
+        .map(function quote(cell) {
+          return `"${String(cell).replace(/"/g, '""')}"`;
+        })
+        .join(",");
     })
     .join("\n");
 }
@@ -111,7 +117,13 @@ export function salesPdfBlob(
   profile: PharmacyProfile,
 ) {
   const headerLine =
-    pad("Date", 16) + pad("Invoice", 10) + pad("Customer", 20) + pad("Chnl", 8) + pad("Status", 11) + padLeft("GST", 9) + padLeft("Total", 12);
+    pad("Date", 16) +
+    pad("Invoice", 10) +
+    pad("Customer", 20) +
+    pad("Chnl", 8) +
+    pad("Status", 11) +
+    padLeft("GST", 9) +
+    padLeft("Total", 12);
   const rowLines = rows.map(function toPdf(row) {
     const { sale, totals } = row;
     return (
@@ -124,7 +136,10 @@ export function salesPdfBlob(
       padLeft(rupees(totals.payable), 12)
     );
   });
-  const totalsLine = pad(`TOTAL  ${rows.length} sales  ${summary.units} units`, 54) + padLeft(rupees(summary.tax), 9) + padLeft(rupees(summary.net), 12);
+  const totalsLine =
+    pad(`TOTAL  ${rows.length} sales  ${summary.units} units`, 54) +
+    padLeft(rupees(summary.tax), 9) +
+    padLeft(rupees(summary.net), 12);
   return buildReportPdf({
     title: "Sales Report",
     subtitle: `Period: ${label}`,
@@ -159,15 +174,25 @@ function rowMatches(sale: Sale, query: SalesQuery, needle: string) {
   if (query.status !== "all" && sale.status !== query.status) return false;
   if (query.paid === "paid" && sale.paid === false) return false;
   if (query.paid === "unpaid" && sale.paid !== false) return false;
-  if (needle && !`${sale.id} ${sale.customer.name} ${sale.customer.phone ?? ""}`.toLowerCase().includes(needle)) return false;
+  if (
+    needle &&
+    !`${sale.id} ${sale.customer.name} ${sale.customer.phone ?? ""}`.toLowerCase().includes(needle)
+  )
+    return false;
   return true;
 }
 
-function compareRows(left: SalesRow, right: SalesRow, sort: SalesSortKey, direction: SortDirection) {
+function compareRows(
+  left: SalesRow,
+  right: SalesRow,
+  sort: SalesSortKey,
+  direction: SortDirection,
+) {
   const sign = direction === "asc" ? 1 : -1;
   if (sort === "total") return (left.totals.payable - right.totals.payable) * sign;
   if (sort === "items") return (unitCount(left.sale) - unitCount(right.sale)) * sign;
-  if (sort === "customer") return left.sale.customer.name.localeCompare(right.sale.customer.name) * sign;
+  if (sort === "customer")
+    return left.sale.customer.name.localeCompare(right.sale.customer.name) * sign;
   return (left.sale.createdAt - right.sale.createdAt) * sign;
 }
 

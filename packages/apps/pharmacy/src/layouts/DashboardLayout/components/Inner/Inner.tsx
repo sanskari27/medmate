@@ -14,7 +14,9 @@ import { Canvas } from "../Canvas";
 export function Inner() {
   const { setupComplete, signedIn, needsPin, pinReset, route, go, me, isHospital } = usePharma();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [masterSessionPhone, setMasterSessionPhone] = useState<string | null | undefined>(undefined);
+  const [masterSessionPhone, setMasterSessionPhone] = useState<string | null | undefined>(
+    undefined,
+  );
   const [masterPortalOpen, setMasterPortalOpen] = useState(false);
 
   function loadMasterSession() {
@@ -66,9 +68,7 @@ export function Inner() {
   );
 
   if (masterSessionPhone === undefined && !signedIn) {
-    return (
-      <Text>Loading pharmacy…</Text>
-    );
+    return <Text>Loading pharmacy…</Text>;
   }
   if (masterSessionPhone && (masterPortalOpen || !signedIn)) {
     return (
@@ -115,7 +115,7 @@ export function Inner() {
         />
         <Stack className="h-dvh min-w-0">
           <AppHeader onMenu={toggleSidebar} />
-          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-7 min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10">
+          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-[max(28px,env(safe-area-inset-bottom))] min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10">
             <Canvas />
           </Box>
         </Stack>
@@ -129,7 +129,7 @@ function MenuBackdrop({ onClose }: { onClose: () => void }) {
     <Button
       variant="ghost"
       aria-label="Close menu"
-      className="fixed inset-0 z-30 h-full w-full rounded-none border-0 bg-deep/45 p-0 shadow-none hover:border-0 hover:bg-deep/45 hover:text-transparent focus-visible:shadow-none active:translate-y-0 min-[1100px]:hidden"
+      className="fixed inset-0 z-30 h-full w-full rounded-none border-0 bg-black/45 p-0 shadow-none hover:border-0 hover:bg-black/45 hover:text-transparent focus-visible:shadow-none active:translate-y-0 min-[1100px]:hidden"
       onClick={onClose}
     />
   );

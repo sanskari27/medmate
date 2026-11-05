@@ -33,7 +33,8 @@ const selectableTileVariants = cva("h-auto whitespace-normal shadow-none", {
   },
 });
 
-export type SelectableTileProps = ComponentProps<typeof Button> & VariantProps<typeof selectableTileVariants>;
+export type SelectableTileProps = ComponentProps<typeof Button> &
+  VariantProps<typeof selectableTileVariants>;
 
 export function SelectableTile({
   className,

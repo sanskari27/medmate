@@ -5,11 +5,7 @@ import { PayModePicker } from "./PayModePicker";
 describe("PayModePicker", () => {
   it("renders the payment labels", () => {
     render(
-      <PayModePicker
-        options={[{ m: "cash", Ic: CashMark }]}
-        selected="cash"
-        onSelect={ignore}
-      />,
+      <PayModePicker options={[{ m: "cash", Ic: CashMark }]} selected="cash" onSelect={ignore} />,
     );
     expect(screen.getByRole("button", { name: "Cash" })).toBeTruthy();
   });

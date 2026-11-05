@@ -6,7 +6,13 @@ import { DataTable } from "./DataTable";
 describe("DataTable", () => {
   it("renders rows and an empty title", () => {
     const view = render(
-      <DataTable head={<TableRow><TableHeaderCell>Name</TableHeaderCell></TableRow>}>
+      <DataTable
+        head={
+          <TableRow>
+            <TableHeaderCell>Name</TableHeaderCell>
+          </TableRow>
+        }
+      >
         <TableRow>
           <TableCell>Crocin</TableCell>
         </TableRow>

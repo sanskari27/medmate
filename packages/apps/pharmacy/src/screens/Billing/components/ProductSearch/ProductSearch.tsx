@@ -43,7 +43,7 @@ export function ProductSearch({
           onChange={changeScan}
           onKeyDown={submitOnEnter}
           autoFocus
-          className="py-1.5 text-[13.5px]"
+          className="min-w-0 flex-1 px-0.5 py-1.5 text-[13.5px]"
         />
         <Button variant="primary" size="sm" onClick={onScanSubmit} disabled={!scan.trim()}>
           Add
@@ -63,7 +63,7 @@ export function ProductSearch({
           placeholder="Search medicine, salt, brand…"
           value={searchQuery}
           onChange={changeSearch}
-          className="py-0 text-[13.5px]"
+          className="min-w-0 flex-1 py-0 text-[13.5px]"
         />
       </Stack>
     </Stack>

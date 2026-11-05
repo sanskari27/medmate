@@ -10,7 +10,14 @@ describe("SignOutDialog", () => {
   });
 
   it("asks before saving", () => {
-    render(<SaveConfirm title="Save this bill?" body="Nothing stored will be deleted." onCancel={cancel} onConfirm={confirm} />);
+    render(
+      <SaveConfirm
+        title="Save this bill?"
+        body="Nothing stored will be deleted."
+        onCancel={cancel}
+        onConfirm={confirm}
+      />,
+    );
     expect(screen.getByRole("dialog", { name: "Save this bill?" })).toBeTruthy();
   });
 });

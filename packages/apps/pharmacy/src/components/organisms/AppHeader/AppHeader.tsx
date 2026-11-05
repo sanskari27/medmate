@@ -88,7 +88,7 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
       align="center"
       gap={4}
       className={cn(
-        "h-[60px] gap-4 border-b border-line bg-paper px-6 max-[1099px]:gap-2.5 max-[1099px]:px-4 max-[767px]:h-auto max-[767px]:flex-wrap max-[767px]:gap-2 max-[767px]:px-3 max-[767px]:pt-2.5 max-[767px]:pb-2.5",
+        "h-[60px] gap-4 border-b border-line bg-paper px-6 max-[1099px]:gap-2.5 max-[1099px]:px-4 max-[767px]:h-auto max-[767px]:flex-wrap max-[767px]:gap-2 max-[767px]:px-3 max-[767px]:pt-[max(10px,env(safe-area-inset-top))] max-[767px]:pb-2.5",
         className,
       )}
     >
@@ -114,7 +114,11 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
         <Heading level={1} className="truncate text-[19px] font-bold max-[767px]:text-[17px]">
           {meta.title}
         </Heading>
-        <Text as="span" variant="caption" className="truncate text-[12.5px] font-medium">
+        <Text
+          as="span"
+          variant="caption"
+          className="truncate text-[12.5px] leading-[1.5] font-medium"
+        >
           {meta.sub}
         </Text>
       </Stack>
@@ -135,14 +139,16 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
             onFocus={onSearchFocus}
             onChange={onSearchChange}
             aria-label="Search medicines, orders, invoices"
-            className="px-[2px] py-px text-[13.5px] placeholder:text-faint"
+            className="px-[2px] py-0 text-[13.5px] placeholder:text-faint"
           />
         </Stack>
-      ) : (
-        <Box className="ml-auto" />
-      )}
+      ) : null}
       {subscription.plan === "Essential" ? (
-        <UpgradeChip className="print:hidden" title="Unlock premium features" onClick={openSubscription} />
+        <UpgradeChip
+          className="print:hidden"
+          title="Unlock premium features"
+          onClick={openSubscription}
+        />
       ) : null}
       {allow("pos") ? (
         <Button className="print:hidden" onClick={openPos}>

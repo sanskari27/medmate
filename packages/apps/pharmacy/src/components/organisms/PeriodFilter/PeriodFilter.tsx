@@ -3,9 +3,6 @@ import { Input } from "@/components/atoms/Input";
 import { Select } from "@/components/atoms/Select";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
-import { Chip } from "@/components/molecules/Chip";
-import { DateRangeField } from "@/components/molecules/DateRangeField";
-import { resolveRange } from "@/utils/date";
 import type { PeriodWindow, PMode } from "./PeriodFilter.types";
 
 function pad(value: number) {
@@ -136,34 +133,27 @@ function FyOption({ year }: { year: number }) {
 
 function RangeArrow() {
   return (
-    <Text as="span" variant="caption">
+    <Text as="span" className="text-xs text-muted">
       →
     </Text>
   );
 }
 
-function ScopeChips({
-  range,
-  onChange,
-}: {
-  range: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  function onSingle() {
-    onChange(false);
-  }
-  function onRange() {
-    onChange(true);
+function ScopeSelect({ range, onChange }: { range: boolean; onChange: (next: boolean) => void }) {
+  function onScope(event: ChangeEvent<HTMLSelectElement>) {
+    onChange(event.target.value === "range");
   }
   return (
-    <Stack direction="row" gap={1}>
-      <Chip selected={!range} onClick={onSingle}>
-        Single
-      </Chip>
-      <Chip selected={range} onClick={onRange}>
-        Range
-      </Chip>
-    </Stack>
+    <Select
+      className="w-[96px]"
+      value={range ? "range" : "single"}
+      onChange={onScope}
+      aria-label="Range scope"
+      options={[
+        { value: "single", label: "Single" },
+        { value: "range", label: "Range" },
+      ]}
+    />
   );
 }
 
@@ -179,10 +169,16 @@ function YearSelect({
   label: string;
 }) {
   function renderYear(year: number) {
-        return YearOption({year: year});
-      }
+    return YearOption({ year: year });
+  }
   return (
-    <Select className="w-[100px]" value={value} onChange={onChange} aria-label={label} options={[...years.map(renderYear)]} />
+    <Select
+      className="w-[100px]"
+      value={value}
+      onChange={onChange}
+      aria-label={label}
+      options={[...years.map(renderYear)]}
+    />
   );
 }
 
@@ -196,10 +192,16 @@ function FySelect({
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
 }) {
   function renderFy(year: number) {
-        return FyOption({year: year});
-      }
+    return FyOption({ year: year });
+  }
   return (
-    <Select className="w-[140px]" value={value} onChange={onChange} aria-label="Financial year" options={[...years.map(renderFy)]} />
+    <Select
+      className="w-[140px]"
+      value={value}
+      onChange={onChange}
+      aria-label="Financial year"
+      options={[...years.map(renderFy)]}
+    />
   );
 }
 
@@ -220,12 +222,24 @@ function MonthControls({
 }) {
   return (
     <>
-      <ScopeChips range={range} onChange={onScope} />
-      <Input type="month" className="w-[150px]" value={month} onChange={onMonth} aria-label="Month" />
+      <ScopeSelect range={range} onChange={onScope} />
+      <Input
+        type="month"
+        className="w-[150px]"
+        value={month}
+        onChange={onMonth}
+        aria-label="Month"
+      />
       {range ? (
         <>
           <RangeArrow />
-          <Input type="month" className="w-[150px]" value={monthTo} onChange={onMonthTo} aria-label="Month to" />
+          <Input
+            type="month"
+            className="w-[150px]"
+            value={monthTo}
+            onChange={onMonthTo}
+            aria-label="Month to"
+          />
         </>
       ) : null}
     </>
@@ -251,7 +265,7 @@ function YearControls({
 }) {
   return (
     <>
-      <ScopeChips range={range} onChange={onScope} />
+      <ScopeSelect range={range} onChange={onScope} />
       <YearSelect years={years} value={year} onChange={onYear} label="Year" />
       {range ? (
         <>
@@ -265,9 +279,12 @@ function YearControls({
 
 /** Shared reporting period filter: Today / Month / Year / FY / Custom / All. */
 export function usePeriod(now: number, initial: PMode = "month"): PeriodWindow {
-  const base = useMemo(function currentDate() {
-    return new Date(now);
-  }, [now]);
+  const base = useMemo(
+    function currentDate() {
+      return new Date(now);
+    },
+    [now],
+  );
   const [mode, setMode] = useState<PMode>(initial);
   const [today, setToday] = useState(isoDate(base));
   const [month, setMonth] = useState(isoMonth(base));
@@ -330,21 +347,12 @@ export function usePeriod(now: number, initial: PMode = "month"): PeriodWindow {
   function onFyChange(event: ChangeEvent<HTMLSelectElement>) {
     setFy(Number(event.target.value));
   }
-  function onFromValue(value: string) {
-    setFrom(value);
+  function onFromChange(event: ChangeEvent<HTMLInputElement>) {
+    setFrom(event.target.value);
   }
-  function onToValue(value: string) {
-    setTo(value);
+  function onToChange(event: ChangeEvent<HTMLInputElement>) {
+    setTo(event.target.value);
   }
-  function keepCustomPreset() {
-    return undefined;
-  }
-  const customResolved = resolveRange(
-    "custom",
-    now,
-    startOfDay(new Date(from + "T12:00:00")),
-    endOfDay(new Date(to + "T12:00:00")),
-  );
 
   const years = Array.from({ length: 6 }, function yearAt(_item, index) {
     return base.getFullYear() - 4 + index;
@@ -354,10 +362,29 @@ export function usePeriod(now: number, initial: PMode = "month"): PeriodWindow {
   });
 
   const node = (
-    <Stack data-slot="period-filter" direction="row" align="center" wrap gap={2}>
-      <Select className="w-[140px]" value={mode} onChange={onModeChange} aria-label="Period" options={[PeriodOption({value: "today", label: "Today"}), PeriodOption({value: "month", label: "Month"}), PeriodOption({value: "year", label: "Year"}), PeriodOption({value: "fy", label: "Financial Year"}), PeriodOption({value: "custom", label: "Custom dates"}), PeriodOption({value: "all", label: "All time"})]} />
+    <Stack data-slot="period-filter" direction="row" align="center" wrap className="gap-1.5">
+      <Select
+        className="w-[140px]"
+        value={mode}
+        onChange={onModeChange}
+        aria-label="Period"
+        options={[
+          PeriodOption({ value: "today", label: "Today" }),
+          PeriodOption({ value: "month", label: "Month" }),
+          PeriodOption({ value: "year", label: "Year" }),
+          PeriodOption({ value: "fy", label: "Financial Year" }),
+          PeriodOption({ value: "custom", label: "Custom dates" }),
+          PeriodOption({ value: "all", label: "All time" }),
+        ]}
+      />
       {mode === "today" ? (
-        <Input type="date" className="w-40" value={today} onChange={onTodayChange} aria-label="Day" />
+        <Input
+          type="date"
+          className="w-40"
+          value={today}
+          onChange={onTodayChange}
+          aria-label="Day"
+        />
       ) : null}
       {mode === "month" ? (
         <MonthControls
@@ -382,16 +409,23 @@ export function usePeriod(now: number, initial: PMode = "month"): PeriodWindow {
       ) : null}
       {mode === "fy" ? <FySelect years={financialYears} value={fy} onChange={onFyChange} /> : null}
       {mode === "custom" ? (
-        <DateRangeField
-          now={now}
-          preset="custom"
-          onPreset={keepCustomPreset}
-          from={from}
-          onFrom={onFromValue}
-          to={to}
-          onTo={onToValue}
-          resolved={customResolved}
-        />
+        <>
+          <Input
+            type="date"
+            className="w-[150px]"
+            value={from}
+            onChange={onFromChange}
+            aria-label="From"
+          />
+          <RangeArrow />
+          <Input
+            type="date"
+            className="w-[150px]"
+            value={to}
+            onChange={onToChange}
+            aria-label="To"
+          />
+        </>
       ) : null}
     </Stack>
   );

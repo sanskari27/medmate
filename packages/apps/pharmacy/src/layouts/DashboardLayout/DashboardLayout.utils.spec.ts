@@ -13,12 +13,36 @@ describe("lockedRouteFallback", () => {
     const hospital = visibleNavItems({ role: "Owner", isHospital: true });
     const counter = visibleNavItems(cashier);
 
-    expect(retail.some(function hasWards(item) { return item.key === "wards"; })).toBe(false);
-    expect(hospital.some(function hasWards(item) { return item.key === "wards"; })).toBe(true);
-    expect(NAV.find(function catalogue(item) { return item.key === "inventory"; })?.group).toBe("Catalogue");
-    expect(counter.some(function hasPos(item) { return item.key === "pos"; })).toBe(true);
-    expect(counter.some(function hasInventory(item) { return item.key === "inventory"; })).toBe(false);
-    expect(counter.some(function hasDashboard(item) { return item.key === "dashboard"; })).toBe(false);
+    expect(
+      retail.some(function hasWards(item) {
+        return item.key === "wards";
+      }),
+    ).toBe(false);
+    expect(
+      hospital.some(function hasWards(item) {
+        return item.key === "wards";
+      }),
+    ).toBe(true);
+    expect(
+      NAV.find(function catalogue(item) {
+        return item.key === "inventory";
+      })?.group,
+    ).toBe("Catalogue");
+    expect(
+      counter.some(function hasPos(item) {
+        return item.key === "pos";
+      }),
+    ).toBe(true);
+    expect(
+      counter.some(function hasInventory(item) {
+        return item.key === "inventory";
+      }),
+    ).toBe(false);
+    expect(
+      counter.some(function hasDashboard(item) {
+        return item.key === "dashboard";
+      }),
+    ).toBe(false);
   });
 
   it("sends a locked route to the first screen that role can open", () => {

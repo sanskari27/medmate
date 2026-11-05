@@ -10,7 +10,14 @@ export type CardHeaderProps = ComponentProps<typeof Stack> & {
   actions?: ReactNode;
 };
 
-export function CardHeader({ className, title, subtitle, actions, children, ...props }: CardHeaderProps) {
+export function CardHeader({
+  className,
+  title,
+  subtitle,
+  actions,
+  children,
+  ...props
+}: CardHeaderProps) {
   return (
     <Stack
       data-slot="card-header"

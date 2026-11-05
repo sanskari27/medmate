@@ -12,18 +12,36 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
     return <TimelineStep key={step} step={step} position={position} index={index} />;
   }
   return (
-    <Stack direction="row" align="center" justify="between" className="my-1 mb-[18px] gap-0 print:hidden">
+    <Stack
+      direction="row"
+      align="center"
+      justify="between"
+      className="my-1 mb-[18px] gap-0 print:hidden"
+    >
       {ONLINE_FLOW.map(renderStep)}
     </Stack>
   );
 }
 
-function TimelineStep({ step, position, index }: { step: OrderStatus; position: number; index: number }) {
+function TimelineStep({
+  step,
+  position,
+  index,
+}: {
+  step: OrderStatus;
+  position: number;
+  index: number;
+}) {
   const reached = position <= index;
   return (
     <Box className="relative flex-1 text-center">
       {position > 0 ? (
-        <Box className={cn("absolute top-[11px] -left-1/2 h-[3px] w-full", position <= index ? "bg-mid" : "bg-line")} />
+        <Box
+          className={cn(
+            "absolute top-[11px] -left-1/2 h-[3px] w-full",
+            position <= index ? "bg-mid" : "bg-line",
+          )}
+        />
       ) : null}
       <Box
         className={cn(
@@ -33,7 +51,13 @@ function TimelineStep({ step, position, index }: { step: OrderStatus; position: 
       >
         {position < index ? <IconCheck size={12} /> : position + 1}
       </Box>
-      <Text as="span" className={cn("mt-[5px] block text-[10.5px] font-bold", reached ? "text-dark" : "text-muted")}>
+      <Text
+        as="span"
+        className={cn(
+          "mt-[5px] block text-[10.5px] font-bold",
+          reached ? "text-dark" : "text-muted",
+        )}
+      >
         {STATUS_LABEL[step]}
       </Text>
     </Box>

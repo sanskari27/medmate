@@ -18,7 +18,14 @@ function PatientMark({ name, initials }: { name: string; initials?: string }) {
       </Box>
     );
   }
-  return <Avatar name={name} initials={initials} size="lg" className="h-12 w-12 rounded-[13px] bg-mid text-white" />;
+  return (
+    <Avatar
+      name={name}
+      initials={initials}
+      size="lg"
+      className="h-12 w-12 rounded-[13px] bg-mid text-white"
+    />
+  );
 }
 
 function ContactItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
@@ -114,7 +121,10 @@ export function PatientSummary({
         data-slot="patient-summary"
         variant="link"
         onClick={onOpenClick}
-        className={cn("h-auto w-full justify-start px-0 py-0 whitespace-normal no-underline hover:no-underline", className)}
+        className={cn(
+          "h-auto w-full justify-start px-0 py-0 whitespace-normal no-underline hover:no-underline",
+          className,
+        )}
       >
         <PatientBody
           name={name}

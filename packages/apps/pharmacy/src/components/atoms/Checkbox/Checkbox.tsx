@@ -22,7 +22,11 @@ export type CheckboxProps = Omit<ComponentProps<"input">, "type" | "size"> &
 export function Checkbox({ className, controlSize, children, ...props }: CheckboxProps) {
   return (
     <label data-slot="checkbox" className="inline-flex items-center gap-2 text-[13px] text-ink">
-      <input type="checkbox" className={cn(checkboxVariants({ controlSize }), className)} {...props} />
+      <input
+        type="checkbox"
+        className={cn(checkboxVariants({ controlSize }), className)}
+        {...props}
+      />
       {children}
     </label>
   );

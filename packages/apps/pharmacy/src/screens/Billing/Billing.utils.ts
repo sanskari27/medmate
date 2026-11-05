@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import {
   billUnit,
   earliestBatch,
@@ -55,6 +56,18 @@ export function billingInvoiceTitle(sale: { id: string; payMode: string; paid?: 
   if (sale.paid === false) return `Bill ${sale.id} · sent to reception`;
   return `Invoice ${sale.id} · created`;
 }
+
+function selectChevron(stroke: string) {
+  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='${stroke}' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+}
+
+export const billingSelectClass =
+  "cursor-pointer appearance-none bg-[length:16px_16px] bg-[position:right_11px_center] bg-no-repeat pr-[34px] [background-image:var(--select-chevron)] hover:[background-image:var(--select-chevron-hover)]";
+
+export const billingSelectStyle = {
+  "--select-chevron": selectChevron("%232F7D52"),
+  "--select-chevron-hover": selectChevron("%231B3D29"),
+} as CSSProperties;
 
 export function billingCheckoutGates(input: {
   hasPrescriptionItem: boolean;

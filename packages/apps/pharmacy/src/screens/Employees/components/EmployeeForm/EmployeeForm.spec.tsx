@@ -4,7 +4,14 @@ import { EmployeeForm } from "./EmployeeForm";
 
 describe("EmployeeForm", () => {
   it("opens the add-employee form", () => {
-    render(<EmployeeForm initial={null} now={0} onClose={function close() {}} onSave={function save() {}} />);
+    render(
+      <EmployeeForm
+        initial={null}
+        now={0}
+        onClose={function close() {}}
+        onSave={function save() {}}
+      />,
+    );
     expect(screen.getByText("Add Employee")).toBeTruthy();
   });
 });

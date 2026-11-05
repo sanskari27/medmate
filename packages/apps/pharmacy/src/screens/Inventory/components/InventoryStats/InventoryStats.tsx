@@ -132,7 +132,7 @@ function StatCard({
       <Text variant="label" className="mt-3 text-[11px] tracking-[0.05em] text-muted uppercase">
         {label}
       </Text>
-      <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">
+      <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums max-[767px]:text-[22px]">
         {value}
       </Text>
       <Text className="mt-auto border-t border-line pt-[9px] text-[12px] [line-height:18px] text-muted">

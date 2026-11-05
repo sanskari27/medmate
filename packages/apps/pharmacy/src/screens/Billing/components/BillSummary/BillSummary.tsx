@@ -43,7 +43,7 @@ export function BillSummary({
             Discount
             {discountMode === "percent" && discountAmount > 0 ? ` · −${inr(discountAmount)}` : ""}
           </Text>
-          <Stack direction="row" align="center" gap={1}>
+          <Stack direction="row" align="center" className="gap-1.5">
             <Input
               type="number"
               min={0}

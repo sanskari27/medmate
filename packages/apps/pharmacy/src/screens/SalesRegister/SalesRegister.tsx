@@ -42,11 +42,17 @@ export default function SalesRegisterScreen() {
   function chooseSource(next: SaleSource) {
     setSource(source === next ? "all" : next);
   }
+  function pickSource(next: SaleSource) {
+    setSource(next);
+  }
   function showAllSources() {
     setSource("all");
   }
   function exportCsv() {
-    downloadBlob(new Blob(["\uFEFF" + registerCsv(rows)], { type: "text/csv;charset=utf-8;" }), "hospital-sales-register.csv");
+    downloadBlob(
+      new Blob(["\uFEFF" + registerCsv(rows)], { type: "text/csv;charset=utf-8;" }),
+      "hospital-sales-register.csv",
+    );
   }
   function exportPdf() {
     downloadBlob(
@@ -55,15 +61,22 @@ export default function SalesRegisterScreen() {
     );
   }
   function renderSource(item: (typeof SALE_SOURCES)[number]) {
-    return <SourceChip key={item.key} source={item} selected={source === item.key} onSelect={chooseSource} />;
+    return (
+      <SourceChip
+        key={item.key}
+        source={item}
+        selected={source === item.key}
+        onSelect={pickSource}
+      />
+    );
   }
 
   return (
     <Box className="mx-auto max-w-[1680px]">
       <SourceCards cards={sourceBreakdown(base)} selected={source} onSelect={chooseSource} />
-      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+      <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
         {period.node as ReactNode}
-        <Stack direction="row" wrap gap={1}>
+        <Stack direction="row" align="center" wrap className="gap-1.5">
           <Chip
             selected={source === "all"}
             className={cn(source === "all" && "border-dark bg-dark text-white hover:bg-dark")}
@@ -73,7 +86,7 @@ export default function SalesRegisterScreen() {
           </Chip>
           {SALE_SOURCES.map(renderSource)}
         </Stack>
-        <Box className="min-w-4 flex-1" />
+        <Box className="flex-1" />
         <Button variant="ghost" onClick={exportCsv}>
           <IconReports size={15} /> Excel
         </Button>
@@ -120,7 +133,11 @@ function SourceChip({
     onSelect(source.key);
   }
   return (
-    <Chip selected={selected} className={cn(selected && "border-dark bg-dark text-white hover:bg-dark")} onClick={select}>
+    <Chip
+      selected={selected}
+      className={cn(selected && "border-dark bg-dark text-white hover:bg-dark")}
+      onClick={select}
+    >
       {source.short}
     </Chip>
   );

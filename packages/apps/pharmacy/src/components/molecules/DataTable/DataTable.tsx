@@ -15,7 +15,15 @@ export type DataTableProps = {
   footer?: ReactNode;
 };
 
-export function DataTable({ head, children, emptyTitle, emptyBody, isEmpty = false, className, footer }: DataTableProps) {
+export function DataTable({
+  head,
+  children,
+  emptyTitle,
+  emptyBody,
+  isEmpty = false,
+  className,
+  footer,
+}: DataTableProps) {
   return (
     <Box data-slot="data-table" className={cn("overflow-x-auto", className)}>
       <Table>

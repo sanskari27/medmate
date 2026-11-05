@@ -1,6 +1,5 @@
 import type { ComponentProps } from "react";
 import { Pill } from "@/components/atoms/Pill";
-import type { InvProduct } from "@/utils";
 import { stockPillView } from "./StockPill.utils";
 import type { StockPillProps } from "./StockPill.types";
 

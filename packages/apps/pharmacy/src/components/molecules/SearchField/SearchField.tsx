@@ -8,7 +8,12 @@ export type SearchFieldProps = Omit<ComponentProps<typeof Input>, "type" | "vari
   containerClassName?: string;
 };
 
-export function SearchField({ label = "Search", className, containerClassName, ...props }: SearchFieldProps) {
+export function SearchField({
+  label = "Search",
+  className,
+  containerClassName,
+  ...props
+}: SearchFieldProps) {
   return (
     <Stack
       data-slot="search-field"

@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const selectVariants = cva(
-  "w-full rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] leading-[1.5] text-ink outline-none transition-[border-color,box-shadow] duration-[140ms] max-[767px]:text-[16px] hover:border-[#b9d0c2] focus:border-mid focus:shadow-focus disabled:cursor-not-allowed",
+  "w-full rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] [line-height:normal] text-ink outline-none transition-[border-color,box-shadow] duration-[140ms] max-[767px]:text-[16px] hover:border-[#b9d0c2] focus:border-mid focus:shadow-focus disabled:cursor-not-allowed",
   {
     variants: {
       controlSize: {
@@ -43,7 +43,11 @@ export function DataList({ id, options }: { id: string; options: readonly Select
 
 export function Select({ className, controlSize, options, ...props }: SelectProps) {
   return (
-    <select data-slot="select" className={cn(selectVariants({ controlSize }), className)} {...props}>
+    <select
+      data-slot="select"
+      className={cn(selectVariants({ controlSize }), className)}
+      {...props}
+    >
       {(options ?? []).map(renderOption)}
     </select>
   );

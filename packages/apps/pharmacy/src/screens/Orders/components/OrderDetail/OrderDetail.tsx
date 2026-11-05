@@ -6,7 +6,14 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { MonoText } from "@/components/atoms/MonoText";
 import { Pill } from "@/components/atoms/Pill";
 import { Stack } from "@/components/atoms/Stack";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/atoms";
 import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
 import {
@@ -25,7 +32,15 @@ import { ChannelPill } from "@/components/molecules/ChannelPill";
 import { StatusPill } from "@/components/molecules/StatusPill";
 import { Invoice } from "@/components/organisms";
 import { RxView } from "@/components/organisms";
-import { fmtDateTime, inr, PAY_LABEL, STATUS_LABEL, timeAgo, type PayMode, type SaleItem } from "@/utils";
+import {
+  fmtDateTime,
+  inr,
+  PAY_LABEL,
+  STATUS_LABEL,
+  timeAgo,
+  type PayMode,
+  type SaleItem,
+} from "@/utils";
 import { cn } from "@/utils/className";
 import type { OrderTab } from "../../Orders.types";
 import { orderHistory, rxStatusTone, type HistoryEntry } from "../../Orders.utils";
@@ -35,7 +50,10 @@ import type { OrderDetailProps } from "./OrderDetail.types";
 const PAY_CHOICES: PayMode[] = ["cash", "upi", "card"];
 const headCell =
   "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
-const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const numHead =
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-semibold tracking-[0.07em] whitespace-nowrap text-ink uppercase";
+const bodyCell =
+  "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2 [[data-slot=table-body]_tr:last-child_&]:border-b-0";
 const footCell =
   "border-t-2 border-b-0 border-line-2 bg-wash-2 px-3.5 py-[11px] text-[13px] font-extrabold text-ink-2";
 const modalWrap =
@@ -43,7 +61,8 @@ const modalWrap =
 const modalCard =
   "flex max-h-[90vh] w-full max-w-[720px] animate-[pdPop_.2s_cubic-bezier(.2,.9,.3,1.2)] flex-col overflow-hidden rounded-lg bg-paper shadow-pop max-md:max-h-[92dvh] max-md:max-w-none max-md:rounded-t-lg max-md:rounded-b-none";
 const closeBtn = "h-8 w-8 rounded-sm border-0 bg-wash-2 text-ink-2 hover:bg-wash hover:text-ink-2";
-const segBtn = "h-auto items-baseline gap-0 border-0 px-[13px] py-1.5 text-[12.5px] !leading-[1.5] shadow-none";
+const segBtn =
+  "h-auto items-baseline gap-0 border-0 px-[13px] py-1.5 text-[12.5px] !leading-[1.5] shadow-none";
 const footBtn = "h-auto !leading-[1.5] active:translate-y-px max-md:flex-1";
 const goldBtn = "border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100";
 const roseBtn = "border-[#dc26262e] hover:bg-[#fbdada] hover:brightness-100";
@@ -98,7 +117,12 @@ export function OrderDetail({
   const events = [...view.history, ...view.future];
   function renderEvent(entry: HistoryEntry, index: number) {
     return (
-      <HistoryEvent key={`${entry.status}-${index}`} entry={entry} now={now} last={index === events.length - 1} />
+      <HistoryEvent
+        key={`${entry.status}-${index}`}
+        entry={entry}
+        now={now}
+        last={index === events.length - 1}
+      />
     );
   }
 
@@ -112,7 +136,12 @@ export function OrderDetail({
         className={modalCard}
         onClick={keepOpen}
       >
-        <Stack direction="row" align="center" justify="between" className="border-b border-line px-5 py-4 print:hidden">
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          className="border-b border-line px-5 py-4 print:hidden"
+        >
           <Box>
             <Heading level={3} className="text-[17px]">
               {sale.id}{" "}
@@ -136,7 +165,11 @@ export function OrderDetail({
         </Stack>
         <Box className="px-5 pt-3 print:hidden">
           <Box className="inline-flex max-w-full flex-wrap gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
-            <TabButton label="Details & history" selected={tab === "history"} onClick={showHistory} />
+            <TabButton
+              label="Details & history"
+              selected={tab === "history"}
+              onClick={showHistory}
+            />
             <TabButton label="Invoice" selected={tab === "invoice"} onClick={showInvoice} />
           </Box>
         </Box>
@@ -158,7 +191,11 @@ export function OrderDetail({
                   small
                 />
                 <Fact label="Items" value={`${units} units · ${sale.items.length} lines`} small />
-                <Fact label="GST" value={`${inr(view.totals.totalTax)} (${inr(view.totals.taxable)} taxable)`} small />
+                <Fact
+                  label="GST"
+                  value={`${inr(view.totals.totalTax)} (${inr(view.totals.taxable)} taxable)`}
+                  small
+                />
               </Box>
               {sale.customer.address ? (
                 <Text variant="muted" className="mb-3.5 text-[12.5px]">
@@ -171,7 +208,9 @@ export function OrderDetail({
                     <Text className="text-[14px] font-extrabold text-rose">
                       Payment pending · {inr(view.totals.payable)}
                     </Text>
-                    <Text className="text-[12px] text-muted">Sent to reception from billing. Collect & mark paid.</Text>
+                    <Text className="text-[12px] text-muted">
+                      Sent to reception from billing. Collect & mark paid.
+                    </Text>
                   </Box>
                   <Stack direction="row" wrap className="mb-2.5 gap-1.5">
                     {PAY_CHOICES.map(renderPay)}
@@ -181,21 +220,31 @@ export function OrderDetail({
                   </Button>
                 </Box>
               ) : null}
-              {sale.channel === "online" && sale.status !== "cancelled" ? <OrderTimeline status={sale.status} /> : null}
+              {sale.channel === "online" && sale.status !== "cancelled" ? (
+                <OrderTimeline status={sale.status} />
+              ) : null}
               <SectionLabel>Status history</SectionLabel>
-              <Box className="relative my-1 pl-[22px]">
-                {events.map(renderEvent)}
-              </Box>
+              <Box className="relative my-1 pl-[22px]">{events.map(renderEvent)}</Box>
               {sale.rx ? (
                 <>
-                  <Stack direction="row" align="center" justify="between" className="mt-4 mb-0.5 gap-2.5">
+                  <Stack
+                    direction="row"
+                    align="center"
+                    justify="between"
+                    className="mt-4 mb-0.5 gap-2.5"
+                  >
                     <SectionLabel className="mb-0">Prescription</SectionLabel>
                     {rx ? (
                       <Stack direction="row" align="center" className="gap-1.5">
                         <Pill tone={rxStatusTone(rx.status)} dot className="gap-[5px]">
                           {rx.status}
                         </Pill>
-                        <Button variant="ghost" size="sm" className="h-auto !leading-[1.5]" onClick={onOpenRx}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto !leading-[1.5]"
+                          onClick={onOpenRx}
+                        >
                           Open <IconArrowRight size={13} />
                         </Button>
                       </Stack>
@@ -215,7 +264,8 @@ export function OrderDetail({
                     </>
                   ) : (
                     <Text variant="muted" className="text-[12.5px]">
-                      Prescription-required items — Rx verified at billing (Dr. {sale.customer.doctor ?? "on file"}).
+                      Prescription-required items — Rx verified at billing (Dr.{" "}
+                      {sale.customer.doctor ?? "on file"}).
                     </Text>
                   )}
                 </>
@@ -223,23 +273,23 @@ export function OrderDetail({
               <SectionLabel className="mt-4">Items</SectionLabel>
               <Table className="border-separate border-spacing-0">
                 <TableHead>
-                  <TableRow>
+                  <TableRow className="border-0">
                     <TableHeaderCell className={headCell}>Item</TableHeaderCell>
                     <TableHeaderCell className={headCell}>Batch</TableHeaderCell>
-                    <TableHeaderCell align="right" className={headCell}>
+                    <TableHeaderCell align="right" className={numHead}>
                       Qty
                     </TableHeaderCell>
-                    <TableHeaderCell align="right" className={headCell}>
+                    <TableHeaderCell align="right" className={numHead}>
                       Rate
                     </TableHeaderCell>
-                    <TableHeaderCell align="right" className={headCell}>
+                    <TableHeaderCell align="right" className={numHead}>
                       Amount
                     </TableHeaderCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>{sale.items.map(renderItem)}</TableBody>
                 <tfoot>
-                  <TableRow>
+                  <TableRow className="border-0">
                     <TableCell colSpan={4} className={footCell}>
                       Total payable
                     </TableCell>
@@ -254,7 +304,12 @@ export function OrderDetail({
             <Invoice sale={sale} profile={profile} className="print-area" />
           )}
         </Box>
-        <Stack direction="row" justify="end" wrap className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap">
+        <Stack
+          direction="row"
+          justify="end"
+          wrap
+          className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap"
+        >
           {sale.channel === "online" && sale.status === "new" ? (
             <Button variant="rose" className={cn(footBtn, roseBtn)} onClick={onCancel}>
               Reject order
@@ -271,7 +326,9 @@ export function OrderDetail({
               Accept order
             </Button>
           ) : null}
-          {sale.channel === "online" && (sale.status === "accepted" || sale.status === "packed") && onPack ? (
+          {sale.channel === "online" &&
+          (sale.status === "accepted" || sale.status === "packed") &&
+          onPack ? (
             <Button variant="gold" className={cn(footBtn, goldBtn)} onClick={onPack}>
               {sale.status === "accepted" ? (
                 <>
@@ -316,12 +373,22 @@ function SectionLabel({ children, className }: { children: ReactNode; className?
 function ModalMotion() {
   return (
     <style>
-      {"@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"}
+      {
+        "@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"
+      }
     </style>
   );
 }
 
-function TabButton({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+function TabButton({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
     <Button
       variant="ghost"
@@ -352,19 +419,35 @@ function PayChoice({
     onSelect(mode);
   }
   return (
-    <Chip selected={selected} className="min-h-10" onClick={select}>
+    <Chip selected={selected} onClick={select}>
       {PAY_LABEL[mode]}
     </Chip>
   );
 }
 
-function Fact({ label, value, small, alert }: { label: string; value: string; small?: boolean; alert?: boolean }) {
+function Fact({
+  label,
+  value,
+  small,
+  alert,
+}: {
+  label: string;
+  value: string;
+  small?: boolean;
+  alert?: boolean;
+}) {
   return (
     <Box className="bg-paper px-[13px] py-[11px]">
       <Text variant="caption" className="text-[11px] font-semibold">
         {label}
       </Text>
-      <Text className={cn("mt-0.5 font-extrabold text-dark", small ? "font-sans text-[12.5px] font-bold" : "font-display text-[14px]", alert && "text-rose")}>
+      <Text
+        className={cn(
+          "mt-0.5 font-extrabold text-dark",
+          small ? "font-sans text-[12.5px] font-bold" : "font-display text-[14px]",
+          alert && "text-rose",
+        )}
+      >
         {value}
       </Text>
     </Box>
@@ -385,7 +468,10 @@ function HistoryEvent({ entry, now, last }: { entry: HistoryEntry; now: number; 
         )}
       />
       {last ? null : <Box className="absolute top-3 -bottom-0.5 left-[1.5px] w-0.5 bg-line" />}
-      <Text as="span" className={cn("text-[13px] font-bold text-ink", future && "font-semibold text-muted")}>
+      <Text
+        as="span"
+        className={cn("text-[13px] font-bold text-ink", future && "font-semibold text-muted")}
+      >
         {STATUS_LABEL[entry.status]}
       </Text>
       <Text variant="caption" className="mt-px">
@@ -397,7 +483,7 @@ function HistoryEvent({ entry, now, last }: { entry: HistoryEntry; now: number; 
 
 function ItemRow({ item }: { item: SaleItem }) {
   return (
-    <TableRow>
+    <TableRow className="border-0">
       <TableCell className={`${bodyCell} font-semibold`}>{item.name}</TableCell>
       <TableCell className={`${bodyCell} font-mono`}>{item.batchNo}</TableCell>
       <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>

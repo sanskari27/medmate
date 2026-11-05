@@ -13,16 +13,16 @@ export type MeterProps = Omit<ComponentProps<typeof Stack>, "children"> & {
 
 export function Meter({ className, label, valueLabel, value, tone, ...props }: MeterProps) {
   return (
-    <Stack data-slot="meter" gap={1} className={cn(className)} {...props}>
+    <Stack data-slot="meter" className={cn("gap-[3px]", className)} {...props}>
       <Stack direction="row" justify="between">
-        <Text as="span" className="text-[12.5px] font-semibold">
+        <Text as="span" className="text-xs font-bold text-ink">
           {label}
         </Text>
-        <Text as="span" className="text-[12.5px] text-muted">
+        <Text as="span" className="text-xs text-muted">
           {valueLabel}
         </Text>
       </Stack>
-      <Progress className="h-2 rounded-[6px]" value={value} tone={tone} label={label} />
+      <Progress value={value} tone={tone} label={label} />
     </Stack>
   );
 }

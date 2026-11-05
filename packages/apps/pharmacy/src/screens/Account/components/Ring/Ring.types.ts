@@ -1,3 +1,3 @@
 export type RingProps = {
-    pct: number;
+  pct: number;
 };

@@ -2,18 +2,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
-const avatarVariants = cva("grid place-items-center overflow-hidden rounded-full bg-wash font-bold text-mid", {
-  variants: {
-    size: {
-      sm: "h-7 w-7 text-[11px]",
-      md: "h-9 w-9 text-[13px]",
-      lg: "h-14 w-14 text-[18px]",
+const avatarVariants = cva(
+  "grid place-items-center overflow-hidden rounded-full bg-wash font-bold text-mid",
+  {
+    variants: {
+      size: {
+        sm: "h-7 w-7 text-[11px]",
+        md: "h-9 w-9 text-[13px]",
+        lg: "h-14 w-14 text-[18px]",
+      },
+    },
+    defaultVariants: {
+      size: "md",
     },
   },
-  defaultVariants: {
-    size: "md",
-  },
-});
+);
 
 export type AvatarProps = Omit<ComponentProps<"div">, "children"> &
   VariantProps<typeof avatarVariants> & {
@@ -45,7 +48,12 @@ export function Avatar({ className, name, src, alt, size, initials, ...props }: 
     );
   }
   return (
-    <div data-slot="avatar" aria-hidden className={cn(avatarVariants({ size }), className)} {...props}>
+    <div
+      data-slot="avatar"
+      aria-hidden
+      className={cn(avatarVariants({ size }), className)}
+      {...props}
+    >
       {initials ?? avatarInitials(name)}
     </div>
   );

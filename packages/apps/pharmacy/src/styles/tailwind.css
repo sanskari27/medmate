@@ -63,11 +63,33 @@ body {
 }
 
 #root {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: #16241c;
   -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(145, 182, 136, 0.45);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="nav"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 [data-slot="select"] {
@@ -87,6 +109,11 @@ body {
   cursor: not-allowed;
 }
 
+[data-slot="select"] option {
+  color: var(--color-ink);
+  background: #fff;
+}
+
 [data-slot="app-frame"][data-fault="gstin"] [data-field="gstin"] :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="phone"] [data-field="phone"] :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="ifsc"] [data-field="ifsc"] :is(input, select, textarea),
@@ -97,7 +124,9 @@ body {
 [data-slot="app-frame"][data-fault="qty"] [data-field="qty"] :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="doctor"] [data-field="doctor"] :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="ward"] [data-field="ward"] :is(input, select, textarea),
-[data-slot="app-frame"][data-fault="invoiceNo"] [data-field="invoiceNo"] :is(input, select, textarea),
+[data-slot="app-frame"][data-fault="invoiceNo"]
+  [data-field="invoiceNo"]
+  :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="name"] [data-field="name"] :is(input, select, textarea),
 [data-slot="app-frame"][data-fault="gstin"] [data-field="gstin"]:is(input, select, textarea),
 [data-slot="app-frame"][data-fault="phone"] [data-field="phone"]:is(input, select, textarea),
@@ -109,10 +138,36 @@ body {
 [data-slot="app-frame"][data-fault="qty"] [data-field="qty"]:is(input, select, textarea),
 [data-slot="app-frame"][data-fault="doctor"] [data-field="doctor"]:is(input, select, textarea),
 [data-slot="app-frame"][data-fault="ward"] [data-field="ward"]:is(input, select, textarea),
-[data-slot="app-frame"][data-fault="invoiceNo"] [data-field="invoiceNo"]:is(input, select, textarea),
-[data-slot="app-frame"][data-fault="name"] [data-field="name"]:is(input, select, textarea) {
+[data-slot="app-frame"][data-fault="invoiceNo"]
+  [data-field="invoiceNo"]:is(input, select, textarea),
+[data-slot="app-frame"][data-fault="name"] [data-field="name"]:is(input, select, textarea),
+[data-slot="app-frame"][data-fault="qty"] [data-slot="quantity-stepper"][data-field="qty"] {
   border-color: var(--color-rose);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+@keyframes pd-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pd-pop {
+  from {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pd-ob-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media print {

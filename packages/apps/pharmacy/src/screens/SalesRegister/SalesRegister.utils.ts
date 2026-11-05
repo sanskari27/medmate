@@ -26,11 +26,13 @@ export function registerBase(sales: Sale[], inWindow: (createdAt: number) => boo
 export function registerInsurers(sales: Sale[]) {
   return Array.from(
     new Set(
-      sales.filter(function insured(sale) {
-        return Boolean(sale.insurer);
-      }).map(function name(sale) {
-        return sale.insurer as string;
-      }),
+      sales
+        .filter(function insured(sale) {
+          return Boolean(sale.insurer);
+        })
+        .map(function name(sale) {
+          return sale.insurer as string;
+        }),
     ),
   ).sort();
 }
@@ -38,11 +40,13 @@ export function registerInsurers(sales: Sale[]) {
 export function registerWards(sales: Sale[]) {
   return Array.from(
     new Set(
-      sales.filter(function placed(sale) {
-        return Boolean(sale.ward);
-      }).map(function name(sale) {
-        return sale.ward as string;
-      }),
+      sales
+        .filter(function placed(sale) {
+          return Boolean(sale.ward);
+        })
+        .map(function name(sale) {
+          return sale.ward as string;
+        }),
     ),
   ).sort();
 }
@@ -80,15 +84,21 @@ export function filterRegister(sales: Sale[], query: RegisterQuery) {
 export function registerTotals(rows: Sale[]) {
   return {
     revenue: sumPayable(rows),
-    paid: sumPayable(rows.filter(function settled(sale) {
-      return sale.paid !== false;
-    })),
-    unpaid: sumPayable(rows.filter(function pending(sale) {
-      return sale.paid === false;
-    })),
-    insurance: sumPayable(rows.filter(function insured(sale) {
-      return sale.payMode === "insurance";
-    })),
+    paid: sumPayable(
+      rows.filter(function settled(sale) {
+        return sale.paid !== false;
+      }),
+    ),
+    unpaid: sumPayable(
+      rows.filter(function pending(sale) {
+        return sale.paid === false;
+      }),
+    ),
+    insurance: sumPayable(
+      rows.filter(function insured(sale) {
+        return sale.payMode === "insurance";
+      }),
+    ),
   };
 }
 
@@ -126,7 +136,17 @@ export function doctorLabel(doctor: string) {
 }
 
 export function registerCsv(rows: Sale[]) {
-  const head = ["Invoice", "Date", "Source", "Patient/Customer", "Ward", "Payment", "Insurer", "Paid", "Amount"];
+  const head = [
+    "Invoice",
+    "Date",
+    "Source",
+    "Patient/Customer",
+    "Ward",
+    "Payment",
+    "Insurer",
+    "Paid",
+    "Amount",
+  ];
   const lines = rows.map(function toLine(sale) {
     return [
       sale.id,
@@ -142,9 +162,11 @@ export function registerCsv(rows: Sale[]) {
   });
   return [head, ...lines]
     .map(function joinRow(cells: Array<string | number>) {
-      return cells.map(function quote(cell) {
-        return `"${String(cell).replace(/"/g, '""')}"`;
-      }).join(",");
+      return cells
+        .map(function quote(cell) {
+          return `"${String(cell).replace(/"/g, '""')}"`;
+        })
+        .join(",");
     })
     .join("\n");
 }
@@ -157,7 +179,8 @@ export function registerPdfBlob(
   profile: PharmacyProfile,
   now: number,
 ) {
-  const headerLine = "Invoice    Date              Source     Patient            Payment      Paid    Amount";
+  const headerLine =
+    "Invoice    Date              Source     Patient            Payment      Paid    Amount";
   const rowLines = rows.map(function toPdf(sale) {
     const sourceShort = SALE_SOURCES.find(function named(item) {
       return item.key === saleSourceOf(sale);

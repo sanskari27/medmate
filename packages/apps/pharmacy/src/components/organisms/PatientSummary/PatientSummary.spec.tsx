@@ -5,7 +5,13 @@ import { PatientSummary } from "./PatientSummary";
 describe("PatientSummary", () => {
   it("renders the patient name, tier, and phone", () => {
     render(
-      <PatientSummary name="Asha Rao" tier="Gold" phone="9886012345" lastSeen="seen today" chronic />,
+      <PatientSummary
+        name="Asha Rao"
+        tier="Gold"
+        phone="9886012345"
+        lastSeen="seen today"
+        chronic
+      />,
     );
     expect(screen.getByRole("heading", { name: "Asha Rao" })).toBeTruthy();
     expect(screen.getByText("Gold")).toBeTruthy();

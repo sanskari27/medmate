@@ -25,7 +25,9 @@ describe("CustomerModal", () => {
         onNewSale={function sale() {}}
         sales={[]}
         creditPayments={[]}
-        recordCreditPayment={async function pay() { return null; }}
+        recordCreditPayment={async function pay() {
+          return null;
+        }}
         profile={{ name: "Sri Sai Medicals" } as never}
       />,
     );

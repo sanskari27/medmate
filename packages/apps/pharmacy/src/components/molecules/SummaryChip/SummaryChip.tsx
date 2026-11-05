@@ -13,7 +13,12 @@ export type SummaryChipProps = Omit<ComponentProps<typeof Stack>, "children"> & 
 
 export function SummaryChip({ className, label, value, ...props }: SummaryChipProps) {
   return (
-    <Stack data-slot="summary-chip" gap={0} className={cn(summaryChipVariants(), className)} {...props}>
+    <Stack
+      data-slot="summary-chip"
+      gap={0}
+      className={cn(summaryChipVariants(), className)}
+      {...props}
+    >
       <Text as="span" variant="caption" className="text-[12.5px]">
         {label}
       </Text>

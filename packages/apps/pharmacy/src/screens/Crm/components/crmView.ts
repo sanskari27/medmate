@@ -8,9 +8,15 @@ export const emptyCrmView = {
   sales: [],
   crm: EMPTY_CRM,
   redeemedBy: new Map(),
-  setPatientMeta: async function save() { return null; },
-  addCampaign: async function add() { return null; },
-  addFeedback: async function add() { return null; },
+  setPatientMeta: async function save() {
+    return null;
+  },
+  addCampaign: async function add() {
+    return null;
+  },
+  addFeedback: async function add() {
+    return null;
+  },
   logReminder: function log() {},
   redeemPoints: function redeem() {},
   openPatient: function open() {},

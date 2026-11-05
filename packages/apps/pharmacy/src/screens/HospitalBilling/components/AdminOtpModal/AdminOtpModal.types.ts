@@ -1,3 +1,3 @@
 export type AdminOtpModalProps = {
-    onClose: () => void;
+  onClose: () => void;
 };

@@ -5,9 +5,7 @@ import { useDateRange } from "./DateRangeField";
 describe("useDateRange", () => {
   it("resolves today and opens the preset list", () => {
     const now = new Date(2026, 0, 15, 12).getTime();
-    const { result } = renderHook(function renderRange() {
-      return useDateRange(now, "today");
-    });
+    const { result } = renderHook(() => useDateRange(now, "today"));
     expect(result.current.label).toBe("Today");
     expect(result.current.inWindow(now)).toBe(true);
 

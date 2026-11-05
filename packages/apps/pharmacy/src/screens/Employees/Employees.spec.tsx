@@ -17,6 +17,8 @@ describe("Employees", () => {
   it("renders the team directory", () => {
     render(<EmployeesScreen />);
     expect(screen.getByRole("button", { name: "Add Employee" })).toBeTruthy();
-    expect(screen.getByText("No employees match this filter. Add your first team member.")).toBeTruthy();
+    expect(
+      screen.getByText("No employees match this filter. Add your first team member."),
+    ).toBeTruthy();
   });
 });

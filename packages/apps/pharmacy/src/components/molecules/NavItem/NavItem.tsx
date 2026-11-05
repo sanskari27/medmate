@@ -70,7 +70,12 @@ export function NavItem({
       {...props}
     >
       {icon ? (
-        <Box className={cn("grid h-5 w-5 shrink-0 place-items-center", active ? "opacity-100" : "opacity-80")}>
+        <Box
+          className={cn(
+            "grid h-5 w-5 shrink-0 place-items-center",
+            active ? "opacity-100" : "opacity-80",
+          )}
+        >
           {icon}
         </Box>
       ) : null}

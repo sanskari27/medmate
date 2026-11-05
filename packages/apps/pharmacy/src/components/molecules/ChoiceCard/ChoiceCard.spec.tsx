@@ -4,7 +4,14 @@ import { ChoiceCard } from "./ChoiceCard";
 
 describe("ChoiceCard", () => {
   it("shows the title and selling points", () => {
-    render(<ChoiceCard selected title="Pharmacy" description="Retail counter" points={["GST billing"]} />);
+    render(
+      <ChoiceCard
+        selected
+        title="Pharmacy"
+        description="Retail counter"
+        points={["GST billing"]}
+      />,
+    );
     expect(screen.getByRole("button", { name: /Pharmacy/ })).toBeTruthy();
     expect(screen.getByText("GST billing")).toBeTruthy();
     expect(screen.getByText("Retail counter")).toBeTruthy();

@@ -12,13 +12,17 @@ export function doctorStatusTone(tone: string) {
   return "gray" as const;
 }
 
-export function filterDoctors(doctors: DoctorProfile[], filters: DoctorDirectoryFilters): DoctorProfile[] {
+export function filterDoctors(
+  doctors: DoctorProfile[],
+  filters: DoctorDirectoryFilters,
+): DoctorProfile[] {
   const needle = filters.query.trim().toLowerCase();
   return doctors.filter(function matchDoctor(doctor) {
     if (filters.department !== "all" && doctor.department !== filters.department) return false;
     if (filters.status !== "all" && doctor.status !== filters.status) return false;
     if (!needle) return true;
-    const haystack = `${doctor.name} ${doctor.specialty} ${doctor.department} ${doctor.regNo} ${doctor.qualification}`.toLowerCase();
+    const haystack =
+      `${doctor.name} ${doctor.specialty} ${doctor.department} ${doctor.regNo} ${doctor.qualification}`.toLowerCase();
     return haystack.includes(needle);
   });
 }

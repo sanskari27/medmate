@@ -14,5 +14,7 @@ const tableCellVariants = cva("px-3 py-2 text-ink", {
 export type TableCellProps = ComponentProps<"td"> & VariantProps<typeof tableCellVariants>;
 
 export function TableCell({ className, align, ...props }: TableCellProps) {
-  return <td data-slot="table-cell" className={cn(tableCellVariants({ align }), className)} {...props} />;
+  return (
+    <td data-slot="table-cell" className={cn(tableCellVariants({ align }), className)} {...props} />
+  );
 }

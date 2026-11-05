@@ -12,7 +12,8 @@ describe("PeriodFilter", () => {
   it("renders the month period controls", () => {
     render(<Probe />);
     expect(screen.getByRole("combobox", { name: "Period" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Single" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Range scope" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Single" })).toBeTruthy();
     expect(screen.getByLabelText("Month")).toBeTruthy();
   });
 });

@@ -5,7 +5,15 @@ import { Pill } from "@/components/atoms/Pill";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import { IconCheck, IconStar } from "@/components/atoms/Icon";
-import { annualOff, annualPerMonth, annualSavings, cycleNoun, inr, planPrice, PLANS } from "@/utils";
+import {
+  annualOff,
+  annualPerMonth,
+  annualSavings,
+  cycleNoun,
+  inr,
+  planPrice,
+  PLANS,
+} from "@/utils";
 import { cn } from "@/utils/className";
 import type { PlanCardProps, PlanPickerProps } from "./PlanPicker.types";
 
@@ -86,7 +94,13 @@ export function PlanCard({ plan, cycle, current, onRequest, className }: PlanCar
       <Stack gap={1} className="mb-3 flex-1">
         <PlanFeatures features={plan.features} />
       </Stack>
-      <Button variant="ghost" block disabled={Boolean(current && free)} onClick={onChoose} className="mt-auto">
+      <Button
+        variant="ghost"
+        block
+        disabled={Boolean(current && free)}
+        onClick={onChoose}
+        className="mt-auto"
+      >
         {current && free ? "Current plan" : current ? "Request renewal" : `Request ${plan.name}`}
       </Button>
     </Stack>
@@ -102,13 +116,19 @@ export function PlanPicker({
   className,
 }: PlanPickerProps) {
   function renderPlan(plan: PlanCardProps["plan"]) {
-        const current = plan.key === currentPlan && (plan.key === "Essential" || cycle === currentCycle);
-        return <PlanCard key={plan.key} plan={plan} cycle={cycle} current={current} onRequest={onRequest} />;
-      }
+    const current =
+      plan.key === currentPlan && (plan.key === "Essential" || cycle === currentCycle);
+    return (
+      <PlanCard key={plan.key} plan={plan} cycle={cycle} current={current} onRequest={onRequest} />
+    );
+  }
   return (
     <Box
       data-slot="plan-picker"
-      className={cn("grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5 pt-3", className)}
+      className={cn(
+        "grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5 pt-3",
+        className,
+      )}
     >
       {plans.map(renderPlan)}
     </Box>

@@ -27,6 +27,16 @@ const modalMotion = `
 @keyframes inventoryPop { from { transform: translateY(14px) scale(.98); opacity: .6 } }
 .inventory-fade { animation: inventoryFade .16s ease }
 .inventory-pop { animation: inventoryPop .2s cubic-bezier(.2,.9,.3,1.2) }
+.inventory-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232F7D52' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 34px;
+}
+.inventory-select:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231B3D29' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
 `;
 
 const FORMS: DosageForm[] = [
@@ -138,7 +148,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
 
   return (
     <Box
-      className="inventory-fade fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
+      className="inventory-fade fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px] max-[767px]:items-end max-[767px]:p-0"
       onClick={onClose}
     >
       <style>{modalMotion}</style>
@@ -146,7 +156,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={`Edit ${draft.name}`}
-        className="inventory-pop flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        className="inventory-pop flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop max-[767px]:max-h-[92dvh] max-[767px]:max-w-none max-[767px]:rounded-t-2xl max-[767px]:rounded-b-none"
         onClick={keepOpen}
       >
         <Stack
@@ -167,11 +177,11 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
           </IconButton>
         </Stack>
         <Box className="overflow-y-auto px-5 py-5">
-          <Box className="grid grid-cols-2 gap-3.5">
-            <Field label="Medicine name" className="col-span-2">
+          <Box className="grid grid-cols-2 gap-3.5 max-[767px]:grid-cols-1">
+            <Field label="Medicine name" className="col-span-2 max-[767px]:col-span-1">
               <Input value={draft.name} onChange={changeName} placeholder="e.g. Dolo 650" />
             </Field>
-            <Field label="Composition / salt" className="col-span-2">
+            <Field label="Composition / salt" className="col-span-2 max-[767px]:col-span-1">
               <Input
                 value={draft.composition}
                 onChange={changeComposition}
@@ -186,6 +196,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             </Field>
             <Field label="Category">
               <Select
+                className="inventory-select"
                 value={draft.category}
                 onChange={changeCategory}
                 options={[...CATEGORIES.map(renderCategory)]}
@@ -193,6 +204,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             </Field>
             <Field label="Form">
               <Select
+                className="inventory-select"
                 value={draft.form}
                 onChange={changeForm}
                 options={[...FORMS.map(renderForm)]}
@@ -200,6 +212,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             </Field>
             <Field label="Drug schedule">
               <Select
+                className="inventory-select"
                 value={draft.schedule}
                 onChange={changeSchedule}
                 options={[...SCHEDS.map(renderSchedule)]}
@@ -209,7 +222,12 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
               <Input value={draft.hsn} onChange={changeHsn} />
             </Field>
             <Field label="GST %">
-              <Select value={draft.gst} onChange={changeGst} options={[...GSTS.map(renderGst)]} />
+              <Select
+                className="inventory-select"
+                value={draft.gst}
+                onChange={changeGst}
+                options={[...GSTS.map(renderGst)]}
+              />
             </Field>
             <Field
               label={
@@ -309,7 +327,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
         <Stack
           direction="row"
           justify="end"
-          className="gap-[10px] border-t border-line px-5 py-3.5"
+          className="gap-[10px] border-t border-line px-5 py-3.5 max-[767px]:flex-wrap max-[767px]:[&_button]:flex-1"
         >
           <Button variant="ghost" className="active:translate-y-px" onClick={onClose}>
             Cancel

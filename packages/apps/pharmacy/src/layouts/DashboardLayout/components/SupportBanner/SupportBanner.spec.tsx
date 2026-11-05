@@ -15,6 +15,8 @@ vi.mock("@/hooks", () => ({
 describe("SupportBanner", () => {
   it("shows the support session", () => {
     render(<SupportBanner />);
-    expect(screen.getByRole("status").textContent).toContain("Support · Sri Sai Medicals · ops@medmate");
+    expect(screen.getByRole("status").textContent).toContain(
+      "Support · Sri Sai Medicals · ops@medmate",
+    );
   });
 });

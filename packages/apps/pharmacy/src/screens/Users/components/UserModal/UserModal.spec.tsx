@@ -8,7 +8,9 @@ describe("UserModal", () => {
       <UserModal
         user={null}
         onClose={function close() {}}
-        onSave={async function save() { return null; }}
+        onSave={async function save() {
+          return null;
+        }}
         onShare={function share() {}}
       />,
     );

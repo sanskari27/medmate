@@ -26,7 +26,9 @@ export function FeatureRow({ className, ico, t, s, on, onClick }: FeatureRowProp
       gap={3}
       className={cn(featureRowVariants(), className)}
     >
-      <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">{ico}</Box>
+      <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">
+        {ico}
+      </Box>
       <Stack gap={0} className="min-w-0 flex-1">
         <Text as="span" className="text-[13.5px] font-bold text-ink">
           {t}

@@ -73,8 +73,8 @@ function DonutLegendRow({ arc, fmt }: { arc: DonutArc; fmt: (value: number) => s
 
 function DonutLegend({ arcs, fmt }: { arcs: DonutArc[]; fmt: (value: number) => string }) {
   function renderLegend(arc: DonutArc) {
-        return <DonutLegendRow key={arc.key} arc={arc} fmt={fmt} />;
-      }
+    return <DonutLegendRow key={arc.key} arc={arc} fmt={fmt} />;
+  }
   return (
     <Box className="w-full max-w-[300px] min-w-[210px] flex-1 rounded-md bg-wash-2 px-3.5 py-2.5">
       {arcs.map(renderLegend)}

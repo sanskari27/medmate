@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Patient } from "@/utils/calculations/crm";
-import { availablePoints, campaignMessage, clampNps, filterPatients, patientMetaFromForm } from "./Crm.utils";
+import {
+  availablePoints,
+  campaignMessage,
+  clampNps,
+  filterPatients,
+  patientMetaFromForm,
+} from "./Crm.utils";
 import type { PatientProfileForm } from "./Crm.types";
 
 function patient(patch: Partial<Patient>): Patient {

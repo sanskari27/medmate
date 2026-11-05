@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Button } from "@/components/atoms";
+import { IconLogout } from "@/components/atoms/Icon";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import type { SaveConfirmProps, SignOutDialogProps } from "./SignOutDialog.types";
 
@@ -11,6 +12,7 @@ export function SignOutDialog({ onCancel, onConfirm }: SignOutDialogProps) {
       body="You will leave this session. Sign in again to continue."
       onClose={onCancel}
       size="sm"
+      mark={<IconLogout size={22} />}
     >
       <Button variant="ghost" autoFocus onClick={onCancel}>
         Cancel

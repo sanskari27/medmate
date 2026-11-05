@@ -1,4 +1,4 @@
 export type ReportDetailProps = {
-    id: string;
-    onBack: () => void;
+  id: string;
+  onBack: () => void;
 };

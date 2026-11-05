@@ -22,7 +22,9 @@ const cardVariants = cva("overflow-hidden border border-line bg-paper shadow-car
 export type CardProps = ComponentProps<typeof Box> & VariantProps<typeof cardVariants>;
 
 export function Card({ className, radius, padding, ...props }: CardProps) {
-  return <Box data-slot="card" className={cn(cardVariants({ radius, padding }), className)} {...props} />;
+  return (
+    <Box data-slot="card" className={cn(cardVariants({ radius, padding }), className)} {...props} />
+  );
 }
 
 export { cardVariants };

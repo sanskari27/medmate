@@ -1,6 +1,13 @@
 import { useState, type ChangeEvent, type ReactNode } from "react";
 import { usePharma } from "@/hooks";
-import { ALL_PERM_KEYS, seatCeiling, includedSeats, userPerms, type StaffUser, type UserRole } from "@/utils";
+import {
+  ALL_PERM_KEYS,
+  seatCeiling,
+  includedSeats,
+  userPerms,
+  type StaffUser,
+  type UserRole,
+} from "@/utils";
 import {
   Avatar,
   Box,
@@ -62,7 +69,9 @@ export default function UsersScreen() {
   }
 
   async function handleSave(payload: Partial<StaffUser>, id?: string) {
-    const error = id ? await updateUser(id, payload) : await addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">);
+    const error = id
+      ? await updateUser(id, payload)
+      : await addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">);
     if (!error) setEditing(null);
     return error;
   }
@@ -75,7 +84,13 @@ export default function UsersScreen() {
   return (
     <Box className="mx-auto max-w-[1680px]">
       <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
-        <StatCard tone="green" icon={<IconUsers size={18} />} label="Team members" value={String(users.length)} hint={`${activeCount} active`} />
+        <StatCard
+          tone="green"
+          icon={<IconUsers size={18} />}
+          label="Team members"
+          value={String(users.length)}
+          hint={`${activeCount} active`}
+        />
         <StatCard
           tone="blue"
           icon={<IconKey size={18} />}
@@ -83,8 +98,20 @@ export default function UsersScreen() {
           value={`${activeCount} / ${seatLimit == null ? "∞" : seatLimit}`}
           hint={`${included == null ? "Unlimited" : `${included} included`}${extraSeats ? ` + ${extraSeats} extra` : ""}`}
         />
-        <StatCard tone="gold" icon={<IconLock size={18} />} label="Login enabled" value={String(withLogin)} hint="have ID & password" />
-        <StatCard tone="teal" icon={<IconShield size={18} />} label="Access roles" value={String(USER_ROLES.length)} hint="module-level control" />
+        <StatCard
+          tone="gold"
+          icon={<IconLock size={18} />}
+          label="Login enabled"
+          value={String(withLogin)}
+          hint="have ID & password"
+        />
+        <StatCard
+          tone="teal"
+          icon={<IconShield size={18} />}
+          label="Access roles"
+          value={String(USER_ROLES.length)}
+          hint="module-level control"
+        />
       </Box>
 
       <Stack direction="row" align="center" wrap gap={2} className="mb-4">
@@ -98,13 +125,14 @@ export default function UsersScreen() {
       </Stack>
       {seatsFull ? (
         <Text variant="muted" className="mb-3 flex items-center gap-1.5 text-[12.5px]">
-          <IconAlert size={14} /> Seat limit reached for the {subscription.plan} plan — deactivate a user or ask Namma MedMate for more seats.
+          <IconAlert size={14} /> Seat limit reached for the {subscription.plan} plan — deactivate a
+          user or ask Namma MedMate for more seats.
         </Text>
       ) : null}
 
       <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
         <Box className="overflow-x-auto">
-          <Table className="border-separate border-spacing-0 text-[13px]">
+          <Table className="border-separate border-spacing-0 text-[13px] [&_td]:text-ink-2">
             <TableHead>
               <TableRow className="border-0">
                 <HeaderCell>Member</HeaderCell>
@@ -131,9 +159,16 @@ export default function UsersScreen() {
       </Box>
 
       {editing ? (
-        <UserModal user={editing === "new" ? null : editing} onClose={handleCloseEditor} onSave={handleSave} onShare={handleShareFromModal} />
+        <UserModal
+          user={editing === "new" ? null : editing}
+          onClose={handleCloseEditor}
+          onSave={handleSave}
+          onShare={handleShareFromModal}
+        />
       ) : null}
-      {share ? <ShareCreds user={share} pharmacy={profile.name} onClose={handleCloseShare} /> : null}
+      {share ? (
+        <ShareCreds user={share} pharmacy={profile.name} onClose={handleCloseShare} />
+      ) : null}
     </Box>
   );
 }
@@ -223,10 +258,14 @@ function UserRow({
   }
 
   return (
-    <TableRow>
+    <TableRow className="hover:bg-wash-2">
       <TableCell className="px-3.5 py-[11px]">
         <Stack direction="row" align="center" gap={2}>
-          <Avatar name={user.name} size="md" />
+          <Avatar
+            name={user.name}
+            initials={(user.name.trim()[0] ?? "?").toUpperCase()}
+            className="!h-[34px] !w-[34px] !rounded-[9px] !bg-wash !text-[17px] !font-extrabold !text-mid"
+          />
           <Stack gap={0}>
             <Text as="span" className="font-bold text-ink">
               {user.name}
@@ -236,13 +275,23 @@ function UserRow({
         </Stack>
       </TableCell>
       <TableCell className="px-3.5 py-[11px]">
-        <Select className="w-auto max-w-[130px] py-[5px] pl-2 text-[12.5px]" value={user.role} disabled={user.role === "Owner"} onChange={handleRoleChange} aria-label={`Role for ${user.name}`} options={[...RoleOptions()]} />
+        <Select
+          className="w-auto max-w-[130px] py-[5px] pr-[30px] pl-2 text-[12.5px] ![background-position:right_7px_center]"
+          value={user.role}
+          disabled={user.role === "Owner"}
+          onChange={handleRoleChange}
+          aria-label={`Role for ${user.name}`}
+          options={[...RoleOptions()]}
+        />
       </TableCell>
       <TableCell className="px-3.5 py-[11px]">
         {user.username ? (
           <Stack gap={1}>
             <Stack direction="row" align="center" gap={1}>
-              <Text as="span" className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted">
+              <Text
+                as="span"
+                className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted"
+              >
                 ID
               </Text>
               <Text as="span" className="min-w-24 font-mono text-[12.5px] font-bold text-ink">
@@ -251,20 +300,32 @@ function UserRow({
               <CopyButton text={user.username} label="login ID" />
             </Stack>
             <Stack direction="row" align="center" gap={1}>
-              <Text as="span" className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted">
+              <Text
+                as="span"
+                className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted"
+              >
                 PW
               </Text>
               <Text as="span" className="min-w-24 font-mono text-[12.5px] font-bold text-ink">
                 {revealed ? user.password : "••••••••"}
               </Text>
-              <IconButton label={revealed ? "Hide" : "Reveal"} variant="ghost" className="h-[26px] w-[26px] rounded-[7px] border border-line" onClick={handleReveal}>
+              <IconButton
+                label={revealed ? "Hide" : "Reveal"}
+                variant="ghost"
+                className="h-[26px] w-[26px] rounded-[7px] border border-line bg-paper text-ink-2 hover:border-line-2 hover:bg-wash-2 hover:text-green"
+                onClick={handleReveal}
+              >
                 {revealed ? <IconEyeOff size={13} /> : <IconEye size={13} />}
               </IconButton>
               <CopyButton text={user.password || ""} label="password" />
             </Stack>
           </Stack>
         ) : (
-          <Button variant="link" className="text-[12.5px] text-green" onClick={handleEdit}>
+          <Button
+            variant="link"
+            className="text-[12.5px] font-bold text-green underline"
+            onClick={handleEdit}
+          >
             Set up login
           </Button>
         )}
@@ -275,13 +336,23 @@ function UserRow({
             <IconShield size={11} /> Full access
           </Pill>
         ) : (
-          <Button variant="ghost" size="sm" className="rounded-full border-line-2 bg-wash-2 px-[11px] py-1 text-[12px]" onClick={handleEdit}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full border-line-2 bg-wash-2 px-[11px] py-1 text-[12px] font-bold text-ink-2 hover:border-line-2 hover:bg-wash hover:text-mid"
+            onClick={handleEdit}
+          >
             {permissions.length} / {ALL_PERM_KEYS.length} modules
           </Button>
         )}
       </TableCell>
       <TableCell className="px-3.5 py-[11px]">
-        <Switch checked={user.active} label={`Toggle ${user.name}`} disabled={user.role === "Owner"} onClick={handleToggle} />
+        <Switch
+          checked={user.active}
+          label={`Toggle ${user.name}`}
+          disabled={user.role === "Owner"}
+          onClick={handleToggle}
+        />
       </TableCell>
       <TableCell align="right" className="px-3.5 py-[11px]">
         <Stack direction="row" gap={1}>
@@ -327,10 +398,15 @@ function StatCard({
   return (
     <Stack className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
       <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${toneClass}`}>{icon}</Box>
-      <Text variant="label" className="mt-3 text-[11px] font-bold uppercase tracking-[0.05em] text-muted">
+      <Text
+        variant="label"
+        className="mt-3 text-[11px] font-bold uppercase tracking-[0.05em] text-muted"
+      >
         {label}
       </Text>
-      <Text className="mb-2.5 mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
+      <Text className="mb-2.5 mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">
+        {value}
+      </Text>
       <Text variant="caption" className="mt-auto border-t border-line pt-[9px] text-[12px]">
         {hint}
       </Text>

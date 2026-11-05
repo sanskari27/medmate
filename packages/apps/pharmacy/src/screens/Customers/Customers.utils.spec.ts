@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Sale } from "@/utils";
-import { buildCustomerDirectory, creditOutreach, filterCustomers, loyaltyPoints, sortCustomers, summarizeCustomers } from "./Customers.utils";
+import {
+  buildCustomerDirectory,
+  creditOutreach,
+  filterCustomers,
+  loyaltyPoints,
+  sortCustomers,
+  summarizeCustomers,
+} from "./Customers.utils";
 
 function sale(overrides: Partial<Sale> = {}): Sale {
   return {
@@ -22,12 +29,24 @@ describe("buildCustomerDirectory", () => {
     const rows = buildCustomerDirectory([
       sale(),
       sale({ id: "S-2", createdAt: 1_700_000_100_000, rx: true, channel: "online" }),
-      sale({ id: "S-3", customer: { name: "Walk-in", phone: "" }, items: [{ name: "ORS", qty: 1 } as Sale["items"][number]] }),
+      sale({
+        id: "S-3",
+        customer: { name: "Walk-in", phone: "" },
+        items: [{ name: "ORS", qty: 1 } as Sale["items"][number]],
+      }),
       sale({ id: "S-4", status: "cancelled" }),
       sale({ id: "S-5", customer: { name: "Kiosk (self-order)", phone: "" } }),
     ]);
-    expect(rows.map(function nameOf(row) { return row.name; }).sort()).toEqual(["Anita Rao", "Walk-in customers"]);
-    const anita = rows.find(function isAnita(row) { return row.name === "Anita Rao"; });
+    expect(
+      rows
+        .map(function nameOf(row) {
+          return row.name;
+        })
+        .sort(),
+    ).toEqual(["Anita Rao", "Walk-in customers"]);
+    const anita = rows.find(function isAnita(row) {
+      return row.name === "Anita Rao";
+    });
     expect(anita?.orders).toHaveLength(2);
     expect(anita?.rx).toBe(true);
     expect(anita?.online).toBe(1);
@@ -38,7 +57,11 @@ describe("buildCustomerDirectory", () => {
 describe("customer list helpers", () => {
   const rows = buildCustomerDirectory([
     sale(),
-    sale({ id: "S-2", customer: { name: "Bala", phone: "9000000002" }, createdAt: 1_800_000_000_000 }),
+    sale({
+      id: "S-2",
+      customer: { name: "Bala", phone: "9000000002" },
+      createdAt: 1_800_000_000_000,
+    }),
   ]);
 
   it("filters by name or phone and sorts by the selected column", () => {

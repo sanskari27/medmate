@@ -4,7 +4,14 @@ import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Pill } from "@/components/atoms/Pill";
 import { Stack } from "@/components/atoms/Stack";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/atoms";
 import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
 import {
@@ -27,6 +34,8 @@ import type { OrderTableProps } from "./OrderTable.types";
 
 const headCell =
   "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const numHead =
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-semibold tracking-[0.07em] whitespace-nowrap text-ink uppercase";
 const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
 const smBtn = "h-auto !leading-[1.5] active:translate-y-px";
 const goldBtn = "border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100";
@@ -34,21 +43,23 @@ const roseBtn = "border-[#dc26262e] hover:bg-[#fbdada] hover:brightness-100";
 
 export function OrderTable(props: OrderTableProps) {
   function renderSale(sale: Sale, index: number) {
-    return <OrderRow key={sale.id} sale={sale} last={index === props.sales.length - 1} {...props} />;
+    return (
+      <OrderRow key={sale.id} sale={sale} last={index === props.sales.length - 1} {...props} />
+    );
   }
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
         <Table className="border-separate border-spacing-0">
           <TableHead>
-            <TableRow>
+            <TableRow className="border-0">
               <TableHeaderCell className={headCell}>Invoice</TableHeaderCell>
               <TableHeaderCell className={headCell}>Customer</TableHeaderCell>
               <TableHeaderCell className={headCell}>Items</TableHeaderCell>
               <TableHeaderCell className={headCell}>Channel</TableHeaderCell>
               <TableHeaderCell className={headCell}>Payment</TableHeaderCell>
               <TableHeaderCell className={headCell}>Status</TableHeaderCell>
-              <TableHeaderCell align="right" className={headCell}>
+              <TableHeaderCell align="right" className={numHead}>
                 Amount
               </TableHeaderCell>
               <TableHeaderCell className={headCell}>{""}</TableHeaderCell>
@@ -57,7 +68,7 @@ export function OrderTable(props: OrderTableProps) {
           <TableBody>
             {props.sales.map(renderSale)}
             {props.sales.length === 0 ? (
-              <TableRow>
+              <TableRow className="border-0">
                 <TableCell colSpan={8} className={`${bodyCell} border-b-0`}>
                   <Stack align="center" className="px-5 py-9 text-center">
                     <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-[21px] leading-none text-mid">
@@ -91,9 +102,11 @@ function OrderRow({
   const units = sale.items.reduce(function add(sum, item) {
     return sum + item.qty;
   }, 0);
-  const names = sale.items.map(function name(item) {
-    return item.name;
-  }).join(", ");
+  const names = sale.items
+    .map(function name(item) {
+      return item.name;
+    })
+    .join(", ");
   function open() {
     onOpen(sale, "history");
   }
@@ -123,7 +136,10 @@ function OrderRow({
   }
   const cell = cn(bodyCell, last && "border-b-0");
   return (
-    <TableRow className="cursor-pointer transition-colors duration-100 hover:bg-wash-2" onClick={open}>
+    <TableRow
+      className="cursor-pointer border-0 transition-colors duration-100 hover:bg-wash-2"
+      onClick={open}
+    >
       <TableCell className={cn(cell, "font-mono font-bold")}>
         {sale.id}
         {sale.rx ? (
@@ -233,7 +249,13 @@ function OrderActions({
           Mark delivered
         </Button>
       ) : null}
-      <Button variant="ghost" size="sm" className={smBtn} title="View order history" onClick={onHistory}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={smBtn}
+        title="View order history"
+        onClick={onHistory}
+      >
         <IconClock size={14} /> History
       </Button>
       <IconButton label="Share bill" title="Share bill" onClick={onShare}>

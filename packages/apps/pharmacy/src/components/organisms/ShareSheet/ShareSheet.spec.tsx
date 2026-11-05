@@ -66,6 +66,8 @@ describe("ShareSheet", () => {
     }
     render(<ShareSheet sale={sale} profile={profile} onClose={onClose} />);
     expect(screen.getByRole("heading", { name: "Share bill INV-9" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "WhatsApp Send bill link on WhatsApp" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "WhatsApp Send bill link on WhatsApp" }),
+    ).toBeTruthy();
   });
 });

@@ -15,7 +15,7 @@ export type QuantityStepperProps = {
 };
 
 const stepButtonClass =
-  "h-7 w-[26px] rounded-none border-0 bg-wash-2 p-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:bg-wash-2 disabled:text-mid disabled:opacity-40";
+  "h-7 w-[26px] rounded-none border-0 bg-wash-2 p-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-wash-2 disabled:text-mid disabled:opacity-40 max-[767px]:h-9 max-[767px]:w-9";
 
 export function QuantityStepper({
   qty,
@@ -71,7 +71,13 @@ export function QuantityStepper({
       align="center"
       className="inline-flex overflow-hidden rounded-sm border border-line-2"
     >
-      <Button type="button" variant="ghost" className={stepButtonClass} onClick={onDec} aria-label="decrease">
+      <Button
+        type="button"
+        variant="ghost"
+        className={stepButtonClass}
+        onClick={onDec}
+        aria-label="decrease"
+      >
         −
       </Button>
       <Input
@@ -99,7 +105,10 @@ export function QuantityStepper({
         <Button
           type="button"
           variant="ghost"
-          className={cn(stepButtonClass, "border-l border-line text-[#c0392b] hover:bg-[#fdecec] hover:text-[#b02a2a]")}
+          className={cn(
+            stepButtonClass,
+            "border-l border-line text-[#c0392b] hover:bg-[#fdecec] hover:text-[#b02a2a]",
+          )}
           onClick={onRemove}
           aria-label="remove item"
           title="Remove item"
