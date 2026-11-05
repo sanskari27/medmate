@@ -1,571 +1,430 @@
+import type { Supplier } from "@/utils";
+import { Box, Button, Heading, Image, Input, Label, Select, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Textarea, Stack } from "@/components/atoms";
+import { cn } from "@/utils/className";
+import type { ChangeEvent } from "react";
 import { useState, useRef } from "react";
 import { usePharma } from "@/hooks";
-import {
-  PharmacyProfile,
-  BizDetail,
-  INDIAN_STATES,
-  PHARMACY_BUSINESS_TYPES,
-  REGISTRATION_TYPES,
-  INDUSTRY_TYPES,
-  isValidGstin,
-} from "@/utils";
+import { PharmacyProfile, BizDetail, INDIAN_STATES, PHARMACY_BUSINESS_TYPES, REGISTRATION_TYPES, INDUSTRY_TYPES, isValidGstin, } from "@/utils";
 import { IconCheck, IconPlus, IconUpload, IconDot, IconSettings } from "@/components/Icon";
-
+import { nextBusinessTypes } from "./Settings.utils";
 export default function SettingsScreen() {
-  const {
-    profile,
-    updateProfile,
-    invoiceSettings,
-    updateInvoiceSettings,
-    toggleStoreOpen,
-    startSetup,
-    suppliers,
-    go,
-    toast,
-    showFault,
-  } = usePharma();
-  const [f, setF] = useState<PharmacyProfile>(profile);
-  const [terms, setTerms] = useState(invoiceSettings.terms);
-  const [nd, setNd] = useState<BizDetail>({ label: "", value: "" });
-  const logoRef = useRef<HTMLInputElement>(null);
-  const signRef = useRef<HTMLInputElement>(null);
-  const set = (patch: Partial<PharmacyProfile>) => setF((p) => ({ ...p, ...patch }));
-
-  const dirty = JSON.stringify(f) !== JSON.stringify(profile) || terms !== invoiceSettings.terms;
-  const save = async () => {
-    if (f.gstin.trim() && !isValidGstin(f.gstin)) {
-      showFault("Enter a valid GSTIN");
-      return;
-    }
-    const err = await updateProfile({ ...f, gstRegistered: true, phone: profile.phone });
-    if (err) return;
-    updateInvoiceSettings({ terms });
-    toast("Business settings saved");
-  };
-  const discard = () => {
-    setF(profile);
-    setTerms(invoiceSettings.terms);
-  };
-
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>, key: "logo" | "signature") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = () => set({ [key]: r.result as string } as Partial<PharmacyProfile>);
-    r.readAsDataURL(file);
-  };
-  const toggleType = (t: string) =>
-    set({
-      businessTypes: f.businessTypes.includes(t)
-        ? f.businessTypes.filter((x) => x !== t)
-        : [...f.businessTypes, t],
+    const { profile, updateProfile, invoiceSettings, updateInvoiceSettings, toggleStoreOpen, startSetup, suppliers, go, toast, showFault, } = usePharma();
+    const [f, setF] = useState<PharmacyProfile>(profile);
+    const [terms, setTerms] = useState(invoiceSettings.terms);
+    const [nd, setNd] = useState<BizDetail>({ label: "", value: "" });
+    const logoRef = useRef<HTMLInputElement>(null);
+    const signRef = useRef<HTMLInputElement>(null);
+    const set = (patch: Partial<PharmacyProfile>) => setF((p) => ({ ...p, ...patch }));
+    const dirty = JSON.stringify(f) !== JSON.stringify(profile) || terms !== invoiceSettings.terms;
+    const save = async () => {
+        if (f.gstin.trim() && !isValidGstin(f.gstin)) {
+            showFault("Enter a valid GSTIN");
+            return;
+        }
+        const err = await updateProfile({ ...f, gstRegistered: true, phone: profile.phone });
+        if (err)
+            return;
+        updateInvoiceSettings({ terms });
+        toast("Business settings saved");
+    };
+    const discard = () => {
+        setF(profile);
+        setTerms(invoiceSettings.terms);
+    };
+    const onFile = (e: React.ChangeEvent<HTMLInputElement>, key: "logo" | "signature") => {
+        const file = e.target.files?.[0];
+        if (!file)
+            return;
+        const r = new FileReader();
+        r.onload = () => set({ [key]: r.result as string } as Partial<PharmacyProfile>);
+        r.readAsDataURL(file);
+    };
+    const toggleType = (t: string) => set({
+        businessTypes: nextBusinessTypes(f.businessTypes, t),
     });
-  const addDetail = () => {
-    if (!nd.label.trim() || !nd.value.trim()) return;
-    set({ extraDetails: [...f.extraDetails, nd] });
-    setNd({ label: "", value: "" });
-  };
-
-  return (
-    <div className="pd-canvas-wide">
+    const addDetail = () => {
+        if (!nd.label.trim() || !nd.value.trim())
+            return;
+        set({ extraDetails: [...f.extraDetails, nd] });
+        setNd({ label: "", value: "" });
+    };
+    return (<Box className="!mx-auto !max-w-[1680px]">
       {/* header / save bar */}
-      <div className="pd-toolbar pd-sticky-bar" style={{ position: "sticky", top: -22, zIndex: 5 }}>
-        <div>
-          <h2 style={{ fontSize: 16 }}>Business Settings</h2>
-          <span className="pd-muted" style={{ fontSize: 12.5 }}>
+      <Box className={cn("!mb-4 !flex !flex-wrap !items-center !gap-2.5 !mb-4 !border-b !border-line !bg-paper/95 !py-2.5 !shadow-[0_4px_16px_rgba(27,61,41,0.06)] !backdrop-blur-sm", "!sticky -!top-5.5 !z-[5]")}>
+        <Box>
+          <Heading className={cn("!text-[16px]")} level={2}>Business Settings</Heading>
+          <Text className={cn("!text-muted", "!text-[12.5px]")} as="span">
             Edit your pharmacy details — shown on invoices & reports
-          </span>
-        </div>
-        <div className="pd-spacer" />
-        {dirty && (
-          <span className="pd-muted" style={{ fontSize: 12.5 }}>
+          </Text>
+        </Box>
+        <Box className="!flex-1"/>
+        {dirty && (<Text className={cn("!text-muted", "!text-[12.5px]")} as="span">
             Unsaved changes
-          </span>
-        )}
-        <button className="pd-btn pd-btn-ghost" disabled={!dirty} onClick={discard}>
+          </Text>)}
+        <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" disabled={!dirty} onClick={discard}>
           Discard
-        </button>
-        <button className="pd-btn pd-btn-primary" disabled={!dirty} onClick={save}>
-          <IconCheck size={16} /> Save changes
-        </button>
-      </div>
+        </Button>
+        <Button className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" disabled={!dirty} onClick={save}>
+          <IconCheck size={16}/> Save changes
+        </Button>
+      </Box>
 
       {/* store-open quick toggle */}
-      <div
-        className="pd-card pd-card-pad"
-        style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}
-      >
-        <span style={{ color: profile.storeOpen ? "var(--green)" : "var(--rose)" }}>
-          <IconDot size={8} />
-        </span>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 15 }}>Online store</h3>
-          <p className="pd-muted" style={{ fontSize: 12.5 }}>
+      <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!mb-4 !flex !items-center !gap-3.5")}>
+        <Text className={cn(profile.storeOpen ? "!text-green" : "!text-rose")} as="span">
+          <IconDot size={8}/>
+        </Text>
+        <Box className={cn("!flex-1")}>
+          <Heading className={cn("!text-[15px]")} level={3}>Online store</Heading>
+          <Text className={cn("!text-muted", "!text-[12.5px]")}>
             {profile.storeOpen
-              ? "Accepting online orders."
-              : "Paused — counter billing still works."}
-          </p>
-        </div>
-        <button
-          className={`pd-switch${profile.storeOpen ? " on" : ""}`}
-          style={{ transform: "scale(1.2)" }}
-          onClick={toggleStoreOpen}
-        />
-      </div>
+            ? "Accepting online orders."
+            : "Paused — counter billing still works."}
+          </Text>
+        </Box>
+        <Button onClick={toggleStoreOpen} className={cn(`!relative !h-[22px] !w-[38px] !shrink-0 !rounded-full !border-0 !bg-[#cddcd3] !p-0 !shadow-none after:!absolute after:!top-0.5 after:!left-0.5 after:!h-[18px] after:!w-[18px] after:!rounded-full after:!bg-white after:!shadow after:!transition after:!content-['']${profile.storeOpen ? "!bg-mid after:!translate-x-4" : ""}`, "!scale-[1.2]")}/>
+      </Box>
 
-      <div className="pd-grid-2b" style={{ alignItems: "start" }}>
+      <Box className={cn("!grid !grid-cols-2 !gap-4 max-[767px]:!grid-cols-1", "!items-start")}>
         {/* ───── LEFT column ───── */}
-        <div className="pd-card pd-card-pad">
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]">
           {/* logo + name */}
-          <div className="pd-flex" style={{ gap: 16, marginBottom: 16, alignItems: "flex-start" }}>
-            <div>
-              <input
-                ref={logoRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => onFile(e, "logo")}
-              />
-              <button
-                onClick={() => logoRef.current?.click()}
-                style={{
-                  width: 92,
-                  height: 92,
-                  borderRadius: 14,
-                  border: "1px dashed var(--line-2)",
-                  background: f.logo ? "#000" : "var(--wash2)",
-                  display: "grid",
-                  placeItems: "center",
-                  overflow: "hidden",
-                  padding: 0,
-                }}
-              >
-                {f.logo ? (
-                  <img
-                    src={f.logo}
-                    alt="logo"
-                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                  />
-                ) : (
-                  <span style={{ textAlign: "center", color: "var(--muted)", fontSize: 11 }}>
-                    <IconUpload size={18} />
-                    <br />
-                    Logo
-                  </span>
-                )}
-              </button>
-              {f.logo && (
-                <button
-                  className="pd-btn pd-btn-sm pd-btn-ghost"
-                  style={{ marginTop: 6, width: 92 }}
-                  onClick={() => set({ logo: undefined })}
-                >
+          <Box className={cn("!flex !items-center !gap-2.5", "!gap-4 !mb-4 !items-start")}>
+            <Box>
+              <Input ref={logoRef} type="file" accept="image/*" hidden onChange={onFileOnChange}/>
+              <Button onClick={clickOnClick} className={cn("!w-[92px] !h-[92px] !rounded-[14px] !border !border-line-2 !border-dashed !grid !place-items-center !overflow-hidden !p-0", f.logo ? "!bg-dark" : "!bg-wash-2")}>
+                {f.logo ? (<Image src={f.logo} alt="logo" className={cn("!w-full !h-full !object-contain")}/>) : (<Stack align="center" gap={1} className="text-center text-[11px] text-muted">
+                    <IconUpload size={18}/>
+                    <Text as="span">Logo</Text>
+                  </Stack>)}
+              </Button>
+              {f.logo && (<Button onClick={setOnClick} className={cn("!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2", "!mt-1.5 !w-[92px]")}>
                   Remove
-                </button>
-              )}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="pd-field">
-                <label>Business Name *</label>
-                <input
-                  className="pd-input"
-                  value={f.name}
-                  onChange={(e) => set({ name: e.target.value })}
-                />
-              </div>
-              <div className="pd-field" style={{ marginTop: 10 }}>
-                <label>Tagline</label>
-                <input
-                  className="pd-input"
-                  value={f.tagline}
-                  onChange={(e) => set({ tagline: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
+                </Button>)}
+            </Box>
+            <Box className={cn("!flex-1 !min-w-0")}>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+                <Label>Business Name *</Label>
+                <Input className="" value={f.name} onChange={setOnChange}/>
+              </Box>
+              <Box className={cn("!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2", "!mt-2.5")}>
+                <Label>Tagline</Label>
+                <Input className="" value={f.tagline} onChange={setOnChange2}/>
+              </Box>
+            </Box>
+          </Box>
 
-          <div className="pd-form-grid">
-            <div className="pd-field" data-field="phone">
-              <label>Company Phone Number</label>
-              <input
-                className="pd-input"
-                value={profile.phone}
-                readOnly
-                aria-readonly="true"
-                style={{ background: "var(--wash2)" }}
-              />
-              <span className="pd-muted" style={{ fontSize: 12 }}>
+          <Box className="!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1">
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2" data-field="phone">
+              <Label>Company Phone Number</Label>
+              <Input value={profile.phone} readOnly aria-readonly="true" className={cn("", "!bg-wash-2")}/>
+              <Text className={cn("!text-muted", "!text-[12px]")} as="span">
                 Login uses this number, so it cannot be changed.
-              </span>
-            </div>
-            <div className="pd-field">
-              <label>Company E-Mail</label>
-              <input
-                className="pd-input"
-                value={f.email}
-                onChange={(e) => set({ email: e.target.value })}
-              />
-            </div>
-            <div className="pd-field pd-span2">
-              <label>Billing Address</label>
-              <textarea
-                className="pd-textarea"
-                value={f.address}
-                onChange={(e) => set({ address: e.target.value })}
-              />
-            </div>
-            <div className="pd-field">
-              <label>State</label>
-              <select
-                className="pd-select"
-                value={f.state}
-                onChange={(e) => set({ state: e.target.value })}
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div className="pd-field">
-              <label>Pincode</label>
-              <input
-                className="pd-input"
-                value={f.pincode}
-                onChange={(e) => set({ pincode: e.target.value })}
-              />
-            </div>
-            <div className="pd-field pd-span2">
-              <label>City</label>
-              <input
-                className="pd-input"
-                value={f.city}
-                onChange={(e) => set({ city: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
+              </Text>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Company E-Mail</Label>
+              <Input className="" value={f.email} onChange={setOnChange3}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
+              <Label>Billing Address</Label>
+              <Textarea className="!min-h-16 !resize-y" value={f.address} onChange={setOnChange4}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>State</Label>
+              <Select className="" value={f.state} onChange={setOnChange5} options={[...(INDIAN_STATES.map(renderINDIANSTATES))]} />
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Pincode</Label>
+              <Input className="" value={f.pincode} onChange={setOnChange6}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
+              <Label>City</Label>
+              <Input className="" value={f.city} onChange={setOnChange7}/>
+            </Box>
+          </Box>
+        </Box>
 
         {/* ───── Tax & registration ───── */}
-        <div className="pd-card pd-card-pad">
-          <div className="pd-pl-head">Tax & registration</div>
-          <div className="pd-field" data-field="gstin">
-            <label>GSTIN *</label>
-            <input
-              className="pd-input pd-mono"
-              value={f.gstin}
-              onChange={(e) => set({ gstin: e.target.value.toUpperCase(), gstRegistered: true })}
-            />
-          </div>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]">
+          <Box className="!mt-4 !mb-0.5 !text-[11px] !font-extrabold !tracking-[0.08em] !text-faint !uppercase first:!mt-0">Tax & registration</Box>
+          <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2" data-field="gstin">
+            <Label>GSTIN *</Label>
+            <Input className="!font-mono" value={f.gstin} onChange={setOnChange8}/>
+          </Box>
 
-          <ToggleRow
-            label="Enable e-Invoicing"
-            badge="New"
-            on={f.eInvoicing}
-            onClick={() => set({ eInvoicing: !f.eInvoicing })}
-          />
+          <ToggleRow label="Enable e-Invoicing" badge="New" on={f.eInvoicing} onClick={setOnClick2}/>
 
-          <div className="pd-form-grid" style={{ marginTop: 12 }}>
-            <div className="pd-field">
-              <label>PAN Number</label>
-              <input
-                className="pd-input pd-mono"
-                value={f.pan}
-                onChange={(e) => set({ pan: e.target.value })}
-              />
-            </div>
-            <div className="pd-field">
-              <label>Drug Licence No. (D.L.)</label>
-              <input
-                className="pd-input pd-mono"
-                value={f.dlNo}
-                onChange={(e) => set({ dlNo: e.target.value })}
-              />
-            </div>
-            <div className="pd-field">
-              <label>FSSAI Licence No.</label>
-              <input
-                className="pd-input pd-mono"
-                value={f.fssai}
-                onChange={(e) => set({ fssai: e.target.value })}
-              />
-            </div>
-            <div className="pd-field">
-              <label>Trade Licence No.</label>
-              <input
-                className="pd-input pd-mono"
-                value={f.tradeNo || ""}
-                onChange={(e) => set({ tradeNo: e.target.value.toUpperCase() })}
-              />
-            </div>
-          </div>
+          <Box className={cn("!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1", "!mt-3")}>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>PAN Number</Label>
+              <Input className="!font-mono" value={f.pan} onChange={setOnChange9}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Drug Licence No. (D.L.)</Label>
+              <Input className="!font-mono" value={f.dlNo} onChange={setOnChange10}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>FSSAI Licence No.</Label>
+              <Input className="!font-mono" value={f.fssai} onChange={setOnChange11}/>
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Trade Licence No.</Label>
+              <Input className="!font-mono" value={f.tradeNo || ""} onChange={setOnChange12}/>
+            </Box>
+          </Box>
 
-          <ToggleRow
-            label="Enable TDS"
-            on={f.enableTDS}
-            onClick={() => set({ enableTDS: !f.enableTDS })}
-          />
-          <ToggleRow
-            label="Enable TCS"
-            on={f.enableTCS}
-            onClick={() => set({ enableTCS: !f.enableTCS })}
-          />
+          <ToggleRow label="Enable TDS" on={f.enableTDS} onClick={setOnClick3}/>
+          <ToggleRow label="Enable TCS" on={f.enableTCS} onClick={setOnClick4}/>
 
-          <div className="pd-field" style={{ marginTop: 12 }}>
-            <label>Registered pharmacist (on invoice)</label>
-            <input
-              className="pd-input"
-              value={f.pharmacist}
-              onChange={(e) => set({ pharmacist: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
+          <Box className={cn("!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2", "!mt-3")}>
+            <Label>Registered pharmacist (on invoice)</Label>
+            <Input className="" value={f.pharmacist} onChange={setOnChange13}/>
+          </Box>
+        </Box>
+      </Box>
 
       {/* ───── store categories + invoice terms ───── */}
-      <div className="pd-grid-2b" style={{ alignItems: "stretch", marginTop: 16 }}>
-        <div className="pd-card pd-card-pad">
-          <div className="pd-field">
-            <label>Store categories (select multiple, if applicable)</label>
-            <div className="pd-flex pd-gap6" style={{ marginTop: 6, flexWrap: "wrap" }}>
-              {PHARMACY_BUSINESS_TYPES.map((t) => (
-                <button
-                  key={t}
-                  className={`pd-chip${f.businessTypes.includes(t) ? " on" : ""}`}
-                  onClick={() => toggleType(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="pd-form-grid" style={{ marginTop: 14 }}>
-            <div className="pd-field">
-              <label>Industry Type</label>
-              <select
-                className="pd-select"
-                value={f.industryType}
-                onChange={(e) => set({ industryType: e.target.value })}
-              >
-                {INDUSTRY_TYPES.map((i) => (
-                  <option key={i}>{i}</option>
-                ))}
-              </select>
-            </div>
-            <div className="pd-field">
-              <label>Business Registration Type</label>
-              <select
-                className="pd-select"
-                value={f.registrationType}
-                onChange={(e) => set({ registrationType: e.target.value })}
-              >
-                {REGISTRATION_TYPES.map((r) => (
-                  <option key={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+      <Box className={cn("!grid !grid-cols-2 !gap-4 max-[767px]:!grid-cols-1", "!items-stretch !mt-4")}>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]">
+          <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+            <Label>Store categories (select multiple, if applicable)</Label>
+            <Box className={cn("!flex !items-center !gap-1.5", "!mt-1.5 !flex-wrap")}>
+              {PHARMACY_BUSINESS_TYPES.map(renderPHARMACYBUSINESSTYPES)}
+            </Box>
+          </Box>
+          <Box className={cn("!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1", "!mt-3.5")}>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Industry Type</Label>
+              <Select className="" value={f.industryType} onChange={setOnChange14} options={[...(INDUSTRY_TYPES.map(renderINDUSTRYTYPES))]} />
+            </Box>
+            <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+              <Label>Business Registration Type</Label>
+              <Select className="" value={f.registrationType} onChange={setOnChange15} options={[...(REGISTRATION_TYPES.map(renderREGISTRATIONTYPES))]} />
+            </Box>
+          </Box>
+        </Box>
 
         {/* T&C + signature */}
-        <div className="pd-card pd-card-pad" style={{ marginBottom: 16 }}>
-          <div
-            className="pd-card"
-            style={{
-              background: "var(--wash2)",
-              padding: "10px 12px",
-              marginBottom: 14,
-              border: "1px solid var(--line)",
-            }}
-          >
-            <span style={{ fontSize: 12.5 }}>
-              <b>Note:</b> Terms &amp; Conditions and Signature below are shown on your invoices.
-            </span>
-          </div>
-          <div className="pd-field">
-            <label>Terms &amp; Conditions</label>
-            <textarea
-              className="pd-textarea"
-              value={terms}
-              onChange={(e) => setTerms(e.target.value)}
-            />
-          </div>
+        <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!mb-4")}>
+          <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm", "!bg-wash-2 !py-2.5 !px-3 !mb-3.5 !border !border-line")}>
+            <Text className={cn("!text-[12.5px]")} as="span">
+              <Text as="span" className="font-bold">Note:</Text> Terms &amp; Conditions and Signature below are shown on your invoices.
+            </Text>
+          </Box>
+          <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+            <Label>Terms &amp; Conditions</Label>
+            <Textarea className="!min-h-16 !resize-y" value={terms} onChange={setTermsOnChange}/>
+          </Box>
 
-          <div className="pd-field" style={{ marginTop: 14 }}>
-            <label>Signature</label>
-            <input
-              ref={signRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => onFile(e, "signature")}
-            />
-            {f.signature ? (
-              <div
-                style={{
-                  border: "1px dashed var(--line-2)",
-                  borderRadius: 12,
-                  padding: 12,
-                  display: "inline-block",
-                  marginTop: 4,
-                }}
-              >
-                <img
-                  src={f.signature}
-                  alt="signature"
-                  style={{ maxHeight: 90, maxWidth: 220, objectFit: "contain", display: "block" }}
-                />
-                <button
-                  className="pd-btn pd-btn-sm"
-                  style={{ color: "var(--rose)", background: "none", padding: "4px 0" }}
-                  onClick={() => set({ signature: undefined })}
-                >
+          <Box className={cn("!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2", "!mt-3.5")}>
+            <Label>Signature</Label>
+            <Input ref={signRef} type="file" accept="image/*" hidden onChange={onFileOnChange2}/>
+            {f.signature ? (<Box className={cn("!border !border-line-2 !border-dashed !rounded-md !p-3 !inline-block !mt-1")}>
+                <Image src={f.signature} alt="signature" className={cn("!max-h-[90px] !max-w-[220px] !object-contain !block")}/>
+                <Button onClick={setOnClick5} className={cn("!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs", "!text-rose !bg-transparent !py-1 !px-0")}>
                   Remove
-                </button>
-              </div>
-            ) : (
-              <button
-                className="pd-btn pd-btn-ghost"
-                style={{ marginTop: 4 }}
-                onClick={() => signRef.current?.click()}
-              >
-                <IconUpload size={15} /> Upload signature / stamp
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+                </Button>
+              </Box>) : (<Button onClick={clickOnClick2} className={cn("!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2", "!mt-1")}>
+                <IconUpload size={15}/> Upload signature / stamp
+              </Button>)}
+          </Box>
+        </Box>
+      </Box>
 
       {/* additional business details */}
-      <div className="pd-card pd-card-pad">
-        <h3 style={{ fontSize: 14 }}>Add Business Details</h3>
-        <p className="pd-muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
+      <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]">
+        <Heading className={cn("!text-[14px]")} level={3}>Add Business Details</Heading>
+        <Text className={cn("!text-muted", "!text-[12.5px] !mb-3")}>
           Additional info such as MSME number, Website, etc.
-        </p>
-        <div className="pd-flex pd-gap6" style={{ alignItems: "stretch" }}>
-          <input
-            className="pd-input"
-            placeholder="Label (e.g. MSME)"
-            value={nd.label}
-            onChange={(e) => setNd({ ...nd, label: e.target.value })}
-          />
-          <span className="pd-flex" style={{ color: "var(--muted)" }}>
+        </Text>
+        <Box className={cn("!flex !items-center !gap-1.5", "!items-stretch")}>
+          <Input className="" placeholder="Label (e.g. MSME)" value={nd.label} onChange={setNdOnChange}/>
+          <Text className={cn("!flex !items-center !gap-2.5", "!text-muted")} as="span">
             =
-          </span>
-          <input
-            className="pd-input"
-            placeholder="Value"
-            value={nd.value}
-            onChange={(e) => setNd({ ...nd, value: e.target.value })}
-          />
-          <button className="pd-btn pd-btn-primary" onClick={addDetail}>
-            <IconPlus size={15} /> Add
-          </button>
-        </div>
-        {f.extraDetails.length > 0 && (
-          <div style={{ marginTop: 14 }}>
-            {f.extraDetails.map((d, i) => (
-              <div
-                className="pd-flex"
-                key={i}
-                style={{
-                  justifyContent: "space-between",
-                  padding: "9px 0",
-                  borderTop: "1px solid var(--line)",
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{d.label}</div>
-                  <div className="pd-muted" style={{ fontSize: 12.5 }}>
-                    {d.value}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          </Text>
+          <Input className="" placeholder="Value" value={nd.value} onChange={setNdOnChange2}/>
+          <Button className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={addDetail}>
+            <IconPlus size={15}/> Add
+          </Button>
+        </Box>
+        {f.extraDetails.length > 0 && (<Box className={cn("!mt-3.5")}>
+            {f.extraDetails.map(renderExtraDetail)}
+          </Box>)}
+      </Box>
 
       {/* suppliers */}
-      <div className="pd-card" style={{ marginTop: 16 }}>
-        <div className="pd-card-head">
-          <h3>Distributors</h3>
-          <button className="pd-btn pd-btn-ghost pd-btn-sm" onClick={() => go("distributors")}>
+      <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm", "!mt-4")}>
+        <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+          <Heading level={3}>Distributors</Heading>
+          <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2 !h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs" onClick={goOnClick}>
             Manage distributors →
-          </button>
-        </div>
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Distributor</th>
-                <th>GSTIN</th>
-                <th>Phone</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suppliers.map((s) => (
-                <tr key={s.id}>
-                  <td style={{ fontWeight: 700 }}>{s.name}</td>
-                  <td className="pd-mono">{s.gstin}</td>
-                  <td>{s.phone}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          </Button>
+        </Box>
+        <Box className="!overflow-x-auto">
+          <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Distributor</TableHeaderCell>
+                <TableHeaderCell>GSTIN</TableHeaderCell>
+                <TableHeaderCell>Phone</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {suppliers.map(renderSupplier)}
+            </TableBody>
+          </Table>
+        </Box>
+      </Box>
 
       {/* re-run setup */}
-      <div
-        className="pd-card pd-card-pad"
-        style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14 }}
-      >
-        <span style={{ fontSize: 24 }}>
-          <IconSettings size={24} />
-        </span>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 14 }}>Store setup wizard</h3>
-          <p className="pd-muted" style={{ fontSize: 12.5 }}>
+      <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!mt-4 !flex !items-center !gap-3.5")}>
+        <Text className={cn("!text-[24px]")} as="span">
+          <IconSettings size={24}/>
+        </Text>
+        <Box className={cn("!flex-1")}>
+          <Heading className={cn("!text-[14px]")} level={3}>Store setup wizard</Heading>
+          <Text className={cn("!text-muted", "!text-[12.5px]")}>
             Re-run the guided setup to reconfigure your pharmacy, features and catalogue.
-          </p>
-        </div>
-        <button className="pd-btn pd-btn-ghost" onClick={startSetup}>
+          </Text>
+        </Box>
+        <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={startSetup}>
           Run setup
-        </button>
-      </div>
-    </div>
-  );
+        </Button>
+      </Box>
+    </Box>);
+    function onFileOnChange(e: ChangeEvent<HTMLInputElement>) {
+        return onFile(e, "logo");
+    }
+    function clickOnClick() {
+        return logoRef.current?.click();
+    }
+    function setOnClick() {
+        return set({ logo: undefined });
+    }
+    function setOnChange(e: ChangeEvent<HTMLInputElement>) {
+        return set({ name: e.target.value });
+    }
+    function setOnChange2(e: ChangeEvent<HTMLInputElement>) {
+        return set({ tagline: e.target.value });
+    }
+    function setOnChange3(e: ChangeEvent<HTMLInputElement>) {
+        return set({ email: e.target.value });
+    }
+    function setOnChange4(e: ChangeEvent<HTMLTextAreaElement>) {
+        return set({ address: e.target.value });
+    }
+    function setOnChange5(e: ChangeEvent<HTMLSelectElement>) {
+        return set({ state: e.target.value });
+    }
+    function renderINDIANSTATES(s: string) {
+        return { value: String(s), label: String(s) };
+    }
+    function setOnChange6(e: ChangeEvent<HTMLInputElement>) {
+        return set({ pincode: e.target.value });
+    }
+    function setOnChange7(e: ChangeEvent<HTMLInputElement>) {
+        return set({ city: e.target.value });
+    }
+    function setOnChange8(e: ChangeEvent<HTMLInputElement>) {
+        return set({ gstin: e.target.value.toUpperCase(), gstRegistered: true });
+    }
+    function setOnClick2() {
+        return set({ eInvoicing: !f.eInvoicing });
+    }
+    function setOnChange9(e: ChangeEvent<HTMLInputElement>) {
+        return set({ pan: e.target.value });
+    }
+    function setOnChange10(e: ChangeEvent<HTMLInputElement>) {
+        return set({ dlNo: e.target.value });
+    }
+    function setOnChange11(e: ChangeEvent<HTMLInputElement>) {
+        return set({ fssai: e.target.value });
+    }
+    function setOnChange12(e: ChangeEvent<HTMLInputElement>) {
+        return set({ tradeNo: e.target.value.toUpperCase() });
+    }
+    function setOnClick3() {
+        return set({ enableTDS: !f.enableTDS });
+    }
+    function setOnClick4() {
+        return set({ enableTCS: !f.enableTCS });
+    }
+    function setOnChange13(e: ChangeEvent<HTMLInputElement>) {
+        return set({ pharmacist: e.target.value });
+    }
+    function renderPHARMACYBUSINESSTYPES(t: string) {
+        return (<Button key={t} className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${f.businessTypes.includes(t) ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`} onClick={toggleTypeOnClick}>
+                  {t}
+                </Button>);
+        function toggleTypeOnClick() {
+            return toggleType(t);
+        }
+    }
+    function setOnChange14(e: ChangeEvent<HTMLSelectElement>) {
+        return set({ industryType: e.target.value });
+    }
+    function renderINDUSTRYTYPES(i: string) {
+        return { value: String(i), label: String(i) };
+    }
+    function setOnChange15(e: ChangeEvent<HTMLSelectElement>) {
+        return set({ registrationType: e.target.value });
+    }
+    function renderREGISTRATIONTYPES(r: string) {
+        return { value: String(r), label: String(r) };
+    }
+    function setTermsOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
+        return setTerms(e.target.value);
+    }
+    function onFileOnChange2(e: ChangeEvent<HTMLInputElement>) {
+        return onFile(e, "signature");
+    }
+    function setOnClick5() {
+        return set({ signature: undefined });
+    }
+    function clickOnClick2() {
+        return signRef.current?.click();
+    }
+    function setNdOnChange(e: ChangeEvent<HTMLInputElement>) {
+        return setNd({ ...nd, label: e.target.value });
+    }
+    function setNdOnChange2(e: ChangeEvent<HTMLInputElement>) {
+        return setNd({ ...nd, value: e.target.value });
+    }
+    function renderExtraDetail(d: BizDetail, i: number) {
+        return (<Box key={i} className={cn("!flex !items-center !gap-2.5", "!justify-between !py-[9px] !px-0 !border-t !border-line")}>
+                <Box>
+                  <Box className={cn("!font-bold !text-[13px]")}>{d.label}</Box>
+                  <Box className={cn("!text-muted", "!text-[12.5px]")}>
+                    {d.value}
+                  </Box>
+                </Box>
+              </Box>);
+    }
+    function goOnClick() {
+        return go("distributors");
+    }
+    function renderSupplier(s: Supplier) {
+        return (<TableRow key={s.id}>
+                  <TableCell className={cn("!font-bold")}>{s.name}</TableCell>
+                  <TableCell className="!font-mono">{s.gstin}</TableCell>
+                  <TableCell>{s.phone}</TableCell>
+                </TableRow>);
+    }
 }
-
-function ToggleRow({
-  label,
-  on,
-  onClick,
-  badge,
-}: {
-  label: string;
-  on: boolean;
-  onClick: () => void;
-  badge?: string;
+function ToggleRow({ label, on, onClick, badge, }: {
+    label: string;
+    on: boolean;
+    onClick: () => void;
+    badge?: string;
 }) {
-  return (
-    <div
-      className="pd-flex"
-      style={{
-        justifyContent: "space-between",
-        padding: "11px 0",
-        borderBottom: "1px solid var(--line)",
-      }}
-    >
-      <span className="pd-flex pd-gap6" style={{ fontSize: 13.5, fontWeight: 600 }}>
+    return (<Box className={cn("!flex !items-center !gap-2.5", "!justify-between !py-[11px] !px-0 !border-b !border-line")}>
+      <Text className={cn("!flex !items-center !gap-1.5", "!text-[13.5px] !font-semibold")} as="span">
         {label}
-        {badge && (
-          <span className="pd-pill pill-blue" style={{ fontSize: 9 }}>
+        {badge && (<Text className={cn("!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-blue-bg !text-blue", "!text-[9px]")} as="span">
             {badge}
-          </span>
-        )}
-      </span>
-      <button className={`pd-switch${on ? " on" : ""}`} onClick={onClick} />
-    </div>
-  );
+          </Text>)}
+      </Text>
+      <Button className={`!relative !h-[22px] !w-[38px] !shrink-0 !rounded-full !border-0 !bg-[#cddcd3] !p-0 !shadow-none after:!absolute after:!top-0.5 after:!left-0.5 after:!h-[18px] after:!w-[18px] after:!rounded-full after:!bg-white after:!shadow after:!transition after:!content-['']${on ? "!bg-mid after:!translate-x-4" : ""}`} onClick={onClick}/>
+    </Box>);
 }

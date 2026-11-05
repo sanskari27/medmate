@@ -1,1 +1,1 @@
-export * from "./invoiceSettings";
+export * from "./invoiceSettings.utils";

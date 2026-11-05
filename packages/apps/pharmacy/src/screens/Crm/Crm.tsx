@@ -1,26 +1,27 @@
-import { Overview } from "@/screens/Crm/components/Overview";
-import { Patients } from "@/screens/Crm/components/Patients";
-import { Reminders } from "@/screens/Crm/components/Reminders";
-import { Loyalty } from "@/screens/Crm/components/Loyalty";
-import { Campaigns } from "@/screens/Crm/components/Campaigns";
-import { FeedbackTab } from "@/screens/Crm/components/FeedbackTab";
-import { Analytics } from "@/screens/Crm/components/Analytics";
-import { PatientModal } from "@/screens/Crm/components/PatientModal";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { usePharma } from "@/hooks";
-import { custKeyOf } from "@/utils";
+import { Box, Button } from "@/components/atoms";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { buildPatients } from "@/utils/calculations/crm";
+import { Analytics } from "./components/Analytics";
+import { Campaigns } from "./components/Campaigns";
+import { FeedbackTab } from "./components/FeedbackTab";
+import { Loyalty } from "./components/Loyalty";
+import { Overview } from "./components/Overview";
+import { PatientModal } from "./components/PatientModal";
+import { Patients } from "./components/Patients";
+import { Reminders } from "./components/Reminders";
+import type { CrmTab, CrmViewProps } from "./Crm.types";
+import { creditCustomerKeys, redeemedPointsByCustomer } from "./Crm.utils";
 
-type Tab =
-  "overview" | "patients" | "reminders" | "loyalty" | "campaigns" | "feedback" | "analytics";
-const TABS: { k: Tab; label: string }[] = [
-  { k: "overview", label: "Overview" },
-  { k: "patients", label: "Patients & Segments" },
-  { k: "reminders", label: "Reminders" },
-  { k: "loyalty", label: "Loyalty" },
-  { k: "campaigns", label: "Campaigns" },
-  { k: "feedback", label: "Feedback" },
-  { k: "analytics", label: "Analytics" },
+const TABS: { key: CrmTab; label: string }[] = [
+  { key: "overview", label: "Overview" },
+  { key: "patients", label: "Patients & Segments" },
+  { key: "reminders", label: "Reminders" },
+  { key: "loyalty", label: "Loyalty" },
+  { key: "campaigns", label: "Campaigns" },
+  { key: "feedback", label: "Feedback" },
+  { key: "analytics", label: "Analytics" },
 ];
 
 export default function CrmScreen() {
@@ -38,28 +39,23 @@ export default function CrmScreen() {
     redeemPoints,
     go,
   } = usePharma();
-  const [tab, setTab] = useState<Tab>("overview");
-  const [sel, setSel] = useState<string | null>(null);
+  const [tab, setTab] = useState<CrmTab>("overview");
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const creditKeys = useMemo(() => {
-    const k = new Set<string>();
-    for (const s of sales)
-      if (s.status !== "cancelled" && s.payMode === "credit") k.add(custKeyOf(s.customer));
-    for (const p of creditPayments) k.add(p.custKey);
-    return k;
+  const creditKeys = useMemo(function collectCreditKeys() {
+    return creditCustomerKeys(sales, creditPayments);
   }, [sales, creditPayments]);
-  const patients = useMemo(
-    () => buildPatients(sales, inventory, creditKeys, now, crm.meta),
-    [sales, inventory, creditKeys, now, crm.meta],
-  );
-  const redeemedBy = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of crm.redemptions) m.set(r.custKey, (m.get(r.custKey) ?? 0) + r.points);
-    return m;
+  const patients = useMemo(function collectPatients() {
+    return buildPatients(sales, inventory, creditKeys, now, crm.meta);
+  }, [sales, inventory, creditKeys, now, crm.meta]);
+  const redeemedBy = useMemo(function collectRedemptions() {
+    return redeemedPointsByCustomer(crm.redemptions);
   }, [crm.redemptions]);
-  const current = patients.find((p) => p.key === sel) ?? null;
+  const current = patients.find(function matchPatient(patient) {
+    return patient.key === selectedKey;
+  }) ?? null;
 
-  const shared = {
+  const view: CrmViewProps = {
     patients,
     profile,
     now,
@@ -71,49 +67,54 @@ export default function CrmScreen() {
     addFeedback,
     logReminder,
     redeemPoints,
-    openPatient: setSel,
+    openPatient: setSelectedKey,
     go,
   };
 
+  function handleClosePatient() {
+    setSelectedKey(null);
+  }
+
   return (
-    <div className="pd-canvas-wide">
-      <div className="pd-toolbar">
-        <div className="pd-seg" style={{ flexWrap: "wrap" }}>
-          {TABS.map((t) => (
-            <button key={t.k} className={tab === t.k ? "on" : ""} onClick={() => setTab(t.k)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {tab === "overview" && <Overview {...shared} />}
-      {tab === "patients" && <Patients {...shared} />}
-      {tab === "reminders" && <Reminders {...shared} />}
-      {tab === "loyalty" && <Loyalty {...shared} />}
-      {tab === "campaigns" && <Campaigns {...shared} />}
-      {tab === "feedback" && <FeedbackTab {...shared} />}
-      {tab === "analytics" && <Analytics {...shared} />}
-
-      {current && <PatientModal p={current} onClose={() => setSel(null)} {...shared} />}
-    </div>
+    <Box className="mx-auto max-w-[1680px]">
+      <Box className="mb-4">
+        <SegmentedControl label="CRM sections" className="flex-wrap">
+          <CrmTabs tab={tab} onSelect={setTab} />
+        </SegmentedControl>
+      </Box>
+      {tab === "overview" ? <Overview view={view} /> : null}
+      {tab === "patients" ? <Patients view={view} /> : null}
+      {tab === "reminders" ? <Reminders view={view} /> : null}
+      {tab === "loyalty" ? <Loyalty view={view} /> : null}
+      {tab === "campaigns" ? <Campaigns view={view} /> : null}
+      {tab === "feedback" ? <FeedbackTab view={view} /> : null}
+      {tab === "analytics" ? <Analytics view={view} /> : null}
+      {current ? <PatientModal patient={current} onClose={handleClosePatient} view={view} /> : null}
+    </Box>
   );
 }
 
-// ════════════════════ OVERVIEW ════════════════════
+function CrmTabs({ tab, onSelect }: { tab: CrmTab; onSelect: (tab: CrmTab) => void }) {
+  return TABS.map(function renderTab(item) {
+    return <CrmTabButton key={item.key} item={item} selected={tab === item.key} onSelect={onSelect} />;
+  });
+}
 
-// ════════════════════ PATIENTS & SEGMENTS ════════════════════
-
-// ════════════════════ REMINDERS ════════════════════
-
-// ════════════════════ LOYALTY ════════════════════
-
-// ════════════════════ CAMPAIGNS ════════════════════
-
-// ════════════════════ FEEDBACK ════════════════════
-
-// ════════════════════ ANALYTICS ════════════════════
-
-// small inline spend sparkline for the patient profile
-
-// ════════════════════ PATIENT 360° PROFILE ════════════════════
+function CrmTabButton({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: (typeof TABS)[number];
+  selected: boolean;
+  onSelect: (tab: CrmTab) => void;
+}) {
+  function handleSelect() {
+    onSelect(item.key);
+  }
+  return (
+    <Button size="sm" variant="ghost" className={selected ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={handleSelect}>
+      {item.label}
+    </Button>
+  );
+}

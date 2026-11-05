@@ -1,403 +1,368 @@
+import type { MouseEvent } from "react";
+import { Box } from "@/components/atoms/Box";
+import { Button } from "@/components/atoms/Button";
+import { Heading } from "@/components/atoms/Heading";
+import { IconButton } from "@/components/atoms/IconButton";
+import { MonoText } from "@/components/atoms/MonoText";
+import { Pill } from "@/components/atoms/Pill";
+import { Stack } from "@/components/atoms/Stack";
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
+import { Text } from "@/components/atoms/Text";
 import {
-  catLabel,
-  inr,
-  stockOf,
-  isLowStock,
-  isExpired,
-  monthsToExpiry,
-  sellPrice,
-  stockLabel,
-  InvProduct,
-  stockValue,
-  unitNoun,
-  looseUnitsOf,
-  hasLocation,
-  locationCodes,
-  Sale,
-  fmtDateTime,
-  timeAgo,
-  productBarcode,
-} from "@/utils";
-import { barcodeSvg, saveBarcodeSvg } from "@/utils/barcode";
-import { ScheduleTag } from "@/components/ScheduleTag";
-import { Thumb } from "@/components/Thumb";
-import {
-  IconEdit,
-  IconX,
-  IconTruck,
-  IconUnlock,
-  IconLock,
   IconAlert,
+  IconDownload,
+  IconEdit,
+  IconLock,
   IconPin,
   IconRefresh,
-  IconDownload,
-} from "@/components/Icon";
+  IconTruck,
+  IconUnlock,
+  IconX,
+} from "@/components/atoms/Icon";
+import { ScheduleTag } from "@/components/molecules/ScheduleTag";
+import { Thumb } from "@/components/Thumb";
+import {
+  catLabel,
+  fmtDateTime,
+  hasLocation,
+  inr,
+  isExpired,
+  isLowStock,
+  locationCodes,
+  looseUnitsOf,
+  monthsToExpiry,
+  productBarcode,
+  sellPrice,
+  stockLabel,
+  timeAgo,
+  unitNoun,
+  type Batch,
+} from "@/utils";
+import { barcodeSvg, saveBarcodeSvg } from "@/utils/barcode";
+import { cn } from "@/utils/className";
+import { expiryTone, productInsight, type ProductMovement } from "../../Inventory.utils";
+import type { ProductDetailModalProps } from "./ProductDetailModal.types";
 
-import { mrpValueOf } from "@/screens/Inventory/utils/mrpValueOf";
-import { soldSince } from "@/screens/Inventory/utils/soldSince";
-import { lastSoldAt } from "@/screens/Inventory/utils/lastSoldAt";
-
-const DAY = 86400000;
+const headCell =
+  "sticky top-0 bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
+const bodyCell = "px-3.5 py-[11px] text-[13px] text-ink-2";
 
 export function ProductDetailModal({
-  product: p,
+  product,
   sales,
   now,
   onClose,
   onEdit,
   toggleOnline,
   go,
-}: {
-  product: InvProduct;
-  sales: Sale[];
-  now: number;
-  onClose: () => void;
-  onEdit: () => void;
-  toggleOnline: (id: string) => void;
-  toggleLoose: (id: string) => void;
-  go: (r: any) => void;
-}) {
-  const stock = stockOf(p);
-  const costVal = stockValue(p);
-  const mrpVal = mrpValueOf(p);
-  const margin = mrpVal > 0 ? Math.round(((mrpVal - costVal) / mrpVal) * 100) : 0;
-  const sold30 = soldSince(p, sales, now - 30 * DAY);
-  const sold90 = soldSince(p, sales, now - 90 * DAY);
-  const lastAt = lastSoldAt(p, sales);
-  const velocity = sold30 / 30; // units/day
-  const cover = velocity > 0 ? Math.round(stock / velocity) : null; // days of stock left
-  const movement = sales
-    .filter((s) => s.status !== "cancelled" && s.items.some((i) => i.productId === p.id))
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 12)
-    .map((s) => ({
-      id: s.id,
-      at: s.createdAt,
-      qty: s.items.filter((i) => i.productId === p.id).reduce((x, i) => x + i.qty, 0),
-      channel: s.channel,
-    }));
-  const code = productBarcode(p);
-  const facts: [string, React.ReactNode][] = [
-    ["Manufacturer", p.manufacturer],
-    ["Pack", p.pack],
-    ["HSN / GST", `${p.hsn} · ${p.gst}%`],
-    [
-      "Rack location",
-      hasLocation(p) ? (
-        <span className="pd-mono">
-          <IconPin size={11} /> {locationCodes(p).join(" · ")}
-        </span>
-      ) : (
-        <button
-          className="pd-pill pill-gold"
-          style={{ cursor: "pointer", border: 0 }}
-          onClick={() => {
-            onClose();
-            go("rackmap");
-          }}
-        >
-          <IconAlert size={11} /> Unallocated · assign
-        </button>
-      ),
-    ],
-    ["Reorder level", `${p.reorderLevel} units`],
-    ["Selling price", inr(sellPrice(p))],
-  ];
+}: ProductDetailModalProps) {
+  const insight = productInsight(product, sales, now);
+  const code = productBarcode(product);
+
+  function keepOpen(event: MouseEvent<HTMLDivElement>) {
+    event.stopPropagation();
+  }
+  function receive() {
+    onClose();
+    go("purchases");
+  }
+  function reorder() {
+    onClose();
+    go("reorder");
+  }
+  function assignRack() {
+    onClose();
+    go("rackmap");
+  }
+  function toggleStore() {
+    toggleOnline(product.id);
+  }
+  function saveCode() {
+    saveBarcodeSvg(code);
+  }
+  function renderBatch(batch: Batch) {
+    const expired = isExpired(batch.expiry, now);
+    const months = monthsToExpiry(batch.expiry, now);
+    return (
+      <TableRow key={batch.batchNo}>
+        <TableCell className={`${bodyCell} font-mono font-bold text-ink`}>{batch.batchNo || "—"}</TableCell>
+        <TableCell className={bodyCell}>
+          <Pill tone={expiryTone(expired, months)}>
+            {batch.expiry}
+            {expired ? " · exp" : months <= 4 ? ` · ${months}mo` : ""}
+          </Pill>
+        </TableCell>
+        <TableCell align="right" className={`${bodyCell} font-bold text-ink`}>
+          {batch.qty}
+        </TableCell>
+        <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+          {inr(batch.mrp)}
+        </TableCell>
+        <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
+          {inr(batch.qty * batch.ptr)}
+        </TableCell>
+      </TableRow>
+    );
+  }
+  function renderMove(move: ProductMovement) {
+    return <MovementRow key={move.id} move={move} />;
+  }
+  const low = isLowStock(product) || insight.stock === 0;
 
   return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal lg" onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <div className="pd-flex" style={{ gap: 12, alignItems: "center", minWidth: 0 }}>
-            <span
-              className="em"
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 11,
-                background: "var(--wash)",
-                display: "grid",
-                placeItems: "center",
-                overflow: "hidden",
-                flexShrink: 0,
-              }}
-            >
-              <Thumb p={p} />
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {p.name} <ScheduleTag schedule={p.schedule} />
-              </h3>
-              <div className="pd-muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                {p.composition} · {p.manufacturer} · {catLabel(p.category)}
-              </div>
-            </div>
-          </div>
-          <button className="pd-x" onClick={onClose}>
+    <Box
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
+      onClick={onClose}
+    >
+      <Box
+        role="dialog"
+        aria-modal="true"
+        aria-label={product.name}
+        className="flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        onClick={keepOpen}
+      >
+        <Stack direction="row" align="center" justify="between" gap={3} className="border-b border-line px-5 py-4">
+          <Stack direction="row" align="center" gap={3} className="min-w-0">
+            <Box className="grid h-[42px] w-[42px] shrink-0 place-items-center overflow-hidden rounded-[11px] bg-wash">
+              <Thumb p={product} />
+            </Box>
+            <Box className="min-w-0">
+              <Heading level={3} className="flex items-center gap-2 text-[17px]">
+                {product.name} <ScheduleTag schedule={product.schedule} />
+              </Heading>
+              <Text variant="caption" className="mt-0.5 text-[12.5px]">
+                {product.composition} · {product.manufacturer} · {catLabel(product.category)}
+              </Text>
+            </Box>
+          </Stack>
+          <IconButton label="Close" className="border-0 bg-wash-2" onClick={onClose}>
             <IconX size={18} />
-          </button>
-        </div>
-
-        <div className="pd-modal-body">
-          <div className="pd-flex" style={{ gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-            <button className="pd-btn pd-btn-primary pd-btn-sm" onClick={onEdit}>
+          </IconButton>
+        </Stack>
+        <Box className="overflow-y-auto px-5 py-5">
+          <Stack direction="row" wrap gap={1} className="mb-3.5">
+            <Button variant="primary" size="sm" onClick={onEdit}>
               <IconEdit size={14} /> Edit product
-            </button>
-            <button
-              className="pd-btn pd-btn-ghost pd-btn-sm"
-              onClick={() => {
-                onClose();
-                go("purchases");
-              }}
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={receive}>
               <IconTruck size={14} /> Receive stock
-            </button>
-            {isLowStock(p) && (
-              <button
-                className="pd-btn pd-btn-ghost pd-btn-sm"
-                onClick={() => {
-                  onClose();
-                  go("reorder");
-                }}
-              >
+            </Button>
+            {isLowStock(product) ? (
+              <Button variant="ghost" size="sm" onClick={reorder}>
                 <IconRefresh size={14} /> Reorder
-              </button>
-            )}
-            <button
-              className={`pd-btn pd-btn-sm ${p.online ? "pd-btn-ghost" : "pd-btn-ghost"}`}
-              onClick={() => toggleOnline(p.id)}
-            >
-              {p.online ? "● Online" : "○ Offline"}
-            </button>
-          </div>
-
-          <div
-            className="pd-card"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "200px minmax(0,1fr) auto",
-              gap: 18,
-              alignItems: "center",
-              padding: 14,
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ width: 200 }} dangerouslySetInnerHTML={{ __html: barcodeSvg(code) }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700 }}>{p.name}</div>
-              <div className="pd-mono" style={{ letterSpacing: ".12em", marginTop: 4 }}>
-                {code}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
-                {catLabel(p.category)} · {p.manufacturer} · {p.pack}
-              </div>
-            </div>
-            <button
-              className="pd-btn pd-btn-primary pd-btn-sm"
-              style={{ whiteSpace: "nowrap" }}
-              onClick={() => saveBarcodeSvg(code)}
-            >
+              </Button>
+            ) : null}
+            <Button variant="ghost" size="sm" onClick={toggleStore}>
+              {product.online ? "● Online" : "○ Offline"}
+            </Button>
+          </Stack>
+          <Box className="mb-3.5 grid items-center gap-[18px] rounded-md border border-line bg-paper p-3.5 shadow-sm md:grid-cols-[200px_minmax(0,1fr)_auto]">
+            <Box className="w-[200px]" dangerouslySetInnerHTML={{ __html: barcodeSvg(code) }} />
+            <Box className="min-w-0">
+              <Text as="span" className="font-bold">
+                {product.name}
+              </Text>
+              <MonoText className="mt-1 block tracking-[0.12em]">{code}</MonoText>
+              <Text variant="caption" className="mt-0.5 text-[12px]">
+                {catLabel(product.category)} · {product.manufacturer} · {product.pack}
+              </Text>
+            </Box>
+            <Button variant="primary" size="sm" className="whitespace-nowrap" onClick={saveCode}>
               <IconDownload size={14} /> Save SVG
-            </button>
-          </div>
-
-          {/* KPI tiles */}
-          <div className="pd-pt-kpis">
-            <div className="k">
-              <span className="l">In stock</span>
-              <span className="v sm">{stockLabel(p)}</span>
-            </div>
-            <div className="k">
-              <span className="l">Stock value (cost)</span>
-              <span className="v">{inr(costVal)}</span>
-            </div>
-            <div className="k">
-              <span className="l">Retail value (MRP)</span>
-              <span className="v">{inr(mrpVal)}</span>
-            </div>
-            <div className="k">
-              <span className="l">Margin</span>
-              <span className="v">
-                {margin}
-                <small>%</small>
-              </span>
-            </div>
-            <div className="k">
-              <span className="l">Sold · 30 days</span>
-              <span className="v">
-                {sold30}
-                <small> u</small>
-              </span>
-            </div>
-            <div className="k">
-              <span className="l">Sold · 90 days</span>
-              <span className="v">
-                {sold90}
-                <small> u</small>
-              </span>
-            </div>
-            <div className="k">
-              <span className="l">Days of cover</span>
-              <span
-                className="v"
-                style={cover !== null && cover <= 14 ? { color: "var(--rose)" } : undefined}
-              >
-                {cover === null ? "—" : cover}
-                <small>{cover !== null ? "d" : ""}</small>
-              </span>
-            </div>
-            <div className="k">
-              <span className="l">Last sold</span>
-              <span className="v sm">{lastAt ? timeAgo(lastAt, now) : "never"}</span>
-            </div>
-          </div>
-
-          {(isLowStock(p) || stock === 0) && (
-            <div className="pd-pill pill-rose" style={{ marginBottom: 12 }}>
+            </Button>
+          </Box>
+          <Box className="mb-3.5 grid grid-cols-2 overflow-hidden rounded-md border border-line bg-line sm:grid-cols-4">
+            <Kpi label="In stock" value={stockLabel(product)} small />
+            <Kpi label="Stock value (cost)" value={inr(insight.costValue)} />
+            <Kpi label="Retail value (MRP)" value={inr(insight.retailValue)} />
+            <Kpi label="Margin" value={`${insight.margin}`} suffix="%" />
+            <Kpi label="Sold · 30 days" value={String(insight.sold30)} suffix=" u" />
+            <Kpi label="Sold · 90 days" value={String(insight.sold90)} suffix=" u" />
+            <Kpi
+              label="Days of cover"
+              value={insight.coverDays === null ? "—" : String(insight.coverDays)}
+              suffix={insight.coverDays !== null ? "d" : ""}
+              alert={insight.coverDays !== null && insight.coverDays <= 14}
+            />
+            <Kpi label="Last sold" value={insight.lastSoldAt ? timeAgo(insight.lastSoldAt, now) : "never"} small />
+          </Box>
+          {low ? (
+            <Pill tone="rose" className="mb-3">
               <IconAlert size={13} />{" "}
-              {stock === 0
+              {insight.stock === 0
                 ? "Out of stock — reorder now"
-                : `Low stock — ${stock} left, reorder level ${p.reorderLevel}`}
-            </div>
-          )}
-
-          {/* facts */}
-          <div className="pd-rack-facts" style={{ marginBottom: 14 }}>
-            {facts.map(([k, v]) => (
-              <div className="f" key={k}>
-                <span className="k">{k}</span>
-                <span className="v">{v}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="pd-grid-2">
-            {/* batches */}
-            <div>
-              <div className="pd-pl-head" style={{ marginTop: 0 }}>
-                Batches · stock & expiry
-              </div>
-              <div className="pd-tbl-wrap">
-                <table className="pd-tbl">
-                  <thead>
-                    <tr>
-                      <th>Batch</th>
-                      <th>Expiry</th>
-                      <th className="num">Qty</th>
-                      <th className="num">MRP</th>
-                      <th className="num">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {p.batches.length === 0 && (
-                      <tr>
-                        <td colSpan={5}>
-                          <div className="pd-empty" style={{ padding: 14 }}>
-                            <p>No stock.</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                    {p.batches.map((b) => {
-                      const exp = isExpired(b.expiry, now);
-                      const mo = monthsToExpiry(b.expiry, now);
-                      return (
-                        <tr key={b.batchNo}>
-                          <td className="pd-mono" style={{ fontWeight: 700 }}>
-                            {b.batchNo || "—"}
-                          </td>
-                          <td>
-                            <span
-                              className={`pd-pill ${exp ? "pill-rose" : mo <= 4 ? "pill-gold" : "pill-gray"}`}
-                            >
-                              {b.expiry}
-                              {exp ? " · exp" : mo <= 4 ? ` · ${mo}mo` : ""}
-                            </span>
-                          </td>
-                          <td className="num" style={{ fontWeight: 700 }}>
-                            {b.qty}
-                          </td>
-                          <td className="num">{inr(b.mrp)}</td>
-                          <td className="num">{inr(b.qty * b.ptr)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  {p.batches.length > 0 && (
-                    <tfoot>
-                      <tr style={{ background: "var(--wash2)", fontWeight: 800 }}>
-                        <td colSpan={2}>Total</td>
-                        <td className="num">{stock}</td>
-                        <td className="num"></td>
-                        <td className="num">{inr(costVal)}</td>
-                      </tr>
-                    </tfoot>
-                  )}
-                </table>
-              </div>
-              {looseUnitsOf(p) > 0 && (
-                <div className="pd-muted" style={{ fontSize: 11.5, marginTop: 6 }}>
-                  <IconUnlock size={12} /> {looseUnitsOf(p)} loose {unitNoun(p)}
-                  {looseUnitsOf(p) !== 1 ? "s" : ""} from an opened strip.
-                </div>
+                : `Low stock — ${insight.stock} left, reorder level ${product.reorderLevel}`}
+            </Pill>
+          ) : null}
+          <Box className="mb-3.5 grid grid-cols-1 overflow-hidden rounded-md border border-line bg-line sm:grid-cols-3">
+            <Fact label="Manufacturer" value={product.manufacturer} />
+            <Fact label="Pack" value={product.pack} />
+            <Fact label="HSN / GST" value={`${product.hsn} · ${product.gst}%`} />
+            <Box className="flex flex-col gap-0.5 bg-paper px-3 py-[9px]">
+              <Text variant="label" className="text-[10.5px] tracking-[0.04em] text-faint uppercase">
+                Rack location
+              </Text>
+              {hasLocation(product) ? (
+                <MonoText size="sm">
+                  <IconPin size={11} /> {locationCodes(product).join(" · ")}
+                </MonoText>
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="h-auto w-fit rounded-full border-0 bg-amber-bg px-[9px] py-[3px] text-[11px] font-bold text-gold-d"
+                  onClick={assignRack}
+                >
+                  <IconAlert size={11} /> Unallocated · assign
+                </Button>
               )}
-            </div>
-
-            {/* movement */}
-            <div>
-              <div className="pd-pl-head" style={{ marginTop: 0 }}>
-                Recent sales{" "}
-                <span className="pd-muted" style={{ fontWeight: 500, fontSize: 12 }}>
-                  · movement
-                </span>
-              </div>
-              <div
-                className="pd-card"
-                style={{ overflow: "hidden", maxHeight: 250, overflowY: "auto" }}
-              >
-                {movement.length === 0 ? (
-                  <div className="pd-empty" style={{ padding: 16 }}>
-                    <p>No sales recorded.</p>
-                  </div>
+            </Box>
+            <Fact label="Reorder level" value={`${product.reorderLevel} units`} />
+            <Fact label="Selling price" value={inr(sellPrice(product))} />
+          </Box>
+          <Box className="grid gap-4 md:grid-cols-2">
+            <Box>
+              <Text variant="label" className="mb-0.5 text-[11px] tracking-[0.08em] text-faint uppercase">
+                Batches · stock & expiry
+              </Text>
+              <Box className="overflow-x-auto">
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableHeaderCell className={headCell}>Batch</TableHeaderCell>
+                      <TableHeaderCell className={headCell}>Expiry</TableHeaderCell>
+                      <TableHeaderCell align="right" className={headCell}>
+                        Qty
+                      </TableHeaderCell>
+                      <TableHeaderCell align="right" className={headCell}>
+                        MRP
+                      </TableHeaderCell>
+                      <TableHeaderCell align="right" className={headCell}>
+                        Value
+                      </TableHeaderCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {product.batches.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className={bodyCell}>
+                          <Text variant="muted" className="py-3.5 text-center text-[13px]">
+                            No stock.
+                          </Text>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      product.batches.map(renderBatch)
+                    )}
+                    {product.batches.length > 0 ? (
+                      <TableRow className="bg-wash-2 font-extrabold">
+                        <TableCell colSpan={2} className={`${bodyCell} bg-wash-2 font-extrabold`}>
+                          Total
+                        </TableCell>
+                        <TableCell align="right" className={`${bodyCell} bg-wash-2 font-extrabold text-ink`}>
+                          {insight.stock}
+                        </TableCell>
+                        <TableCell className={`${bodyCell} bg-wash-2`} />
+                        <TableCell align="right" className={`${bodyCell} bg-wash-2 font-extrabold text-ink`}>
+                          {inr(insight.costValue)}
+                        </TableCell>
+                      </TableRow>
+                    ) : null}
+                  </TableBody>
+                </Table>
+              </Box>
+              {looseUnitsOf(product) > 0 ? (
+                <Text variant="caption" className="mt-1.5 text-[11.5px]">
+                  <IconUnlock size={12} /> {looseUnitsOf(product)} loose {unitNoun(product)}
+                  {looseUnitsOf(product) !== 1 ? "s" : ""} from an opened strip.
+                </Text>
+              ) : null}
+            </Box>
+            <Box>
+              <Text variant="label" className="mb-0.5 text-[11px] tracking-[0.08em] text-faint uppercase">
+                Recent sales <Text as="span" className="text-[12px] font-medium tracking-normal text-muted normal-case">· movement</Text>
+              </Text>
+              <Box className="max-h-[250px] overflow-y-auto rounded-md border border-line bg-paper">
+                {insight.movement.length === 0 ? (
+                  <Text variant="muted" className="px-4 py-4 text-center text-[13px]">
+                    No sales recorded.
+                  </Text>
                 ) : (
-                  movement.map((mv) => (
-                    <div className="pd-medrow" key={mv.id}>
-                      <span className="em" style={{ color: "var(--rose)" }}>
-                        −
-                      </span>
-                      <span className="gw">
-                        <div className="t pd-mono">{mv.id}</div>
-                        <div className="s">
-                          {fmtDateTime(mv.at).split(",")[0]} ·{" "}
-                          {mv.channel === "online" ? "Online" : "Counter"}
-                        </div>
-                      </span>
-                      <b style={{ fontSize: 13 }}>{mv.qty} u</b>
-                    </div>
-                  ))
+                  insight.movement.map(renderMove)
                 )}
-              </div>
-              <p className="pd-muted" style={{ fontSize: 11, marginTop: 8 }}>
+              </Box>
+              <Text variant="caption" className="mt-2 text-[11px]">
                 <IconLock size={11} /> Stock updates automatically from purchases & sales.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="pd-modal-foot">
-          <button className="pd-btn pd-btn-ghost" onClick={onClose}>
+              </Text>
+            </Box>
+          </Box>
+        </Box>
+        <Stack direction="row" justify="end" gap={2} className="border-t border-line px-5 py-3.5">
+          <Button variant="ghost" onClick={onClose}>
             Close
-          </button>
-          <button
-            className="pd-btn pd-btn-primary"
-            onClick={() => {
-              onClose();
-              go("purchases");
-            }}
-          >
+          </Button>
+          <Button variant="primary" onClick={receive}>
             <IconTruck size={15} /> Receive stock
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  suffix,
+  small,
+  alert,
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  small?: boolean;
+  alert?: boolean;
+}) {
+  return (
+    <Box className="flex flex-col gap-0.5 bg-paper px-3 py-2.5">
+      <Text variant="label" className="text-[10.5px] tracking-[0.04em] text-faint uppercase">
+        {label}
+      </Text>
+      <Text className={cn("font-display font-extrabold text-dark", small ? "text-[13px]" : "text-[17px]", alert && "text-rose")}>
+        {value}
+        {suffix ? <Text as="span" className="text-[11px] font-semibold text-muted">{suffix}</Text> : null}
+      </Text>
+    </Box>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <Box className="flex flex-col gap-0.5 bg-paper px-3 py-[9px]">
+      <Text variant="label" className="text-[10.5px] tracking-[0.04em] text-faint uppercase">
+        {label}
+      </Text>
+      <Text as="span" className="text-[13px] font-semibold text-ink">
+        {value}
+      </Text>
+    </Box>
+  );
+}
+
+function MovementRow({ move }: { move: ProductMovement }) {
+  return (
+    <Stack direction="row" align="center" gap={2} className="border-b border-line px-[13px] py-2 last:border-0">
+      <Box className="grid h-7 w-7 shrink-0 place-items-center rounded-sm bg-wash text-rose">−</Box>
+      <Box className="min-w-0 flex-1">
+        <MonoText size="sm" className="block truncate font-bold">
+          {move.id}
+        </MonoText>
+        <Text variant="caption" className="text-[11px] whitespace-nowrap">
+          {fmtDateTime(move.at).split(",")[0]} · {move.channel === "online" ? "Online" : "Counter"}
+        </Text>
+      </Box>
+      <Text as="span" className="text-[13px] font-bold">
+        {move.qty} u
+      </Text>
+    </Stack>
   );
 }

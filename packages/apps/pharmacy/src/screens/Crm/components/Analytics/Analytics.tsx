@@ -1,118 +1,87 @@
+import type { ReactNode } from "react";
 import { inr } from "@/utils";
-import { Patient, segLabel, atRisk, attributedSales, Campaign } from "@/utils/calculations/crm";
-import {
-  IconUser,
-  IconRupee,
-  IconStar,
-  IconRefresh,
-  IconTrendDown,
-  IconMega,
-} from "@/components/Icon";
+import { atRisk, segLabel, type Patient } from "@/utils/calculations/crm";
+import { Box, Pill, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { IconMega, IconRefresh, IconRupee, IconStar, IconTrendDown, IconUser } from "@/components/atoms";
+import { Card, CardHeader } from "@/components/molecules/Card";
+import type { CrmViewProps } from "@/screens/Crm/Crm.types";
+import { averageLifetimeValue, campaignRevenue, retentionPercent, topPatientsByRfm } from "@/screens/Crm/Crm.utils";
 
-export function Analytics(s: any) {
-  const { patients, sales } = s;
-  const ltv = patients.length
-    ? patients.reduce((a: number, p: Patient) => a + p.spent, 0) / patients.length
-    : 0;
-  const repeat = patients.filter((p: Patient) => p.orders > 1).length;
-  const retention = patients.length ? Math.round((repeat / patients.length) * 100) : 0;
-  const risk = atRisk(patients);
-  const rfm = [...patients].sort((a, b) => b.rfm.score - a.rfm.score).slice(0, 10);
-  const campRev = s.crm.campaigns.reduce(
-    (a: number, c: Campaign) => a + attributedSales(c, patients, sales),
-    0,
-  );
+import type { AnalyticsProps } from "./Analytics.types";
+export function Analytics({ view }: AnalyticsProps) {
+  const leaders = topPatientsByRfm(view.patients);
+  const risk = atRisk(view.patients);
   return (
-    <>
-      <div className="pd-stats">
-        <div className="pd-stat">
-          <div className="ic ic-green">
-            <IconRupee size={18} />
-          </div>
-          <div className="lbl">Avg lifetime value</div>
-          <div className="val">{inr(ltv)}</div>
-          <div className="split">per patient</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconRefresh size={18} />
-          </div>
-          <div className="lbl">Retention (repeat)</div>
-          <div className="val">{retention}%</div>
-          <div className="split">came back</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-rose">
-            <IconTrendDown size={18} />
-          </div>
-          <div className="lbl">Churn risk</div>
-          <div className="val">{risk.length}</div>
-          <div className="split">at-risk patients</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconMega size={18} />
-          </div>
-          <div className="lbl">Campaign sales</div>
-          <div className="val">{inr(campRev)}</div>
-          <div className="split">attributed revenue</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconStar size={18} />
-          </div>
-          <div className="lbl">RFM leaders</div>
-          <div className="val">{rfm.length}</div>
-          <div className="split">best customers</div>
-        </div>
-      </div>
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>Top patients by RFM</h3>
-          <span className="sub">recency · frequency · monetary</span>
-        </div>
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th className="num">R</th>
-                <th className="num">F</th>
-                <th className="num">M</th>
-                <th className="num">RFM</th>
-                <th className="num">Orders</th>
-                <th className="num">Lifetime</th>
-                <th>Segments</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rfm.map((p: Patient) => (
-                <tr key={p.key} style={{ cursor: "pointer" }} onClick={() => s.openPatient(p.key)}>
-                  <td>
-                    <div className="prod">
-                      <span className="em">
-                        <IconUser size={15} />
-                      </span>
-                      <span className="nm">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="num">{p.rfm.r}</td>
-                  <td className="num">{p.rfm.f}</td>
-                  <td className="num">{p.rfm.m}</td>
-                  <td className="num">
-                    <span className="pd-pill pill-green">{p.rfm.score}</span>
-                  </td>
-                  <td className="num">{p.orders}</td>
-                  <td className="num" style={{ fontWeight: 800 }}>
-                    {inr(p.spent)}
-                  </td>
-                  <td>{p.segments.map((g) => segLabel(g)).join(", ")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+    <Stack gap={4}>
+      <Box className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+        <Stat tone="bg-wash text-mid" icon={<IconRupee size={18} />} label="Avg lifetime value" value={inr(averageLifetimeValue(view.patients))} detail="per patient" />
+        <Stat tone="bg-blue-bg text-blue" icon={<IconRefresh size={18} />} label="Retention (repeat)" value={`${retentionPercent(view.patients)}%`} detail="came back" />
+        <Stat tone="bg-rose-bg text-rose" icon={<IconTrendDown size={18} />} label="Churn risk" value={String(risk.length)} detail="at-risk patients" />
+        <Stat tone="bg-amber-bg text-gold-d" icon={<IconMega size={18} />} label="Campaign sales" value={inr(campaignRevenue(view.crm.campaigns, view.patients, view.sales))} detail="attributed revenue" />
+        <Stat tone="bg-blue-bg text-blue" icon={<IconStar size={18} />} label="RFM leaders" value={String(leaders.length)} detail="best customers" />
+      </Box>
+      <Card>
+        <CardHeader title="Top patients by RFM" subtitle="recency · frequency · monetary" />
+        <Box className="overflow-x-auto">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Patient</TableHeaderCell>
+                <TableHeaderCell align="right">R</TableHeaderCell>
+                <TableHeaderCell align="right">F</TableHeaderCell>
+                <TableHeaderCell align="right">M</TableHeaderCell>
+                <TableHeaderCell align="right">RFM</TableHeaderCell>
+                <TableHeaderCell align="right">Orders</TableHeaderCell>
+                <TableHeaderCell align="right">Lifetime</TableHeaderCell>
+                <TableHeaderCell>Segments</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <LeaderRows patients={leaders} onOpen={view.openPatient} />
+            </TableBody>
+          </Table>
+        </Box>
+      </Card>
+    </Stack>
+  );
+}
+
+function Stat({ tone, icon, label, value, detail }: { tone: string; icon: ReactNode; label: string; value: string; detail: string }) {
+  return (
+    <Box className="flex flex-col rounded-lg border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${tone}`}>{icon}</Box>
+      <Text variant="label" className="mt-3 text-[11px] uppercase tracking-[0.05em]">{label}</Text>
+      <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
+      <Text variant="caption" className="border-t border-line pt-[9px] text-[12px]">{detail}</Text>
+    </Box>
+  );
+}
+
+function LeaderRows({ patients, onOpen }: { patients: Patient[]; onOpen: (key: string) => void }) {
+  return patients.map(function renderLeader(patient) {
+    return <LeaderRow key={patient.key} patient={patient} onOpen={onOpen} />;
+  });
+}
+
+function LeaderRow({ patient, onOpen }: { patient: Patient; onOpen: (key: string) => void }) {
+  function handleOpen() {
+    onOpen(patient.key);
+  }
+  return (
+    <TableRow className="cursor-pointer" onClick={handleOpen}>
+      <TableCell>
+        <Stack direction="row" align="center" gap={2}>
+          <Box className="grid h-8 w-8 place-items-center rounded-md bg-wash text-mid"><IconUser size={15} /></Box>
+          <Text className="font-bold">{patient.name}</Text>
+        </Stack>
+      </TableCell>
+      <TableCell align="right">{patient.rfm.r}</TableCell>
+      <TableCell align="right">{patient.rfm.f}</TableCell>
+      <TableCell align="right">{patient.rfm.m}</TableCell>
+      <TableCell align="right"><Pill tone="green">{patient.rfm.score}</Pill></TableCell>
+      <TableCell align="right">{patient.orders}</TableCell>
+      <TableCell align="right" className="font-extrabold">{inr(patient.spent)}</TableCell>
+      <TableCell>{patient.segments.map(segLabel).join(", ")}</TableCell>
+    </TableRow>
   );
 }

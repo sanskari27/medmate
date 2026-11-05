@@ -1,6 +1,6 @@
 import { isFreePlan, subscriptionLapsed } from "@/utils";
 
-import { plusDays } from "@/screens/Master/utils/plusDays";
+import { plusDays } from "@/utils/date";
 import { subOf } from "@/screens/Master/utils/subOf";
 
 type Seats = { included: number | null; extra: number; inUse: number; limit: number | null };

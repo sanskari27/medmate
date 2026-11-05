@@ -1,1 +1,1 @@
-export * from "./reportCatalog";
+export * from "./reportCatalog.utils";

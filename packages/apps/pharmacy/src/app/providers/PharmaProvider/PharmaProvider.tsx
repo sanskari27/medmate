@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Box } from "@/components/atoms/Box";
 import { useLocation, useNavigate } from "react-router-dom";
 import { pathForRoute, routeFromPath } from "@/app/routes";
 import {
@@ -288,298 +289,286 @@ type Ctx = {
   posSetQty: (id: string, qty: number, loose?: boolean, batchNo?: string) => void;
   posRemove: (id: string, loose?: boolean, batchNo?: string) => void;
   posSetBatch: (id: string, batchNo: string | undefined, loose?: boolean) => void; // pin/override a line's batch
-  scanToPos: (code: string) => { name: string; batchNo?: string } | null; // barcode/batch scan → add to bill
-  posClear: () => void;
-  posTotals: InvoiceTotals;
-  posCount: number;
-  checkoutPos: (opts?: { paid?: boolean; ward?: string }) => Promise<SaveFault | null>;
-  lastInvoice: Sale | null;
-  setLastInvoice: (s: Sale | null) => void;
-  // orders (online lifecycle)
-  advanceOrder: (id: string) => void;
-  cancelOrder: (id: string) => void;
-  markPaid: (id: string, payMode: PayMode) => void;
-  // online-order fulfilment (pick → scan-pack → seal → handover)
-  startPacking: (id: string) => void;
-  scanPackLine: (
-    id: string,
-    code: string,
-  ) => Promise<{ name: string; batchNo: string; scanned: number; qty: number } | null>;
-  pickPackLine: (id: string, productId: string, delta: number) => void;
-  sealPacket: (id: string) => void;
-  handToRider: (id: string, rider?: Rider) => void;
-  // prescriptions
-  approveRx: (id: string) => void;
-  rejectRx: (id: string, reason?: string) => void;
-  dispenseRx: (id: string) => void;
-  // offers
-  addOffer: (o: Offer) => Promise<SaveFault | null>;
-  toggleOffer: (id: string) => void;
-  removeOffer: (id: string) => void;
-  setDirectOffer: (productId: string, type: OfferType, value: number) => void;
-  // staff / users
-  users: StaffUser[];
-  addUser: (u: Omit<StaffUser, "id" | "lastActiveMins">) => Promise<SaveFault | null>;
-  updateUser: (id: string, patch: Partial<StaffUser>) => Promise<SaveFault | null>;
-  toggleUser: (id: string) => void;
-  removeUser: (id: string) => void;
-  // subscription
-  subscription: Subscription;
-  grants: ScreenGrant[];
-  extraSeats: number;
-  subscriptionRequests: SubRequest[];
-  couponRedeemed: boolean;
-  requestPlan: (
-    plan: Plan,
-    cycle: BillingCycle,
-    kind?: "plan" | "renewal",
-  ) => Promise<SaveFault | null>;
-  redeemCoupon: (code: string) => Promise<SaveFault | null>;
-  toggleAutoRenew: () => void;
-  featureLocked: (r: Route) => boolean; // freemium paywall for premium routes
-  // invoice settings
-  invoiceSettings: InvoiceSettings;
-  updateInvoiceSettings: (patch: Partial<InvoiceSettings>) => void;
-  // kiosk
-  kiosk: KioskConfig;
-  updateKiosk: (patch: Partial<KioskConfig>) => void;
-  placeKioskOrder: (
-    lines: { productId: string; qty: number; loose?: boolean }[],
-    pay: PayMode,
-  ) => Promise<Sale | null>;
-  // CA / accountant report sharing
-  advisors: Advisor[];
-  addAdvisor: (a: Omit<Advisor, "id">) => Promise<SaveFault | null>;
-  updateAdvisor: (id: string, patch: Partial<Advisor>) => Promise<SaveFault | null>;
-  removeAdvisor: (id: string) => void;
-  caShares: CAShare[];
-  shareWithCA: (period: string, reports: string[], advisorId: string) => void;
-  // purchase orders (reorder → distributor)
-  purchaseOrders: PurchaseOrder[];
-  sendPurchaseOrder: (
-    supplierId: string,
-    supplierName: string,
-    items: POItem[],
-    note?: string,
-  ) => void;
-  importPurchaseOrders: (
-    rows: { supplierName: string; productName: string; qty: number; note?: string }[],
-  ) => Promise<{ created: number; skipped: string[] } | null>;
-  markPOReceived: (id: string) => void;
-  setProductSupplier: (id: string, supplierId: string) => void;
-  // distributors / suppliers
-  // customer credit (khata)
-  creditPayments: CreditPayment[];
-  recordCreditPayment: (p: {
-    custKey: string;
-    custName: string;
-    custPhone: string;
-    amount: number;
-    mode: PayMode;
-    note?: string;
-  }) => Promise<SaveFault | null>;
-  // CRM
-  crm: CrmData;
-  setPatientMeta: (key: string, patch: PatientMeta) => Promise<SaveFault | null>;
-  addCampaign: (c: Omit<Campaign, "id" | "sentAt">) => Promise<SaveFault | null>;
-  addFeedback: (f: Omit<Feedback, "id" | "at">) => Promise<SaveFault | null>;
-  logReminder: (r: Omit<ReminderLog, "id" | "at">) => void;
-  redeemPoints: (custKey: string, custName: string, points: number) => void;
-  // employees (HR records)
-  employees: Employee[];
-  addEmployee: (e: Omit<Employee, "id">) => Promise<SaveFault | null>;
-  updateEmployee: (id: string, patch: Partial<Employee>) => Promise<SaveFault | null>;
-  removeEmployee: (id: string) => void;
-  // expenses
-  expenses: Expense[];
-  expenseCategories: string[];
-  addExpense: (e: Omit<Expense, "id" | "number">) => Promise<SaveFault | null>;
-  updateExpense: (id: string, patch: Partial<Expense>) => void;
-  removeExpense: (id: string) => void;
-  addExpenseCategory: (name: string) => void;
-  suppliers: Supplier[];
-  addSupplier: (s: Omit<Supplier, "id">) => Promise<SaveFault | null>;
-  updateSupplier: (id: string, patch: Partial<Supplier>) => Promise<SaveFault | null>;
-  removeSupplier: (id: string) => void;
-  // distributor supply list (product ↔ distributor with purchase price)
-  supplyList: SupplyEntry[];
-  addSupply: (s: Omit<SupplyEntry, "id">) => Promise<SaveFault | null>;
-  updateSupply: (id: string, patch: Partial<SupplyEntry>) => Promise<SaveFault | null>;
-  removeSupply: (id: string) => void;
-  setPreferredSupply: (id: string) => void;
-  // settings
-  updateProfile: (patch: Partial<PharmacyProfile>) => Promise<SaveFault | null>;
-  toggleStoreOpen: () => void;
-  // payout bank account
-  bankAccount: BankAccount | null;
-  saveBankAccount: (b: Omit<BankAccount, "verified" | "addedOn">) => Promise<SaveFault | null>;
-  verifyBankAccount: () => void;
-  removeBankAccount: () => void;
-  // initial store setup wizard
-  setupComplete: boolean;
-  startSetup: () => void;
-  completeSetup: () => void;
-  commitSetup: (input: {
-    profile: Partial<PharmacyProfile>;
-    invoice: Partial<InvoiceSettings>;
-    kioskEnabled: boolean;
-    loose: boolean;
-  }) => Promise<SaveFault | null>;
-  wipeData: () => void;
-  setLooseDefault: (allowed: boolean) => void;
-  // ui
-  toast: (m: string) => void;
-  toastMsg: string | null;
-  formFault: SaveFault | null;
-  showFault: (err: unknown, fallback?: string) => void;
-  clearFault: () => void;
-  tickets: {
-    id: string;
-    subject: string;
-    category: string;
-    status: "Open" | "Resolved";
-    createdAt: number;
-  }[];
-  raiseTicket: (subject: string, category: string) => Promise<SaveFault | null>;
-};
+ scanToPos: (code: string) => { name: string; batchNo?: string} | null; // barcode/batch scan → add to bill
+ posClear: () => void;
+ posTotals: InvoiceTotals;
+ posCount: number;
+ checkoutPos: (opts?: { paid?: boolean; ward?: string}) => Promise<SaveFault | null>;
+ lastInvoice: Sale | null;
+ setLastInvoice: (s: Sale | null) => void;
+ // orders (online lifecycle)
+ advanceOrder: (id: string) => void;
+ cancelOrder: (id: string) => void;
+ markPaid: (id: string, payMode: PayMode) => void;
+ // online-order fulfilment (pick → scan-pack → seal → handover)
+ startPacking: (id: string) => void;
+ scanPackLine: (
+ id: string,
+ code: string,
+ ) => Promise<{ name: string; batchNo: string; scanned: number; qty: number} | null>;
+ pickPackLine: (id: string, productId: string, delta: number) => void;
+ sealPacket: (id: string) => void;
+ handToRider: (id: string, rider?: Rider) => void;
+ // prescriptions
+ approveRx: (id: string) => void;
+ rejectRx: (id: string, reason?: string) => void;
+ dispenseRx: (id: string) => void;
+ // offers
+ addOffer: (o: Offer) => Promise<SaveFault | null>;
+ toggleOffer: (id: string) => void;
+ removeOffer: (id: string) => void;
+ setDirectOffer: (productId: string, type: OfferType, value: number) => void;
+ // staff / users
+ users: StaffUser[];
+ addUser: (u: Omit<StaffUser,"id" |"lastActiveMins">) => Promise<SaveFault | null>;
+ updateUser: (id: string, patch: Partial<StaffUser>) => Promise<SaveFault | null>;
+ toggleUser: (id: string) => void;
+ removeUser: (id: string) => void;
+ // subscription
+ subscription: Subscription;
+ grants: ScreenGrant[];
+ extraSeats: number;
+ subscriptionRequests: SubRequest[];
+ couponRedeemed: boolean;
+ requestPlan: (
+ plan: Plan,
+ cycle: BillingCycle,
+ kind?:"plan" |"renewal",
+ ) => Promise<SaveFault | null>;
+ redeemCoupon: (code: string) => Promise<SaveFault | null>;
+ toggleAutoRenew: () => void;
+ featureLocked: (r: Route) => boolean; // freemium paywall for premium routes
+ // invoice settings
+ invoiceSettings: InvoiceSettings;
+ updateInvoiceSettings: (patch: Partial<InvoiceSettings>) => void;
+ // kiosk
+ kiosk: KioskConfig;
+ updateKiosk: (patch: Partial<KioskConfig>) => void;
+ placeKioskOrder: (
+ lines: { productId: string; qty: number; loose?: boolean}[],
+ pay: PayMode,
+ ) => Promise<Sale | null>;
+ // CA / accountant report sharing
+ advisors: Advisor[];
+ addAdvisor: (a: Omit<Advisor,"id">) => Promise<SaveFault | null>;
+ updateAdvisor: (id: string, patch: Partial<Advisor>) => Promise<SaveFault | null>;
+ removeAdvisor: (id: string) => void;
+ caShares: CAShare[];
+ shareWithCA: (period: string, reports: string[], advisorId: string) => void;
+ // purchase orders (reorder → distributor)
+ purchaseOrders: PurchaseOrder[];
+ sendPurchaseOrder: (
+ supplierId: string,
+ supplierName: string,
+ items: POItem[],
+ note?: string,
+ ) => void;
+ importPurchaseOrders: (
+ rows: { supplierName: string; productName: string; qty: number; note?: string}[],
+ ) => Promise<{ created: number; skipped: string[]} | null>;
+ markPOReceived: (id: string) => void;
+ setProductSupplier: (id: string, supplierId: string) => void;
+ // distributors / suppliers
+ // customer credit (khata)
+ creditPayments: CreditPayment[];
+ recordCreditPayment: (p: {
+ custKey: string;
+ custName: string;
+ custPhone: string;
+ amount: number;
+ mode: PayMode;
+ note?: string;}) => Promise<SaveFault | null>;
+ // CRM
+ crm: CrmData;
+ setPatientMeta: (key: string, patch: PatientMeta) => Promise<SaveFault | null>;
+ addCampaign: (c: Omit<Campaign,"id" |"sentAt">) => Promise<SaveFault | null>;
+ addFeedback: (f: Omit<Feedback,"id" |"at">) => Promise<SaveFault | null>;
+ logReminder: (r: Omit<ReminderLog,"id" |"at">) => void;
+ redeemPoints: (custKey: string, custName: string, points: number) => void;
+ // employees (HR records)
+ employees: Employee[];
+ addEmployee: (e: Omit<Employee,"id">) => Promise<SaveFault | null>;
+ updateEmployee: (id: string, patch: Partial<Employee>) => Promise<SaveFault | null>;
+ removeEmployee: (id: string) => void;
+ // expenses
+ expenses: Expense[];
+ expenseCategories: string[];
+ addExpense: (e: Omit<Expense,"id" |"number">) => Promise<SaveFault | null>;
+ updateExpense: (id: string, patch: Partial<Expense>) => void;
+ removeExpense: (id: string) => void;
+ addExpenseCategory: (name: string) => void;
+ suppliers: Supplier[];
+ addSupplier: (s: Omit<Supplier,"id">) => Promise<SaveFault | null>;
+ updateSupplier: (id: string, patch: Partial<Supplier>) => Promise<SaveFault | null>;
+ removeSupplier: (id: string) => void;
+ // distributor supply list (product ↔ distributor with purchase price)
+ supplyList: SupplyEntry[];
+ addSupply: (s: Omit<SupplyEntry,"id">) => Promise<SaveFault | null>;
+ updateSupply: (id: string, patch: Partial<SupplyEntry>) => Promise<SaveFault | null>;
+ removeSupply: (id: string) => void;
+ setPreferredSupply: (id: string) => void;
+ // settings
+ updateProfile: (patch: Partial<PharmacyProfile>) => Promise<SaveFault | null>;
+ toggleStoreOpen: () => void;
+ // payout bank account
+ bankAccount: BankAccount | null;
+ saveBankAccount: (b: Omit<BankAccount,"verified" |"addedOn">) => Promise<SaveFault | null>;
+ verifyBankAccount: () => void;
+ removeBankAccount: () => void;
+ // initial store setup wizard
+ setupComplete: boolean;
+ startSetup: () => void;
+ completeSetup: () => void;
+ commitSetup: (input: {
+ profile: Partial<PharmacyProfile>;
+ invoice: Partial<InvoiceSettings>;
+ kioskEnabled: boolean;
+ loose: boolean;}) => Promise<SaveFault | null>;
+ wipeData: () => void;
+ setLooseDefault: (allowed: boolean) => void;
+ // ui
+ toast: (m: string) => void;
+ toastMsg: string | null;
+ formFault: SaveFault | null;
+ showFault: (err: unknown, fallback?: string) => void;
+ clearFault: () => void;
+ tickets: {
+ id: string;
+ subject: string;
+ category: string;
+ status:"Open" |"Resolved";
+ createdAt: number;}[];
+ raiseTicket: (subject: string, category: string) => Promise<SaveFault | null>;};
 
 const PCtx = createContext<Ctx | null>(null);
 export const usePharma = () => {
-  const c = useContext(PCtx);
-  if (!c) throw new Error("usePharma must be inside PharmaProvider");
-  return c;
-};
+ const c = useContext(PCtx);
+ if (!c) throw new Error("usePharma must be inside PharmaProvider");
+ return c;};
 
-export function PharmaProvider({ children }: { children: React.ReactNode }) {
-  // stamp a single "now" so date maths are stable within a session render
-  const nowRef = useRef<number>(0);
-  if (nowRef.current === 0) nowRef.current = Date.now();
-  const now = nowRef.current;
-  const dispatch = useAppDispatch();
+export function PharmaProvider({ children}: { children: React.ReactNode}) {
+ // stamp a single"now" so date maths are stable within a session render
+ const nowRef = useRef<number>(0);
+ if (nowRef.current === 0) nowRef.current = Date.now();
+ const now = nowRef.current;
+ const dispatch = useAppDispatch();
 
-  const [signedIn, setSignedIn] = useSessionField("signedIn");
-  const [needsPin, setNeedsPin] = useSessionField("needsPin");
-  const [pinReset, setPinReset] = useSessionField("pinReset");
-  const [saveAsk, setSaveAsk] = useState<{
-    title: string;
-    body: string;
-    resolve: (yes: boolean) => void;
-  } | null>(null);
-  const [leaveOpen, setLeaveOpen] = useSessionField("leaveOpen");
-  const [impersonator, setImpersonator] = useSessionField("impersonator");
-  const [businessType, setBusinessType] = useSessionField("businessType");
-  const [wards, setWards] = useSessionField("wards");
-  const [admissions, setAdmissions] = useSessionField("admissions");
-  const [wardIndents, setWardIndents] = useSessionField("wardIndents");
-  const [departments, setDepartments] = useSessionField("departments");
-  const [referrals, setReferrals] = useSessionField("referrals");
-  const [tpaClaims, setTpaClaims] = useSessionField("tpaClaims");
-  const [doctors, setDoctors] = useSessionField("doctors");
-  const [hospitalAccount, setHospitalAccount] = useSessionField("hospitalAccount");
-  const [hospitalPriceRules, setHospitalPriceRules] = useSessionField("hospitalPriceRules");
-  const [pricingUnlocked, setPricingUnlocked] = useSessionField("pricingUnlocked");
-  const [wardSupplies, setWardSupplies] = useSessionField("wardSupplies");
-  const [hospitalPayments, setHospitalPayments] = useSessionField("hospitalPayments");
-  const [billIndentTarget, setBillIndentTarget] = useSessionField("billIndentTarget");
+ const [signedIn, setSignedIn] = useSessionField("signedIn");
+ const [needsPin, setNeedsPin] = useSessionField("needsPin");
+ const [pinReset, setPinReset] = useSessionField("pinReset");
+ const [saveAsk, setSaveAsk] = useState<{
+ title: string;
+ body: string;
+ resolve: (yes: boolean) => void;} | null>(null);
+ const [leaveOpen, setLeaveOpen] = useSessionField("leaveOpen");
+ const [impersonator, setImpersonator] = useSessionField("impersonator");
+ const [businessType, setBusinessType] = useSessionField("businessType");
+ const [wards, setWards] = useSessionField("wards");
+ const [admissions, setAdmissions] = useSessionField("admissions");
+ const [wardIndents, setWardIndents] = useSessionField("wardIndents");
+ const [departments, setDepartments] = useSessionField("departments");
+ const [referrals, setReferrals] = useSessionField("referrals");
+ const [tpaClaims, setTpaClaims] = useSessionField("tpaClaims");
+ const [doctors, setDoctors] = useSessionField("doctors");
+ const [hospitalAccount, setHospitalAccount] = useSessionField("hospitalAccount");
+ const [hospitalPriceRules, setHospitalPriceRules] = useSessionField("hospitalPriceRules");
+ const [pricingUnlocked, setPricingUnlocked] = useSessionField("pricingUnlocked");
+ const [wardSupplies, setWardSupplies] = useSessionField("wardSupplies");
+ const [hospitalPayments, setHospitalPayments] = useSessionField("hospitalPayments");
+ const [billIndentTarget, setBillIndentTarget] = useSessionField("billIndentTarget");
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [route, setRoute] = useSessionField("route");
-  // ── history-aware navigation (back-stack + in-screen back handlers) ──
-  const routeRef = useRef<Route>(routeFromPath(location.pathname)); // last committed route (kept in sync inline)
-  const backStack = useRef<Route[]>([]); // routes we can pop back to
-  const backHandlerRef = useRef<null | (() => boolean)>(null); // a screen with internal sub-views can intercept back
-  const [canGoBack, setCanGoBack] = useSessionField("canGoBack");
-  const [invFilter, setInvFilter] = useSessionField("invFilter");
-  const [reportTarget, setReportTarget] = useSessionField("reportTarget");
-  const [inventory, setInventory] = useSessionField("inventory");
-  const [racks, setRacks] = useSessionField("racks");
-  const [sales, setSales] = useSessionField("sales");
-  const [prescriptions, setPrescriptions] = useSessionField("prescriptions");
-  const [offers, setOffers] = useSessionField("offers");
-  const [purchases, setPurchases] = useSessionField("purchases");
-  const [profile, setProfile] = useSessionField("profile");
-  const [bankAccount, setBankAccount] = useSessionField("bankAccount");
-  const [users, setUsers] = useSessionField("users");
-  const [subscription, setSubscription] = useSessionField("subscription");
-  const [grants, setGrants] = useSessionField("grants");
-  const [extraSeats, setExtraSeats] = useSessionField("extraSeats");
-  const [subscriptionRequests, setSubscriptionRequests] = useSessionField("subscriptionRequests");
-  const [couponRedeemed, setCouponRedeemed] = useSessionField("couponRedeemed");
-  const [invoiceSettings, setInvoiceSettings] = useSessionField("invoiceSettings");
-  const [kiosk, setKiosk] = useSessionField("kiosk");
-  const [advisors, setAdvisors] = useSessionField("advisors");
-  const [caShares, setCaShares] = useSessionField("caShares");
-  const [purchaseOrders, setPurchaseOrders] = useSessionField("purchaseOrders");
-  const [suppliers, setSuppliers] = useSessionField("suppliers");
-  const [supplyList, setSupplyList] = useSessionField("supplyList");
-  const [expenses, setExpenses] = useSessionField("expenses");
-  const [expenseCategories, setExpenseCategories] = useSessionField("expenseCategories");
-  const [employees, setEmployees] = useSessionField("employees");
-  const [creditPayments, setCreditPayments] = useSessionField("creditPayments");
-  const [crm, setCrm] = useSessionField("crm");
+ const navigate = useNavigate();
+ const location = useLocation();
+ const [route, setRoute] = useSessionField("route");
+ // ── history-aware navigation (back-stack + in-screen back handlers) ──
+ const routeRef = useRef<Route>(routeFromPath(location.pathname)); // last committed route (kept in sync inline)
+ const backStack = useRef<Route[]>([]); // routes we can pop back to
+ const backHandlerRef = useRef<null | (() => boolean)>(null); // a screen with internal sub-views can intercept back
+ const [canGoBack, setCanGoBack] = useSessionField("canGoBack");
+ const [invFilter, setInvFilter] = useSessionField("invFilter");
+ const [reportTarget, setReportTarget] = useSessionField("reportTarget");
+ const [inventory, setInventory] = useSessionField("inventory");
+ const [racks, setRacks] = useSessionField("racks");
+ const [sales, setSales] = useSessionField("sales");
+ const [prescriptions, setPrescriptions] = useSessionField("prescriptions");
+ const [offers, setOffers] = useSessionField("offers");
+ const [purchases, setPurchases] = useSessionField("purchases");
+ const [profile, setProfile] = useSessionField("profile");
+ const [bankAccount, setBankAccount] = useSessionField("bankAccount");
+ const [users, setUsers] = useSessionField("users");
+ const [subscription, setSubscription] = useSessionField("subscription");
+ const [grants, setGrants] = useSessionField("grants");
+ const [extraSeats, setExtraSeats] = useSessionField("extraSeats");
+ const [subscriptionRequests, setSubscriptionRequests] = useSessionField("subscriptionRequests");
+ const [couponRedeemed, setCouponRedeemed] = useSessionField("couponRedeemed");
+ const [invoiceSettings, setInvoiceSettings] = useSessionField("invoiceSettings");
+ const [kiosk, setKiosk] = useSessionField("kiosk");
+ const [advisors, setAdvisors] = useSessionField("advisors");
+ const [caShares, setCaShares] = useSessionField("caShares");
+ const [purchaseOrders, setPurchaseOrders] = useSessionField("purchaseOrders");
+ const [suppliers, setSuppliers] = useSessionField("suppliers");
+ const [supplyList, setSupplyList] = useSessionField("supplyList");
+ const [expenses, setExpenses] = useSessionField("expenses");
+ const [expenseCategories, setExpenseCategories] = useSessionField("expenseCategories");
+ const [employees, setEmployees] = useSessionField("employees");
+ const [creditPayments, setCreditPayments] = useSessionField("creditPayments");
+ const [crm, setCrm] = useSessionField("crm");
 
-  const [pos, setPos] = useSessionField("pos");
-  const [posCustomer, setPosCustomerState] = useSessionField("posCustomer");
-  const [posDiscount, setPosDiscount] = useSessionField("posDiscount");
-  const [posDiscountMode, setPosDiscountMode] = useSessionField("posDiscountMode");
-  const [posPay, setPosPay] = useSessionField("posPay");
-  const [posSource, setPosSource] = useSessionField("posSource");
-  const [posWard, setPosWard] = useSessionField("posWard");
-  const [posInsurer, setPosInsurer] = useSessionField("posInsurer");
-  const [posPatientId, setPosPatientId] = useSessionField("posPatientId");
-  const [posRxImage, setPosRxImage] = useSessionField("posRxImage");
-  const [lastInvoice, setLastInvoice] = useSessionField("lastInvoice");
+ const [pos, setPos] = useSessionField("pos");
+ const [posCustomer, setPosCustomerState] = useSessionField("posCustomer");
+ const [posDiscount, setPosDiscount] = useSessionField("posDiscount");
+ const [posDiscountMode, setPosDiscountMode] = useSessionField("posDiscountMode");
+ const [posPay, setPosPay] = useSessionField("posPay");
+ const [posSource, setPosSource] = useSessionField("posSource");
+ const [posWard, setPosWard] = useSessionField("posWard");
+ const [posInsurer, setPosInsurer] = useSessionField("posInsurer");
+ const [posPatientId, setPosPatientId] = useSessionField("posPatientId");
+ const [posRxImage, setPosRxImage] = useSessionField("posRxImage");
+ const [lastInvoice, setLastInvoice] = useSessionField("lastInvoice");
 
-  const [toastMsg, setToastMsg] = useSessionField("toastMsg");
-  const [formFault, setFormFault] = useSessionField("formFault");
-  const faultRef = useRef<SaveFault | null>(null);
-  const [setupComplete, setSetupComplete] = useSessionField("setupComplete");
-  const [tickets, setTickets] = useSessionField("tickets");
-  const [me, setMe] = useSessionField("me");
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hydrated, setHydrated] = useSessionField("hydrated");
-  const crmSeq = useRef(0);
+ const [toastMsg, setToastMsg] = useSessionField("toastMsg");
+ const [formFault, setFormFault] = useSessionField("formFault");
+ const faultRef = useRef<SaveFault | null>(null);
+ const [setupComplete, setSetupComplete] = useSessionField("setupComplete");
+ const [tickets, setTickets] = useSessionField("tickets");
+ const [me, setMe] = useSessionField("me");
+ const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+ const [hydrated, setHydrated] = useSessionField("hydrated");
+ const crmSeq = useRef(0);
 
-  const scrollCanvasTop = () => {
-    if (typeof document !== "undefined") {
-      const c = document.querySelector(".pd-canvas");
-      if (c) c.scrollTop = 0;
-    }
-  };
-  const go = (r: Route) => {
-    if (r === routeRef.current) {
-      scrollCanvasTop();
-      return;
-    } // same page — just reset scroll
-    backStack.current.push(routeRef.current); // remember where we came from
-    if (backStack.current.length > 60) backStack.current.shift();
-    routeRef.current = r;
-    backHandlerRef.current = null; // leaving a screen retires its in-screen back handler
-    setCanGoBack(true);
-    faultRef.current = null;
-    setFormFault(null);
-    setRoute(r);
-    navigate(pathForRoute[r]);
-    scrollCanvasTop();
-  };
-  // Go back one step: first let the current screen close an internal sub-view, else pop the route stack.
-  const back = () => {
-    if (backHandlerRef.current && backHandlerRef.current()) return;
-    const prev = backStack.current.pop();
-    if (prev === undefined) return; // at the root — nothing to go back to
-    routeRef.current = prev;
-    backHandlerRef.current = null;
-    setCanGoBack(backStack.current.length > 0);
-    setRoute(prev);
-    navigate(pathForRoute[prev]);
-    scrollCanvasTop();
-  };
-  // A screen with full-screen internal sub-views registers a handler; return true = "consumed one in-screen step".
-  const registerBack = useCallback((fn: (() => boolean) | null) => {
-    backHandlerRef.current = fn;
-  }, []);
-  // Reset the whole nav stack (sign-in / sign-out) so Back can't cross an auth boundary.
+ const scrollCanvasTop = () => {
+ if (typeof document !=="undefined") {
+ const c = document.querySelector(".!mx-auto !max-w-[1180px] !px-6 !py-5");
+ if (c) c.scrollTop = 0;}};
+ const go = (r: Route) => {
+ if (r === routeRef.current) {
+ scrollCanvasTop();
+ return;} // same page — just reset scroll
+ backStack.current.push(routeRef.current); // remember where we came from
+ if (backStack.current.length > 60) backStack.current.shift();
+ routeRef.current = r;
+ backHandlerRef.current = null; // leaving a screen retires its in-screen back handler
+ setCanGoBack(true);
+ faultRef.current = null;
+ setFormFault(null);
+ setRoute(r);
+ navigate(pathForRoute[r]);
+ scrollCanvasTop();};
+ // Go back one step: first let the current screen close an internal sub-view, else pop the route stack.
+ const back = () => {
+ if (backHandlerRef.current && backHandlerRef.current()) return;
+ const prev = backStack.current.pop();
+ if (prev === undefined) return; // at the root — nothing to go back to
+ routeRef.current = prev;
+ backHandlerRef.current = null;
+ setCanGoBack(backStack.current.length > 0);
+ setRoute(prev);
+ navigate(pathForRoute[prev]);
+ scrollCanvasTop();};
+ // A screen with full-screen internal sub-views registers a handler; return true ="consumed one in-screen step".
+ const registerBack = useCallback((fn: (() => boolean) | null) => {
+ backHandlerRef.current = fn;}, []);
+ // Reset the whole nav stack (sign-in / sign-out) so Back can't cross an auth boundary.
   const resetNav = (r: Route) => {
     backStack.current = [];
     backHandlerRef.current = null;
@@ -2081,7 +2070,7 @@ export function PharmaProvider({ children }: { children: React.ReactNode }) {
     if (ids.length === 0) return;
     void post("/sales/settle", "POST", { ids, payMode }, { idem: true, pull: true }).then((res) => {
       if (res)
-        toast(`Settled ${ids.length} bill${ids.length !== 1 ? "s" : ""} · ${PAY_LABEL[payMode]}`);
+        toast(`Settled ${ids.length} bill ${ids.length !== 1 ? " s" : ""} · ${PAY_LABEL[payMode]}`);
     });
   };
 
@@ -2301,26 +2290,30 @@ export function PharmaProvider({ children }: { children: React.ReactNode }) {
     raiseTicket,
     me,
   };
-  if (!hydrated) return <div className="pd-boot">Loading pharmacy…</div>;
+  function cancelLeave() {
+    setLeaveOpen(false);
+  }
+  function dismissSave() {
+    if (!saveAsk) return;
+    saveAsk.resolve(false);
+    setSaveAsk(null);
+  }
+  function confirmSave() {
+    if (!saveAsk) return;
+    saveAsk.resolve(true);
+    setSaveAsk(null);
+  }
+  if (!hydrated) {
+    return (
+      <Box className="grid min-h-dvh place-items-center bg-canvas text-sm text-muted">Loading pharmacy…</Box>
+    );
+  }
   return (
     <PCtx.Provider value={value}>
       {children}
-      {leaveOpen && (
-        <SignOutDialog onCancel={() => setLeaveOpen(false)} onConfirm={finishSignOut} />
-      )}
+      {leaveOpen && <SignOutDialog onCancel={cancelLeave} onConfirm={finishSignOut} />}
       {saveAsk && (
-        <SaveConfirm
-          title={saveAsk.title}
-          body={saveAsk.body}
-          onCancel={() => {
-            saveAsk.resolve(false);
-            setSaveAsk(null);
-          }}
-          onConfirm={() => {
-            saveAsk.resolve(true);
-            setSaveAsk(null);
-          }}
-        />
+        <SaveConfirm title={saveAsk.title} body={saveAsk.body} onCancel={dismissSave} onConfirm={confirmSave} />
       )}
     </PCtx.Provider>
   );

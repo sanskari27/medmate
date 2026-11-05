@@ -1,1 +1,1 @@
-export * from "./khata";
+export * from "./khata.utils";

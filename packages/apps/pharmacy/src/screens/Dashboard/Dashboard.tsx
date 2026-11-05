@@ -1,611 +1,551 @@
+import type { InvProduct, Prescription } from "@/utils";
+import { Box, Button, Heading, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { cn } from "@/utils/className";
 import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
-import { Spark } from "@/screens/Dashboard/components/Spark";
+import { Spark } from "@/components/molecules/Sparkline";
+import { SegmentBar } from "@/components/molecules/BarChart";
+import { Progress } from "@/components/atoms/Progress";
 import { SalesAnalytics } from "@/screens/Dashboard/components/SalesAnalytics";
 import { useMemo } from "react";
 import { usePharma } from "@/hooks";
-import {
-  inr,
-  isLowStock,
-  isExpiringSoon,
-  earliestBatch,
-  monthsToExpiry,
-  stockOf,
-  timeAgo,
-  catLabel,
-  Sale,
-} from "@/utils";
+import { inr, isLowStock, isExpiringSoon, earliestBatch, monthsToExpiry, stockOf, timeAgo, catLabel, Sale, } from "@/utils";
 import { StatusPill } from "@/components/StatusPill";
 import { Thumb } from "@/components/Thumb";
-import {
-  IconRupee,
-  IconOrders,
-  IconRx,
-  IconAlert,
-  IconArrowRight,
-  IconCheck,
-  IconGlobe,
-  IconBox,
-  IconCalendar,
-  IconTrendUp,
-  IconTrendDown,
-  IconPos,
-  IconTruck,
-  IconSend,
-  IconStore,
-  IconStar,
-} from "@/components/Icon";
+import { IconRupee, IconOrders, IconRx, IconAlert, IconArrowRight, IconCheck, IconGlobe, IconBox, IconCalendar, IconTrendUp, IconTrendDown, IconPos, IconTruck, IconSend, IconStore, IconStar, } from "@/components/Icon";
 import { monogramOf } from "@/components/EntityIcon";
-
 const DAY_MS = 86400000;
-
 export default function DashboardScreen() {
-  const { sales, inventory, prescriptions, now, go, setInvFilter, isHospital, profile } =
-    usePharma();
-  const openAlerts = () => {
-    setInvFilter("alerts");
-    go("inventory");
-  };
-  const kpiKey = (fn: () => void) => (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      fn();
+    const { sales, inventory, prescriptions, now, go, setInvFilter, isHospital, profile } = usePharma();
+    const openAlerts = () => {
+        setInvFilter("alerts");
+        go("inventory");
+    };
+    function kpiKey(fn: () => void) {
+        return function onKpiKey(event: React.KeyboardEvent) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fn();
+            }
+        };
     }
-  };
-
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  const todays = sales.filter((s) => s.createdAt >= today.getTime() && s.status !== "cancelled");
-  const online = todays.filter((s) => s.channel === "online");
-  const offline = todays.filter((s) => s.channel === "offline");
-  const sum = (arr: Sale[]) => arr.reduce((a, s) => a + saleTotal(s), 0);
-  const onlineRev = sum(online),
-    offlineRev = sum(offline),
-    totalRev = onlineRev + offlineRev;
-
-  const newOrders = sales.filter((s) => s.channel === "online" && s.status === "new");
-  const pendingRx = prescriptions.filter((r) => r.status === "pending");
-  const lowStock = inventory.filter(isLowStock);
-  const expiring = inventory
-    .filter((p) => isExpiringSoon(p, now))
-    .sort((a, b) => (earliestBatch(a)?.expiry ?? "").localeCompare(earliestBatch(b)?.expiry ?? ""));
-
-  const recent = [...sales].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
-
-  // ── smart extras: greeting, 7-day sparkline, delta, at-a-glance, top sellers ──
-  const hour = new Date(now).getHours();
-  const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const who = (profile.pharmacist || profile.name || "there").trim() || "there";
-  const dateStr = new Date(now).toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-
-  const dayTotals = useMemo(() => {
-    const out: number[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d0 = new Date(now);
-      d0.setHours(0, 0, 0, 0);
-      d0.setDate(d0.getDate() - i);
-      const a = d0.getTime(),
-        b = a + DAY_MS;
-      out.push(
+    function openSales() {
+        go("sales");
+    }
+    function openOrders() {
+        go("orders");
+    }
+    function openPrescriptions() {
+        go("prescriptions");
+    }
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const todays = sales.filter((s) => s.createdAt >= today.getTime() && s.status !== "cancelled");
+    const online = todays.filter((s) => s.channel === "online");
+    const offline = todays.filter((s) => s.channel === "offline");
+    const sum = (arr: Sale[]) => arr.reduce((a, s) => a + saleTotal(s), 0);
+    const onlineRev = sum(online), offlineRev = sum(offline), totalRev = onlineRev + offlineRev;
+    const newOrders = sales.filter((s) => s.channel === "online" && s.status === "new");
+    const pendingRx = prescriptions.filter((r) => r.status === "pending");
+    const lowStock = inventory.filter(isLowStock);
+    const expiring = inventory
+        .filter((p) => isExpiringSoon(p, now))
+        .sort((a, b) => (earliestBatch(a)?.expiry ?? "").localeCompare(earliestBatch(b)?.expiry ?? ""));
+    const recent = [...sales].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
+    // ── smart extras: greeting, 7-day sparkline, delta, at-a-glance, top sellers ──
+    const hour = new Date(now).getHours();
+    const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    const who = (profile.pharmacist || profile.name || "there").trim() || "there";
+    const dateStr = new Date(now).toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+    });
+    const dayTotals = useMemo(() => {
+        const out: number[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d0 = new Date(now);
+            d0.setHours(0, 0, 0, 0);
+            d0.setDate(d0.getDate() - i);
+            const a = d0.getTime(), b = a + DAY_MS;
+            out.push(sales
+                .filter((s) => s.status !== "cancelled" && s.createdAt >= a && s.createdAt < b)
+                .reduce((x, s) => x + saleTotal(s), 0));
+        }
+        return out;
+    }, [sales, now]);
+    const dayOrders = useMemo(() => {
+        const out: number[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d0 = new Date(now);
+            d0.setHours(0, 0, 0, 0);
+            d0.setDate(d0.getDate() - i);
+            const a = d0.getTime(), b = a + DAY_MS;
+            out.push(sales.filter((s) => s.status !== "cancelled" && s.createdAt >= a && s.createdAt < b).length);
+        }
+        return out;
+    }, [sales, now]);
+    const dayRx = useMemo(() => {
+        const out: number[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d0 = new Date(now);
+            d0.setHours(0, 0, 0, 0);
+            d0.setDate(d0.getDate() - i);
+            const a = d0.getTime(), b = a + DAY_MS;
+            out.push(prescriptions.filter((r) => r.uploadedAt >= a && r.uploadedAt < b).length);
+        }
+        return out;
+    }, [prescriptions, now]);
+    const alertSegments = [
+        { key: "low", value: lowStock.length, color: "var(--color-gold)", label: "Low stock" },
+        { key: "expiring", value: expiring.length, color: "var(--color-rose)", label: "Expiring" },
+    ];
+    const yday = dayTotals[5] ?? 0;
+    const salesDelta = yday > 0 ? Math.round(((totalRev - yday) / yday) * 100) : totalRev > 0 ? 100 : 0;
+    const itemsToday = todays.reduce((a, s) => a + s.items.reduce((x, i) => x + i.qty, 0), 0);
+    const avgBill = todays.length ? Math.round(totalRev / todays.length) : 0;
+    const dueCount = sales.filter((s) => s.paid === false && s.status !== "cancelled").length;
+    const monthStart = new Date(now);
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthRev = sales
+        .filter((s) => s.status !== "cancelled" && s.createdAt >= monthStart.getTime())
+        .reduce((a, s) => a + saleTotal(s), 0);
+    const topSellers = useMemo(() => {
+        const win = now - 7 * DAY_MS;
+        const m: Record<string, {
+            id: string;
+            name: string;
+            qty: number;
+            rev: number;
+        }> = {};
         sales
-          .filter((s) => s.status !== "cancelled" && s.createdAt >= a && s.createdAt < b)
-          .reduce((x, s) => x + saleTotal(s), 0),
-      );
-    }
-    return out;
-  }, [sales, now]);
-  const dayOrders = useMemo(() => {
-    const out: number[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d0 = new Date(now);
-      d0.setHours(0, 0, 0, 0);
-      d0.setDate(d0.getDate() - i);
-      const a = d0.getTime(),
-        b = a + DAY_MS;
-      out.push(
-        sales.filter((s) => s.status !== "cancelled" && s.createdAt >= a && s.createdAt < b).length,
-      );
-    }
-    return out;
-  }, [sales, now]);
-  const dayRx = useMemo(() => {
-    const out: number[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d0 = new Date(now);
-      d0.setHours(0, 0, 0, 0);
-      d0.setDate(d0.getDate() - i);
-      const a = d0.getTime(),
-        b = a + DAY_MS;
-      out.push(prescriptions.filter((r) => r.uploadedAt >= a && r.uploadedAt < b).length);
-    }
-    return out;
-  }, [prescriptions, now]);
-  const alertTotal = lowStock.length + expiring.length;
-  const yday = dayTotals[5] ?? 0;
-  const salesDelta =
-    yday > 0 ? Math.round(((totalRev - yday) / yday) * 100) : totalRev > 0 ? 100 : 0;
-  const itemsToday = todays.reduce((a, s) => a + s.items.reduce((x, i) => x + i.qty, 0), 0);
-  const avgBill = todays.length ? Math.round(totalRev / todays.length) : 0;
-  const dueCount = sales.filter((s) => s.paid === false && s.status !== "cancelled").length;
-  const monthStart = new Date(now);
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-  const monthRev = sales
-    .filter((s) => s.status !== "cancelled" && s.createdAt >= monthStart.getTime())
-    .reduce((a, s) => a + saleTotal(s), 0);
-
-  const topSellers = useMemo(() => {
-    const win = now - 7 * DAY_MS;
-    const m: Record<string, { id: string; name: string; qty: number; rev: number }> = {};
-    sales
-      .filter((s) => s.status !== "cancelled" && s.createdAt >= win)
-      .forEach((s) =>
-        s.items.forEach((it) => {
-          const e = m[it.productId] ?? { id: it.productId, name: it.name, qty: 0, rev: 0 };
-          e.qty += it.qty;
-          e.rev += it.price * it.qty;
-          m[it.productId] = e;
-        }),
-      );
-    return Object.values(m)
-      .sort((a, b) => b.rev - a.rev)
-      .slice(0, 5);
-  }, [sales, now]);
-  const topMax = Math.max(...topSellers.map((t) => t.rev), 1);
-
-  const QA = [
-    { label: "New sale", sub: "Counter / POS", Icon: IconPos, go: () => go("pos") },
-    { label: "New purchase", sub: "Goods inward", Icon: IconTruck, go: () => go("purchases") },
-    {
-      label: "Prescriptions",
-      sub: pendingRx.length ? `${pendingRx.length} pending` : "All clear",
-      Icon: IconRx,
-      go: () => go("prescriptions"),
-    },
-    {
-      label: "Reorder",
-      sub: lowStock.length ? `${lowStock.length} low` : "Stock healthy",
-      Icon: IconSend,
-      go: () => go("reorder"),
-    },
-  ];
-
-  return (
-    <div className="pd-canvas-wide">
+            .filter((s) => s.status !== "cancelled" && s.createdAt >= win)
+            .forEach((s) => s.items.forEach((it) => {
+            const e = m[it.productId] ?? { id: it.productId, name: it.name, qty: 0, rev: 0 };
+            e.qty += it.qty;
+            e.rev += it.price * it.qty;
+            m[it.productId] = e;
+        }));
+        return Object.values(m)
+            .sort((a, b) => b.rev - a.rev)
+            .slice(0, 5);
+    }, [sales, now]);
+    const topMax = Math.max(...topSellers.map((t) => t.rev), 1);
+    const QA = [
+        { label: "New sale", sub: "Counter / POS", Icon: IconPos, go: () => go("pos") },
+        { label: "New purchase", sub: "Goods inward", Icon: IconTruck, go: () => go("purchases") },
+        {
+            label: "Prescriptions",
+            sub: pendingRx.length ? `${pendingRx.length} pending` : "All clear",
+            Icon: IconRx,
+            go: () => go("prescriptions"),
+        },
+        {
+            label: "Reorder",
+            sub: lowStock.length ? `${lowStock.length} low` : "Stock healthy",
+            Icon: IconSend,
+            go: () => go("reorder"),
+        },
+    ];
+    return (<Box className="!mx-auto !max-w-[1680px]">
       {/* ── today strip + quick actions ── */}
-      <div className="pd-hello">
-        <div className="pd-hello-l">
-          <div className="pd-hello-greet">
+      <Box className="!mb-3.5 !flex !flex-wrap !items-center !justify-between !gap-5 !rounded-lg !border !border-line !bg-paper !px-5 !py-[18px]">
+        <Box className="!min-w-0">
+          <Box className="!font-display !text-[22px] !font-extrabold !text-ink">
             {greet}, {who}
-          </div>
-          <div className="pd-hello-sub">
+          </Box>
+          <Box className="!text-[13px] !text-muted">
             {dateStr} ·{" "}
-            <span className={`pd-dotpill ${profile.storeOpen ? "on" : "off"}`}>
-              <i />
+            <Text className="!inline-flex !items-center !gap-1.5 !rounded-full !bg-wash !px-2.5 !py-[3px] !text-[11px] !font-bold !text-mid" as="span">
+              <Box className={profile.storeOpen ? "inline-block h-1.5 w-1.5 rounded-full bg-mid shadow-[0_0_0_3px_rgba(47,125,82,0.14)]" : "inline-block h-1.5 w-1.5 rounded-full bg-gold"} />
               {profile.storeOpen ? "Store open" : "Store paused"}
-            </span>
-          </div>
-        </div>
-        <div className="pd-qa">
-          {QA.map((a) => (
-            <button key={a.label} className="pd-qa-tile" onClick={a.go}>
-              <span className="ic">
-                <a.Icon size={16} />
-              </span>
-              <span className="tx">
-                <b>{a.label}</b>
-                <small>{a.sub}</small>
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+            </Text>
+          </Box>
+        </Box>
+        <Box className="!flex !w-full !flex-wrap !gap-2">
+          {QA.map(renderQA)}
+        </Box>
+      </Box>
 
       {/* ── metrics rail: context numbers, deliberately not competing cards ── */}
-      <div className="pd-mini">
-        <span>
-          <small>This month</small>
-          <b>{inr(monthRev)}</b>
-        </span>
-        <span>
-          <small>Avg bill today</small>
-          <b>{inr(avgBill)}</b>
-        </span>
-        <span>
-          <small>Items sold today</small>
-          <b>{itemsToday}</b>
-        </span>
-        {dueCount > 0 && (
-          <span className="warn" role="button" onClick={() => go("khata")}>
-            <small>Dues to collect</small>
-            <b>{dueCount}</b>
-          </span>
-        )}
-      </div>
+      <Box className="!mb-[22px] !grid !grid-cols-[repeat(auto-fit,minmax(150px,1fr))] !overflow-hidden !rounded-md !border !border-line !bg-paper !shadow-sm [&>*]:!min-w-0 [&>*]:!border-r [&>*]:!border-line [&>*]:!px-4 [&>*]:!py-3 [&>*:last-child]:!border-r-0">
+        <Box>
+          <Text as="span" className="block text-[11px] font-bold text-muted">This month</Text>
+          <Text as="span" className="block font-display text-lg font-bold text-dark">{inr(monthRev)}</Text>
+        </Box>
+        <Box>
+          <Text as="span" className="block text-[11px] font-bold text-muted">Avg bill today</Text>
+          <Text as="span" className="block font-display text-lg font-bold text-dark">{inr(avgBill)}</Text>
+        </Box>
+        <Box>
+          <Text as="span" className="block text-[11px] font-bold text-muted">Items sold today</Text>
+          <Text as="span" className="block font-display text-lg font-bold text-dark">{itemsToday}</Text>
+        </Box>
+        {dueCount > 0 && (<Box className="cursor-pointer" role="button" onClick={goOnClick}>
+            <Text as="span" className="block text-[11px] font-bold text-muted">Dues to collect</Text>
+            <Text as="span" className="block font-display text-lg font-bold text-dark">{dueCount}</Text>
+          </Box>)}
+      </Box>
 
       {/* ── KPI cards — each opens its section ── */}
-      <div className="pd-stats">
-        <div
-          className="pd-stat link kpi accent-green"
-          role="button"
-          tabIndex={0}
-          onClick={() => go("sales")}
-          onKeyDown={kpiKey(() => go("sales"))}
-          title="View all sales"
-        >
-          <span className="go">
-            <IconArrowRight size={16} />
-          </span>
-          <div className="kpi-top">
-            <div className="ic ic-green">
-              <IconRupee size={19} />
-            </div>
-            {salesDelta !== 0 && (
-              <span className={`pd-trend ${salesDelta >= 0 ? "up" : "down"}`}>
-                {salesDelta >= 0 ? <IconTrendUp size={12} /> : <IconTrendDown size={12} />}
+      <Box className="!mb-[22px] !grid !grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] !gap-4">
+        <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={goOnClick2} onKeyDown={kpiKey(openSales)} title="View all sales">
+          <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
+            <IconArrowRight size={16}/>
+          </Text>
+          <Box className="flex items-start justify-between">
+            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-wash !text-mid">
+              <IconRupee size={19}/>
+            </Box>
+            {salesDelta !== 0 && (<Text className={`!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold ${salesDelta >= 0 ? "!bg-wash !text-green" : "!bg-rose-bg !text-rose"}`} as="span">
+                {salesDelta >= 0 ? <IconTrendUp size={12}/> : <IconTrendDown size={12}/>}
                 {Math.abs(salesDelta)}%
-              </span>
-            )}
-          </div>
-          <div className="lbl">Today’s sales</div>
-          <div className="val">{inr(totalRev)}</div>
-          <div className="pd-kpi-spark">
-            <Spark data={dayTotals} />
-          </div>
-          <div className="split-pair">
-            <span>
-              <b>
-                <IconGlobe size={12} /> {inr(onlineRev)}
-              </b>
-              <small>Online</small>
-            </span>
-            <span>
-              <b>
-                <IconStore size={12} /> {inr(offlineRev)}
-              </b>
-              <small>Counter</small>
-            </span>
-          </div>
-        </div>
-        <div
-          className="pd-stat link kpi accent-blue"
-          role="button"
-          tabIndex={0}
-          onClick={() => go("orders")}
-          onKeyDown={kpiKey(() => go("orders"))}
-          title="View orders"
-        >
-          <span className="go">
-            <IconArrowRight size={16} />
-          </span>
-          <div className="kpi-top">
-            <div className="ic ic-blue">
-              <IconOrders size={19} />
-            </div>
-            {newOrders.length > 0 && <span className="pd-trend gold">{newOrders.length} new</span>}
-          </div>
-          <div className="lbl">Orders today</div>
-          <div className="val">{todays.length}</div>
-          <div className="pd-kpi-spark">
-            <Spark data={dayOrders} />
-          </div>
-          <div className="split">
-            {newOrders.length > 0 ? (
-              <>
-                <b style={{ color: "var(--gold-d)" }}>{newOrders.length}</b> awaiting action
-              </>
-            ) : (
-              <>
-                <IconCheck size={12} /> all caught up
-              </>
-            )}
-          </div>
-        </div>
-        <div
-          className="pd-stat link kpi accent-gold"
-          role="button"
-          tabIndex={0}
-          onClick={() => go("prescriptions")}
-          onKeyDown={kpiKey(() => go("prescriptions"))}
-          title="Review prescriptions"
-        >
-          <span className="go">
-            <IconArrowRight size={16} />
-          </span>
-          <div className="kpi-top">
-            <div className="ic ic-gold">
-              <IconRx size={19} />
-            </div>
-            {pendingRx.length > 0 && <span className="pd-trend gold">to verify</span>}
-          </div>
-          <div className="lbl">Prescriptions</div>
-          <div className="val">{pendingRx.length}</div>
-          <div className="pd-kpi-spark">
-            <Spark data={dayRx} />
-          </div>
-          <div className="split">pending review</div>
-        </div>
-        <div
-          className="pd-stat link kpi accent-rose"
-          role="button"
-          tabIndex={0}
-          onClick={openAlerts}
-          onKeyDown={kpiKey(openAlerts)}
-          title="See medicines to reorder & expiring stock"
-        >
-          <span className="go">
-            <IconArrowRight size={16} />
-          </span>
-          <div className="kpi-top">
-            <div className="ic ic-rose">
-              <IconAlert size={19} />
-            </div>
-            {lowStock.length + expiring.length > 0 && <span className="pd-trend down">action</span>}
-          </div>
-          <div className="lbl">Stock alerts</div>
-          <div className="val">{lowStock.length + expiring.length}</div>
-          <div className="pd-kpi-spark">
+              </Text>)}
+          </Box>
+          <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Today’s sales</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{inr(totalRev)}</Box>
+          <Box className="!h-[30px]">
+            <Spark data={dayTotals}/>
+          </Box>
+          <Box className="mt-auto grid grid-cols-2 gap-2.5 border-t border-line pt-[9px]">
+            <Text as="span">
+              <Text as="span" className="font-bold">
+                <IconGlobe size={12}/> {inr(onlineRev)}
+              </Text>
+              <Text as="span" className="text-[11px] font-semibold">Online</Text>
+            </Text>
+            <Text as="span">
+              <Text as="span" className="font-bold">
+                <IconStore size={12}/> {inr(offlineRev)}
+              </Text>
+              <Text as="span" className="text-[11px] font-semibold">Counter</Text>
+            </Text>
+          </Box>
+        </Box>
+        <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={goOnClick3} onKeyDown={kpiKey(openOrders)} title="View orders">
+          <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
+            <IconArrowRight size={16}/>
+          </Text>
+          <Box className="flex items-start justify-between">
+            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-blue-bg !text-blue">
+              <IconOrders size={19}/>
+            </Box>
+            {newOrders.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">{newOrders.length} new</Text>}
+          </Box>
+          <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Orders today</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{todays.length}</Box>
+          <Box className="!h-[30px]">
+            <Spark data={dayOrders}/>
+          </Box>
+          <Box className="mt-auto block border-t border-line pt-[9px] text-xs text-muted">
+            {newOrders.length > 0 ? (<>
+                <Text as="span" className={cn("font-bold", "!text-gold-d")}>{newOrders.length}</Text> awaiting action
+              </>) : (<>
+                <IconCheck size={12}/> all caught up
+              </>)}
+          </Box>
+        </Box>
+        <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={goOnClick4} onKeyDown={kpiKey(openPrescriptions)} title="Review prescriptions">
+          <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
+            <IconArrowRight size={16}/>
+          </Text>
+          <Box className="flex items-start justify-between">
+            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-amber-bg !text-gold-d">
+              <IconRx size={19}/>
+            </Box>
+            {pendingRx.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">to verify</Text>}
+          </Box>
+          <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Prescriptions</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{pendingRx.length}</Box>
+          <Box className="!h-[30px]">
+            <Spark data={dayRx}/>
+          </Box>
+          <Box className="mt-auto block border-t border-line pt-[9px] text-xs text-muted">pending review</Box>
+        </Box>
+        <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={openAlerts} onKeyDown={kpiKey(openAlerts)} title="See medicines to reorder & expiring stock">
+          <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
+            <IconArrowRight size={16}/>
+          </Text>
+          <Box className="flex items-start justify-between">
+            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-rose-bg !text-rose">
+              <IconAlert size={19}/>
+            </Box>
+            {lowStock.length + expiring.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold bg-rose-bg text-rose" as="span">action</Text>}
+          </Box>
+          <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Stock alerts</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{lowStock.length + expiring.length}</Box>
+          <Box className="!h-[30px]">
             {/* stock health mix — the same footprint as a sparkline, so the row stays uniform */}
-            <div className="pd-healthbar">
-              <i
-                style={{
-                  width: `${alertTotal ? (lowStock.length / alertTotal) * 100 : 0}%`,
-                  background: "var(--gold)",
-                }}
-              />
-              <i
-                style={{
-                  width: `${alertTotal ? (expiring.length / alertTotal) * 100 : 0}%`,
-                  background: "var(--rose)",
-                }}
-              />
-            </div>
-            <div className="pd-healthkey">
-              <span>
-                <i style={{ background: "var(--gold)" }} />
+            <SegmentBar className="h-[7px] overflow-hidden rounded bg-wash" segments={alertSegments} />
+            <Box className="!mt-2 !flex !flex-wrap !gap-3 !text-[12px] !text-muted">
+              <Text as="span">
+                <Box className={cn("!bg-gold")} />
                 Low stock
-              </span>
-              <span>
-                <i style={{ background: "var(--rose)" }} />
+              </Text>
+              <Text as="span">
+                <Box className={cn("!bg-rose")} />
                 Expiring
-              </span>
-            </div>
-          </div>
-          <div className="split-pair">
-            <span>
-              <b>{lowStock.length}</b>
-              <small>Low stock</small>
-            </span>
-            <span>
-              <b>{expiring.length}</b>
-              <small>Expiring</small>
-            </span>
-          </div>
-        </div>
-      </div>
+              </Text>
+            </Box>
+          </Box>
+          <Box className="mt-auto grid grid-cols-2 gap-2.5 border-t border-line pt-[9px]">
+            <Text as="span">
+              <Text as="span" className="font-bold">{lowStock.length}</Text>
+              <Text as="span" className="text-[11px] font-semibold">Low stock</Text>
+            </Text>
+            <Text as="span">
+              <Text as="span" className="font-bold">{expiring.length}</Text>
+              <Text as="span" className="text-[11px] font-semibold">Expiring</Text>
+            </Text>
+          </Box>
+        </Box>
+      </Box>
 
       {/* sales analytics (filterable) */}
-      <div className="pd-grid-2" style={{ marginTop: 16 }}>
-        <SalesAnalytics
-          sales={sales}
-          inventory={inventory}
-          now={now}
-          onlineRev={onlineRev}
-          offlineRev={offlineRev}
-          isHospital={isHospital}
-        />
+      <Box className={cn("!grid !grid-cols-[1.5fr_1fr] !gap-4 max-[767px]:!grid-cols-1", "!mt-4")}>
+        <SalesAnalytics sales={sales} inventory={inventory} now={now} onlineRev={onlineRev} offlineRev={offlineRev} isHospital={isHospital}/>
         {/* action queue */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Needs your attention</h3>
-          </div>
-          <div className="pd-card-pad" style={{ paddingTop: 4, paddingBottom: 6 }}>
-            {newOrders.length === 0 && pendingRx.length === 0 && lowStock.length === 0 ? (
-              <div className="pd-empty" style={{ padding: "26px 10px" }}>
-                <div className="em">
-                  <IconCheck size={30} />
-                </div>
-                <h3>All clear</h3>
-                <p>No pending orders, prescriptions or stock alerts.</p>
-              </div>
-            ) : (
-              <>
-                {newOrders.slice(0, 2).map((o) => (
-                  <div className="pd-row" key={o.id}>
-                    <span className="em">
-                      <IconGlobe size={18} />
-                    </span>
-                    <span className="gw">
-                      <div className="t">New order {o.id}</div>
-                      <div className="s">
-                        {o.customer.name} · {o.items.length} items · {timeAgo(o.createdAt, now)}
-                      </div>
-                    </span>
-                    <button
-                      className="pd-btn pd-btn-sm pd-btn-primary"
-                      onClick={() => go("orders")}
-                    >
-                      Review
-                    </button>
-                  </div>
-                ))}
-                {pendingRx.slice(0, 2).map((r) => (
-                  <div className="pd-row" key={r.id}>
-                    <span className="em">
-                      <IconRx size={18} />
-                    </span>
-                    <span className="gw">
-                      <div className="t">Prescription {r.id}</div>
-                      <div className="s">
-                        {r.patient} · Dr. uploaded {timeAgo(r.uploadedAt, now)}
-                      </div>
-                    </span>
-                    <button
-                      className="pd-btn pd-btn-sm pd-btn-ghost"
-                      onClick={() => go("prescriptions")}
-                    >
-                      Verify
-                    </button>
-                  </div>
-                ))}
-                {lowStock.slice(0, 2).map((p) => (
-                  <div className="pd-row" key={p.id}>
-                    <span className="em">
-                      <IconBox size={18} />
-                    </span>
-                    <span className="gw">
-                      <div className="t">{p.name} running low</div>
-                      <div className="s">
-                        {stockOf(p)} left · reorder at {p.reorderLevel}
-                      </div>
-                    </span>
-                    <button
-                      className="pd-btn pd-btn-sm pd-btn-ghost"
-                      onClick={() => go("inventory")}
-                    >
-                      Restock
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Needs your attention</Heading>
+          </Box>
+          <Box className={cn("!flex-1 !p-[18px]", "!pt-1 !pb-1.5")}>
+            {newOrders.length === 0 && pendingRx.length === 0 && lowStock.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-[26px] !px-2.5")}>
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                  <IconCheck size={30}/>
+                </Box>
+                <Heading level={3}>All clear</Heading>
+                <Text>No pending orders, prescriptions or stock alerts.</Text>
+              </Box>) : (<>
+                {newOrders.slice(0, 2).map(renderO)}
+                {pendingRx.slice(0, 2).map(renderR)}
+                {lowStock.slice(0, 2).map(renderP)}
+              </>)}
+          </Box>
+        </Box>
+      </Box>
 
-      <div className="pd-grid-3" style={{ marginTop: 16 }}>
+      <Box className={cn("!grid !grid-cols-3 !gap-4 max-[767px]:!grid-cols-1", "!mt-4")}>
         {/* expiring soon */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Expiring soon</h3>
-            <button className="pd-btn pd-btn-sm pd-btn-ghost" onClick={() => go("inventory")}>
-              Inventory <IconArrowRight size={14} />
-            </button>
-          </div>
-          <div className="pd-card-pad" style={{ paddingTop: 4, paddingBottom: 6 }}>
-            {expiring.length === 0 ? (
-              <div className="pd-empty" style={{ padding: "26px 10px" }}>
-                <div className="em">
-                  <IconCalendar size={30} />
-                </div>
-                <p>No medicines expiring in the next 4 months.</p>
-              </div>
-            ) : (
-              expiring.slice(0, 5).map((p) => {
-                const b = earliestBatch(p)!;
-                const mo = monthsToExpiry(b.expiry, now);
-                const expired = mo < 0;
-                return (
-                  <div className="pd-row" key={p.id}>
-                    <span className="em">{monogramOf(p.name)}</span>
-                    <span className="gw">
-                      <div className="t">{p.name}</div>
-                      <div className="s">
-                        Batch {b.batchNo} · {catLabel(p.category)} · {b.qty} units
-                      </div>
-                    </span>
-                    <span className={`pd-pill ${expired ? "pill-rose" : "pill-gold"}`}>
-                      {expired ? "Expired" : `${mo} mo · ${b.expiry}`}
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>
-              <IconStar size={15} /> Top sellers{" "}
-              <span className="pd-muted" style={{ fontWeight: 600, fontSize: 12 }}>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Expiring soon</Heading>
+            <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={goOnClick8}>
+              Inventory <IconArrowRight size={14}/>
+            </Button>
+          </Box>
+          <Box className={cn("!flex-1 !p-[18px]", "!pt-1 !pb-1.5")}>
+            {expiring.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-[26px] !px-2.5")}>
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                  <IconCalendar size={30}/>
+                </Box>
+                <Text>No medicines expiring in the next 4 months.</Text>
+              </Box>) : (expiring.slice(0, 5).map(renderP2))}
+          </Box>
+        </Box>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>
+              <IconStar size={15}/> Top sellers{" "}
+              <Text className={cn("!text-muted", "!font-semibold !text-[12px]")} as="span">
                 · last 7 days
-              </span>
-            </h3>
-            <button className="pd-btn pd-btn-sm pd-btn-ghost" onClick={() => go("reports")}>
-              Reports <IconArrowRight size={14} />
-            </button>
-          </div>
-          <div className="pd-card-pad" style={{ paddingTop: 8 }}>
-            {topSellers.length === 0 ? (
-              <div className="pd-empty" style={{ padding: "24px 10px" }}>
-                <div className="em">
-                  <IconStar size={28} />
-                </div>
-                <p>No sales yet in the last 7 days.</p>
-              </div>
-            ) : (
-              topSellers.map((t, i) => {
-                const p = inventory.find((x) => x.id === t.id);
-                return (
-                  <div className="pd-sell" key={t.id}>
-                    <span className="rk">{i + 1}</span>
-                    <span className="em">{p ? <Thumb p={p} /> : <IconBox size={16} />}</span>
-                    <div className="gw">
-                      <div className="t">{t.name}</div>
-                      <div className="track">
-                        <i style={{ width: `${(t.rev / topMax) * 100}%` }} />
-                      </div>
-                    </div>
-                    <div className="amt">
+              </Text>
+            </Heading>
+            <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={goOnClick9}>
+              Reports <IconArrowRight size={14}/>
+            </Button>
+          </Box>
+          <Box className={cn("!flex-1 !p-[18px]", "!pt-2")}>
+            {topSellers.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-6 !px-2.5")}>
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                  <IconStar size={28}/>
+                </Box>
+                <Text>No sales yet in the last 7 days.</Text>
+              </Box>) : (topSellers.map(renderTopSeller))}
+          </Box>
+        </Box>
+
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Recent transactions</Heading>
+            <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={goOnClick10}>
+              View all <IconArrowRight size={14}/>
+            </Button>
+          </Box>
+          <Box className="!overflow-x-auto">
+            <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>Invoice</TableHeaderCell>
+                  <TableHeaderCell>Customer</TableHeaderCell>
+                  <TableHeaderCell>Status</TableHeaderCell>
+                  <TableHeaderCell className="text-right tabular-nums font-semibold text-ink">Amount</TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recent.map(renderRecent)}
+              </TableBody>
+            </Table>
+          </Box>
+        </Box>
+      </Box>
+    </Box>);
+    function renderQA(a: {
+        label: string;
+        sub: string;
+        Icon: (p: { size?: number }) => React.JSX.Element;
+        go: () => void;
+    }) {
+        return (<Button key={a.label} className="!inline-flex !min-w-0 !items-center !gap-2 !rounded-md !border !border-line !bg-paper !px-3 !py-2.5 !text-[13px] !font-bold !shadow-sm hover:!border-mint" onClick={a.go}>
+              <Text className="!grid !h-[30px] !w-[30px] !shrink-0 !place-items-center !rounded-full !bg-wash !text-mid" as="span">
+                <a.Icon size={16}/>
+              </Text>
+              <Text className="flex min-w-0 flex-col items-start text-left" as="span">
+                <Text as="span" className="font-bold">{a.label}</Text>
+                <Text as="span" className="text-[11px] font-semibold">{a.sub}</Text>
+              </Text>
+            </Button>);
+    }
+    function goOnClick() {
+        return go("khata");
+    }
+    function goOnClick2() {
+        return go("sales");
+    }
+    function goOnClick3() {
+        return go("orders");
+    }
+    function goOnClick4() {
+        return go("prescriptions");
+    }
+    function renderO(o: Sale) {
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={o.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+                      <IconGlobe size={18}/>
+                    </Text>
+                    <Text className="min-w-0 flex-1" as="span">
+                      <Box className="text-[13.5px] font-bold text-ink">New order {o.id}</Box>
+                      <Box className="text-xs text-muted">
+                        {o.customer.name} · {o.items.length} items · {timeAgo(o.createdAt, now)}
+                      </Box>
+                    </Text>
+                    <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={goOnClick5}>
+                      Review
+                    </Button>
+                  </Box>);
+        function goOnClick5() {
+            return go("orders");
+        }
+    }
+    function renderR(r: Prescription) {
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={r.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+                      <IconRx size={18}/>
+                    </Text>
+                    <Text className="min-w-0 flex-1" as="span">
+                      <Box className="text-[13.5px] font-bold text-ink">Prescription {r.id}</Box>
+                      <Box className="text-xs text-muted">
+                        {r.patient} · Dr. uploaded {timeAgo(r.uploadedAt, now)}
+                      </Box>
+                    </Text>
+                    <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={goOnClick6}>
+                      Verify
+                    </Button>
+                  </Box>);
+        function goOnClick6() {
+            return go("prescriptions");
+        }
+    }
+    function renderP(p: InvProduct) {
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={p.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+                      <IconBox size={18}/>
+                    </Text>
+                    <Text className="min-w-0 flex-1" as="span">
+                      <Box className="text-[13.5px] font-bold text-ink">{p.name} running low</Box>
+                      <Box className="text-xs text-muted">
+                        {stockOf(p)} left · reorder at {p.reorderLevel}
+                      </Box>
+                    </Text>
+                    <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={goOnClick7}>
+                      Restock
+                    </Button>
+                  </Box>);
+        function goOnClick7() {
+            return go("inventory");
+        }
+    }
+    function goOnClick8() {
+        return go("inventory");
+    }
+    function renderP2(p: InvProduct) {
+        const b = earliestBatch(p)!;
+        const mo = monthsToExpiry(b.expiry, now);
+        const expired = mo < 0;
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={p.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">{monogramOf(p.name)}</Text>
+                    <Text className="min-w-0 flex-1" as="span">
+                      <Box className="text-[13.5px] font-bold text-ink">{p.name}</Box>
+                      <Box className="text-xs text-muted">
+                        Batch {b.batchNo} · {catLabel(p.category)} · {b.qty} units
+                      </Box>
+                    </Text>
+                    <Text className={`!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold ${expired ?"!bg-rose-bg !text-rose" :"!bg-amber-bg !text-gold-d"}`} as="span">
+                      {expired ? "Expired" : `${mo} mo · ${b.expiry}`}
+                    </Text>
+                  </Box>);
+    }
+    function goOnClick9() {
+        return go("reports");
+    }
+    function renderTopSeller(t: {
+        id: string;
+        name: string;
+        qty: number;
+        rev: number;
+    }, i: number) {
+        const p = inventory.find(matchInventory);
+        return (<Box className="!flex !items-center !gap-[11px] !border-b !border-line !py-[9px] last:!border-b-0" key={t.id}>
+                    <Text className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-wash text-[11px] font-extrabold text-mid" as="span">{i + 1}</Text>
+                    <Text className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-wash text-base text-mid" as="span">{p ? <Thumb p={p}/> : <IconBox size={16}/>}</Text>
+                    <Box className="min-w-0 flex-1">
+                      <Box className="truncate text-[13px] font-bold text-ink">{t.name}</Box>
+                      <Box className="mt-[5px] h-1.5 overflow-hidden rounded-[5px] bg-wash">
+                        <Progress className="h-full rounded-[5px]" value={topMax ? (t.rev / topMax) * 100 : 0} tone="gold" label={t.name} />
+                      </Box>
+                    </Box>
+                    <Box className="flex shrink-0 flex-col text-right font-display text-[13px] font-extrabold text-dark">
                       {inr(t.rev)}
-                      <small>{t.qty} sold</small>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Recent transactions</h3>
-            <button className="pd-btn pd-btn-sm pd-btn-ghost" onClick={() => go("orders")}>
-              View all <IconArrowRight size={14} />
-            </button>
-          </div>
-          <div className="pd-tbl-wrap">
-            <table className="pd-tbl">
-              <thead>
-                <tr>
-                  <th>Invoice</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th className="num">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((s) => (
-                  <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => go("orders")}>
-                    <td className="pd-mono" style={{ fontWeight: 700 }}>
+                      <Text as="span" className="text-[11px] font-semibold">{t.qty} sold</Text>
+                    </Box>
+                  </Box>);
+        function matchInventory(x: InvProduct) {
+            return x.id === t.id;
+        }
+    }
+    function goOnClick10() {
+        return go("orders");
+    }
+    function renderRecent(s: Sale) {
+        return (<TableRow key={s.id} onClick={goOnClick11} className={cn("!cursor-pointer")}>
+                    <TableCell className={cn("!font-mono", "!font-bold")}>
                       {s.id}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       {s.customer.name}
-                      <div className="s" style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                      <Box className={cn("text-xs text-muted", "!text-[11.5px] !text-muted")}>
                         {timeAgo(s.createdAt, now)}
-                      </div>
-                    </td>
-                    <td>
-                      <StatusPill status={s.status} />
-                    </td>
-                    <td className="num" style={{ fontWeight: 800 }}>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <StatusPill status={s.status}/>
+                    </TableCell>
+                    <TableCell className={cn("text-right tabular-nums font-semibold text-ink", "!font-extrabold")}>
                       {inr(saleTotal(s))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+                    </TableCell>
+                  </TableRow>);
+        function goOnClick11() {
+            return go("orders");
+        }
+    }
 }
-
-// ── SVG time-series chart: grouped bars / line ──
-
-// ── SVG donut: source composition ──

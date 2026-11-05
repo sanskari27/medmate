@@ -1,1 +1,1 @@
-export * from "./kiosk";
+export * from "./kiosk.utils";

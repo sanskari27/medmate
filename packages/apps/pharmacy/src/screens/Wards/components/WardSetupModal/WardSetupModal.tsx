@@ -1,25 +1,14 @@
+import type { WardSetupModalProps } from "./WardSetupModal.types";
+import { Box, Button, Heading, Input, Label, Select, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { cn } from "@/utils/className";
+import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Ward, WardType, WARD_TYPES } from "@/utils/calculations/hospital";
 import { IconPlus, IconX } from "@/components/Icon";
-
-export function WardSetupModal({ onClose }: { onClose: () => void }) {
-  const { wards, addWard, updateWard } = usePharma();
-  const [draft, setDraft] = useState<Omit<Ward, "id">>({
-    name: "",
-    code: "",
-    floor: "",
-    type: "General",
-    beds: 10,
-    occupied: 0,
-    sister: "",
-  });
-  const setD = (p: Partial<Ward>) => setDraft((s) => ({ ...s, ...p }));
-  const add = async () => {
-    if (!draft.name.trim() || !draft.code.trim()) return;
-    const err = await addWard(draft);
-    if (!err)
-      setDraft({
+export function WardSetupModal({ onClose }: WardSetupModalProps) {
+    const { wards, addWard, updateWard } = usePharma();
+    const [draft, setDraft] = useState<Omit<Ward, "id">>({
         name: "",
         code: "",
         floor: "",
@@ -27,178 +16,159 @@ export function WardSetupModal({ onClose }: { onClose: () => void }) {
         beds: 10,
         occupied: 0,
         sister: "",
-      });
-  };
+    });
+    const setD = (p: Partial<Ward>) => setDraft((s) => ({ ...s, ...p }));
+    const add = async () => {
+        if (!draft.name.trim() || !draft.code.trim())
+            return;
+        const err = await addWard(draft);
+        if (!err)
+            setDraft({
+                name: "",
+                code: "",
+                floor: "",
+                type: "General",
+                beds: 10,
+                occupied: 0,
+                sister: "",
+            });
+    };
+    return (<Box className="!fixed !inset-0 !z-[100] !flex !items-center !justify-center !bg-[rgba(13,32,21,0.5)] !p-6 !backdrop-blur-[3px]" onClick={onClose}>
+      <Box className="!flex !max-h-[90vh] !w-full !max-w-[720px] !flex-col !overflow-hidden !rounded-lg !bg-paper !shadow-pop" onClick={stopPropagationOnClick}>
+        <Box className="!flex !items-center !justify-between !border-b !border-line !px-5 !py-4 [&_h3]:!text-[17px]">
+          <Heading level={3}>Manage wards & beds</Heading>
+          <Button className="!grid !h-8 !w-8 !place-items-center !rounded-xs !border !border-line-2 !bg-paper !text-ink-2 hover:!bg-wash-2 hover:!text-mid" onClick={onClose}>
+            <IconX size={18}/>
+          </Button>
+        </Box>
+        <Box className="!overflow-y-auto !p-5">
+          <Box className="!overflow-x-auto">
+            <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>Ward name</TableHeaderCell>
+                  <TableHeaderCell>Code</TableHeaderCell>
+                  <TableHeaderCell>Floor</TableHeaderCell>
+                  <TableHeaderCell>Category</TableHeaderCell>
+                  <TableHeaderCell>Beds</TableHeaderCell>
+                  <TableHeaderCell>Nurse in-charge</TableHeaderCell>
+                  <TableHeaderCell></TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {wards.map(renderWard)}
+              </TableBody>
+            </Table>
+          </Box>
 
-  return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal lg" onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <h3>Manage wards & beds</h3>
-          <button className="pd-iconbtn" onClick={onClose}>
-            <IconX size={18} />
-          </button>
-        </div>
-        <div className="pd-modal-body">
-          <div className="pd-tbl-wrap">
-            <table className="pd-tbl">
-              <thead>
-                <tr>
-                  <th>Ward name</th>
-                  <th>Code</th>
-                  <th>Floor</th>
-                  <th>Category</th>
-                  <th>Beds</th>
-                  <th>Nurse in-charge</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {wards.map((w) => (
-                  <tr key={w.id}>
-                    <td>
-                      <input
-                        className="pd-input"
-                        value={w.name}
-                        onChange={(e) => updateWard(w.id, { name: e.target.value })}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="pd-input pd-mono"
-                        style={{ width: 90 }}
-                        value={w.code}
-                        onChange={(e) => updateWard(w.id, { code: e.target.value.toUpperCase() })}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="pd-input"
-                        style={{ width: 110 }}
-                        value={w.floor}
-                        onChange={(e) => updateWard(w.id, { floor: e.target.value })}
-                      />
-                    </td>
-                    <td>
-                      <select
-                        className="pd-select"
-                        value={w.type}
-                        onChange={(e) => updateWard(w.id, { type: e.target.value as WardType })}
-                      >
-                        {WARD_TYPES.map((t) => (
-                          <option key={t}>{t}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        className="pd-input"
-                        type="number"
-                        min={0}
-                        style={{ width: 70 }}
-                        value={w.beds}
-                        onChange={(e) =>
-                          updateWard(w.id, { beds: Math.max(0, Number(e.target.value) || 0) })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="pd-input"
-                        value={w.sister}
-                        onChange={(e) => updateWard(w.id, { sister: e.target.value })}
-                      />
-                    </td>
-                    <td />
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div
-            className="pd-card pd-card-pad"
-            style={{ marginTop: 16, background: "var(--wash2)" }}
-          >
-            <b style={{ display: "block", marginBottom: 10 }}>Add a ward</b>
-            <div className="pd-form-grid">
-              <div className="pd-field pd-span2" data-field="name">
-                <label>Ward name</label>
-                <input
-                  className="pd-input"
-                  value={draft.name}
-                  onChange={(e) => setD({ name: e.target.value })}
-                  placeholder="e.g. Orthopaedic Ward"
-                />
-              </div>
-              <div className="pd-field">
-                <label>Code / bed prefix</label>
-                <input
-                  className="pd-input pd-mono"
-                  value={draft.code}
-                  onChange={(e) => setD({ code: e.target.value.toUpperCase() })}
-                  placeholder="ORT"
-                />
-              </div>
-              <div className="pd-field">
-                <label>Floor</label>
-                <input
-                  className="pd-input"
-                  value={draft.floor}
-                  onChange={(e) => setD({ floor: e.target.value })}
-                  placeholder="3rd floor"
-                />
-              </div>
-              <div className="pd-field">
-                <label>Category</label>
-                <select
-                  className="pd-select"
-                  value={draft.type}
-                  onChange={(e) => setD({ type: e.target.value as WardType })}
-                >
-                  {WARD_TYPES.map((t) => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="pd-field">
-                <label>Bed capacity</label>
-                <input
-                  className="pd-input"
-                  type="number"
-                  min={1}
-                  value={draft.beds || ""}
-                  onChange={(e) => setD({ beds: Math.max(0, Number(e.target.value) || 0) })}
-                />
-              </div>
-              <div className="pd-field pd-span2">
-                <label>Nurse in-charge</label>
-                <input
-                  className="pd-input"
-                  value={draft.sister}
-                  onChange={(e) => setD({ sister: e.target.value })}
-                  placeholder="Sr. …"
-                />
-              </div>
-            </div>
-            <button
-              className="pd-btn pd-btn-primary"
-              style={{ marginTop: 12 }}
-              disabled={!draft.name.trim() || !draft.code.trim()}
-              onClick={add}
-            >
-              <IconPlus size={15} /> Add ward · {draft.beds} beds ({draft.code}-1…{draft.code}-
+          <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!mt-4 !bg-wash-2")}>
+            <Text as="span" className={cn("font-bold", "!block !mb-2.5")}>Add a ward</Text>
+            <Box className="!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1">
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1" data-field="name">
+                <Label>Ward name</Label>
+                <Input className="" value={draft.name} onChange={setDOnChange} placeholder="e.g. Orthopaedic Ward"/>
+              </Box>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+                <Label>Code / bed prefix</Label>
+                <Input className="!font-mono" value={draft.code} onChange={setDOnChange2} placeholder="ORT"/>
+              </Box>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+                <Label>Floor</Label>
+                <Input className="" value={draft.floor} onChange={setDOnChange3} placeholder="3rd floor"/>
+              </Box>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+                <Label>Category</Label>
+                <Select className="" value={draft.type} onChange={setDOnChange4} options={[...(WARD_TYPES.map(renderWARDTYPES2))]} />
+              </Box>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
+                <Label>Bed capacity</Label>
+                <Input className="" type="number" min={1} value={draft.beds || ""} onChange={setDOnChange5}/>
+              </Box>
+              <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
+                <Label>Nurse in-charge</Label>
+                <Input className="" value={draft.sister} onChange={setDOnChange6} placeholder="Sr. …"/>
+              </Box>
+            </Box>
+            <Button disabled={!draft.name.trim() || !draft.code.trim()} onClick={add} className={cn("!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green", "!mt-3")}>
+              <IconPlus size={15}/> Add ward · {draft.beds} beds ({draft.code}-1…{draft.code}-
               {draft.beds})
-            </button>
-          </div>
-        </div>
-        <div className="pd-modal-foot">
-          <div className="pd-spacer" />
-          <button className="pd-btn pd-btn-primary" onClick={onClose}>
+            </Button>
+          </Box>
+        </Box>
+        <Box className="!mt-auto !flex !justify-end !gap-2.5 !border-t !border-line !px-5 !py-3.5">
+          <Box className="!flex-1"/>
+          <Button className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={onClose}>
             Done
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+          </Button>
+        </Box>
+      </Box>
+    </Box>);
+    function stopPropagationOnClick(e: MouseEvent<HTMLDivElement>) {
+        return e.stopPropagation();
+    }
+    function renderWard(w: Ward) {
+        return (<TableRow key={w.id}>
+                    <TableCell>
+                      <Input className="" value={w.name} onChange={updateWardOnChange}/>
+                    </TableCell>
+                    <TableCell>
+                      <Input value={w.code} onChange={updateWardOnChange2} className={cn("!font-mono", "!w-[90px]")}/>
+                    </TableCell>
+                    <TableCell>
+                      <Input value={w.floor} onChange={updateWardOnChange3} className={cn("", "!w-[110px]")}/>
+                    </TableCell>
+                    <TableCell>
+                      <Select className="" value={w.type} onChange={updateWardOnChange4} options={[...(WARD_TYPES.map(renderWARDTYPES))]} />
+                    </TableCell>
+                    <TableCell>
+                      <Input type="number" min={0} value={w.beds} onChange={updateWardOnChange5} className={cn("", "!w-[70px]")}/>
+                    </TableCell>
+                    <TableCell>
+                      <Input className="" value={w.sister} onChange={updateWardOnChange6}/>
+                    </TableCell>
+                    <TableCell />
+                  </TableRow>);
+        function updateWardOnChange(e: ChangeEvent<HTMLInputElement>) {
+            return updateWard(w.id, { name: e.target.value });
+        }
+        function updateWardOnChange2(e: ChangeEvent<HTMLInputElement>) {
+            return updateWard(w.id, { code: e.target.value.toUpperCase() });
+        }
+        function updateWardOnChange3(e: ChangeEvent<HTMLInputElement>) {
+            return updateWard(w.id, { floor: e.target.value });
+        }
+        function updateWardOnChange4(e: ChangeEvent<HTMLSelectElement>) {
+            return updateWard(w.id, { type: e.target.value as WardType });
+        }
+        function renderWARDTYPES(t: WardType) {
+            return { value: String(t), label: String(t) };
+        }
+        function updateWardOnChange5(e: ChangeEvent<HTMLInputElement>) {
+            return updateWard(w.id, { beds: Math.max(0, Number(e.target.value) || 0) });
+        }
+        function updateWardOnChange6(e: ChangeEvent<HTMLInputElement>) {
+            return updateWard(w.id, { sister: e.target.value });
+        }
+    }
+    function setDOnChange(e: ChangeEvent<HTMLInputElement>) {
+        return setD({ name: e.target.value });
+    }
+    function setDOnChange2(e: ChangeEvent<HTMLInputElement>) {
+        return setD({ code: e.target.value.toUpperCase() });
+    }
+    function setDOnChange3(e: ChangeEvent<HTMLInputElement>) {
+        return setD({ floor: e.target.value });
+    }
+    function setDOnChange4(e: ChangeEvent<HTMLSelectElement>) {
+        return setD({ type: e.target.value as WardType });
+    }
+    function renderWARDTYPES2(t: WardType) {
+        return { value: String(t), label: String(t) };
+    }
+    function setDOnChange5(e: ChangeEvent<HTMLInputElement>) {
+        return setD({ beds: Math.max(0, Number(e.target.value) || 0) });
+    }
+    function setDOnChange6(e: ChangeEvent<HTMLInputElement>) {
+        return setD({ sister: e.target.value });
+    }
 }

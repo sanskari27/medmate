@@ -1,1 +1,1 @@
-export * from "./ca";
+export * from "./ca.utils";

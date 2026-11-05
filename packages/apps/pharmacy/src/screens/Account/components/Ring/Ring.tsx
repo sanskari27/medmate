@@ -1,25 +1,9 @@
-export function Ring({ pct }: { pct: number }) {
-  const r = 30,
-    c = 2 * Math.PI * r,
-    off = c * (1 - pct / 100);
-  return (
-    <div className="pd-acct-ring">
-      <svg width={78} height={78} viewBox="0 0 78 78">
-        <circle cx="39" cy="39" r={r} fill="none" stroke="var(--wash)" strokeWidth="8" />
-        <circle
-          cx="39"
-          cy="39"
-          r={r}
-          fill="none"
-          stroke="var(--mid)"
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={off}
-          transform="rotate(-90 39 39)"
-        />
-      </svg>
-      <span className="pd-acct-ring-val">{pct}%</span>
-    </div>
-  );
+import type { RingProps } from "./Ring.types";
+import { Box, Text } from "@/components/atoms";
+import { RingMark } from "@/components/organisms/DonutChart";
+export function Ring({ pct }: RingProps) {
+    return (<Box className="!relative !grid !h-[78px] !w-[78px] !place-items-center">
+      <RingMark pct={pct} />
+      <Text className="!text-[13px] !font-extrabold" as="span">{pct}%</Text>
+    </Box>);
 }

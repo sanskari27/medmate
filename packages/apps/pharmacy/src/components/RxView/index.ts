@@ -1,2 +1,2 @@
-export { default } from "./RxView";
-export * from "./RxView";
+export { default } from "../organisms/RxView";
+export * from "../organisms/RxView";

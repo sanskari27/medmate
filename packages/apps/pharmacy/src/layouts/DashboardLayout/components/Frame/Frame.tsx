@@ -1,18 +1,18 @@
+import { Stack } from "@/components/atoms";
+import { Toast } from "@/components/organisms/Toast";
 import { usePharma } from "@/hooks";
-
-import { Toast } from "@/layouts/DashboardLayout/components/Toast";
-import { FaultBanner } from "@/layouts/DashboardLayout/components/FaultBanner";
-import { Inner } from "@/layouts/DashboardLayout/components/Inner";
-import { SupportBanner } from "@/layouts/DashboardLayout/components/SupportBanner";
+import { FaultBanner } from "../FaultBanner";
+import { Inner } from "../Inner";
+import { SupportBanner } from "../SupportBanner";
 
 export function Frame() {
   const { formFault } = usePharma();
   return (
-    <div className="pd-app" data-fault={formFault?.field || ""}>
+    <Stack className="contents" data-slot="app-frame" data-fault={formFault?.field || ""}>
       <SupportBanner />
       <Inner />
       <FaultBanner />
       <Toast />
-    </div>
+    </Stack>
   );
 }

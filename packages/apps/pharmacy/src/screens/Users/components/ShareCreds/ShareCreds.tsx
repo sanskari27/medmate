@@ -1,121 +1,75 @@
-import { useMemo, useState } from "react";
-import { StaffUser, ALL_PERM_KEYS, PERM_LABEL, userPerms, waLink, smsLink } from "@/utils";
-import {
-  IconX,
-  IconAlert,
-  IconCopy,
-  IconCheck,
-  IconWhatsApp,
-  IconMessage,
-  IconMail,
-} from "@/components/Icon";
+import { useState } from "react";
+import { waLink, smsLink, type StaffUser } from "@/utils";
+import { Box, Button, Stack, Text } from "@/components/atoms";
+import { IconAlert, IconCheck, IconCopy, IconMail, IconMessage, IconWhatsApp } from "@/components/atoms";
+import { CodeBlock } from "@/components/atoms";
+import { Modal } from "@/components/molecules/Modal";
+import { CopyButton, copyText } from "@/screens/Users/components/CopyButton";
+import { buildCredentialMessage } from "@/screens/Users/Users.utils";
 
-import { copy, Copy } from "@/screens/Users/components/Copy";
+import type { ShareCredsProps } from "./ShareCreds.types";
 
-export function ShareCreds({
-  user,
-  pharmacy,
-  onClose,
-}: {
-  user: StaffUser;
-  pharmacy: string;
-  onClose: () => void;
-}) {
-  const perms = userPerms(user);
-  const full = user.role === "Owner" || perms.length >= ALL_PERM_KEYS.length;
-  const msg = useMemo(
-    () =>
-      [
-        `Namma MedMate — your login for ${pharmacy}`,
-        ``,
-        `Login ID: ${user.username}`,
-        `Password: ${user.password}`,
-        `Role: ${user.role}`,
-        ``,
-        `Access: ${
-          full
-            ? "Full access"
-            : perms
-                .map((k) => PERM_LABEL[k])
-                .filter(Boolean)
-                .join(", ")
-        }`,
-        ``,
-        `Please sign in and change your password after first login.`,
-      ].join("\n"),
-    [user, pharmacy, perms, full],
-  );
 
-  const [ok, setOk] = useState(false);
-  const mail = `mailto:${user.email || ""}?subject=${encodeURIComponent(`Your ${pharmacy} login`)}&body=${encodeURIComponent(msg)}`;
+export function ShareCreds({ user, pharmacy, onClose }: ShareCredsProps) {
+  const message = buildCredentialMessage(user, pharmacy);
+  const [copied, setCopied] = useState(false);
+  const mail = `mailto:${user.email || ""}?subject=${encodeURIComponent(`Your ${pharmacy} login`)}&body=${encodeURIComponent(message)}`;
+
+  function handleCopyMessage() {
+    copyText(message, function markCopied() {
+      setCopied(true);
+      window.setTimeout(function clearCopied() {
+        setCopied(false);
+      }, 1600);
+    });
+  }
 
   return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <h3>Share login with {user.name}</h3>
-          <button className="pd-x" onClick={onClose}>
-            <IconX size={18} />
-          </button>
-        </div>
-        <div className="pd-modal-body">
-          <div className="pd-cred-cards">
-            <div className="pd-cred-card">
-              <span>Login ID</span>
-              <b className="pd-mono">{user.username}</b>
-              <Copy text={user.username || ""} label="login ID" />
-            </div>
-            <div className="pd-cred-card">
-              <span>Password</span>
-              <b className="pd-mono">{user.password}</b>
-              <Copy text={user.password || ""} label="password" />
-            </div>
-          </div>
-          <div className="pd-msgbox">{msg}</div>
-          <div className="pd-share-row">
-            <button
-              className="pd-btn pd-btn-line"
-              onClick={() =>
-                copy(msg, () => {
-                  setOk(true);
-                  setTimeout(() => setOk(false), 1600);
-                })
-              }
-            >
-              {ok ? <IconCheck size={15} /> : <IconCopy size={15} />}{" "}
-              {ok ? "Copied" : "Copy message"}
-            </button>
-            <a
-              className="pd-btn pd-btn-wa"
-              href={user.phone ? waLink(user.phone, msg) : undefined}
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={!user.phone}
-            >
-              <IconWhatsApp size={15} /> WhatsApp
-            </a>
-            <a
-              className="pd-btn pd-btn-line"
-              href={user.phone ? smsLink(user.phone, msg) : undefined}
-              aria-disabled={!user.phone}
-            >
-              <IconMessage size={15} /> SMS
-            </a>
-            <a className="pd-btn pd-btn-line" href={mail}>
-              <IconMail size={15} /> Email
-            </a>
-          </div>
-          <p className="pd-hint">
-            <IconAlert size={12} /> Namma MedMate opens WhatsApp / SMS / email prefilled — you press
-            send. Nothing is sent automatically.
-          </p>
-        </div>
-        <div className="pd-modal-foot">
-          <button className="pd-btn pd-btn-primary" onClick={onClose}>
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
+    <Modal title={`Share login with ${user.name}`} onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
+      <Box className="mb-3.5 grid grid-cols-2 gap-2.5">
+        <CredentialCard label="Login ID" value={user.username || ""} copyLabel="login ID" />
+        <CredentialCard label="Password" value={user.password || ""} copyLabel="password" />
+      </Box>
+      <CodeBlock className="max-h-[220px] rounded-[11px]">{message}</CodeBlock>
+      <Stack direction="row" wrap gap={2} className="mt-3">
+        <Button variant="line" className="min-w-[120px] flex-1" onClick={handleCopyMessage}>
+          {copied ? <IconCheck size={15} /> : <IconCopy size={15} />} {copied ? "Copied" : "Copy message"}
+        </Button>
+        <Button asChild variant="whatsapp" className="min-w-[120px] flex-1">
+          <a href={user.phone ? waLink(user.phone, message) : undefined} target="_blank" rel="noreferrer" aria-disabled={!user.phone}>
+            <IconWhatsApp size={15} /> WhatsApp
+          </a>
+        </Button>
+        <Button asChild variant="line" className="min-w-[120px] flex-1">
+          <a href={user.phone ? smsLink(user.phone, message) : undefined} aria-disabled={!user.phone}>
+            <IconMessage size={15} /> SMS
+          </a>
+        </Button>
+        <Button asChild variant="line" className="min-w-[120px] flex-1">
+          <a href={mail}>
+            <IconMail size={15} /> Email
+          </a>
+        </Button>
+      </Stack>
+      <Text variant="caption" className="mt-2.5 flex items-start gap-1.5">
+        <IconAlert size={12} /> Namma MedMate opens WhatsApp / SMS / email prefilled — you press send. Nothing is sent automatically.
+      </Text>
+    </Modal>
+  );
+}
+
+function CredentialCard({ label, value, copyLabel }: { label: string; value: string; copyLabel: string }) {
+  return (
+    <Box className="relative flex flex-col gap-0.5 rounded-[11px] border border-line bg-wash-2 px-[13px] py-[11px]">
+      <Text variant="caption" className="text-[10px] font-extrabold uppercase tracking-[0.05em]">
+        {label}
+      </Text>
+      <Text as="span" className="font-mono text-[15px] font-bold text-ink">
+        {value}
+      </Text>
+      <Box className="absolute top-[9px] right-[9px]">
+        <CopyButton text={value} label={copyLabel} />
+      </Box>
+    </Box>
   );
 }

@@ -1,2 +1,2 @@
 export { default } from "./PackOrder";
-export * from "./PackOrder";
+export type { PackOrderProps } from "./PackOrder.types";

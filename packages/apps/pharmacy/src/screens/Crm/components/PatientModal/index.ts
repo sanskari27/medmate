@@ -1,1 +1,1 @@
-export * from "./PatientModal";
+export { PatientModal } from "./PatientModal";

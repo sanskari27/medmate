@@ -1,2 +1,2 @@
-export { default } from "./Invoice";
-export * from "./Invoice";
+export { default } from "../organisms/Invoice";
+export * from "../organisms/Invoice";

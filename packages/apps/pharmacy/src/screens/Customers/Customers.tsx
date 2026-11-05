@@ -1,524 +1,276 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { usePharma } from "@/hooks";
+import { inr, timeAgo, totalCreditOutstanding, customerCredit } from "@/utils";
 import {
-  inr,
-  computeInvoice,
-  fmtDateTime,
-  timeAgo,
-  Sale,
-  PayMode,
-  PAY_LABEL,
-  customerCredit,
-  customerLedger,
-  totalCreditOutstanding,
-  SETTLED_MODES,
-  waLink,
-  smsLink,
-  CreditPayment,
-} from "@/utils";
+  Box,
+  Button,
+  Input,
+  Pill,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  Tag,
+  Text,
+} from "@/components/atoms";
 import {
-  IconSearch,
-  IconX,
-  IconUser,
-  IconPrint,
-  IconWhatsApp,
-  IconMessage,
-  IconCheck,
   IconCart,
-  IconRefresh,
-  IconReceipt,
   IconDownload,
   IconGlobe,
-  IconStore,
-  IconUsers,
+  IconPrint,
+  IconReceipt,
+  IconRefresh,
   IconRx,
-} from "@/components/Icon";
+  IconSearch,
+  IconStore,
+  IconUser,
+  IconUsers,
+} from "@/components/atoms";
 import {
   aggregateCustomers,
+  buildCustomerDirectory,
   exportCustomersCsv,
   exportCustomersPdf,
-} from "@/screens/Customers/utils/customerExport";
-
-type Cust = {
-  key: string;
-  name: string;
-  phone: string;
-  orders: Sale[];
-  spent: number;
-  units: number;
-  online: number;
-  offline: number;
-  last: number;
-  rx: boolean;
-};
+  filterCustomers,
+  loyaltyPoints,
+  sortCustomers,
+  summarizeCustomers,
+} from "./Customers.utils";
+import type { CustomerAccount, CustomerSort } from "./Customers.types";
+import { CustomerModal } from "./components/CustomerModal";
 
 export default function CustomersScreen() {
   const { sales, creditPayments, recordCreditPayment, now, go, profile } = usePharma();
-  const [q, setQ] = useState("");
-  const dbRows = useMemo(() => aggregateCustomers(sales), [sales]);
-  const [sort, setSort] = useState<"spent" | "orders" | "recent">("spent");
-  const [open, setOpen] = useState<Cust | null>(null);
-
-  const customers = useMemo(() => {
-    const m = new Map<string, Cust>();
-    sales
-      .filter(
-        (s) =>
-          s.status !== "cancelled" && s.customer.name && s.customer.name !== "Kiosk (self-order)",
-      )
-      .forEach((s) => {
-        const key = (s.customer.phone || s.customer.name).trim();
-        const isWalkin = s.customer.name === "Walk-in" && !s.customer.phone;
-        const k = isWalkin ? "walkin" : key;
-        const cur = m.get(k) ?? {
-          key: k,
-          name: isWalkin ? "Walk-in customers" : s.customer.name,
-          phone: s.customer.phone || "—",
-          orders: [],
-          spent: 0,
-          units: 0,
-          online: 0,
-          offline: 0,
-          last: 0,
-          rx: false,
-        };
-        const t = computeInvoice(s.items, s.discount);
-        cur.orders.push(s);
-        cur.spent += t.payable;
-        cur.units += s.items.reduce((a, i) => a + i.qty, 0);
-        if (s.channel === "online") cur.online++;
-        else cur.offline++;
-        cur.last = Math.max(cur.last, s.createdAt);
-        cur.rx = cur.rx || s.rx;
-        if (!isWalkin && s.customer.phone) cur.phone = s.customer.phone;
-        m.set(k, cur);
-      });
-    return [...m.values()];
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<CustomerSort>("spent");
+  const [open, setOpen] = useState<CustomerAccount | null>(null);
+  const exportRows = useMemo(function exportRowsOf() {
+    return aggregateCustomers(sales);
   }, [sales]);
-
-  let list = customers.filter(
-    (c) => !q || `${c.name} ${c.phone}`.toLowerCase().includes(q.toLowerCase()),
-  );
-  list = [...list].sort((a, b) =>
-    sort === "orders"
-      ? b.orders.length - a.orders.length
-      : sort === "recent"
-        ? b.last - a.last
-        : b.spent - a.spent,
-  );
-
-  const totalSpent = customers.reduce((a, c) => a + c.spent, 0);
-  const named = customers.filter((c) => c.key !== "walkin").length;
+  const customers = useMemo(function directoryOf() {
+    return buildCustomerDirectory(sales);
+  }, [sales]);
+  const list = sortCustomers(filterCustomers(customers, query), sort);
+  const summary = summarizeCustomers(customers);
   const creditDue = totalCreditOutstanding(sales, creditPayments);
 
+  function handleQueryChange(event: ChangeEvent<HTMLInputElement>) {
+    setQuery(event.target.value);
+  }
+
+  function showSpenders() {
+    setSort("spent");
+  }
+
+  function showOrders() {
+    setSort("orders");
+  }
+
+  function showRecent() {
+    setSort("recent");
+  }
+
+  function handleExcel() {
+    exportCustomersCsv(exportRows, now);
+  }
+
+  function handlePdf() {
+    exportCustomersPdf(exportRows, profile, now);
+  }
+
+  function handleClose() {
+    setOpen(null);
+  }
+
+  function handleNewSale() {
+    setOpen(null);
+    go("pos");
+  }
+
   return (
-    <div className="pd-canvas-wide">
-      <div className="pd-stats">
-        <div className="pd-stat">
-          <div className="ic ic-green">
-            <IconUser size={18} />
-          </div>
-          <div className="lbl">Customers</div>
-          <div className="val">{named}</div>
-          <div className="split">+ walk-ins</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconCart size={18} />
-          </div>
-          <div className="lbl">Lifetime sales</div>
-          <div className="val">{inr(totalSpent)}</div>
-          <div className="split">across all customers</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconRefresh size={18} />
-          </div>
-          <div className="lbl">Repeat customers</div>
-          <div className="val">
-            {customers.filter((c) => c.orders.length > 1 && c.key !== "walkin").length}
-          </div>
-          <div className="split">ordered more than once</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-rose">
-            <IconRx size={18} />
-          </div>
-          <div className="lbl">On chronic Rx</div>
-          <div className="val">{customers.filter((c) => c.rx && c.key !== "walkin").length}</div>
-          <div className="split">long-term therapy</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconReceipt size={18} />
-          </div>
-          <div className="lbl">Credit outstanding</div>
-          <div className="val">{inr(creditDue)}</div>
-          <div className="split">khata / udhaar</div>
-        </div>
-      </div>
+    <Box className="mx-auto max-w-[1680px]">
+      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+        <StatCard tone="green" icon={<IconUser size={18} />} label="Customers" value={String(summary.named)} hint="+ walk-ins" />
+        <StatCard tone="blue" icon={<IconCart size={18} />} label="Lifetime sales" value={inr(summary.totalSpent)} hint="across all customers" />
+        <StatCard tone="gold" icon={<IconRefresh size={18} />} label="Repeat customers" value={String(summary.repeat)} hint="ordered more than once" />
+        <StatCard tone="rose" icon={<IconRx size={18} />} label="On chronic Rx" value={String(summary.chronic)} hint="long-term therapy" />
+        <StatCard tone="gold" icon={<IconReceipt size={18} />} label="Credit outstanding" value={inr(creditDue)} hint="khata / udhaar" />
+      </Box>
 
-      <div className="pd-toolbar">
-        <div className="pd-search-inline">
-          <span className="ic">
+      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+        <Stack direction="row" align="center" gap={2} className="min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
+          <Box className="text-green">
             <IconSearch size={17} />
-          </span>
-          <input
-            placeholder="Search customer name or phone…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-        <div className="pd-spacer" />
-        <div className="pd-seg">
-          <button className={sort === "spent" ? "on" : ""} onClick={() => setSort("spent")}>
-            Top spenders
-          </button>
-          <button className={sort === "orders" ? "on" : ""} onClick={() => setSort("orders")}>
-            Most orders
-          </button>
-          <button className={sort === "recent" ? "on" : ""} onClick={() => setSort("recent")}>
-            Recent
-          </button>
-        </div>
-        <button
-          className="pd-btn pd-btn-ghost"
-          disabled={!dbRows.length}
-          title="Download customer database as Excel (CSV)"
-          onClick={() => exportCustomersCsv(dbRows, now)}
-        >
+          </Box>
+          <Input variant="plain" aria-label="Search customers" placeholder="Search customer name or phone…" value={query} onChange={handleQueryChange} className="placeholder:text-faint" />
+        </Stack>
+        <Box className="flex-1" />
+        <Stack direction="row" gap={0} className="rounded-sm border border-line bg-wash-2 p-0.5">
+          <SortButton label="Top spenders" selected={sort === "spent"} onSelect={showSpenders} />
+          <SortButton label="Most orders" selected={sort === "orders"} onSelect={showOrders} />
+          <SortButton label="Recent" selected={sort === "recent"} onSelect={showRecent} />
+        </Stack>
+        <Button variant="ghost" disabled={!exportRows.length} title="Download customer database as Excel (CSV)" onClick={handleExcel}>
           <IconDownload size={14} /> Excel
-        </button>
-        <button
-          className="pd-btn pd-btn-ghost"
-          disabled={!dbRows.length}
-          title="Download customer database as PDF"
-          onClick={() => exportCustomersPdf(dbRows, profile, now)}
-        >
+        </Button>
+        <Button variant="ghost" disabled={!exportRows.length} title="Download customer database as PDF" onClick={handlePdf}>
           <IconPrint size={15} /> PDF
-        </button>
-      </div>
+        </Button>
+      </Stack>
 
-      <div className="pd-card">
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th className="num">Orders</th>
-                <th>Channel</th>
-                <th className="num">Units</th>
-                <th>Last visit</th>
-                <th className="num">Loyalty</th>
-                <th className="num">Lifetime value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((c) => (
-                <tr key={c.key} style={{ cursor: "pointer" }} onClick={() => setOpen(c)}>
-                  <td>
-                    <div className="prod">
-                      <span className="em">
-                        <IconUser size={15} />
-                      </span>
-                      <span className="nm">
-                        {c.name}
-                        {c.rx && (
-                          <span className="pd-tag rx" style={{ marginLeft: 6 }}>
-                            Rx
-                          </span>
-                        )}
-                        {c.key !== "walkin" &&
-                          customerCredit(c.key, sales, creditPayments).outstanding > 0 && (
-                            <span className="pd-pill pill-rose" style={{ marginLeft: 6 }}>
-                              Due {inr(customerCredit(c.key, sales, creditPayments).outstanding)}
-                            </span>
-                          )}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="pd-mono">{c.phone}</td>
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {c.orders.length}
-                  </td>
-                  <td>
-                    <span className="pd-split2" title={`${c.online} online · ${c.offline} counter`}>
-                      <span>
-                        <IconGlobe size={13} />
-                        {c.online}
-                      </span>
-                      <span>
-                        <IconStore size={13} />
-                        {c.offline}
-                      </span>
-                    </span>
-                  </td>
-                  <td className="num">{c.units}</td>
-                  <td>{timeAgo(c.last, now)}</td>
-                  <td className="num">
-                    <span className="pd-pill pill-gold">{Math.floor(c.spent / 100)} pts</span>
-                  </td>
-                  <td className="num" style={{ fontWeight: 800 }}>
-                    {inr(c.spent)}
-                  </td>
-                </tr>
-              ))}
-              {list.length === 0 && (
-                <tr>
-                  <td colSpan={8}>
-                    <div className="pd-empty">
-                      <div className="em">
+      <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
+        <Box className="overflow-x-auto">
+          <Table className="border-separate border-spacing-0 text-[13px]">
+            <TableHead>
+              <TableRow className="border-0">
+                <HeaderCell>Customer</HeaderCell>
+                <HeaderCell>Phone</HeaderCell>
+                <HeaderCell align="right">Orders</HeaderCell>
+                <HeaderCell>Channel</HeaderCell>
+                <HeaderCell align="right">Units</HeaderCell>
+                <HeaderCell>Last visit</HeaderCell>
+                <HeaderCell align="right">Loyalty</HeaderCell>
+                <HeaderCell align="right">Lifetime value</HeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <CustomerRows customers={list} sales={sales} creditPayments={creditPayments} now={now} onOpen={setOpen} />
+              {list.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <Stack align="center" className="px-5 py-9 text-center text-muted">
+                      <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid">
                         <IconUsers size={30} />
-                      </div>
-                      <p>No customers match.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      </Box>
+                      <Text variant="muted">No customers match.</Text>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </Box>
+      </Box>
 
-      {open && (
+      {open ? (
         <CustomerModal
-          c={open}
-          onClose={() => setOpen(null)}
-          onNewSale={() => {
-            setOpen(null);
-            go("pos");
-          }}
+          customer={open}
+          onClose={handleClose}
+          onNewSale={handleNewSale}
           sales={sales}
           creditPayments={creditPayments}
           recordCreditPayment={recordCreditPayment}
           profile={profile}
         />
-      )}
-    </div>
+      ) : null}
+    </Box>
   );
 }
 
-function CustomerModal({
-  c,
-  onClose,
-  onNewSale,
+function HeaderCell({ children, align }: { children: string; align?: "right" }) {
+  return (
+    <TableHeaderCell align={align} className="sticky top-0 z-[1] whitespace-nowrap bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted">
+      {children}
+    </TableHeaderCell>
+  );
+}
+
+function SortButton({ label, selected, onSelect }: { label: string; selected: boolean; onSelect: () => void }) {
+  return (
+    <Button variant="ghost" onClick={onSelect} className={selected ? "border-0 bg-paper px-[13px] py-1.5 text-[12.5px] text-dark shadow-sm" : "border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] text-muted shadow-none"}>
+      {label}
+    </Button>
+  );
+}
+
+function CustomerRows({
+  customers,
   sales,
   creditPayments,
-  recordCreditPayment,
-  profile,
+  now,
+  onOpen,
 }: {
-  c: Cust;
-  onClose: () => void;
-  onNewSale: () => void;
-  sales: Sale[];
-  creditPayments: CreditPayment[];
-  recordCreditPayment: (p: {
-    custKey: string;
-    custName: string;
-    custPhone: string;
-    amount: number;
-    mode: PayMode;
-    note?: string;
-  }) => Promise<unknown>;
-  profile: any;
+  customers: CustomerAccount[];
+  sales: Parameters<typeof customerCredit>[1];
+  creditPayments: Parameters<typeof customerCredit>[2];
+  now: number;
+  onOpen: (customer: CustomerAccount) => void;
 }) {
-  const isWalkin = c.key === "walkin";
-  const cr = isWalkin
-    ? { given: 0, repaid: 0, outstanding: 0 }
-    : customerCredit(c.key, sales, creditPayments);
-  const ledger = isWalkin ? [] : customerLedger(c.key, sales, creditPayments);
-  const phone = c.phone && c.phone !== "—" ? c.phone : "";
-  const [repay, setRepay] = useState(false);
-  const [amt, setAmt] = useState(cr.outstanding);
-  const [mode, setMode] = useState<PayMode>("cash");
+  return customers.map(function renderCustomer(customer) {
+    return (
+      <CustomerRow key={customer.key} customer={customer} sales={sales} creditPayments={creditPayments} now={now} onOpen={onOpen} />
+    );
+  });
+}
 
-  const msg = (kind: "remind" | "invite", channel: "wa" | "sms") => {
-    if (!phone) return;
-    const text =
-      kind === "remind"
-        ? `Hi ${c.name}, this is ${profile.name}. Your pending medicine credit (khata) balance is ${inr(cr.outstanding)}. Kindly settle it at your convenience. Thank you!`
-        : `Hi ${c.name}, this is ${profile.name}. You can now buy your medicines on credit (khata) and pay later. Just visit us or reply here to place an order.`;
-    if (channel === "wa") window.open(waLink(phone, text), "_blank");
-    else window.open(smsLink(phone, text), "_blank");
-  };
-  const doRepay = async () => {
-    if (amt <= 0) return;
-    const err = await recordCreditPayment({
-      custKey: c.key,
-      custName: c.name,
-      custPhone: phone,
-      amount: Math.min(amt, cr.outstanding || amt),
-      mode,
-    });
-    if (!err) setRepay(false);
-  };
+function CustomerRow({
+  customer,
+  sales,
+  creditPayments,
+  now,
+  onOpen,
+}: {
+  customer: CustomerAccount;
+  sales: Parameters<typeof customerCredit>[1];
+  creditPayments: Parameters<typeof customerCredit>[2];
+  now: number;
+  onOpen: (customer: CustomerAccount) => void;
+}) {
+  const due = customer.key === "walkin" ? 0 : customerCredit(customer.key, sales, creditPayments).outstanding;
+
+  function handleOpen() {
+    onOpen(customer);
+  }
 
   return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <h3>{c.name}</h3>
-          <button className="pd-x" onClick={onClose}>
-            <IconX size={18} />
-          </button>
-        </div>
-        <div className="pd-modal-body">
-          <div className="pd-summary-chips">
-            <div className="pd-schip">
-              Phone<b style={{ fontSize: 13 }}>{c.phone}</b>
-            </div>
-            <div className="pd-schip">
-              Lifetime<b>{inr(c.spent)}</b>
-            </div>
-            <div className="pd-schip">
-              Orders<b>{c.orders.length}</b>
-            </div>
-            <div className="pd-schip">
-              Credit due
-              <b style={{ color: cr.outstanding > 0 ? "var(--rose)" : undefined }}>
-                {inr(cr.outstanding)}
-              </b>
-            </div>
-          </div>
+    <TableRow className="cursor-pointer" onClick={handleOpen}>
+      <TableCell className="px-3.5 py-[11px]">
+        <Stack direction="row" align="center" gap={2}>
+          <Box className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-wash text-mid">
+            <IconUser size={15} />
+          </Box>
+          <Text as="span" className="font-bold text-ink">
+            {customer.name}
+            {customer.rx ? <Tag tone="rx" className="ml-1.5">Rx</Tag> : null}
+            {due > 0 ? <Pill tone="rose" className="ml-1.5">Due {inr(due)}</Pill> : null}
+          </Text>
+        </Stack>
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px] font-mono">{customer.phone}</TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px] font-bold">{customer.orders.length}</TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Stack direction="row" align="center" gap={3} className="text-[12px] text-ink-2 tabular-nums" title={`${customer.online} online · ${customer.offline} counter`}>
+          <Stack direction="row" align="center" gap={1}>
+            <Box className="text-faint"><IconGlobe size={13} /></Box>
+            {customer.online}
+          </Stack>
+          <Stack direction="row" align="center" gap={1}>
+            <Box className="text-faint"><IconStore size={13} /></Box>
+            {customer.offline}
+          </Stack>
+        </Stack>
+      </TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px]">{customer.units}</TableCell>
+      <TableCell className="px-3.5 py-[11px]">{timeAgo(customer.last, now)}</TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px]">
+        <Pill tone="gold">{loyaltyPoints(customer.spent)} pts</Pill>
+      </TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px] font-extrabold">{inr(customer.spent)}</TableCell>
+    </TableRow>
+  );
+}
 
-          {!isWalkin && (
-            <>
-              <div className="pd-pl-head">Credit account (khata)</div>
-              <div
-                className="pd-flex"
-                style={{ gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}
-              >
-                <span className="pd-muted" style={{ fontSize: 13, flex: 1 }}>
-                  Given {inr(cr.given)} · Repaid {inr(cr.repaid)} ·{" "}
-                  <b style={{ color: cr.outstanding > 0 ? "var(--rose)" : "var(--green)" }}>
-                    Outstanding {inr(cr.outstanding)}
-                  </b>
-                </span>
-                {cr.outstanding > 0 && !repay && (
-                  <button
-                    className="pd-btn pd-btn-primary"
-                    onClick={() => {
-                      setAmt(cr.outstanding);
-                      setRepay(true);
-                    }}
-                  >
-                    <IconCheck size={15} /> Record repayment
-                  </button>
-                )}
-                <button
-                  className="pd-btn pd-btn-ghost"
-                  disabled={!phone}
-                  onClick={() => msg(cr.outstanding > 0 ? "remind" : "invite", "wa")}
-                >
-                  <IconWhatsApp size={15} /> {cr.outstanding > 0 ? "Remind" : "Offer credit"}
-                </button>
-                <button
-                  className="pd-btn pd-btn-ghost"
-                  disabled={!phone}
-                  onClick={() => msg(cr.outstanding > 0 ? "remind" : "invite", "sms")}
-                >
-                  <IconMessage size={15} /> SMS
-                </button>
-              </div>
-              {repay && (
-                <div
-                  className="pd-flex"
-                  style={{ gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}
-                >
-                  <input
-                    className="pd-input"
-                    data-field="amount"
-                    type="number"
-                    min={0}
-                    value={amt || ""}
-                    onChange={(e) => setAmt(Number(e.target.value) || 0)}
-                    placeholder="Amount ₹"
-                    style={{ width: 120 }}
-                    autoFocus
-                  />
-                  <select
-                    className="pd-select"
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value as PayMode)}
-                    style={{ width: 110 }}
-                  >
-                    {SETTLED_MODES.filter((m) => m !== "cod").map((m) => (
-                      <option key={m} value={m}>
-                        {PAY_LABEL[m]}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="pd-btn pd-btn-primary" disabled={amt <= 0} onClick={doRepay}>
-                    Save ₹{Math.round(Math.min(amt, cr.outstanding || amt)).toLocaleString("en-IN")}
-                  </button>
-                  <button className="pd-btn pd-btn-ghost" onClick={() => setRepay(false)}>
-                    Cancel
-                  </button>
-                </div>
-              )}
-              {ledger.length > 0 &&
-                ledger.map((r, i) => (
-                  <div className="pd-row" key={i}>
-                    <span
-                      className="em"
-                      style={{ color: r.kind === "debit" ? "var(--rose)" : "var(--green)" }}
-                    >
-                      {r.kind === "debit" ? "−" : "+"}
-                    </span>
-                    <span className="gw">
-                      <div className="t">{r.label}</div>
-                      <div className="s">{r.ref}</div>
-                    </span>
-                    <span style={{ textAlign: "right", fontSize: 12 }}>
-                      <b style={{ color: r.kind === "debit" ? "var(--rose)" : "var(--green)" }}>
-                        {r.kind === "debit" ? "−" : "+"}
-                        {inr(r.amount)}
-                      </b>
-                      <br />
-                      <span className="pd-muted" style={{ fontSize: 11 }}>
-                        {fmtDateTime(r.at)}
-                      </span>
-                    </span>
-                  </div>
-                ))}
-            </>
-          )}
-
-          <div className="pd-pl-head">Purchase history</div>
-          {[...c.orders]
-            .sort((a, b) => b.createdAt - a.createdAt)
-            .map((s) => {
-              const t = computeInvoice(s.items, s.discount);
-              return (
-                <div className="pd-row" key={s.id}>
-                  <span className="em">
-                    {s.channel === "online" ? <IconGlobe size={15} /> : <IconStore size={15} />}
-                  </span>
-                  <span className="gw">
-                    <div className="t">
-                      {s.id} · {inr(t.payable)}
-                    </div>
-                    <div className="s">{s.items.map((i) => i.name).join(", ")}</div>
-                  </span>
-                  <span className="pd-muted" style={{ fontSize: 11.5, textAlign: "right" }}>
-                    {fmtDateTime(s.createdAt)}
-                    <br />
-                    {PAY_LABEL[s.payMode]}
-                  </span>
-                </div>
-              );
-            })}
-        </div>
-        <div className="pd-modal-foot">
-          <button className="pd-btn pd-btn-ghost" onClick={onClose}>
-            Close
-          </button>
-          <button className="pd-btn pd-btn-primary" onClick={onNewSale}>
-            New sale
-          </button>
-        </div>
-      </div>
-    </div>
+function StatCard({ tone, icon, label, value, hint }: { tone: "green" | "blue" | "gold" | "rose"; icon: ReactNode; label: string; value: string; hint: string }) {
+  const toneClass = { green: "bg-wash text-mid", blue: "bg-blue-bg text-blue", gold: "bg-amber-bg text-gold-d", rose: "bg-rose-bg text-rose" }[tone];
+  return (
+    <Stack className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${toneClass}`}>{icon}</Box>
+      <Text variant="label" className="mt-3 text-[11px] font-bold uppercase tracking-[0.05em] text-muted">{label}</Text>
+      <Text className="mb-2.5 mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
+      <Text variant="caption" className="mt-auto border-t border-line pt-[9px] text-[12px]">{hint}</Text>
+    </Stack>
   );
 }

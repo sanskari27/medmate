@@ -1,208 +1,153 @@
 import {
-  timeAgo,
-  RxStatus,
-  Prescription,
-  InvProduct,
-  inr,
-  SCHEDULE_META,
-  rxWaitMins,
-  rxOverdue,
-  rxTurnaroundMins,
-  rxAvailability,
-  rxScheduledCount,
   fmtMins,
+  inr,
   RX_SLA_MINS,
+  rxAvailability,
+  rxOverdue,
+  rxScheduledCount,
+  rxTurnaroundMins,
+  rxWaitMins,
+  timeAgo,
+  type InvProduct,
+  type Prescription,
 } from "@/utils";
-import {
-  IconCheck,
-  IconX,
-  IconArrowRight,
-  IconClock,
-  IconDoc,
-  IconPill,
-  IconAlert,
-  IconStethoscope,
-  IconBolt,
-} from "@/components/Icon";
-import { monogramOf } from "@/components/EntityIcon";
+import { Box, Button, Heading, Pill, Stack, Text } from "@/components/atoms";
+import { IconAlert, IconArrowRight, IconBolt, IconCheck, IconClock, IconDoc, IconPill, IconStethoscope, IconX } from "@/components/atoms";
+import { monogramOf } from "@/components/molecules/EntityMark";
+import { ScheduleTag } from "@/components/molecules/ScheduleTag";
+import { rxKindLabel, rxStatusLabel, rxStatusTone } from "@/screens/Prescriptions/Prescriptions.utils";
 
-const RX_PILL: Record<RxStatus, string> = {
-  pending: "pill-gold",
-  approved: "pill-blue",
-  dispensed: "pill-green",
-  rejected: "pill-rose",
-};
-
-const RX_LABEL: Record<RxStatus, string> = {
-  pending: "Pending review",
-  approved: "Approved",
-  dispensed: "Dispensed",
-  rejected: "Rejected",
-};
-
-const KIND_LABEL: Record<string, string> = { digital: "Digital Rx", uploaded: "Uploaded" };
+import type { RxCardProps } from "./RxCard.types";
 
 export function RxCard({
-  r,
+  prescription,
   now,
   inventory,
   onOpen,
   onApprove,
   onReject,
   onDispense,
-}: {
-  r: Prescription;
-  now: number;
-  inventory: InvProduct[];
-  onOpen: () => void;
-  onApprove: () => void;
-  onReject: () => void;
-  onDispense: () => void;
-}) {
-  const av = rxAvailability(r, inventory);
-  const meds = av.items;
-  const wait = rxWaitMins(r, now);
-  const overdue = rxOverdue(r, now);
-  const scheduled = rxScheduledCount(r, inventory);
+}: RxCardProps) {
+  const availability = rxAvailability(prescription, inventory);
+  const medicines = availability.items;
+  const wait = rxWaitMins(prescription, now);
+  const overdue = rxOverdue(prescription, now);
+  const scheduled = rxScheduledCount(prescription, inventory);
 
+  function productName(product: InvProduct) { return product.name; }
   return (
-    <div className={`pd-card pd-rxcard${overdue ? " overdue" : ""}`}>
-      <div className="pd-card-head">
-        <div className="pd-flex pd-gap6" style={{ alignItems: "center" }}>
-          <span className={`pd-rx-kindico ${r.kind}`}>
-            {r.kind === "digital" ? <IconPill size={15} /> : <IconDoc size={15} />}
-          </span>
-          <div>
-            <h3 style={{ fontSize: 13.5 }}>
-              {r.id}
-              {r.urgent && (
-                <span className="pd-pill pill-rose" style={{ marginLeft: 6 }}>
-                  <IconBolt size={10} /> Urgent
-                </span>
-              )}
-            </h3>
-            <div className="sub">{timeAgo(r.uploadedAt, now)}</div>
-          </div>
-        </div>
-        <span className={`pd-pill ${RX_PILL[r.status]}`}>
-          <i className="d" />
-          {RX_LABEL[r.status]}
-        </span>
-      </div>
+    <Box className={`flex flex-col overflow-hidden rounded-lg border bg-paper shadow-sm ${overdue ? "border-[#f0c4c4] shadow-[0_0_0_1px_#f0c4c4]" : "border-line"}`}>
+      <Stack direction="row" align="start" justify="between" gap={2} className="px-4 py-3">
+        <Stack direction="row" align="center" gap={2} className="min-w-0 flex-1">
+          <Box className={`grid h-8 w-8 shrink-0 place-items-center rounded-md ${prescription.kind === "digital" ? "bg-[#efeafc] text-[#6d4fc4]" : "bg-wash text-mid"}`}>
+            {prescription.kind === "digital" ? <IconPill size={15} /> : <IconDoc size={15} />}
+          </Box>
+          <Box>
+            <Heading level={3} className="flex items-center gap-1.5 text-[13.5px] leading-[22px]">
+              {prescription.id}
+              {prescription.urgent ? <Pill tone="rose"><IconBolt size={10} /> Urgent</Pill> : null}
+            </Heading>
+            <Text variant="caption">{timeAgo(prescription.uploadedAt, now)}</Text>
+          </Box>
+        </Stack>
+        <Pill tone={rxStatusTone(prescription.status)} dot>{rxStatusLabel(prescription.status)}</Pill>
+      </Stack>
 
-      <div className="pd-card-pad" style={{ paddingTop: 10, paddingBottom: 10 }}>
-        <button onClick={onOpen} className="pd-rx-patient">
-          <span className="av">{r.patient[0]}</span>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span className="nm">{r.patient}</span>
-            <span className="dr">
-              <IconStethoscope size={11} /> {r.doctor}
-              {r.regNo ? ` · ${r.regNo}` : ""}
-            </span>
-          </span>
-          <span className="pd-pill pill-gray">{KIND_LABEL[r.kind]}</span>
-        </button>
+      <Box className="px-4 py-2.5">
+        <Button variant="ghost" className="h-auto w-full justify-start border-transparent bg-transparent px-0 py-1 text-left shadow-none" onClick={onOpen}>
+          <Box className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-wash font-bold text-mid">{prescription.patient[0]}</Box>
+          <Stack className="min-w-0 flex-1">
+            <Text className="font-bold">{prescription.patient}</Text>
+            <Text variant="caption" className="truncate">
+              <IconStethoscope size={11} /> {prescription.doctor}
+              {prescription.regNo ? ` · ${prescription.regNo}` : ""}
+            </Text>
+          </Stack>
+          <Pill tone="gray">{rxKindLabel(prescription.kind)}</Pill>
+        </Button>
 
-        {/* status-aware meta row */}
-        {r.status === "pending" && (
-          <div className={`pd-rx-sla${overdue ? " over" : ""}`}>
+        {prescription.status === "pending" ? (
+          <Text variant="caption" className={`mt-2 flex items-center gap-1 font-bold ${overdue ? "text-rose" : "text-gold-d"}`}>
             <IconClock size={12} /> Waiting {fmtMins(wait)}
             {overdue ? ` · over ${RX_SLA_MINS / 60}h SLA` : ` · SLA ${RX_SLA_MINS / 60}h`}
-          </div>
-        )}
-        {r.status === "approved" && r.approvedAt && (
-          <div className="pd-rx-sla ok">
-            <IconCheck size={12} /> Approved {timeAgo(r.approvedAt, now)}
-            {r.reviewedBy ? ` · ${r.reviewedBy}` : ""}
-          </div>
-        )}
-        {r.status === "dispensed" && (
-          <div className="pd-rx-sla ok">
+          </Text>
+        ) : null}
+        {prescription.status === "approved" && prescription.approvedAt ? (
+          <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-mid">
+            <IconCheck size={12} /> Approved {timeAgo(prescription.approvedAt, now)}
+            {prescription.reviewedBy ? ` · ${prescription.reviewedBy}` : ""}
+          </Text>
+        ) : null}
+        {prescription.status === "dispensed" ? (
+          <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-mid">
             <IconCheck size={12} /> Dispensed
-            {rxTurnaroundMins(r) != null ? ` in ${fmtMins(rxTurnaroundMins(r))}` : ""}
-          </div>
-        )}
-        {r.status === "rejected" && (
-          <div className="pd-rx-sla over">
-            <IconX size={12} /> {r.rejectReason || "Rejected"}
-          </div>
-        )}
+            {rxTurnaroundMins(prescription) != null ? ` in ${fmtMins(rxTurnaroundMins(prescription))}` : ""}
+          </Text>
+        ) : null}
+        {prescription.status === "rejected" ? (
+          <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-rose">
+            <IconX size={12} /> {prescription.rejectReason || "Rejected"}
+          </Text>
+        ) : null}
 
-        {/* verified medicines */}
-        {meds.length > 0 && (
-          <>
-            <div className="pd-rx-medlbl">
-              Verified medicines{" "}
-              <span>
-                {av.inStock}/{av.total} in stock{scheduled ? ` · ${scheduled} Rx-only` : ""}
-              </span>
-            </div>
-            {meds.slice(0, 3).map(({ product, stock, price, rx: needsPrescription }) => (
-              <div className="pd-rx-medrow" key={product.id}>
-                <span className="nm">
-                  <span className="em">{monogramOf(product.name)}</span> {product.name}
-                  {needsPrescription && (
-                    <span className="pd-schtag">{SCHEDULE_META[product.schedule].label}</span>
-                  )}
-                </span>
-                <span className={`st ${stock > 0 ? "" : "out"}`}>
-                  {stock > 0 ? inr(price) : "Out"}
-                </span>
-              </div>
-            ))}
-            {meds.length > 3 && (
-              <div className="pd-muted" style={{ fontSize: 11.5, marginTop: 2 }}>
-                +{meds.length - 3} more…
-              </div>
-            )}
-            <div className="pd-rx-total">
-              <span>Est. bill value</span>
-              <b>{inr(av.value)}</b>
-            </div>
-          </>
-        )}
-        {av.outOfStock.length > 0 && (
-          <div className="pd-rx-oos">
-            <IconAlert size={12} /> {av.outOfStock.map((p) => p.name).join(", ")} out of stock
-          </div>
-        )}
-        {r.note && meds.length === 0 && (
-          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6, fontStyle: "italic" }}>
-            “{r.note}”
-          </div>
-        )}
-      </div>
+        {medicines.length > 0 ? (
+          <Box>
+            <Stack direction="row" justify="between" className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted">
+              <Text as="span" variant="label">Verified medicines</Text>
+              <Text as="span" variant="caption">{availability.inStock}/{availability.total} in stock{scheduled ? ` · ${scheduled} Rx-only` : ""}</Text>
+            </Stack>
+            <MedicineRows medicines={medicines.slice(0, 3)} />
+            {medicines.length > 3 ? <Text variant="caption" className="mt-0.5">+{medicines.length - 3} more…</Text> : null}
+            <Stack direction="row" justify="between" className="mt-2 border-t border-line pt-2 text-[13px]">
+              <Text as="span">Est. bill value</Text>
+              <Text as="span" className="font-extrabold">{inr(availability.value)}</Text>
+            </Stack>
+          </Box>
+        ) : null}
+        {availability.outOfStock.length > 0 ? (
+          <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-rose">
+            <IconAlert size={12} /> {availability.outOfStock.map(productName).join(", ")} out of stock
+          </Text>
+        ) : null}
+        {prescription.note && medicines.length === 0 ? (
+          <Text variant="muted" className="mt-1.5 text-[12px] italic">“{prescription.note}”</Text>
+        ) : null}
+      </Box>
 
-      <div className="pd-modal-foot" style={{ borderTop: "1px solid var(--line)" }}>
-        {r.status === "pending" && (
+      <Stack direction="row" gap={2} className="mt-auto border-t border-line px-4 py-3">
+        {prescription.status === "pending" ? (
           <>
-            <button className="pd-btn pd-btn-rose pd-btn-sm" onClick={onReject}>
-              <IconX size={14} /> Reject
-            </button>
-            <button className="pd-btn pd-btn-ghost pd-btn-sm" onClick={onApprove}>
-              <IconCheck size={14} /> Approve
-            </button>
-            <button className="pd-btn pd-btn-primary pd-btn-sm" onClick={onDispense}>
-              Dispense <IconArrowRight size={14} />
-            </button>
+            <Button size="sm" variant="rose" onClick={onReject}><IconX size={14} /> Reject</Button>
+            <Button size="sm" variant="ghost" onClick={onApprove}><IconCheck size={14} /> Approve</Button>
+            <Button size="sm" onClick={onDispense}>Dispense <IconArrowRight size={14} /></Button>
           </>
-        )}
-        {r.status === "approved" && (
-          <button className="pd-btn pd-btn-primary pd-btn-sm pd-btn-block" onClick={onDispense}>
-            Dispense → billing <IconArrowRight size={14} />
-          </button>
-        )}
-        {r.status === "dispensed" && (
-          <button className="pd-btn pd-btn-ghost pd-btn-sm pd-btn-block" onClick={onOpen}>
-            View details
-          </button>
-        )}
-        {r.status === "rejected" && (
-          <button className="pd-btn pd-btn-ghost pd-btn-sm pd-btn-block" onClick={onOpen}>
-            View &amp; re-notify
-          </button>
-        )}
-      </div>
-    </div>
+        ) : null}
+        {prescription.status === "approved" ? (
+          <Button size="sm" block onClick={onDispense}>Dispense → billing <IconArrowRight size={14} /></Button>
+        ) : null}
+        {prescription.status === "dispensed" ? (
+          <Button size="sm" variant="ghost" block onClick={onOpen}>View details</Button>
+        ) : null}
+        {prescription.status === "rejected" ? (
+          <Button size="sm" variant="ghost" block onClick={onOpen}>View & re-notify</Button>
+        ) : null}
+      </Stack>
+    </Box>
   );
+}
+
+function MedicineRows({ medicines }: { medicines: ReturnType<typeof rxAvailability>["items"] }) {
+  function renderMedicine(item: ReturnType<typeof rxAvailability>["items"][number]) {
+    return (
+      <Stack key={item.product.id} direction="row" align="center" justify="between" gap={2} className="py-1 text-[12.5px]">
+        <Text as="span" className="min-w-0 truncate">
+          <Text as="span" className="mr-1 inline-grid h-5 w-5 place-items-center rounded bg-wash text-[10px] font-bold text-mid">{monogramOf(item.product.name)}</Text>
+          {item.product.name}
+          {item.rx ? <ScheduleTag schedule={item.product.schedule} /> : null}
+        </Text>
+        <Text as="span" className={item.stock > 0 ? "font-bold" : "font-bold text-rose"}>{item.stock > 0 ? inr(item.price) : "Out"}</Text>
+      </Stack>
+    );
+  }
+  return medicines.map(renderMedicine);
 }

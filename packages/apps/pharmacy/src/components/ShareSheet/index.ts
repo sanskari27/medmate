@@ -1,2 +1,2 @@
-export { default } from "./ShareSheet";
-export * from "./ShareSheet";
+export { default } from "../organisms/ShareSheet";
+export * from "../organisms/ShareSheet";

@@ -1,1 +1,1 @@
-export * from "./offers";
+export * from "./offers.utils";

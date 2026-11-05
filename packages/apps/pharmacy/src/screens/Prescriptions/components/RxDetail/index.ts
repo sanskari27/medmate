@@ -1,1 +1,1 @@
-export * from "./RxDetail";
+export { RxDetail } from "./RxDetail";

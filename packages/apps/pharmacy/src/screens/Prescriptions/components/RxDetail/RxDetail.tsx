@@ -1,44 +1,22 @@
 import {
   fmtDateTime,
-  RxStatus,
-  Prescription,
-  InvProduct,
   inr,
-  SCHEDULE_META,
   rxAvailability,
-  waLink,
   smsLink,
+  waLink,
+  type InvProduct,
+  type Prescription,
 } from "@/utils";
-import { ChannelPill } from "@/components/ChannelPill";
-import {
-  IconCheck,
-  IconX,
-  IconArrowRight,
-  IconClock,
-  IconDoc,
-  IconAlert,
-  IconPhone,
-  IconWhatsApp,
-  IconBox,
-  IconUser,
-  IconBolt,
-} from "@/components/Icon";
-import { monogramOf } from "@/components/EntityIcon";
+import { Box, Button, Pill, Stack, Table, TableBody, TableCell, TableRow, Text } from "@/components/atoms";
+import { IconAlert, IconArrowRight, IconBolt, IconBox, IconCheck, IconClock, IconDoc, IconPhone, IconUser, IconWhatsApp, IconX } from "@/components/atoms";
+import { ChannelPill } from "@/components/molecules/ChannelPill";
+import { monogramOf } from "@/components/molecules/EntityMark";
+import { Modal } from "@/components/molecules/Modal";
+import { ScheduleTag } from "@/components/molecules/ScheduleTag";
 import RxView from "@/components/RxView";
+import { notifyMessage, prescriptionTimeline, rejectedMessage, rxStatusLabel, rxStatusTone } from "@/screens/Prescriptions/Prescriptions.utils";
 
-const RX_PILL: Record<RxStatus, string> = {
-  pending: "pill-gold",
-  approved: "pill-blue",
-  dispensed: "pill-green",
-  rejected: "pill-rose",
-};
-
-const RX_LABEL: Record<RxStatus, string> = {
-  pending: "Pending review",
-  approved: "Approved",
-  dispensed: "Dispensed",
-  rejected: "Rejected",
-};
+import type { RxDetailProps } from "./RxDetail.types";
 
 export function RxDetail({
   rx,
@@ -47,232 +25,151 @@ export function RxDetail({
   onApprove,
   onReject,
   onDispense,
-}: {
-  rx: Prescription;
-  inventory: InvProduct[];
-  now: number;
-  onClose: () => void;
-  onApprove: () => void;
-  onReject: () => void;
-  onDispense: () => void;
-}) {
-  const av = rxAvailability(rx, inventory);
+}: RxDetailProps) {
+  const availability = rxAvailability(rx, inventory);
   const phone = rx.phone && rx.phone !== "—" ? rx.phone : "";
-  const events = [
-    { label: "Uploaded", at: rx.uploadedAt, tone: "done" },
-    ...(rx.approvedAt
-      ? [
-          {
-            label: `Approved${rx.reviewedBy ? ` · ${rx.reviewedBy}` : ""}`,
-            at: rx.approvedAt,
-            tone: "done",
-          },
-        ]
-      : []),
-    ...(rx.rejectedAt
-      ? [
-          {
-            label: `Rejected${rx.reviewedBy ? ` · ${rx.reviewedBy}` : ""}`,
-            at: rx.rejectedAt,
-            tone: "bad",
-          },
-        ]
-      : []),
-    ...(rx.dispensedAt ? [{ label: "Dispensed & billed", at: rx.dispensedAt, tone: "done" }] : []),
-  ];
-  const readyMsg = `Hi ${rx.patient}, your prescription ${rx.id} at our pharmacy is ready. Est. bill ${inr(av.value)}. — Namma MedMate`;
-  const rejMsg = `Hi ${rx.patient}, we couldn't process prescription ${rx.id}. Reason: ${rx.rejectReason || "please re-upload a clearer copy"}. — Namma MedMate`;
-  const notifyMsg = rx.status === "rejected" ? rejMsg : readyMsg;
+  const events = prescriptionTimeline(rx);
+  const rejected = rejectedMessage(rx);
+  const message = notifyMessage(rx, availability.value);
+  const dial = phone.replace(/\s/g, "");
 
+  function productName(product: InvProduct) { return product.name; }
   return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal pd-modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <h3>
-            Prescription {rx.id}{" "}
-            <span className={`pd-pill ${RX_PILL[rx.status]}`} style={{ marginLeft: 6 }}>
-              {RX_LABEL[rx.status]}
-            </span>
-            {rx.urgent && (
-              <span className="pd-pill pill-rose" style={{ marginLeft: 4 }}>
-                <IconBolt size={10} /> Urgent
-              </span>
-            )}
-          </h3>
-          <button className="pd-x" onClick={onClose}>
-            <IconX size={18} />
-          </button>
-        </div>
-        <div className="pd-modal-body">
-          <div className="pd-rx-detail">
-            {/* left: the Rx itself */}
-            <div>
-              <RxView rx={rx} />
-            </div>
-
-            {/* right: patient, timeline, meds */}
-            <div className="pd-rx-side">
-              <div className="pd-rx-block">
-                <div className="pd-rx-blkh">
-                  <IconUser size={13} /> Patient
-                </div>
-                <div className="pd-rx-kv">
-                  <span>Name</span>
-                  <b>{rx.patient}</b>
-                </div>
-                <div className="pd-rx-kv">
-                  <span>Phone</span>
-                  <b>{rx.phone || "—"}</b>
-                </div>
-                <div className="pd-rx-kv">
-                  <span>Channel</span>
-                  <b>
-                    <ChannelPill channel={rx.channel} />
-                  </b>
-                </div>
-                <div className="pd-rx-kv">
-                  <span>Doctor</span>
-                  <b>
-                    {rx.doctor}
-                    {rx.regNo ? ` · ${rx.regNo}` : ""}
-                  </b>
-                </div>
-                {phone && (
-                  <div className="pd-flex pd-gap6" style={{ marginTop: 8 }}>
-                    <a
-                      className="pd-btn pd-btn-line pd-btn-sm"
-                      href={`tel:${phone.replace(/\s/g, "")}`}
-                    >
-                      <IconPhone size={13} /> Call
-                    </a>
-                    <a
-                      className="pd-btn pd-btn-wa pd-btn-sm"
-                      href={waLink(phone, notifyMsg)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <IconWhatsApp size={13} /> WhatsApp
-                    </a>
-                    <a className="pd-btn pd-btn-line pd-btn-sm" href={smsLink(phone, notifyMsg)}>
-                      SMS
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              <div className="pd-rx-block">
-                <div className="pd-rx-blkh">
-                  <IconClock size={13} /> Timeline
-                </div>
-                <div className="pd-rx-tl">
-                  {events.map((e, i) => (
-                    <div className={`pd-rx-tlrow ${e.tone}`} key={i}>
-                      <span className="dot" />
-                      <span className="lb">{e.label}</span>
-                      <span className="tm">{fmtDateTime(e.at)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {av.total > 0 && (
-                <div className="pd-rx-block">
-                  <div className="pd-rx-blkh">
-                    <IconBox size={13} /> Verified medicines{" "}
-                    <span
-                      className="pd-muted"
-                      style={{ fontWeight: 600, marginLeft: "auto", fontSize: 11.5 }}
-                    >
-                      {av.inStock}/{av.total} in stock
-                    </span>
-                  </div>
-                  <table className="pd-tbl pd-rx-mtbl">
-                    <tbody>
-                      {av.items.map(({ product, stock, price, rx: needsPrescription }) => (
-                        <tr key={product.id}>
-                          <td>
-                            <span className="em" style={{ marginRight: 6 }}>
-                              {monogramOf(product.name)}
-                            </span>
-                            {product.name}
-                            {needsPrescription && (
-                              <span className="pd-schtag">
-                                {SCHEDULE_META[product.schedule].label}
-                              </span>
-                            )}
-                          </td>
-                          <td
-                            className={stock > 0 ? "" : "pd-oos-txt"}
-                            style={{ textAlign: "right", fontSize: 12 }}
-                          >
-                            {stock > 0 ? `${stock} in stock` : "Out of stock"}
-                          </td>
-                          <td style={{ textAlign: "right", fontWeight: 700 }}>{inr(price)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colSpan={2}>
-                          <b>Estimated bill</b>
-                        </td>
-                        <td style={{ textAlign: "right", fontWeight: 800 }}>{inr(av.value)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                  {av.outOfStock.length > 0 && (
-                    <div className="pd-rx-oos" style={{ marginTop: 8 }}>
-                      <IconAlert size={12} /> {av.outOfStock.map((p) => p.name).join(", ")} out of
-                      stock — suggest a substitute or reorder.
-                    </div>
-                  )}
-                </div>
-              )}
-              {rx.note && (
-                <div className="pd-rx-block">
-                  <div className="pd-rx-blkh">
-                    <IconDoc size={13} /> Note
-                  </div>
-                  <p style={{ fontSize: 12.5, color: "var(--ink-2)", margin: 0 }}>{rx.note}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="pd-modal-foot">
-          <button className="pd-btn pd-btn-ghost" onClick={onClose}>
-            Close
-          </button>
-          {rx.status === "pending" && (
+    <Modal
+      title={`Prescription ${rx.id}`}
+      size="lg"
+      className="max-w-5xl"
+      onClose={onClose}
+      footer={
+        <Stack direction="row" justify="end" wrap gap={2}>
+          <Button variant="ghost" onClick={onClose}>Close</Button>
+          {rx.status === "pending" ? (
             <>
-              <button className="pd-btn pd-btn-rose" onClick={onReject}>
-                <IconX size={14} /> Reject
-              </button>
-              <button className="pd-btn pd-btn-line" onClick={onApprove}>
-                <IconCheck size={14} /> Approve
-              </button>
-              <button className="pd-btn pd-btn-primary" onClick={onDispense}>
-                Dispense → billing <IconArrowRight size={15} />
-              </button>
+              <Button variant="rose" onClick={onReject}><IconX size={14} /> Reject</Button>
+              <Button variant="line" onClick={onApprove}><IconCheck size={14} /> Approve</Button>
+              <Button onClick={onDispense}>Dispense → billing <IconArrowRight size={15} /></Button>
             </>
-          )}
-          {rx.status === "approved" && (
-            <button className="pd-btn pd-btn-primary" onClick={onDispense}>
-              Dispense → billing <IconArrowRight size={15} />
-            </button>
-          )}
-          {rx.status === "rejected" && phone && (
-            <a
-              className="pd-btn pd-btn-primary"
-              href={waLink(phone, rejMsg)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <IconWhatsApp size={14} /> Notify patient
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
+          ) : null}
+          {rx.status === "approved" ? (
+            <Button onClick={onDispense}>Dispense → billing <IconArrowRight size={15} /></Button>
+          ) : null}
+          {rx.status === "rejected" && phone ? (
+            <Button asChild>
+              <a href={waLink(phone, rejected)} target="_blank" rel="noreferrer"><IconWhatsApp size={14} /> Notify patient</a>
+            </Button>
+          ) : null}
+        </Stack>
+      }
+    >
+      <Box className="max-h-[60vh] overflow-y-auto">
+        <Stack direction="row" align="center" gap={2} className="mb-3">
+          <Pill tone={rxStatusTone(rx.status)}>{rxStatusLabel(rx.status)}</Pill>
+          {rx.urgent ? <Pill tone="rose"><IconBolt size={10} /> Urgent</Pill> : null}
+        </Stack>
+        <Box className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+          <RxView rx={rx} />
+          <Stack gap={3}>
+            <Box className="rounded-md border border-line p-3">
+              <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+                <IconUser size={13} /> Patient
+              </Stack>
+              <KeyValue label="Name" value={rx.patient} />
+              <KeyValue label="Phone" value={rx.phone || "—"} />
+              <Stack direction="row" justify="between" className="py-1 text-[13px]">
+                <Text as="span" variant="muted">Channel</Text>
+                <ChannelPill channel={rx.channel} />
+              </Stack>
+              <KeyValue label="Doctor" value={`${rx.doctor}${rx.regNo ? ` · ${rx.regNo}` : ""}`} />
+              {phone ? (
+                <Stack direction="row" wrap gap={2} className="mt-2">
+                  <Button asChild size="sm" variant="line"><a href={`tel:${dial}`}><IconPhone size={13} /> Call</a></Button>
+                  <Button asChild size="sm" variant="whatsapp"><a href={waLink(phone, message)} target="_blank" rel="noreferrer"><IconWhatsApp size={13} /> WhatsApp</a></Button>
+                  <Button asChild size="sm" variant="line"><a href={smsLink(phone, message)}>SMS</a></Button>
+                </Stack>
+              ) : null}
+            </Box>
+
+            <Box className="rounded-md border border-line p-3">
+              <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+                <IconClock size={13} /> Timeline
+              </Stack>
+              <Timeline events={events} />
+            </Box>
+
+            {availability.total > 0 ? (
+              <Box className="rounded-md border border-line p-3">
+                <Stack direction="row" align="center" justify="between" className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+                  <Text as="span" variant="label"><IconBox size={13} /> Verified medicines</Text>
+                  <Text variant="caption">{availability.inStock}/{availability.total} in stock</Text>
+                </Stack>
+                <Table>
+                  <TableBody>
+                    <MedicineRows items={availability.items} />
+                    <TableRow>
+                      <TableCell colSpan={2}><Text as="span" className="font-bold">Estimated bill</Text></TableCell>
+                      <TableCell align="right" className="font-extrabold">{inr(availability.value)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                {availability.outOfStock.length > 0 ? (
+                  <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-rose">
+                    <IconAlert size={12} /> {availability.outOfStock.map(productName).join(", ")} out of stock — suggest a substitute or reorder.
+                  </Text>
+                ) : null}
+              </Box>
+            ) : null}
+            {rx.note ? (
+              <Box className="rounded-md border border-line p-3">
+                <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+                  <IconDoc size={13} /> Note
+                </Stack>
+                <Text className="text-[12.5px] text-ink-2">{rx.note}</Text>
+              </Box>
+            ) : null}
+          </Stack>
+        </Box>
+      </Box>
+    </Modal>
   );
+}
+
+function KeyValue({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack direction="row" justify="between" gap={3} className="py-1 text-[13px]">
+      <Text as="span" variant="muted">{label}</Text>
+      <Text as="span" className="text-right font-bold">{value}</Text>
+    </Stack>
+  );
+}
+
+function Timeline({ events }: { events: { label: string; at: number; tone: "done" | "bad" }[] }) {
+  function renderEvent(event: { label: string; at: number; tone: "done" | "bad" }, index: number) {
+    return (
+      <Stack key={`${event.label}-${index}`} direction="row" align="center" gap={2} className="py-1 text-[12.5px]">
+        <Box className={`h-2 w-2 rounded-full ${event.tone === "bad" ? "bg-rose" : "bg-mid"}`} />
+        <Text as="span" className="flex-1">{event.label}</Text>
+        <Text as="span" variant="caption">{fmtDateTime(event.at)}</Text>
+      </Stack>
+    );
+  }
+  return events.map(renderEvent);
+}
+
+function MedicineRows({ items }: { items: ReturnType<typeof rxAvailability>["items"] }) {
+  function renderItem(item: ReturnType<typeof rxAvailability>["items"][number]) {
+    return (
+      <TableRow key={item.product.id}>
+        <TableCell>
+          <Text as="span" className="mr-1.5 inline-grid h-5 w-5 place-items-center rounded bg-wash text-[10px] font-bold text-mid">{monogramOf(item.product.name)}</Text>
+          {item.product.name}
+          {item.rx ? <ScheduleTag schedule={item.product.schedule} /> : null}
+        </TableCell>
+        <TableCell align="right" className={item.stock > 0 ? "text-[12px]" : "text-[12px] text-rose"}>
+          {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
+        </TableCell>
+        <TableCell align="right" className="font-bold">{inr(item.price)}</TableCell>
+      </TableRow>
+    );
+  }
+  return items.map(renderItem);
 }

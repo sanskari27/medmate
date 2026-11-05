@@ -1,1 +1,1 @@
-export * from "./FeedbackTab";
+export { FeedbackTab } from "./FeedbackTab";

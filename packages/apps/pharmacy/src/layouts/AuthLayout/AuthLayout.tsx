@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { Stack } from "@/components/atoms";
+import type { AuthLayoutProps } from "./AuthLayout.types";
 
-export function AuthLayout({ children }: { children: ReactNode }) {
-  return <div style={{ display: "contents" }}>{children}</div>;
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return <Stack className="contents">{children}</Stack>;
 }

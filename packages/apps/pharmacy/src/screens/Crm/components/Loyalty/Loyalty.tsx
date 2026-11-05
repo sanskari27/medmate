@@ -1,81 +1,95 @@
 import { inr } from "@/utils";
-import { Patient, TIERS } from "@/utils/calculations/crm";
-import { IconUser } from "@/components/Icon";
+import { TIERS, type Patient } from "@/utils/calculations/crm";
+import { Box, Button, Pill, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { IconUser } from "@/components/atoms";
+import { Card } from "@/components/molecules/Card";
+import type { CrmViewProps } from "@/screens/Crm/Crm.types";
+import { availablePoints, loyaltyRanking, outstandingPoints, tierMemberCount } from "@/screens/Crm/Crm.utils";
 
-export function Loyalty(s: any) {
-  const { patients, redeemedBy, openPatient } = s;
-  const avail = (p: Patient) => Math.max(0, p.points - (redeemedBy.get(p.key) ?? 0));
-  const ranked = [...patients].sort((a, b) => avail(b) - avail(a));
-  const totalPts = patients.reduce((a: number, p: Patient) => a + avail(p), 0);
+import type { LoyaltyProps } from "./Loyalty.types";
+export function Loyalty({ view }: LoyaltyProps) {
+  const ranked = loyaltyRanking(view.patients, view.redeemedBy).slice(0, 50);
+  const total = outstandingPoints(view.patients, view.redeemedBy);
   return (
-    <>
-      <div className="pd-summary-chips" style={{ marginBottom: 14 }}>
-        <div className="pd-schip">
-          Points outstanding<b>{totalPts.toLocaleString("en-IN")}</b>
-        </div>
-        <div className="pd-schip">
-          ≈ Liability<b>{inr(totalPts)}</b>
-        </div>
-        {TIERS.map((t) => (
-          <div className="pd-schip" key={t.tier}>
-            {t.tier}
-            <b>{patients.filter((p: Patient) => p.tier === t.tier).length}</b>
-          </div>
-        ))}
-      </div>
-      <div className="pd-card">
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Tier</th>
-                <th className="num">Earned</th>
-                <th className="num">Redeemed</th>
-                <th className="num">Available</th>
-                <th className="num">Value</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {ranked.slice(0, 50).map((p: Patient) => (
-                <tr key={p.key} style={{ cursor: "pointer" }} onClick={() => openPatient(p.key)}>
-                  <td>
-                    <div className="prod">
-                      <span className="em">
-                        <IconUser size={15} />
-                      </span>
-                      <span className="nm">{p.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="pd-pill pill-gold">{p.tier}</span>
-                  </td>
-                  <td className="num">{p.points}</td>
-                  <td className="num pd-muted">{redeemedBy.get(p.key) ?? 0}</td>
-                  <td className="num" style={{ fontWeight: 800 }}>
-                    {avail(p)}
-                  </td>
-                  <td className="num">{inr(avail(p))}</td>
-                  <td className="num" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="pd-btn pd-btn-ghost"
-                      disabled={avail(p) <= 0}
-                      onClick={() => s.redeemPoints(p.key, p.name, Math.min(avail(p), 50))}
-                    >
-                      Redeem 50
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <p className="pd-muted" style={{ fontSize: 12.5, marginTop: 10 }}>
-        ⓘ Patients earn 1 point per ₹100 spent. Tiers: Silver 12+ · Gold 50+ · Platinum 120+ points.
-        Referral: invite a patient, both get ₹100 credit (use Khata to apply).
-      </p>
-    </>
+    <Stack gap={3}>
+      <Stack direction="row" wrap gap={2}>
+        <SummaryChip label="Points outstanding" value={total.toLocaleString("en-IN")} />
+        <SummaryChip label="≈ Liability" value={inr(total)} />
+        <TierChips patients={view.patients} />
+      </Stack>
+      <Card>
+        <Box className="overflow-x-auto">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Patient</TableHeaderCell>
+                <TableHeaderCell>Tier</TableHeaderCell>
+                <TableHeaderCell align="right">Earned</TableHeaderCell>
+                <TableHeaderCell align="right">Redeemed</TableHeaderCell>
+                <TableHeaderCell align="right">Available</TableHeaderCell>
+                <TableHeaderCell align="right">Value</TableHeaderCell>
+                <TableHeaderCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <LoyaltyRows patients={ranked} view={view} />
+            </TableBody>
+          </Table>
+        </Box>
+      </Card>
+      <Text variant="muted" className="text-[12.5px]">ⓘ Patients earn 1 point per ₹100 spent. Tiers: Silver 12+ · Gold 50+ · Platinum 120+ points. Referral: invite a patient, both get ₹100 credit (use Khata to apply).</Text>
+    </Stack>
+  );
+}
+
+function SummaryChip({ label, value }: { label: string; value: string }) {
+  return (
+    <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
+      {label}
+      <Text className="mt-px block font-display text-[15px] font-extrabold text-dark">{value}</Text>
+    </Box>
+  );
+}
+
+function TierChips({ patients }: { patients: Patient[] }) {
+  return TIERS.map(function renderTier(tier) {
+    return <SummaryChip key={tier.tier} label={tier.tier} value={String(tierMemberCount(patients, tier.tier))} />;
+  });
+}
+
+function LoyaltyRows({ patients, view }: { patients: Patient[]; view: CrmViewProps }) {
+  return patients.map(function renderRow(patient) {
+    return <LoyaltyRow key={patient.key} patient={patient} view={view} />;
+  });
+}
+
+function LoyaltyRow({ patient, view }: { patient: Patient; view: CrmViewProps }) {
+  const available = availablePoints(patient, view.redeemedBy);
+  function handleOpen() {
+    view.openPatient(patient.key);
+  }
+  function stopRowClick(event: { stopPropagation: () => void }) {
+    event.stopPropagation();
+  }
+  function handleRedeem() {
+    view.redeemPoints(patient.key, patient.name, Math.min(available, 50));
+  }
+  return (
+    <TableRow className="cursor-pointer" onClick={handleOpen}>
+      <TableCell>
+        <Stack direction="row" align="center" gap={2}>
+          <Box className="grid h-8 w-8 place-items-center rounded-md bg-wash text-mid"><IconUser size={15} /></Box>
+          <Text className="font-bold">{patient.name}</Text>
+        </Stack>
+      </TableCell>
+      <TableCell><Pill tone="gold">{patient.tier}</Pill></TableCell>
+      <TableCell align="right">{patient.points}</TableCell>
+      <TableCell align="right" className="text-muted">{view.redeemedBy.get(patient.key) ?? 0}</TableCell>
+      <TableCell align="right" className="font-extrabold">{available}</TableCell>
+      <TableCell align="right">{inr(available)}</TableCell>
+      <TableCell align="right" onClick={stopRowClick}>
+        <Button size="sm" variant="ghost" disabled={available <= 0} onClick={handleRedeem}>Redeem 50</Button>
+      </TableCell>
+    </TableRow>
   );
 }

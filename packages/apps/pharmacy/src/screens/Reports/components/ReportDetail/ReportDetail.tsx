@@ -1,3 +1,8 @@
+import type { ReportDetailProps } from "./ReportDetail.types";
+import type { RCol } from "@/utils";
+import { Box, Button, Heading, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { TableFooter } from "@/components/molecules/DataTable";
+import { cn } from "@/utils/className";
 import { useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
@@ -5,14 +10,11 @@ import { IconPrint, IconDownload, IconChart } from "@/components/Icon";
 import { usePeriod } from "@/components/PeriodFilter";
 import { runReport, ReportResult, reportById } from "@/utils/calculations/reportCatalog";
 import { exportCatalogCsv, exportCatalogPdf } from "@/utils/calculations/reportExport";
-
-export function ReportDetail({ id, onBack }: { id: string; onBack: () => void }) {
-  const { sales, purchases, inventory, expenses, now, profile } = usePharma();
-  const meta = reportById(id);
-  const period = usePeriod(now, "month");
-  const res: ReportResult = useMemo(
-    () =>
-      runReport(id, {
+export function ReportDetail({ id, onBack }: ReportDetailProps) {
+    const { sales, purchases, inventory, expenses, now, profile } = usePharma();
+    const meta = reportById(id);
+    const period = usePeriod(now, "month");
+    const res: ReportResult = useMemo(() => runReport(id, {
         sales,
         purchases,
         inventory,
@@ -20,126 +22,106 @@ export function ReportDetail({ id, onBack }: { id: string; onBack: () => void })
         profile,
         now,
         range: { from: period.start, to: period.end, label: period.label },
-      }),
-    [
-      id,
-      sales,
-      purchases,
-      inventory,
-      expenses,
-      profile,
-      now,
-      period.start,
-      period.end,
-      period.label,
-    ],
-  );
-  const range = { from: period.start, to: period.end, label: period.label };
-  const fmt = (v: string | number | undefined, money?: boolean) =>
-    typeof v === "number" ? (money ? inr(v) : v.toLocaleString("en-IN")) : (v ?? "");
-
-  return (
-    <div className="pd-canvas-wide pd-print-area">
-      <div className="pd-toolbar pd-no-print">
-        <button className="pd-btn pd-btn-ghost" onClick={onBack}>
+    }), [
+        id,
+        sales,
+        purchases,
+        inventory,
+        expenses,
+        profile,
+        now,
+        period.start,
+        period.end,
+        period.label,
+    ]);
+    const range = { from: period.start, to: period.end, label: period.label };
+    const fmt = (v: string | number | undefined, money?: boolean) => typeof v === "number" ? (money ? inr(v) : v.toLocaleString("en-IN")) : (v ?? "");
+    return (<Box className="!mx-auto !max-w-[1680px] print-area">
+      <Box className="!mb-4 !flex !flex-wrap !items-center !gap-2.5 print:hidden">
+        <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={onBack}>
           ← All reports
-        </button>
-        <div className="pd-spacer" />
+        </Button>
+        <Box className="!flex-1"/>
         {period.node}
-        <button
-          className="pd-btn pd-btn-ghost"
-          disabled={!res.rows.length}
-          onClick={() => exportCatalogCsv(meta?.name ?? id, res, range, now)}
-        >
-          <IconDownload size={14} /> Excel
-        </button>
-        <button
-          className="pd-btn pd-btn-ghost"
-          disabled={!res.rows.length}
-          onClick={() => exportCatalogPdf(meta?.name ?? id, res, profile, range, now)}
-        >
-          <IconPrint size={16} /> PDF
-        </button>
-      </div>
+        <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" disabled={!res.rows.length} onClick={exportCatalogCsvOnClick}>
+          <IconDownload size={14}/> Excel
+        </Button>
+        <Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" disabled={!res.rows.length} onClick={exportCatalogPdfOnClick}>
+          <IconPrint size={16}/> PDF
+        </Button>
+      </Box>
 
-      <div className="pd-flex" style={{ alignItems: "baseline", gap: 10, marginBottom: 6 }}>
-        <h2 style={{ fontFamily: "Manrope", fontWeight: 800, fontSize: 20 }}>{meta?.name ?? id}</h2>
-        <span className="pd-pill pill-green">
-          <i className="d" />
+      <Box className={cn("!flex !items-center !gap-2.5", "!items-baseline !gap-2.5 !mb-1.5")}>
+        <Heading className={cn("!font-display !font-extrabold !text-[20px]")} level={2}>{meta?.name ?? id}</Heading>
+        <Text className="!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-wash !text-mid" as="span">
+          <Box className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
           {period.label}
-        </span>
-      </div>
-      {meta?.desc && (
-        <p className="pd-muted" style={{ fontSize: 13, marginBottom: 14 }}>
+        </Text>
+      </Box>
+      {meta?.desc && (<Text className={cn("!text-muted", "!text-[13px] !mb-3.5")}>
           {meta.desc} · {res.rows.length} rows
-        </p>
-      )}
+        </Text>)}
 
-      <div className="pd-card">
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                {res.columns.map((c) => (
-                  <th key={c.key} className={c.money || c.num ? "num" : ""}>
-                    {c.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {res.rows.map((row, ri) => (
-                <tr key={ri}>
-                  {row.map((cellv, ci) => {
-                    const c = res.columns[ci];
-                    const isSection = typeof cellv === "string" && row[ci + 1] === "" && ci === 0;
-                    return (
-                      <td
-                        key={ci}
-                        className={c.money || c.num ? "num" : ""}
-                        style={isSection ? { fontWeight: 800, color: "var(--dark)" } : undefined}
-                      >
-                        {fmt(cellv, c.money)}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              {res.rows.length === 0 && (
-                <tr>
-                  <td colSpan={res.columns.length}>
-                    <div className="pd-empty">
-                      <div className="em">
-                        <IconChart size={30} />
-                      </div>
-                      <p>{res.note ?? "No data for this period."}</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            {res.totals && res.rows.length > 0 && (
-              <tfoot>
-                <tr>
-                  {res.totals.map((t, ti) => (
-                    <td
-                      key={ti}
-                      className={res.columns[ti]?.money || res.columns[ti]?.num ? "num" : ""}
-                    >
-                      {fmt(t, res.columns[ti]?.money)}
-                    </td>
-                  ))}
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
-      </div>
-      {res.note && res.rows.length > 0 && (
-        <p className="pd-muted" style={{ fontSize: 12, marginTop: 10 }}>
+      <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+        <Box className="!overflow-x-auto">
+          <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+            <TableHead>
+              <TableRow>
+                {res.columns.map(renderColumn)}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {res.rows.map(renderRow)}
+              {res.rows.length === 0 && (<TableRow>
+                  <TableCell colSpan={res.columns.length}>
+                    <Box className="!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink">
+                      <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                        <IconChart size={30}/>
+                      </Box>
+                      <Text>{res.note ?? "No data for this period."}</Text>
+                    </Box>
+                  </TableCell>
+                </TableRow>)}
+            </TableBody>
+          </Table>
+          {res.totals && res.rows.length > 0 && (
+            <TableFooter className="flex flex-wrap items-center justify-between gap-3">
+              {res.totals.map(renderTotal)}
+            </TableFooter>
+          )}
+        </Box>
+      </Box>
+      {res.note && res.rows.length > 0 && (<Text className={cn("!text-muted", "!text-[12px] !mt-2.5")}>
           ⓘ {res.note}
-        </p>
-      )}
-    </div>
-  );
+        </Text>)}
+    </Box>);
+    function exportCatalogCsvOnClick() {
+        return exportCatalogCsv(meta?.name ?? id, res, range, now);
+    }
+    function exportCatalogPdfOnClick() {
+        return exportCatalogPdf(meta?.name ?? id, res, profile, range, now);
+    }
+    function renderColumn(c: RCol) {
+        return (<TableHeaderCell key={c.key} className={c.money || c.num ? "text-right tabular-nums font-semibold text-ink" : ""}>
+                    {c.label}
+                  </TableHeaderCell>);
+    }
+    function renderRow(row: (string | number)[], ri: number) {
+        return (<TableRow key={ri}>
+                  {row.map(renderRow2)}
+                </TableRow>);
+        function renderRow2(cellv: string | number, ci: number) {
+            const c = res.columns[ci];
+            const isSection = typeof cellv === "string" && row[ci + 1] === "" && ci === 0;
+            return (<TableCell key={ci} className={cn(c.money || c.num ? "text-right tabular-nums font-semibold text-ink" : "", isSection ? "font-extrabold text-dark" : "")}>
+                        {fmt(cellv, c.money)}
+                      </TableCell>);
+        }
+    }
+    function renderTotal(t: string | number, ti: number) {
+        const money = res.columns[ti]?.money || res.columns[ti]?.num;
+        return (<Text key={ti} as="span" className={money ? "tabular-nums" : ""}>
+                      {fmt(t, res.columns[ti]?.money)}
+                    </Text>);
+    }
 }

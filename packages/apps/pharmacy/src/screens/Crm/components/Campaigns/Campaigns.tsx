@@ -1,162 +1,118 @@
-import { useState } from "react";
-import { inr, fmtDateTime } from "@/utils";
-import {
-  Patient,
-  Segment,
-  SEGMENTS,
-  segLabel,
-  attributedSales,
-  Campaign,
-} from "@/utils/calculations/crm";
-import { IconWhatsApp, IconDot, IconMail } from "@/components/Icon";
+import { useState, type ChangeEvent } from "react";
+import { fmtDateTime, inr } from "@/utils";
+import { attributedSales, SEGMENTS, segLabel, type Campaign, type Segment } from "@/utils/calculations/crm";
+import { Box, Button, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
+import { IconDot, IconMail, IconWhatsApp } from "@/components/atoms";
+import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { Field } from "@/components/molecules/Field";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
+import type { CrmViewProps } from "@/screens/Crm/Crm.types";
+import { campaignMessage, campaignRecipients, openSms, openWhatsApp } from "@/screens/Crm/Crm.utils";
 
-import { wa } from "@/screens/Crm/utils/wa";
-import { sms } from "@/screens/Crm/utils/sms";
-
-export function Campaigns(s: any) {
-  const { patients, profile, crm, addCampaign, sales } = s;
-  const [seg, setSeg] = useState<Segment | "all">("chronic");
+import type { CampaignsProps } from "./Campaigns.types";
+export function Campaigns({ view }: CampaignsProps) {
+  const [segment, setSegment] = useState<Segment | "all">("chronic");
   const [channel, setChannel] = useState<"whatsapp" | "sms">("whatsapp");
   const [offer, setOffer] = useState("");
   const [message, setMessage] = useState("");
-  const recipients = patients.filter(
-    (p: Patient) => (seg === "all" || p.segments.includes(seg)) && p.phone,
-  );
-  const defaultMsg =
-    `Hi! This is ${profile.name}. ` +
-    (offer ? `${offer}. ` : "") +
-    `Visit us or reply to order your medicines. Stay healthy!`;
-  const text = message || defaultMsg;
-  const launch = async () => {
+  const recipients = campaignRecipients(view.patients, segment);
+  const text = campaignMessage(view.profile.name, offer, message);
+
+  function handleSegment(event: ChangeEvent<HTMLSelectElement>) {
+    setSegment(event.target.value as Segment | "all");
+  }
+  function handleOffer(event: ChangeEvent<HTMLInputElement>) {
+    setOffer(event.target.value);
+  }
+  function handleMessage(event: ChangeEvent<HTMLTextAreaElement>) {
+    setMessage(event.target.value);
+  }
+  function chooseWhatsApp() {
+    setChannel("whatsapp");
+  }
+  function chooseSms() {
+    setChannel("sms");
+  }
+  async function launch() {
     if (recipients.length === 0) return;
-    const err = await addCampaign({
-      name: `${segLabel(seg as Segment) || "All"} blast`,
-      segment: seg,
+    const error = await view.addCampaign({
+      name: `${segLabel(segment as Segment) || "All"} blast`,
+      segment,
       channel,
       message: text,
       offerLabel: offer || undefined,
       reach: recipients.length,
     });
-    if (!err && recipients[0].phone)
-      (channel === "whatsapp" ? wa : sms)(
-        recipients[0].phone,
-        text.replace("Hi!", `Hi ${recipients[0].name}!`),
-      );
-  };
+    const first = recipients[0];
+    if (!error && first?.phone) {
+      const greeting = text.replace("Hi!", `Hi ${first.name}!`);
+      if (channel === "whatsapp") openWhatsApp(first.phone, greeting);
+      else openSms(first.phone, greeting);
+    }
+  }
+
   return (
-    <div className="pd-grid-2">
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>New campaign</h3>
-          <span className="sub">{recipients.length} recipients</span>
-        </div>
-        <div className="pd-card-pad" style={{ display: "grid", gap: 12 }}>
-          <div className="pd-field">
-            <label>Target segment</label>
-            <select
-              className="pd-select"
-              value={seg}
-              onChange={(e) => setSeg(e.target.value as any)}
-            >
-              <option value="all">Everyone with phone</option>
-              {SEGMENTS.map((x) => (
-                <option key={x.key} value={x.key}>
-                  {x.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="pd-field">
-            <label>Channel</label>
-            <div className="pd-seg">
-              <button
-                className={channel === "whatsapp" ? "on" : ""}
-                onClick={() => setChannel("whatsapp")}
-              >
-                WhatsApp
-              </button>
-              <button className={channel === "sms" ? "on" : ""} onClick={() => setChannel("sms")}>
-                SMS
-              </button>
-            </div>
-          </div>
-          <div className="pd-field">
-            <label>Offer (optional)</label>
-            <input
-              className="pd-input"
-              value={offer}
-              onChange={(e) => setOffer(e.target.value)}
-              placeholder="e.g. 10% off all diabetes meds"
-            />
-          </div>
-          <div className="pd-field">
-            <label>Message</label>
-            <textarea
-              className="pd-input"
-              rows={4}
-              value={text}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </div>
-          <button
-            className="pd-btn pd-btn-primary pd-btn-block"
-            disabled={recipients.length === 0}
-            onClick={launch}
-          >
-            <IconWhatsApp size={16} /> Send to {recipients.length}{" "}
-            {channel === "whatsapp" ? "on WhatsApp" : "via SMS"}
-          </button>
-          <p className="pd-muted" style={{ fontSize: 11.5 }}>
-            ⓘ Opens the first recipient prefilled for you to send, and logs the campaign reach. Bulk
-            send needs a WhatsApp Business API (can be wired later).
-          </p>
-        </div>
-      </div>
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>Campaign history</h3>
-          <span className="sub">{crm.campaigns.length} sent</span>
-        </div>
-        <div className="pd-card-pad">
-          {crm.campaigns.length === 0 && (
-            <div className="pd-empty" style={{ padding: 16 }}>
-              <p>No campaigns yet.</p>
-            </div>
-          )}
-          {crm.campaigns.map((c: Campaign) => {
-            const rev = attributedSales(c, patients, sales);
-            return (
-              <div className="pd-row" key={c.id}>
-                <span className="em">
-                  {c.channel === "whatsapp" ? (
-                    <span style={{ color: "var(--green)" }}>
-                      <IconDot size={8} />
-                    </span>
-                  ) : (
-                    <IconMail size={15} />
-                  )}
-                </span>
-                <span className="gw">
-                  <div className="t">
-                    {c.name} · {c.reach} sent
-                  </div>
-                  <div className="s">
-                    {segLabel(c.segment as Segment) || "All"}
-                    {c.offerLabel ? " · " + c.offerLabel : ""} · {fmtDateTime(c.sentAt)}
-                  </div>
-                </span>
-                <span style={{ textAlign: "right", fontSize: 12 }}>
-                  <b style={{ color: "var(--green)" }}>{inr(rev)}</b>
-                  <br />
-                  <span className="pd-muted" style={{ fontSize: 11 }}>
-                    attributed
-                  </span>
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    <Box className="grid gap-4 lg:grid-cols-2">
+      <Card>
+        <CardHeader title="New campaign" subtitle={`${recipients.length} recipients`} />
+        <CardBody>
+          <Stack gap={3}>
+            <Field label="Target segment" htmlFor="campaign-segment">
+              <Select id="campaign-segment" value={segment} onChange={handleSegment} options={[{ value: "all", label: "Everyone with phone" }, ...SegmentOptions()]} />
+            </Field>
+            <Field label="Channel">
+              <SegmentedControl label="Campaign channel">
+                <Button size="sm" variant="ghost" className={channel === "whatsapp" ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={chooseWhatsApp}>WhatsApp</Button>
+                <Button size="sm" variant="ghost" className={channel === "sms" ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={chooseSms}>SMS</Button>
+              </SegmentedControl>
+            </Field>
+            <Field label="Offer (optional)" htmlFor="campaign-offer">
+              <Input id="campaign-offer" value={offer} onChange={handleOffer} placeholder="e.g. 10% off all diabetes meds" />
+            </Field>
+            <Field label="Message" htmlFor="campaign-message">
+              <Textarea id="campaign-message" rows={4} value={text} onChange={handleMessage} />
+            </Field>
+            <Button block disabled={recipients.length === 0} onClick={launch}>
+              <IconWhatsApp size={16} /> Send to {recipients.length} {channel === "whatsapp" ? "on WhatsApp" : "via SMS"}
+            </Button>
+            <Text variant="caption">ⓘ Opens the first recipient prefilled for you to send, and logs the campaign reach. Bulk send needs a WhatsApp Business API (can be wired later).</Text>
+          </Stack>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title="Campaign history" subtitle={`${view.crm.campaigns.length} sent`} />
+        <CardBody>
+          {view.crm.campaigns.length === 0 ? <EmptyState title="No campaigns yet." className="py-4" /> : <CampaignRows campaigns={view.crm.campaigns} view={view} />}
+        </CardBody>
+      </Card>
+    </Box>
   );
+}
+
+function SegmentOptions() {
+  return SEGMENTS.map(function renderOption(segment) {
+    return { value: String(segment.key), label: String(segment.label) };
+  });
+}
+
+function CampaignRows({ campaigns, view }: { campaigns: Campaign[]; view: CrmViewProps }) {
+  return campaigns.map(function renderCampaign(campaign) {
+    const revenue = attributedSales(campaign, view.patients, view.sales);
+    return (
+      <Stack key={campaign.id} direction="row" align="center" gap={2} className="border-b border-line py-2 last:border-0">
+        <Box className="grid h-8 w-8 place-items-center rounded-md bg-wash text-mid">
+          {campaign.channel === "whatsapp" ? <Box className="text-green"><IconDot size={8} /></Box> : <IconMail size={15} />}
+        </Box>
+        <Stack className="min-w-0 flex-1">
+          <Text className="font-bold">{campaign.name} · {campaign.reach} sent</Text>
+          <Text variant="caption">{segLabel(campaign.segment as Segment) || "All"}{campaign.offerLabel ? " · " + campaign.offerLabel : ""} · {fmtDateTime(campaign.sentAt)}</Text>
+        </Stack>
+        <Stack align="end">
+          <Text className="font-bold text-green">{inr(revenue)}</Text>
+          <Text variant="caption">attributed</Text>
+        </Stack>
+      </Stack>
+    );
+  });
 }

@@ -1,252 +1,232 @@
+import type { AccountsProps } from "./Accounts.types";
+import { Box, Heading, Progress, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { cn } from "@/utils/className";
 import { inr, inr2, PAY_LABEL, PayMode, purchaseTotals } from "@/utils";
-
-export function Accounts(p: any) {
-  const {
-    revenue,
-    taxable,
-    cogs,
-    grossProfit,
-    margin,
-    discounts,
-    outputGst,
-    inputGst,
-    netGst,
-    purchaseTotal,
-    payMap,
-    receivables,
-    enriched,
-    winPurchases,
-    profile,
-  } = p;
-
-  // GST slab breakup (output)
-  const slabMap = new Map<number, { taxable: number; tax: number }>();
-  enriched.forEach((r: any) =>
-    r.t.lines.forEach((l: any) => {
-      const cur = slabMap.get(l.gst) ?? { taxable: 0, tax: 0 };
-      slabMap.set(l.gst, { taxable: cur.taxable + l.taxable, tax: cur.tax + l.cgst + l.sgst });
-    }),
-  );
-  const slabs = [...slabMap.entries()].sort((a, b) => a[0] - b[0]);
-
-  // day book — net sales & purchases per day
-  const dayMap = new Map<string, { sales: number; purch: number }>();
-  enriched.forEach((r: any) => {
-    const k = new Date(r.s.createdAt).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
+export function Accounts(p: AccountsProps) {
+    const { revenue, taxable, cogs, grossProfit, margin, discounts, outputGst, inputGst, netGst, purchaseTotal, payMap, receivables, enriched, winPurchases, profile, } = p;
+    // GST slab breakup (output)
+    const slabMap = new Map<number, {
+        taxable: number;
+        tax: number;
+    }>();
+    enriched.forEach((r: any) => r.t.lines.forEach((l: any) => {
+        const cur = slabMap.get(l.gst) ?? { taxable: 0, tax: 0 };
+        slabMap.set(l.gst, { taxable: cur.taxable + l.taxable, tax: cur.tax + l.cgst + l.sgst });
+    }));
+    const slabs = [...slabMap.entries()].sort((a, b) => a[0] - b[0]);
+    // day book — net sales & purchases per day
+    const dayMap = new Map<string, {
+        sales: number;
+        purch: number;
+    }>();
+    enriched.forEach((r: any) => {
+        const k = new Date(r.s.createdAt).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+        });
+        const c = dayMap.get(k) ?? { sales: 0, purch: 0 };
+        c.sales += r.t.payable;
+        dayMap.set(k, c);
     });
-    const c = dayMap.get(k) ?? { sales: 0, purch: 0 };
-    c.sales += r.t.payable;
-    dayMap.set(k, c);
-  });
-  winPurchases.forEach((pu: any) => {
-    const k = new Date(pu.createdAt).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
+    winPurchases.forEach((pu: any) => {
+        const k = new Date(pu.createdAt).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+        });
+        const c = dayMap.get(k) ?? { sales: 0, purch: 0 };
+        c.purch += purchaseTotals(pu.items).total;
+        dayMap.set(k, c);
     });
-    const c = dayMap.get(k) ?? { sales: 0, purch: 0 };
-    c.purch += purchaseTotals(pu.items).total;
-    dayMap.set(k, c);
-  });
-  const days = [...dayMap.entries()];
-
-  return (
-    <>
-      <div className="pd-grid-2b" style={{ marginBottom: 16 }}>
+    const days = [...dayMap.entries()];
+    return (<>
+      <Box className={cn("!grid !grid-cols-2 !gap-4 max-[767px]:!grid-cols-1", "!mb-4")}>
         {/* P&L */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Profit & Loss</h3>
-            <span className="sub">{profile.name}</span>
-          </div>
-          <div className="pd-card-pad pd-pl">
-            <div className="pd-pl-head">Income</div>
-            <div className="r">
-              <span className="lb">Gross sales (incl. GST)</span>
-              <span className="vl">{inr(revenue + discounts)}</span>
-            </div>
-            <div className="r sub">
-              <span className="lb">less: discounts given</span>
-              <span className="vl neg">− {inr(discounts)}</span>
-            </div>
-            <div className="r sub">
-              <span className="lb">less: output GST</span>
-              <span className="vl neg">− {inr(outputGst)}</span>
-            </div>
-            <div className="r">
-              <span className="lb">Net sales (taxable)</span>
-              <span className="vl">{inr(taxable)}</span>
-            </div>
-            <div className="pd-pl-head">Cost of goods</div>
-            <div className="r">
-              <span className="lb">COGS (at purchase cost)</span>
-              <span className="vl neg">− {inr(cogs)}</span>
-            </div>
-            <div className="r tot">
-              <span className="lb">Gross profit</span>
-              <span className="vl pos">
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Profit & Loss</Heading>
+            <Text className="text-[12.5px] text-muted" as="span">{profile.name}</Text>
+          </Box>
+          <Box className="!flex-1 !p-[18px] !flex !flex-col !gap-2">
+            <Box className="!mt-4 !mb-0.5 !text-[11px] !font-extrabold !tracking-[0.08em] !text-faint !uppercase first:!mt-0">Income</Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Gross sales (incl. GST)</Text>
+              <Text className="font-bold tabular-nums" as="span">{inr(revenue + discounts)}</Text>
+            </Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0 text-[12.5px] text-muted">
+              <Text className="pl-4 text-[12.5px] font-medium text-muted" as="span">less: discounts given</Text>
+              <Text className="font-semibold tabular-nums text-ink-2 text-rose" as="span">− {inr(discounts)}</Text>
+            </Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0 text-[12.5px] text-muted">
+              <Text className="pl-4 text-[12.5px] font-medium text-muted" as="span">less: output GST</Text>
+              <Text className="font-semibold tabular-nums text-ink-2 text-rose" as="span">− {inr(outputGst)}</Text>
+            </Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Net sales (taxable)</Text>
+              <Text className="font-bold tabular-nums" as="span">{inr(taxable)}</Text>
+            </Box>
+            <Box className="!mt-4 !mb-0.5 !text-[11px] !font-extrabold !tracking-[0.08em] !text-faint !uppercase first:!mt-0">Cost of goods</Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">COGS (at purchase cost)</Text>
+              <Text className="font-bold tabular-nums text-rose" as="span">− {inr(cogs)}</Text>
+            </Box>
+            <Box className="mt-1 flex items-baseline justify-between border-t-2 border-line-2 pt-3 font-display text-base font-extrabold text-dark">
+              <Text className="text-ink-2" as="span">Gross profit</Text>
+              <Text className="font-extrabold tabular-nums text-green" as="span">
                 {inr(grossProfit)}{" "}
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>
+                <Text className={cn("!text-[12px] !font-bold !text-muted")} as="span">
                   · {margin.toFixed(1)}%
-                </span>
-              </span>
-            </div>
-          </div>
-        </div>
+                </Text>
+              </Text>
+            </Box>
+          </Box>
+        </Box>
 
         {/* GST liability */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>GST liability</h3>
-            <span className="sub">{profile.gstin}</span>
-          </div>
-          <div className="pd-card-pad pd-pl">
-            <div className="pd-pl-head">Output tax (on sales)</div>
-            {slabs.length === 0 && (
-              <div className="r">
-                <span className="lb pd-muted">No taxable sales</span>
-                <span className="vl">—</span>
-              </div>
-            )}
-            {slabs.map(([gst, v]) => (
-              <div className="r sub" key={gst}>
-                <span className="lb">
-                  GST {gst}% · CGST {gst / 2} + SGST {gst / 2}
-                </span>
-                <span className="vl">{inr2(v.tax)}</span>
-              </div>
-            ))}
-            <div className="r">
-              <span className="lb">Total output GST</span>
-              <span className="vl">{inr(outputGst)}</span>
-            </div>
-            <div className="pd-pl-head">Input tax credit (on purchases)</div>
-            <div className="r">
-              <span className="lb">Input GST (GSTR-2)</span>
-              <span className="vl neg">− {inr(inputGst)}</span>
-            </div>
-            <div className="r tot">
-              <span className="lb">
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>GST liability</Heading>
+            <Text className="text-[12.5px] text-muted" as="span">{profile.gstin}</Text>
+          </Box>
+          <Box className="!flex-1 !p-[18px] !flex !flex-col !gap-2">
+            <Box className="!mt-4 !mb-0.5 !text-[11px] !font-extrabold !tracking-[0.08em] !text-faint !uppercase first:!mt-0">Output tax (on sales)</Box>
+            {slabs.length === 0 && (<Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+                <Text className="text-ink-2 !text-muted" as="span">No taxable sales</Text>
+                <Text className="font-bold tabular-nums" as="span">—</Text>
+              </Box>)}
+            {slabs.map(renderSlab)}
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Total output GST</Text>
+              <Text className="font-bold tabular-nums" as="span">{inr(outputGst)}</Text>
+            </Box>
+            <Box className="!mt-4 !mb-0.5 !text-[11px] !font-extrabold !tracking-[0.08em] !text-faint !uppercase first:!mt-0">Input tax credit (on purchases)</Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Input GST (GSTR-2)</Text>
+              <Text className="font-bold tabular-nums text-rose" as="span">− {inr(inputGst)}</Text>
+            </Box>
+            <Box className="mt-1 flex items-baseline justify-between border-t-2 border-line-2 pt-3 font-display text-base font-extrabold text-dark">
+              <Text className="text-ink-2" as="span">
                 {netGst >= 0 ? "Net GST payable" : "Net GST credit (carried fwd)"}
-              </span>
-              <span className={`vl ${netGst >= 0 ? "neg" : "pos"}`}>{inr(Math.abs(netGst))}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Text>
+              <Text className={`font-extrabold tabular-nums ${netGst >= 0 ? "text-rose" : "text-green"}`} as="span">{inr(Math.abs(netGst))}</Text>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
-      <div className="pd-grid-2" style={{ marginBottom: 16 }}>
+      <Box className={cn("!grid !grid-cols-[1.5fr_1fr] !gap-4 max-[767px]:!grid-cols-1", "!mb-4")}>
         {/* collections + receivables */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Cash & collections</h3>
-          </div>
-          <div className="pd-card-pad">
-            {(["cash", "upi", "card", "cod"] as PayMode[]).map((m) => {
-              const v = payMap.get(m) ?? 0;
-              const pct = revenue ? (v / revenue) * 100 : 0;
-              return (
-                <div className="pd-bd" key={m}>
-                  <span className="nm">{PAY_LABEL[m]}</span>
-                  <span className="track">
-                    <i style={{ width: `${pct}%` }} />
-                  </span>
-                  <b style={{ minWidth: 80, textAlign: "right" }}>{inr(v)}</b>
-                </div>
-              );
-            })}
-            <div
-              className="pd-flex"
-              style={{
-                justifyContent: "space-between",
-                marginTop: 14,
-                paddingTop: 12,
-                borderTop: "1px dashed var(--line-2)",
-              }}
-            >
-              <span className="pd-muted" style={{ fontSize: 13 }}>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Cash & collections</Heading>
+          </Box>
+          <Box className="!flex-1 !p-[18px]">
+            {(["cash", "upi", "card", "cod"] as PayMode[]).map(renderM)}
+            <Box className={cn("!flex !items-center !gap-2.5", "!justify-between !mt-3.5 !pt-3 !border-t !border-line-2 !border-dashed")}>
+              <Text className={cn("!text-muted", "!text-[13px]")} as="span">
                 COD receivable (in transit)
-              </span>
-              <b style={{ fontFamily: "Manrope", fontSize: 16, color: "var(--amber)" }}>
+              </Text>
+              <Text as="span" className={cn("font-bold", "!font-display !text-[16px] !text-amber")}>
                 {inr(receivables)}
-              </b>
-            </div>
-          </div>
-        </div>
+              </Text>
+            </Box>
+          </Box>
+        </Box>
 
         {/* purchases summary */}
-        <div className="pd-card">
-          <div className="pd-card-head">
-            <h3>Purchases (inward)</h3>
-          </div>
-          <div className="pd-card-pad pd-pl">
-            <div className="r">
-              <span className="lb">Goods purchased (incl. GST)</span>
-              <span className="vl">{inr(purchaseTotal)}</span>
-            </div>
-            <div className="r">
-              <span className="lb">Input GST credit</span>
-              <span className="vl">{inr(inputGst)}</span>
-            </div>
-            <div className="r">
-              <span className="lb">GRNs entered</span>
-              <span className="vl">{winPurchases.length}</span>
-            </div>
-            <div className="r tot">
-              <span className="lb">Net stock investment</span>
-              <span className="vl">{inr(purchaseTotal - inputGst)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+          <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+            <Heading level={3}>Purchases (inward)</Heading>
+          </Box>
+          <Box className="!flex-1 !p-[18px] !flex !flex-col !gap-2">
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Goods purchased (incl. GST)</Text>
+              <Text className="font-bold tabular-nums" as="span">{inr(purchaseTotal)}</Text>
+            </Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">Input GST credit</Text>
+              <Text className="font-bold tabular-nums" as="span">{inr(inputGst)}</Text>
+            </Box>
+            <Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0">
+              <Text className="text-ink-2" as="span">GRNs entered</Text>
+              <Text className="font-bold tabular-nums" as="span">{winPurchases.length}</Text>
+            </Box>
+            <Box className="mt-1 flex items-baseline justify-between border-t-2 border-line-2 pt-3 font-display text-base font-extrabold text-dark">
+              <Text className="text-ink-2" as="span">Net stock investment</Text>
+              <Text className="font-extrabold tabular-nums" as="span">{inr(purchaseTotal - inputGst)}</Text>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
       {/* day book */}
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>Day book</h3>
-          <span className="sub">net sales vs purchases</span>
-        </div>
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Day</th>
-                <th className="num">Net sales</th>
-                <th className="num">Purchases</th>
-                <th className="num">Net cash flow</th>
-              </tr>
-            </thead>
-            <tbody>
-              {days.length === 0 && (
-                <tr>
-                  <td colSpan={4}>
-                    <div className="pd-empty" style={{ padding: 20 }}>
-                      <p>No activity in this period.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {days.map(([k, v]) => (
-                <tr key={k}>
-                  <td style={{ fontWeight: 600 }}>{k}</td>
-                  <td className="num">{inr(v.sales)}</td>
-                  <td className="num pd-muted">{v.purch ? inr(v.purch) : "—"}</td>
-                  <td
-                    className="num"
-                    style={{
-                      fontWeight: 700,
-                      color: v.sales - v.purch >= 0 ? "var(--green)" : "var(--rose)",
-                    }}
-                  >
+      <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
+        <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+          <Heading level={3}>Day book</Heading>
+          <Text className="text-[12.5px] text-muted" as="span">net sales vs purchases</Text>
+        </Box>
+        <Box className="!overflow-x-auto">
+          <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Day</TableHeaderCell>
+                <TableHeaderCell className="text-right tabular-nums font-semibold text-ink">Net sales</TableHeaderCell>
+                <TableHeaderCell className="text-right tabular-nums font-semibold text-ink">Purchases</TableHeaderCell>
+                <TableHeaderCell className="text-right tabular-nums font-semibold text-ink">Net cash flow</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {days.length === 0 && (<TableRow>
+                  <TableCell colSpan={4}>
+                    <Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!p-5")}>
+                      <Text>No activity in this period.</Text>
+                    </Box>
+                  </TableCell>
+                </TableRow>)}
+              {days.map(renderDay)}
+            </TableBody>
+          </Table>
+        </Box>
+      </Box>
+    </>);
+    function renderSlab([gst, v]: [
+        number,
+        {
+            taxable: number;
+            tax: number;
+        }
+    ]) {
+        return (<Box className="flex items-baseline justify-between border-b border-line py-[9px] last:border-b-0 text-[12.5px] text-muted" key={gst}>
+                <Text className="pl-4 text-[12.5px] font-medium text-muted" as="span">
+                  GST {gst}% · CGST {gst / 2} + SGST {gst / 2}
+                </Text>
+                <Text className="font-semibold tabular-nums text-ink-2" as="span">{inr2(v.tax)}</Text>
+              </Box>);
+    }
+    function renderM(m: PayMode) {
+        const v = payMap.get(m) ?? 0;
+        const pct = revenue ? (v / revenue) * 100 : 0;
+        return (<Box className="!border !border-line" key={m}>
+                  <Text className="!font-bold !text-ink" as="span">{PAY_LABEL[m]}</Text>
+                  <Text className="h-2 w-[120px] overflow-hidden rounded-[5px] bg-wash" as="span">
+                    <Progress className="h-full rounded-[5px]" value={pct} tone="mid" label={PAY_LABEL[m]} />
+                  </Text>
+                  <Text as="span" className={cn("font-bold", "!min-w-[80px] !text-right")}>{inr(v)}</Text>
+                </Box>);
+    }
+    function renderDay([k, v]: [
+        string,
+        {
+            sales: number;
+            purch: number;
+        }
+    ]) {
+        return (<TableRow key={k}>
+                  <TableCell className={cn("!font-semibold")}>{k}</TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold text-ink">{inr(v.sales)}</TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold text-ink !text-muted">{v.purch ? inr(v.purch) : "—"}</TableCell>
+                  <TableCell className={cn("text-right tabular-nums font-semibold text-ink", "!font-bold", v.sales - v.purch >= 0 ? "!text-green" : "!text-rose")}>
                     {inr(v.sales - v.purch)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
+                  </TableCell>
+                </TableRow>);
+    }
 }

@@ -1,1 +1,1 @@
-export * from "./Patients";
+export { Patients } from "./Patients";

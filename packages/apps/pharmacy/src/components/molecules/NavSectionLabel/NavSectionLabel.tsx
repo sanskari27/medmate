@@ -1,0 +1,23 @@
+import { cva } from "class-variance-authority";
+import type { ComponentProps } from "react";
+import { Text } from "@/components/atoms/Text";
+import { cn } from "@/utils/className";
+
+const navSectionLabelVariants = cva(
+  "px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[rgba(143,212,168,0.48)] uppercase",
+);
+
+export type NavSectionLabelProps = ComponentProps<typeof Text>;
+
+export function NavSectionLabel({ className, ...props }: NavSectionLabelProps) {
+  return (
+    <Text
+      data-slot="nav-section-label"
+      as="span"
+      className={cn(navSectionLabelVariants(), className)}
+      {...props}
+    />
+  );
+}
+
+export { navSectionLabelVariants };

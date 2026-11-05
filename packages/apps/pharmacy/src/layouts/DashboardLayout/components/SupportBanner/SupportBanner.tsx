@@ -1,40 +1,24 @@
+import { Button, Stack, Text } from "@/components/atoms";
+import { Banner } from "@/components/molecules/Banner";
 import { usePharma } from "@/hooks";
 
 export function SupportBanner() {
   const { impersonator, profile, signOut } = usePharma();
   if (!impersonator) return null;
   return (
-    <div
+    <Banner
       role="status"
-      className="pd-form-alert"
-      style={{
-        position: "fixed",
-        top: 8,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 120,
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        width: "max-content",
-        maxWidth: "calc(100% - 16px)",
-        margin: 0,
-        padding: "4px 4px 4px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-      }}
+      tone="rose"
+      className="fixed top-2 left-1/2 z-[120] w-max max-w-[calc(100%-1rem)] -translate-x-1/2 rounded-full border px-1 py-1 pl-2.5"
     >
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        Support · {profile.name} · {impersonator}
-      </span>
-      <button
-        className="pd-btn pd-btn-sm"
-        style={{ padding: "3px 8px", fontSize: 11 }}
-        onClick={signOut}
-      >
-        Exit
-      </button>
-    </div>
+      <Stack direction="row" align="center" gap={2}>
+        <Text as="span" className="truncate text-xs font-semibold">
+          Support · {profile.name} · {impersonator}
+        </Text>
+        <Button size="sm" variant="ghost" onClick={signOut}>
+          Exit
+        </Button>
+      </Stack>
+    </Banner>
   );
 }

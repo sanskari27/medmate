@@ -1,4 +1,2 @@
-export * from "./EmployeeForm";
-export * from "./EmployeeIdCard";
-export * from "./Field";
-export * from "./Section";
+export { EmployeeForm } from "./EmployeeForm";
+export { EmployeeIdCard } from "./EmployeeIdCard";

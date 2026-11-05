@@ -1,3 +1,5 @@
+import { Box, Button, Text } from "@/components/atoms";
+import { cn } from "@/utils/className";
 import { OverviewTab } from "@/screens/HospitalBilling/components/OverviewTab";
 import { ReminderModal } from "@/screens/HospitalBilling/components/ReminderModal";
 import { IssuesTable } from "@/screens/HospitalBilling/components/IssuesTable";
@@ -9,176 +11,121 @@ import { PaymentModal } from "@/screens/HospitalBilling/components/PaymentModal"
 import { useState, useEffect } from "react";
 import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
-import {
-  hospitalOutstanding,
-  suppliedTotal,
-  returnedTotal,
-  paidTotal,
-  hospitalAging,
-} from "@/utils/calculations/hospitalAccount";
+import { hospitalOutstanding, suppliedTotal, returnedTotal, paidTotal, hospitalAging, } from "@/utils/calculations/hospitalAccount";
 import { IconPlus, IconRupee, IconHospital } from "@/components/Icon";
-
 type Tab = "overview" | "issue" | "stock" | "account" | "prices";
-
 // shared hospital-credit-price accessor
-
 // admin OTP gate — unlock pricing changes
-
 // match a ward-indent's free-text item names to catalogue products → editable bill rows
-
 export default function HospitalBillingScreen() {
-  const {
-    hospitalAccount,
-    wardSupplies,
-    hospitalPayments,
-    billIndentTarget,
-    clearBillIndentTarget,
-    now,
-  } = usePharma();
-  const [tab, setTab] = useState<Tab>("overview");
-  const [modal, setModal] = useState<"issue" | "return" | "payment" | "reminder" | null>(null);
-  // arriving from Ward Indents ("Bill & issue to hospital") opens the issue modal pre-loaded
-  useEffect(() => {
-    if (billIndentTarget) {
-      setTab("issue");
-      setModal("issue");
-    }
-  }, [billIndentTarget]);
+ const { hospitalAccount, wardSupplies, hospitalPayments, billIndentTarget, clearBillIndentTarget, now,} = usePharma();
+ const [tab, setTab] = useState<Tab>("overview");
+ const [modal, setModal] = useState<"issue" |"return" |"payment" |"reminder" | null>(null);
+ // arriving from Ward Indents ("Bill & issue to hospital") opens the issue modal pre-loaded
+ useEffect(() => {
+ if (billIndentTarget) {
+ setTab("issue");
+ setModal("issue");}}, [billIndentTarget]);
+ const outstanding = hospitalOutstanding(wardSupplies, hospitalPayments);
+ const supplied = suppliedTotal(wardSupplies);
+ const returns = returnedTotal(wardSupplies);
+ const received = paidTotal(hospitalPayments);
+ const aging = hospitalAging(wardSupplies, hospitalPayments, now, hospitalAccount.creditTerms);
+ const TABS: {
+ k: Tab;
+ label: string;}[] = [
+ { k:"overview", label:"Overview"},
+ { k:"issue", label:"Issue to ward"},
+ { k:"stock", label:"Ward stock"},
+ { k:"account", label:"Account & statement"},
+ { k:"prices", label:"Price list"},
+ ];
+ return (<Box className="!mx-auto !max-w-[1680px]">
+ <Box className="!flex !items-center !gap-3.5 !rounded-lg !border !border-line-2 !bg-gradient-to-br !from-wash-2 !to-white !px-[18px] !py-3.5 ">
+ <Text className="!grid !h-[42px] !w-[42px] !shrink-0 !place-items-center !rounded-md !bg-wash !text-[22px]" as="span">
+ <IconHospital size={18}/>
+ </Text>
+ <Box>
+ <Text as="span" className="font-bold block font-display text-[15px] font-extrabold text-dark">Bill-to: {hospitalAccount.name}</Text>
+ <Text as="span" className="text-[11px] font-semibold">
+ Every ward / emergency / refill issue is billed to the hospital on credit at the
+ institutional price ({hospitalAccount.discountPct}% off MRP) · terms{""}
+ {hospitalAccount.creditTerms}. The hospital settles with patients on its own.
+ </Text>
+ </Box>
+ <Box className="!flex-1"/>
+ {aging.overdue > 0 && (<Box className="!font-bold !text-rose text-rose">
+ <Text as="span">Overdue</Text>
+ <Text as="span" className="font-bold block font-display text-[15px] font-extrabold text-dark">{inr(aging.overdue)}</Text>
+ </Box>)}
+ <Box className="!font-bold !text-rose">
+ <Text as="span">Hospital owes</Text>
+ <Text as="span" className="font-bold block font-display text-[15px] font-extrabold text-dark">{inr(outstanding)}</Text>
+ </Box>
+ </Box>
 
-  const outstanding = hospitalOutstanding(wardSupplies, hospitalPayments);
-  const supplied = suppliedTotal(wardSupplies);
-  const returns = returnedTotal(wardSupplies);
-  const received = paidTotal(hospitalPayments);
-  const aging = hospitalAging(wardSupplies, hospitalPayments, now, hospitalAccount.creditTerms);
+ <Box className={cn("!mb-4 !flex !flex-wrap !items-center !gap-2.5","!mt-4")}>
+ <Box className="!inline-flex !max-w-full !flex-wrap !gap-0.5 !rounded-sm !border !border-line !bg-wash-2 !p-0.5">
+ {TABS.map(renderTABS)}
+ </Box>
+ <Box className="!flex-1"/>
+ {(tab ==="overview" || tab ==="issue") && (<>
+ {tab ==="issue" && (<Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={setModalOnClick}>
+ ↩ Record return
+ </Button>)}
+ <Button className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={setModalOnClick2}>
+ <IconPlus size={16}/> New ward issue
+ </Button>
+ </>)}
+ {tab ==="overview" && (<Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2" onClick={setModalOnClick3}>
+ <IconRupee size={15}/> Record payment
+ </Button>)}
+ {tab ==="account" && (<Button className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={setModalOnClick4}>
+ <IconRupee size={15}/> Record payment
+ </Button>)}
+ </Box>
 
-  const TABS: { k: Tab; label: string }[] = [
-    { k: "overview", label: "Overview" },
-    { k: "issue", label: "Issue to ward" },
-    { k: "stock", label: "Ward stock" },
-    { k: "account", label: "Account & statement" },
-    { k: "prices", label: "Price list" },
-  ];
+ {tab ==="overview" && (<OverviewTab outstanding={outstanding} supplied={supplied} returns={returns} received={received} aging={aging} goTab={setTab} onNewIssue={setModalOnNewIssue} onRecordPayment={setModalOnRecordPayment} onRemind={setModalOnRemind}/>)}
+ {tab ==="issue" && <IssuesTable />}
+ {tab ==="stock" && <WardStockTab />}
+ {tab ==="account" && (<AccountTab outstanding={outstanding} supplied={supplied} returns={returns} received={received} aging={aging} onRemind={setModalOnRemind2}/>)}
+ {tab ==="prices" && <PriceListTab />}
 
-  return (
-    <div className="pd-canvas-wide">
-      <div className="pd-hb-banner">
-        <span className="ic">
-          <IconHospital size={18} />
-        </span>
-        <div>
-          <b>Bill-to: {hospitalAccount.name}</b>
-          <small>
-            Every ward / emergency / refill issue is billed to the hospital on credit at the
-            institutional price ({hospitalAccount.discountPct}% off MRP) · terms{" "}
-            {hospitalAccount.creditTerms}. The hospital settles with patients on its own.
-          </small>
-        </div>
-        <div className="pd-spacer" />
-        {aging.overdue > 0 && (
-          <div className="pd-hb-due overdue">
-            <span>Overdue</span>
-            <b>{inr(aging.overdue)}</b>
-          </div>
-        )}
-        <div className="pd-hb-due">
-          <span>Hospital owes</span>
-          <b>{inr(outstanding)}</b>
-        </div>
-      </div>
-
-      <div className="pd-toolbar" style={{ marginTop: 16 }}>
-        <div className="pd-seg">
-          {TABS.map((t) => (
-            <button key={t.k} className={tab === t.k ? "on" : ""} onClick={() => setTab(t.k)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-        <div className="pd-spacer" />
-        {(tab === "overview" || tab === "issue") && (
-          <>
-            {tab === "issue" && (
-              <button className="pd-btn pd-btn-ghost" onClick={() => setModal("return")}>
-                ↩ Record return
-              </button>
-            )}
-            <button className="pd-btn pd-btn-primary" onClick={() => setModal("issue")}>
-              <IconPlus size={16} /> New ward issue
-            </button>
-          </>
-        )}
-        {tab === "overview" && (
-          <button className="pd-btn pd-btn-ghost" onClick={() => setModal("payment")}>
-            <IconRupee size={15} /> Record payment
-          </button>
-        )}
-        {tab === "account" && (
-          <button className="pd-btn pd-btn-primary" onClick={() => setModal("payment")}>
-            <IconRupee size={15} /> Record payment
-          </button>
-        )}
-      </div>
-
-      {tab === "overview" && (
-        <OverviewTab
-          outstanding={outstanding}
-          supplied={supplied}
-          returns={returns}
-          received={received}
-          aging={aging}
-          goTab={setTab}
-          onNewIssue={() => setModal("issue")}
-          onRecordPayment={() => setModal("payment")}
-          onRemind={() => setModal("reminder")}
-        />
-      )}
-      {tab === "issue" && <IssuesTable />}
-      {tab === "stock" && <WardStockTab />}
-      {tab === "account" && (
-        <AccountTab
-          outstanding={outstanding}
-          supplied={supplied}
-          returns={returns}
-          received={received}
-          aging={aging}
-          onRemind={() => setModal("reminder")}
-        />
-      )}
-      {tab === "prices" && <PriceListTab />}
-
-      {modal === "issue" && (
-        <SupplyModal
-          mode="issue"
-          prefillIndentId={billIndentTarget}
-          onClose={() => {
-            setModal(null);
-            clearBillIndentTarget();
-          }}
-        />
-      )}
-      {modal === "return" && <SupplyModal mode="return" onClose={() => setModal(null)} />}
-      {modal === "payment" && (
-        <PaymentModal onClose={() => setModal(null)} outstanding={outstanding} />
-      )}
-      {modal === "reminder" && (
-        <ReminderModal onClose={() => setModal(null)} outstanding={outstanding} aging={aging} />
-      )}
-    </div>
-  );
-}
-
-/* ── overview dashboard ──────────────────────────────────────── */
-
-/* ── payment reminder (compose links — pharmacist sends) ─────── */
-
-/* ── issues / returns log ────────────────────────────────────── */
-
-/* ── ward stock on hand ──────────────────────────────────────── */
-
-/* ── hospital account + credit statement ─────────────────────── */
-
-/* ── hospital price list & discount control (admin-gated) ────── */
-
-/* ── new ward issue / return ─────────────────────────────────── */
-
-/* ── record a hospital payment ───────────────────────────────── */
+ {modal ==="issue" && (<SupplyModal mode="issue" prefillIndentId={billIndentTarget} onClose={setModalOnClose}/>)}
+ {modal ==="return" && <SupplyModal mode="return" onClose={setModalOnClose2}/>}
+ {modal ==="payment" && (<PaymentModal onClose={setModalOnClose3} outstanding={outstanding}/>)}
+ {modal ==="reminder" && (<ReminderModal onClose={setModalOnClose4} outstanding={outstanding} aging={aging}/>)}
+ </Box>);
+ function renderTABS(t: {
+ k: Tab;
+ label: string;}) {
+ return (<Button key={t.k} className={tab === t.k ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"} onClick={setTabOnClick}>
+ {t.label}
+ </Button>);
+ function setTabOnClick() {
+ return setTab(t.k);}}
+ function setModalOnClick() {
+ return setModal("return");}
+ function setModalOnClick2() {
+ return setModal("issue");}
+ function setModalOnClick3() {
+ return setModal("payment");}
+ function setModalOnClick4() {
+ return setModal("payment");}
+ function setModalOnNewIssue() {
+ return setModal("issue");}
+ function setModalOnRecordPayment() {
+ return setModal("payment");}
+ function setModalOnRemind() {
+ return setModal("reminder");}
+ function setModalOnRemind2() {
+ return setModal("reminder");}
+ function setModalOnClose() {
+ setModal(null);
+ clearBillIndentTarget();}
+ function setModalOnClose2() {
+ return setModal(null);}
+ function setModalOnClose3() {
+ return setModal(null);}
+ function setModalOnClose4() {
+ return setModal(null);}}

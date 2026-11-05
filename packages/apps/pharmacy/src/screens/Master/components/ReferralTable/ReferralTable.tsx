@@ -1,50 +1,43 @@
+import type { ReferralTableProps } from "./ReferralTable.types";
+import { Button, TableCell, TableRow, Text } from "@/components/atoms";
 import { Table } from "@/screens/Master/components/Table";
-
 type Referral = {
-  id: string;
-  name: string;
-  status: string;
-  reward: number;
-  paidAt?: number;
-  paidBy?: string;
-  pharmacyId?: string;
-  pharmacyName?: string;
+    id: string;
+    name: string;
+    status: string;
+    reward: number;
+    paidAt?: number;
+    paidBy?: string;
+    pharmacyId?: string;
+    pharmacyName?: string;
 };
-
-export function ReferralTable({
-  referrals,
-  onEarn,
-  onPay,
-}: {
-  referrals: Referral[];
-  onEarn: (row: Referral) => void;
-  onPay: (row: Referral) => void;
-}) {
-  return (
-    <Table columns={["Pharmacy", "Referral", "Status", "Reward", ""]} empty="No referrals.">
-      {referrals.map((referral) => (
-        <tr key={(referral.pharmacyId || "") + referral.id}>
-          <td>{referral.pharmacyName}</td>
-          <td>{referral.name}</td>
-          <td>
-            <span className="pd-pill">{referral.status}</span>
-          </td>
-          <td>₹{referral.reward}</td>
-          <td>
-            {referral.status !== "Paid" && referral.status !== "Earned" && (
-              <button className="pd-btn pd-btn-sm" onClick={() => onEarn(referral)}>
+export function ReferralTable({ referrals, onEarn, onPay, }: ReferralTableProps) {
+    return (<Table columns={["Pharmacy", "Referral", "Status", "Reward", ""]} empty="No referrals.">
+      {referrals.map(renderReferral)}
+    </Table>);
+    function renderReferral(referral: Referral) {
+        return (<TableRow key={(referral.pharmacyId || "") + referral.id}>
+          <TableCell>{referral.pharmacyName}</TableCell>
+          <TableCell>{referral.name}</TableCell>
+          <TableCell>
+            <Text className="!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold" as="span">{referral.status}</Text>
+          </TableCell>
+          <TableCell>₹{referral.reward}</TableCell>
+          <TableCell>
+            {referral.status !== "Paid" && referral.status !== "Earned" && (<Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs" onClick={onEarnOnClick}>
                 Mark earned
-              </button>
-            )}
-            {referral.status === "Earned" && (
-              <button className="pd-btn pd-btn-sm pd-btn-primary" onClick={() => onPay(referral)}>
+              </Button>)}
+            {referral.status === "Earned" && (<Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={onPayOnClick}>
                 Mark paid
-              </button>
-            )}
-            {referral.paidBy && <span className="pd-muted">Paid by {referral.paidBy}</span>}
-          </td>
-        </tr>
-      ))}
-    </Table>
-  );
+              </Button>)}
+            {referral.paidBy && <Text className="!text-muted" as="span">Paid by {referral.paidBy}</Text>}
+          </TableCell>
+        </TableRow>);
+        function onEarnOnClick() {
+            return onEarn(referral);
+        }
+        function onPayOnClick() {
+            return onPay(referral);
+        }
+    }
 }

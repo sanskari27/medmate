@@ -1,14 +1,9 @@
-import { useRef, useState } from "react";
-import { Employee, PharmacyProfile } from "@/utils";
-import { IconPrint, IconPlus, IconUpload, IconX } from "@/components/Icon";
-
-const fmtDay = (s?: string) => {
-  if (!s) return "—";
-  const d = new Date(s);
-  return isNaN(d.getTime())
-    ? "—"
-    : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-};
+import { useState, type ChangeEvent } from "react";
+import type { Employee, PharmacyProfile } from "@/utils";
+import { formatDayText } from "@/utils/date";
+import { Box, Button, Checkbox, Image, Input, Label, Stack, Text } from "@/components/atoms";
+import { IconPlus, IconPrint, IconUpload, IconX } from "@/components/atoms";
+import { idCardValidThrough, readFileAsDataUrl } from "@/screens/Employees/Employees.utils";
 
 const ACCENTS = [
   { key: "Forest", from: "#1B3D29", to: "#2F7D52" },
@@ -19,359 +14,215 @@ const ACCENTS = [
   { key: "Gold", from: "#6a4a10", to: "#c9922f" },
 ];
 
-// Digital staff ID card — front + back, customisable (orientation / accent / logo).
-// Self-contained styles (incl. @media print) so it works on desktop + phone.
-export default function EmployeeIdCard({
-  emp,
-  profile,
-  onClose,
-}: {
-  emp: Employee;
-  profile: PharmacyProfile;
-  onClose: () => void;
-}) {
-  const initials = emp.name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  const validThru = (() => {
-    const d = new Date(emp.joinedOn);
-    if (isNaN(d.getTime())) return "—";
-    d.setFullYear(d.getFullYear() + 3);
-    return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-  })();
-
+import type { EmployeeIdCardProps } from "./EmployeeIdCard.types";
+export function EmployeeIdCard({ employee, profile, onClose }: EmployeeIdCardProps) {
+  const initials = employee.name.split(" ").map(function initial(word) { return word[0] ?? ""; }).join("").slice(0, 2).toUpperCase();
+  const validThru = idCardValidThrough(employee.joinedOn);
   const [orient, setOrient] = useState<"landscape" | "portrait">("landscape");
   const [accent, setAccent] = useState(ACCENTS[0]);
   const [band, setBand] = useState("EMPLOYEE IDENTITY CARD");
   const [showBack, setShowBack] = useState(true);
   const [logo, setLogo] = useState<string | undefined>(profile.logo);
-  const logoRef = useRef<HTMLInputElement>(null);
-  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => setLogo(r.result as string);
-    r.readAsDataURL(f);
-    e.target.value = "";
-  };
 
-  const cardCls = `idc-card${orient === "portrait" ? " portrait" : ""}`;
-  const LogoMark = ({ sm }: { sm?: boolean }) => (
-    <span className={`idc-logo${sm ? " sm" : ""}`}>
-      {logo ? <img src={logo} alt="" /> : <IconPlus size={sm ? 14 : 18} />}
-    </span>
-  );
+  function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    readFileAsDataUrl(file, setLogo);
+    event.target.value = "";
+  }
 
+  function openLogoPicker() {
+    document.getElementById("employee-logo-input")?.click();
+  }
+
+  function handleResetLogo() {
+    setLogo(profile.logo);
+  }
+
+  function handleLandscape() {
+    setOrient("landscape");
+  }
+
+  function handlePortrait() {
+    setOrient("portrait");
+  }
+
+  function handleBandChange(event: ChangeEvent<HTMLInputElement>) {
+    setBand(event.target.value);
+  }
+
+  function handleShowBack(event: ChangeEvent<HTMLInputElement>) {
+    setShowBack(event.target.checked);
+  }
+
+  function handlePrint() {
+    window.print();
+  }
+
+  const cardClass = orient === "portrait"
+    ? "relative flex h-[340px] w-[214px] flex-col overflow-hidden rounded-[14px] border border-[#e1ece5] bg-white text-ink shadow-[0_8px_22px_rgba(27,61,41,.16)] print:h-[85.6mm] print:w-[53.98mm] print:break-inside-avoid print:border print:border-[#ccc] print:shadow-none"
+    : "relative flex h-[214px] w-[340px] flex-col overflow-hidden rounded-[14px] border border-[#e1ece5] bg-white text-ink shadow-[0_8px_22px_rgba(27,61,41,.16)] print:h-[53.98mm] print:w-[85.6mm] print:break-inside-avoid print:border print:border-[#ccc] print:shadow-none";
+  const bandClass = `px-3.5 py-3 text-white ${SWATCH_CLASS[accent.key] ?? SWATCH_CLASS.Forest}`;
+
+  function bar(index: number) { return <Box key={index} className={`block h-[22px] bg-ink ${index % 3 === 0 ? "w-[3px]" : index % 2 === 0 ? "w-px opacity-80" : "w-0.5"}`} />; }
   return (
-    <div className="idc-wrap" onClick={onClose}>
-      <style>{CSS}</style>
-      <div className="idc-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="idc-controls">
-          <b>Digital Employee ID — {emp.name}</b>
-          <span style={{ flex: 1 }} />
-          <button className="idc-btn idc-btn-primary" onClick={() => window.print()}>
-            <IconPrint size={14} /> Print / Save PDF
-          </button>
-          <button className="idc-btn" onClick={onClose}>
-            <IconX size={13} /> Close
-          </button>
-        </div>
-
-        {/* ── customise bar (not printed) ── */}
-        <div className="idc-custom">
-          <div className="idc-ctl">
-            <label>Orientation</label>
-            <div className="idc-seg">
-              <button
-                className={orient === "landscape" ? "on" : ""}
-                onClick={() => setOrient("landscape")}
-              >
-                ▭ Horizontal
-              </button>
-              <button
-                className={orient === "portrait" ? "on" : ""}
-                onClick={() => setOrient("portrait")}
-              >
-                ▯ Vertical
-              </button>
-            </div>
-          </div>
-          <div className="idc-ctl">
-            <label>Theme</label>
-            <div className="idc-swatches">
-              {ACCENTS.map((a) => (
-                <button
-                  key={a.key}
-                  title={a.key}
-                  className={`idc-sw${accent.key === a.key ? " on" : ""}`}
-                  style={{ background: `linear-gradient(135deg,${a.from},${a.to})` }}
-                  onClick={() => setAccent(a)}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="idc-ctl">
-            <label>Logo</label>
-            <input ref={logoRef} type="file" accept="image/*" hidden onChange={onLogo} />
-            <button className="idc-btn idc-btn-sm" onClick={() => logoRef.current?.click()}>
-              <IconUpload size={12} /> {logo ? "Change" : "Upload"}
-            </button>
-            {logo && logo !== profile.logo && (
-              <button className="idc-btn idc-btn-sm" onClick={() => setLogo(profile.logo)}>
-                Reset
-              </button>
-            )}
-          </div>
-          <div className="idc-ctl grow">
-            <label>Band text</label>
-            <input
-              className="idc-inp"
-              value={band}
-              onChange={(e) => setBand(e.target.value)}
-              placeholder="EMPLOYEE IDENTITY CARD"
-            />
-          </div>
-          <label className="idc-check">
-            <input
-              type="checkbox"
-              checked={showBack}
-              onChange={(e) => setShowBack(e.target.checked)}
-            />{" "}
-            Show back
-          </label>
-        </div>
-
-        <div
-          className="idc-print-area"
-          style={{ ["--af" as string]: accent.from, ["--at" as string]: accent.to }}
-        >
-          <div className="idc-cards">
-            {/* ───── FRONT ───── */}
-            <div className={cardCls}>
-              <span className="idc-tag">FRONT</span>
-              <div className="idc-top">
-                <LogoMark />
-                <div className="idc-org">
-                  <b>{profile.name}</b>
-                  <small>{profile.tagline || "Staff Identity Card"}</small>
-                </div>
-              </div>
-              <div className="idc-band">{band || "EMPLOYEE IDENTITY CARD"}</div>
-              <div className="idc-body">
-                <div className="idc-photo">
-                  {emp.photo ? <img src={emp.photo} alt={emp.name} /> : <span>{initials}</span>}
-                </div>
-                <div className="idc-info">
-                  <div className="idc-name">{emp.name}</div>
-                  <div className="idc-role">
-                    {emp.position}
-                    {emp.department ? ` · ${emp.department}` : ""}
-                  </div>
-                  <div className="idc-rows">
-                    <div>
-                      <span>ID</span>
-                      <b className="mono">{emp.id}</b>
-                    </div>
-                    <div>
-                      <span>Phone</span>
-                      <b>{emp.phone || "—"}</b>
-                    </div>
-                    <div>
-                      <span>Blood</span>
-                      <b>{emp.bloodGroup || "—"}</b>
-                    </div>
-                    <div>
-                      <span>Type</span>
-                      <b>{emp.employment}</b>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="idc-foot">
-                <span>Joined {fmtDay(emp.joinedOn)}</span>
-                <span>Valid thru {validThru}</span>
-              </div>
-            </div>
-
-            {/* ───── BACK ───── */}
-            {showBack && (
-              <div className={`${cardCls} idc-back`}>
-                <span className="idc-tag">BACK</span>
-                <div className="idc-top sm">
-                  <LogoMark sm />
-                  <div className="idc-org">
-                    <b>{profile.name}</b>
-                  </div>
-                </div>
-                <div className="idc-backrows">
-                  <div>
-                    <span>Employee</span>
-                    <b>
-                      {emp.name} · {emp.id}
-                    </b>
-                  </div>
-                  <div>
-                    <span>Designation</span>
-                    <b>{emp.position}</b>
-                  </div>
-                  <div>
-                    <span>Emergency contact</span>
-                    <b>
-                      {emp.emergencyName
-                        ? `${emp.emergencyName} · ${emp.emergencyPhone || ""}`
-                        : "—"}
-                    </b>
-                  </div>
-                  <div>
-                    <span>Issued by</span>
-                    <b>{profile.name}</b>
-                  </div>
-                  <div>
-                    <span>Address</span>
-                    <b className="wrap">{profile.address || `${profile.city}, ${profile.state}`}</b>
-                  </div>
-                  <div>
-                    <span>Contact</span>
-                    <b>{profile.phone}</b>
-                  </div>
-                </div>
-                <div className="idc-barcode" aria-label={`barcode ${emp.id}`}>
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <span>{emp.id}</span>
-                </div>
-                <div className="idc-backfoot">
-                  <div className="idc-sign">
-                    <i />
-                    Authorised signatory
-                  </div>
-                  <p>
-                    If found, please return to the issuer above. This card remains the property of{" "}
-                    {profile.name} and must be surrendered on cessation of employment.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <Box className="fixed inset-0 z-[200] flex items-center justify-center overflow-auto bg-[rgba(15,30,22,.55)] p-5" onClick={onClose}>
+      <Box className="max-h-[94vh] w-full max-w-[780px] overflow-auto rounded-2xl bg-[#f3f7f4] shadow-[0_24px_60px_rgba(0,0,0,.3)]" onClick={stopCardClose}>
+        <Stack direction="row" align="center" gap={2} className="sticky top-0 z-[3] gap-2 border-b border-[#dce7e0] bg-[#f3f7f4] px-4 py-3.5">
+          <Text as="span" className="font-display text-sm font-extrabold text-dark">Digital Employee ID — {employee.name}</Text>
+          <Box className="flex-1" />
+          <Button className="!border !border-[#cfe0d6] !bg-white !px-[13px] !py-2 !text-[13px] !font-bold !text-dark !shadow-none !border-mid !bg-mid !text-white" onClick={handlePrint}><IconPrint size={14} /> Print / Save PDF</Button>
+          <Button className="!border !border-[#cfe0d6] !bg-white !px-[13px] !py-2 !text-[13px] !font-bold !text-dark !shadow-none" onClick={onClose}><IconX size={13} /> Close</Button>
+        </Stack>
+        <Stack direction="row" align="center" wrap gap={4} className="border-b border-[#dce7e0] bg-[#eef4f0] px-4 py-[11px]">
+          <Stack gap={1} className="gap-[5px]">
+            <Label>Orientation</Label>
+            <Stack direction="row" className="inline-flex overflow-hidden rounded-sm border border-[#cfe0d6] bg-white">
+              <Button className={orient === "landscape" ? "!border-0 !bg-mid !text-white !shadow-none !rounded-none !px-[11px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-none !px-[11px] !py-1.5 !text-[12.5px] !font-bold"} onClick={handleLandscape}>▭ Horizontal</Button>
+              <Button className={orient === "portrait" ? "!border-0 !bg-mid !text-white !shadow-none !rounded-none !px-[11px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-none !px-[11px] !py-1.5 !text-[12.5px] !font-bold"} onClick={handlePortrait}>▯ Vertical</Button>
+            </Stack>
+          </Stack>
+          <Stack gap={1} className="gap-[5px]">
+            <Label>Theme</Label>
+            <AccentSwatches accent={accent.key} onSelect={setAccent} />
+          </Stack>
+          <Stack gap={1} className="gap-[5px]">
+            <Label>Logo</Label>
+            <Input id="employee-logo-input" type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+            <Button className="!border !border-[#cfe0d6] !bg-white !px-[13px] !py-2 !text-[13px] !font-bold !text-dark !shadow-none !px-[9px] !py-[5px] !text-xs" onClick={openLogoPicker}><IconUpload size={12} /> {logo ? "Change" : "Upload"}</Button>
+            {logo && logo !== profile.logo ? <Button className="!border !border-[#cfe0d6] !bg-white !px-[13px] !py-2 !text-[13px] !font-bold !text-dark !shadow-none !px-[9px] !py-[5px] !text-xs" onClick={handleResetLogo}>Reset</Button> : null}
+          </Stack>
+          <Stack gap={1} className="gap-[5px] grow">
+            <Label>Band text</Label>
+            <Input className="w-full rounded-sm border border-[#cfe0d6] bg-white px-2.5 py-[7px] text-[13px] text-ink" value={band} onChange={handleBandChange} placeholder="EMPLOYEE IDENTITY CARD" aria-label="Band text" />
+          </Stack>
+          <Checkbox checked={showBack} onChange={handleShowBack}>Show back</Checkbox>
+        </Stack>
+        <Box className="print-area p-6 print:bg-white print:p-[14mm]" data-accent={accent.key}>
+          <Box className="flex flex-wrap justify-center gap-6 print:gap-[10mm]">
+            <Box className={cardClass}>
+              <Text as="span" className="absolute top-2 right-2.5 z-[1] text-[8px] font-extrabold tracking-[0.12em] text-white/55 print:hidden">FRONT</Text>
+              <Stack direction="row" align="center" gap={2} className={orient === "portrait" ? `${bandClass} flex-col text-center` : bandClass}>
+                <LogoMark logo={logo} />
+                <Box className="min-w-0">
+                  <Text as="span" className="block font-display text-sm font-extrabold leading-tight text-inherit">{profile.name}</Text>
+                  <Text as="span" className="text-[9.5px] text-inherit opacity-85">{profile.tagline || "Staff Identity Card"}</Text>
+                </Box>
+              </Stack>
+              <Box className="truncate bg-gold px-1 py-[3px] text-center text-[9px] font-extrabold tracking-[0.14em] text-deep">{band || "EMPLOYEE IDENTITY CARD"}</Box>
+              <Stack direction="row" gap={3} className="min-h-0 flex-1 px-3.5 py-3">
+                <Box className="grid h-[86px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-sm border border-[#cfe0d6] bg-wash font-display text-[26px] font-extrabold text-mid">
+                  {employee.photo ? <Image src={employee.photo} alt={employee.name} fit="cover" /> : <Text as="span">{initials}</Text>}
+                </Box>
+                <Box className="min-w-0 flex-1">
+                  <Text as="span" className="block font-display text-base font-extrabold leading-tight text-dark">{employee.name}</Text>
+                  <Text as="span" className="mb-2 mt-0.5 block text-[11px] text-muted">{employee.position}{employee.department ? ` · ${employee.department}` : ""}</Text>
+                  <Box className="grid grid-cols-2 gap-x-2.5 gap-y-[5px]">
+                    <Fact label="ID" value={employee.id} mono />
+                    <Fact label="Phone" value={employee.phone || "—"} />
+                    <Fact label="Blood" value={employee.bloodGroup || "—"} />
+                    <Fact label="Type" value={employee.employment} />
+                  </Box>
+                </Box>
+              </Stack>
+              <Stack direction="row" justify="between" className="mt-auto justify-between border-t border-[#e1ece5] bg-[#F0FAF4] px-3.5 py-[7px] text-[9px] text-muted">
+                <Text as="span">Joined {formatDayText(employee.joinedOn || "")}</Text>
+                <Text as="span">Valid thru {validThru}</Text>
+              </Stack>
+            </Box>
+            {showBack ? (
+              <Box className={`${cardClass} p-0`}>
+                <Text as="span" className="absolute top-2 right-2.5 z-[1] text-[8px] font-extrabold tracking-[0.12em] text-ink/30 print:hidden">BACK</Text>
+                <Stack direction="row" align="center" className={bandClass}>
+                  <LogoMark logo={logo} small />
+                  <Box className="min-w-0"><Text as="span" className="block font-display text-sm font-extrabold leading-tight text-inherit">{profile.name}</Text></Box>
+                </Stack>
+                <Box className="flex flex-1 flex-col gap-[5px] px-3.5 py-2.5 text-[10.5px]">
+                  <BackRow label="Employee" value={`${employee.name} · ${employee.id}`} />
+                  <BackRow label="Designation" value={employee.position} />
+                  <BackRow label="Emergency contact" value={employee.emergencyName ? `${employee.emergencyName} · ${employee.emergencyPhone || ""}` : "—"} />
+                  <BackRow label="Issued by" value={profile.name} />
+                  <BackRow label="Address" value={profile.address || `${profile.city}, ${profile.state}`} wrap />
+                  <BackRow label="Contact" value={profile.phone} />
+                </Box>
+                <Box className="flex h-[30px] items-center gap-[1.5px] px-3.5" aria-label={`barcode ${employee.id}`}>
+                  {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(bar)}
+                  <Text as="span">{employee.id}</Text>
+                </Box>
+                <Box className="px-3.5 pb-3 pt-1.5 text-[7.5px] leading-snug text-faint">
+                  <Box className="mb-1.5 flex flex-col items-end text-[8.5px] text-muted"><Box className="mb-0.5 block w-[110px] border-t border-faint" />Authorised signatory</Box>
+                  <Text>If found, please return to the issuer above. This card remains the property of {profile.name} and must be surrendered on cessation of employment.</Text>
+                </Box>
+              </Box>
+            ) : null}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
-const CSS = `
-.idc-wrap { position: fixed; inset: 0; z-index: 200; background: rgba(15,30,22,.55); display: flex; align-items: center; justify-content: center; padding: 20px; overflow: auto; }
-.idc-modal { background: #f3f7f4; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.3); width: 100%; max-width: 780px; max-height: 94vh; overflow: auto; }
-.idc-controls { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid #dce7e0; position: sticky; top: 0; background: #f3f7f4; z-index: 3; }
-.idc-controls b { font-family: Manrope, sans-serif; font-size: 14px; color: #1B3D29; }
-.idc-btn { display: inline-flex; align-items: center; gap: 5px; font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 13px; border-radius: 9px; border: 1px solid #cfe0d6; background: #fff; color: #1B3D29; cursor: pointer; }
-.idc-btn-sm { padding: 5px 9px; font-size: 12px; }
-.idc-btn-primary { background: #2F7D52; color: #fff; border-color: #2F7D52; }
-
-/* customise bar */
-.idc-custom { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 11px 16px; border-bottom: 1px solid #dce7e0; background: #eef4f0; }
-.idc-ctl { display: flex; flex-direction: column; gap: 5px; }
-.idc-ctl.grow { flex: 1 1 180px; }
-.idc-ctl > label { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #6a8a78; }
-.idc-seg { display: inline-flex; border: 1px solid #cfe0d6; border-radius: 8px; overflow: hidden; background: #fff; }
-.idc-seg button { border: 0; background: none; font-family: inherit; font-size: 12.5px; font-weight: 700; padding: 6px 11px; color: #5d7a6b; cursor: pointer; }
-.idc-seg button.on { background: #2F7D52; color: #fff; }
-.idc-swatches { display: flex; gap: 6px; }
-.idc-sw { width: 24px; height: 24px; border-radius: 7px; border: 2px solid transparent; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
-.idc-sw.on { border-color: #1B3D29; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1B3D29; }
-.idc-inp { font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid #cfe0d6; border-radius: 8px; background: #fff; color: #16241c; width: 100%; }
-.idc-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: #1B3D29; align-self: flex-end; padding-bottom: 6px; cursor: pointer; }
-
-.idc-print-area { padding: 24px; }
-.idc-cards { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
-
-.idc-card { position: relative; width: 340px; height: 214px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(27,61,41,.16); border: 1px solid #e1ece5; overflow: hidden; display: flex; flex-direction: column; color: #16241c; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.idc-tag { position: absolute; top: 8px; right: 10px; font-size: 8px; font-weight: 800; letter-spacing: .12em; color: rgba(255,255,255,.55); z-index: 1; }
-.idc-back .idc-tag { color: rgba(22,36,28,.3); }
-.idc-top { display: flex; align-items: center; gap: 9px; padding: 12px 14px; background: linear-gradient(135deg, var(--af,#1B3D29), var(--at,#2F7D52)); color: #fff; }
-.idc-top.sm { padding: 9px 14px; }
-.idc-logo { width: 34px; height: 34px; border-radius: 8px; background: #fff; display: grid; place-items: center; font-size: 18px; overflow: hidden; flex-shrink: 0; color: #2F7D52; }
-.idc-logo.sm { width: 26px; height: 26px; }
-.idc-logo img { width: 100%; height: 100%; object-fit: contain; }
-.idc-org b { font-family: Manrope, sans-serif; font-weight: 800; font-size: 14px; display: block; line-height: 1.15; }
-.idc-org small { font-size: 9.5px; opacity: .85; }
-.idc-band { background: #D9A648; color: #1B3D29; font-weight: 800; font-size: 9px; letter-spacing: .14em; text-align: center; padding: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.idc-body { display: flex; gap: 12px; padding: 12px 14px; flex: 1; }
-.idc-photo { width: 72px; height: 86px; border-radius: 8px; background: #E6F2EB; border: 1px solid #cfe0d6; display: grid; place-items: center; overflow: hidden; flex-shrink: 0; }
-.idc-photo img { width: 100%; height: 100%; object-fit: cover; }
-.idc-photo span { font-family: Manrope, sans-serif; font-weight: 800; font-size: 26px; color: #2F7D52; }
-.idc-info { flex: 1; min-width: 0; }
-.idc-name { font-family: Manrope, sans-serif; font-weight: 800; font-size: 16px; color: #1B3D29; line-height: 1.1; }
-.idc-role { font-size: 11px; color: #5d7a6b; margin: 2px 0 8px; }
-.idc-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; }
-.idc-rows > div { display: flex; flex-direction: column; }
-.idc-rows span { font-size: 7.5px; text-transform: uppercase; letter-spacing: .06em; color: #8AAE9A; font-weight: 700; }
-.idc-rows b { font-size: 11px; color: #16241c; }
-.mono { font-family: "IBM Plex Mono", monospace; }
-.idc-foot { display: flex; justify-content: space-between; padding: 7px 14px; background: #F0FAF4; border-top: 1px solid #e1ece5; font-size: 9px; color: #5d7a6b; }
-
-.idc-back { padding: 0; }
-.idc-backrows { padding: 10px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
-.idc-backrows > div { display: flex; gap: 8px; font-size: 10.5px; }
-.idc-backrows span { color: #8AAE9A; font-weight: 700; min-width: 96px; flex-shrink: 0; }
-.idc-backrows b { color: #16241c; font-weight: 700; }
-.idc-backrows b.wrap { font-weight: 600; }
-.idc-barcode { display: flex; align-items: center; gap: 1.5px; padding: 0 14px; height: 30px; }
-.idc-barcode i { display: block; width: 2px; height: 22px; background: #16241c; }
-.idc-barcode i:nth-child(2n) { width: 1px; opacity: .8; }
-.idc-barcode i:nth-child(3n) { width: 3px; }
-.idc-barcode span { font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: .12em; margin-left: 8px; color: #16241c; }
-.idc-backfoot { padding: 6px 14px 12px; }
-.idc-sign { display: flex; flex-direction: column; align-items: flex-end; font-size: 8.5px; color: #5d7a6b; margin-bottom: 6px; }
-.idc-sign i { display: block; width: 110px; border-top: 1px solid #8AAE9A; margin-bottom: 2px; }
-.idc-backfoot p { font-size: 7.5px; color: #8AAE9A; line-height: 1.3; margin: 0; }
-
-/* ── PORTRAIT (vertical) ── */
-.idc-card.portrait { width: 214px; height: 340px; }
-.idc-card.portrait .idc-top { flex-direction: column; text-align: center; gap: 4px; padding: 9px 12px 7px; }
-.idc-card.portrait .idc-org b { line-height: 1.1; }
-.idc-card.portrait .idc-org small { font-size: 8px; }
-.idc-card.portrait .idc-logo { width: 34px; height: 34px; }
-.idc-card.portrait.idc-back .idc-top { flex-direction: row; padding: 9px 14px; text-align: left; }
-.idc-card.portrait .idc-body { flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 8px 12px; }
-.idc-card.portrait .idc-foot { padding: 5px 14px; }
-.idc-card.portrait .idc-photo { width: 76px; height: 90px; }
-.idc-card.portrait .idc-info { width: 100%; }
-.idc-card.portrait .idc-name { font-size: 16px; }
-.idc-card.portrait .idc-role { margin-bottom: 6px; }
-.idc-card.portrait .idc-rows { text-align: left; gap: 5px 12px; }
-.idc-card.portrait .idc-rows > div { line-height: 1.15; }
-.idc-card.portrait .idc-rows b { font-size: 12px; }
-.idc-card.portrait.idc-back .idc-backrows { gap: 4px; padding: 9px 12px; }
-.idc-card.portrait.idc-back .idc-backrows > div { font-size: 9.5px; line-height: 1.25; }
-.idc-card.portrait.idc-back .idc-backrows span { min-width: 62px; }
-.idc-card.portrait.idc-back .idc-backfoot { padding: 4px 12px 9px; }
-.idc-card.portrait.idc-back .idc-sign { margin-bottom: 4px; }
-.idc-card.portrait.idc-back .idc-backfoot p { font-size: 7px; }
-
-@media print {
-  body * { visibility: hidden !important; }
-  .idc-print-area, .idc-print-area * { visibility: visible !important; }
-  .idc-print-area { position: fixed; inset: 0; padding: 14mm; background: #fff; }
-  .idc-cards { gap: 10mm; }
-  .idc-card { width: 85.6mm; height: 53.98mm; box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
-  .idc-card.portrait { width: 53.98mm; height: 85.6mm; }
-  .idc-tag { display: none; }
-  @page { size: auto; margin: 10mm; }
+function stopCardClose(event: { stopPropagation: () => void }) {
+  event.stopPropagation();
 }
-`;
+
+function LogoMark({ logo, small = false }: { logo?: string; small?: boolean }) {
+  return (
+    <Box className={small ? "grid h-[26px] w-[26px] shrink-0 place-items-center overflow-hidden rounded-sm bg-white text-mid" : "grid h-[34px] w-[34px] shrink-0 place-items-center overflow-hidden rounded-sm bg-white text-mid"}>
+      {logo ? <Image src={logo} alt="" fit="contain" /> : <IconPlus size={small ? 14 : 18} />}
+    </Box>
+  );
+}
+
+function Fact({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <Box>
+      <Text as="span" className="text-[7.5px] font-bold uppercase tracking-[0.06em] text-faint">{label}</Text>
+      <Text as="span" className={mono ? "text-[11px] font-bold text-ink font-mono" : "text-[11px] font-bold text-ink"}>{value}</Text>
+    </Box>
+  );
+}
+
+function BackRow({ label, value, wrap = false }: { label: string; value: string; wrap?: boolean }) {
+  return (
+    <Box>
+      <Text as="span" className="text-[7.5px] font-bold uppercase tracking-[0.06em] text-faint">{label}</Text>
+      <Text as="span" className={wrap ? "text-[11px] font-bold text-ink font-semibold" : "text-[11px] font-bold text-ink"}>{value}</Text>
+    </Box>
+  );
+}
+
+function AccentSwatches({ accent, onSelect }: { accent: string; onSelect: (accent: (typeof ACCENTS)[number]) => void }) {
+  function renderSwatch(item: (typeof ACCENTS)[number]) {
+    return <AccentSwatch key={item.key} item={item} selected={accent === item.key} onSelect={onSelect} />;
+  }
+  return (
+    <Stack direction="row" gap={1} className="gap-1.5">
+      {ACCENTS.map(renderSwatch)}
+    </Stack>
+  );
+}
+
+const SWATCH_CLASS: Record<string, string> = {
+  Forest: "!bg-[linear-gradient(135deg,#1B3D29,#2F7D52)]",
+  Teal: "!bg-[linear-gradient(135deg,#0f3a3f,#1f7d8c)]",
+  Blue: "!bg-[linear-gradient(135deg,#16305e,#2563EB)]",
+  Violet: "!bg-[linear-gradient(135deg,#3a2d6e,#6d4fc4)]",
+  Slate: "!bg-[linear-gradient(135deg,#1f2937,#475569)]",
+  Gold: "!bg-[linear-gradient(135deg,#6a4a10,#c9922f)]",
+};
+
+function swatchClass(key: string, selected: boolean) {
+  const fill = SWATCH_CLASS[key] ?? "";
+  const ring = selected
+    ? "!border-dark !shadow-[0_0_0_2px_#fff,0_0_0_4px_#1B3D29]"
+    : "!border-transparent";
+  return `!h-6 !w-6 !min-h-6 !rounded-[7px] !border-2 !p-0 !shadow-[0_1px_3px_rgba(0,0,0,.15)] ${fill} ${ring}`;
+}
+
+function AccentSwatch({ item, selected, onSelect }: { item: (typeof ACCENTS)[number]; selected: boolean; onSelect: (accent: (typeof ACCENTS)[number]) => void }) {
+  function handleSelect() {
+    onSelect(item);
+  }
+  return <Button aria-label={item.key} title={item.key} data-accent={item.key} className={swatchClass(item.key, selected)} onClick={handleSelect} />;
+}

@@ -1,1 +1,1 @@
-export * from "./hospitalAccount";
+export * from "./hospitalAccount.utils";

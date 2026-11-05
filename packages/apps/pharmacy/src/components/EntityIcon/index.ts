@@ -1,1 +1,1 @@
-export * from "./EntityIcon";
+export * from "../molecules/EntityMark";

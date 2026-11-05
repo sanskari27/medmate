@@ -1,1 +1,1 @@
-export * from "./RejectModal";
+export { RejectModal } from "./RejectModal";

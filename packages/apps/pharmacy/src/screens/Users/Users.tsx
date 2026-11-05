@@ -1,25 +1,41 @@
-import { Copy } from "@/screens/Users/components/Copy";
-import { UserModal } from "@/screens/Users/components/UserModal";
-import { ShareCreds } from "@/screens/Users/components/ShareCreds";
-import { useState } from "react";
+import { useState, type ChangeEvent, type ReactNode } from "react";
 import { usePharma } from "@/hooks";
-import { UserRole, StaffUser, seatCeiling, includedSeats, ALL_PERM_KEYS, userPerms } from "@/utils";
+import { ALL_PERM_KEYS, seatCeiling, includedSeats, userPerms, type StaffUser, type UserRole } from "@/utils";
 import {
-  IconPlus,
-  IconUsers,
-  IconKey,
-  IconShield,
+  Avatar,
+  Box,
+  Button,
+  Heading,
+  IconButton,
+  Pill,
+  Select,
+  Stack,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  Text,
+} from "@/components/atoms";
+import {
   IconAlert,
   IconEdit,
   IconEye,
   IconEyeOff,
-  IconShare,
+  IconKey,
   IconLock,
-} from "@/components/Icon";
-
-const ROLES: UserRole[] = ["Owner", "Manager", "Pharmacist", "Cashier"];
-
-// small copy button with a transient tick
+  IconPlus,
+  IconShare,
+  IconShield,
+  IconUsers,
+} from "@/components/atoms";
+import { CopyButton } from "./components/CopyButton";
+import { ShareCreds } from "./components/ShareCreds";
+import { UserModal } from "./components/UserModal";
+import { USER_ROLES } from "./Users.types";
+import { countActiveUsers, countUsersWithLogin, userHasFullAccess } from "./Users.utils";
 
 export default function UsersScreen() {
   const { users, addUser, toggleUser, updateUser, subscription, extraSeats, profile } = usePharma();
@@ -29,217 +45,295 @@ export default function UsersScreen() {
 
   const included = includedSeats(subscription.plan);
   const seatLimit = seatCeiling(subscription.plan, extraSeats);
-  const activeCount = users.filter((u) => u.active).length;
-  const withLogin = users.filter((u) => u.username && u.password).length;
+  const activeCount = countActiveUsers(users);
+  const withLogin = countUsersWithLogin(users);
+  const seatsFull = seatLimit != null && activeCount >= seatLimit;
+
+  function handleAddUser() {
+    setEditing("new");
+  }
+
+  function handleCloseEditor() {
+    setEditing(null);
+  }
+
+  function handleCloseShare() {
+    setShare(null);
+  }
+
+  async function handleSave(payload: Partial<StaffUser>, id?: string) {
+    const error = id ? await updateUser(id, payload) : await addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">);
+    if (!error) setEditing(null);
+    return error;
+  }
+
+  function handleShareFromModal(user: StaffUser) {
+    setEditing(null);
+    setShare(user);
+  }
 
   return (
-    <div className="pd-canvas-wide">
-      <div className="pd-stats">
-        <div className="pd-stat">
-          <div className="ic ic-green">
-            <IconUsers size={18} />
-          </div>
-          <div className="lbl">Team members</div>
-          <div className="val">{users.length}</div>
-          <div className="split">{activeCount} active</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconKey size={18} />
-          </div>
-          <div className="lbl">Seats used</div>
-          <div className="val">
-            {activeCount} / {seatLimit == null ? "∞" : seatLimit}
-          </div>
-          <div className="split">
-            {included == null ? "Unlimited" : `${included} included`}
-            {extraSeats ? ` + ${extraSeats} extra` : ""}
-          </div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconLock size={18} />
-          </div>
-          <div className="lbl">Login enabled</div>
-          <div className="val">{withLogin}</div>
-          <div className="split">have ID &amp; password</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-teal">
-            <IconShield size={18} />
-          </div>
-          <div className="lbl">Access roles</div>
-          <div className="val">{ROLES.length}</div>
-          <div className="split">module-level control</div>
-        </div>
-      </div>
-
-      <div className="pd-toolbar">
-        <h2 style={{ fontSize: 16 }}>Staff &amp; access control</h2>
-        <div className="pd-spacer" />
-        <button
-          className="pd-btn pd-btn-primary"
-          disabled={seatLimit != null && activeCount >= seatLimit}
-          onClick={() => setEditing("new")}
-        >
-          <IconPlus size={16} /> Add user
-        </button>
-      </div>
-      {seatLimit != null && activeCount >= seatLimit && (
-        <p className="pd-muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
-          <IconAlert size={14} /> Seat limit reached for the {subscription.plan} plan — deactivate a
-          user or ask Namma MedMate for more seats.
-        </p>
-      )}
-
-      <div className="pd-card">
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl pd-users-tbl">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Role</th>
-                <th>Login credentials</th>
-                <th>Access</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => {
-                const perms = userPerms(u);
-                const full = u.role === "Owner" || perms.length >= ALL_PERM_KEYS.length;
-                const show = reveal[u.id];
-                return (
-                  <tr key={u.id}>
-                    <td>
-                      <div className="prod">
-                        <span
-                          className="em"
-                          style={{
-                            background: "var(--wash)",
-                            color: "var(--mid)",
-                            fontWeight: 800,
-                          }}
-                        >
-                          {u.name[0]}
-                        </span>
-                        <span>
-                          <span className="nm">{u.name}</span>
-                          <div className="sub">{u.email || u.phone}</div>
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <select
-                        className="pd-select pd-compact"
-                        style={{ maxWidth: 130 }}
-                        value={u.role}
-                        disabled={u.role === "Owner"}
-                        onChange={(e) => updateUser(u.id, { role: e.target.value as UserRole })}
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      {u.username ? (
-                        <div className="pd-cred">
-                          <div className="pd-cred-row">
-                            <span className="k">ID</span>
-                            <b className="pd-mono">{u.username}</b>
-                            <Copy text={u.username} label="login ID" />
-                          </div>
-                          <div className="pd-cred-row">
-                            <span className="k">PW</span>
-                            <b className="pd-mono">{show ? u.password : "••••••••"}</b>
-                            <button
-                              className="pd-copybtn"
-                              title={show ? "Hide" : "Reveal"}
-                              onClick={() => setReveal((r) => ({ ...r, [u.id]: !r[u.id] }))}
-                            >
-                              {show ? <IconEyeOff size={13} /> : <IconEye size={13} />}
-                            </button>
-                            <Copy text={u.password || ""} label="password" />
-                          </div>
-                        </div>
-                      ) : (
-                        <button className="pd-linkbtn" onClick={() => setEditing(u)}>
-                          Set up login
-                        </button>
-                      )}
-                    </td>
-                    <td>
-                      {full ? (
-                        <span className="pd-pill pill-gold">
-                          <IconShield size={11} /> Full access
-                        </span>
-                      ) : (
-                        <button className="pd-accesschip" onClick={() => setEditing(u)}>
-                          {perms.length} / {ALL_PERM_KEYS.length} modules
-                        </button>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        className={`pd-switch${u.active ? " on" : ""}`}
-                        onClick={() => toggleUser(u.id)}
-                        disabled={u.role === "Owner"}
-                        aria-label="Toggle"
-                      />
-                    </td>
-                    <td className="num">
-                      <div className="pd-rowacts">
-                        <button
-                          className="pd-iconbtn"
-                          title="Manage access"
-                          onClick={() => setEditing(u)}
-                        >
-                          <IconEdit size={15} />
-                        </button>
-                        <button
-                          className="pd-iconbtn"
-                          title="Share credentials"
-                          disabled={!u.username}
-                          onClick={() => setShare(u)}
-                        >
-                          <IconShare size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {editing && (
-        <UserModal
-          user={editing === "new" ? null : editing}
-          onClose={() => setEditing(null)}
-          onSave={async (payload, id) => {
-            const err = id
-              ? await updateUser(id, payload)
-              : await addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">);
-            if (!err) setEditing(null);
-            return err;
-          }}
-          onShare={(u) => {
-            setEditing(null);
-            setShare(u);
-          }}
+    <Box className="mx-auto max-w-[1680px]">
+      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+        <StatCard tone="green" icon={<IconUsers size={18} />} label="Team members" value={String(users.length)} hint={`${activeCount} active`} />
+        <StatCard
+          tone="blue"
+          icon={<IconKey size={18} />}
+          label="Seats used"
+          value={`${activeCount} / ${seatLimit == null ? "∞" : seatLimit}`}
+          hint={`${included == null ? "Unlimited" : `${included} included`}${extraSeats ? ` + ${extraSeats} extra` : ""}`}
         />
-      )}
-      {share && <ShareCreds user={share} pharmacy={profile.name} onClose={() => setShare(null)} />}
-    </div>
+        <StatCard tone="gold" icon={<IconLock size={18} />} label="Login enabled" value={String(withLogin)} hint="have ID & password" />
+        <StatCard tone="teal" icon={<IconShield size={18} />} label="Access roles" value={String(USER_ROLES.length)} hint="module-level control" />
+      </Box>
+
+      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+        <Heading level={2} className="text-[16px]">
+          Staff & access control
+        </Heading>
+        <Box className="flex-1" />
+        <Button variant="primary" disabled={seatsFull} onClick={handleAddUser}>
+          <IconPlus size={16} /> Add user
+        </Button>
+      </Stack>
+      {seatsFull ? (
+        <Text variant="muted" className="mb-3 flex items-center gap-1.5 text-[12.5px]">
+          <IconAlert size={14} /> Seat limit reached for the {subscription.plan} plan — deactivate a user or ask Namma MedMate for more seats.
+        </Text>
+      ) : null}
+
+      <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
+        <Box className="overflow-x-auto">
+          <Table className="border-separate border-spacing-0 text-[13px]">
+            <TableHead>
+              <TableRow className="border-0">
+                <HeaderCell>Member</HeaderCell>
+                <HeaderCell>Role</HeaderCell>
+                <HeaderCell>Login credentials</HeaderCell>
+                <HeaderCell>Access</HeaderCell>
+                <HeaderCell>Status</HeaderCell>
+                <HeaderCell>{""}</HeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <UserRows
+                users={users}
+                reveal={reveal}
+                setReveal={setReveal}
+                onEdit={setEditing}
+                onShare={setShare}
+                onToggle={toggleUser}
+                onRole={updateUser}
+              />
+            </TableBody>
+          </Table>
+        </Box>
+      </Box>
+
+      {editing ? (
+        <UserModal user={editing === "new" ? null : editing} onClose={handleCloseEditor} onSave={handleSave} onShare={handleShareFromModal} />
+      ) : null}
+      {share ? <ShareCreds user={share} pharmacy={profile.name} onClose={handleCloseShare} /> : null}
+    </Box>
   );
 }
 
-// ── Add / manage user ────────────────────────────────────────────
+function HeaderCell({ children }: { children: string }) {
+  return (
+    <TableHeaderCell className="sticky top-0 z-[1] bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted">
+      {children}
+    </TableHeaderCell>
+  );
+}
 
-// ── Share credentials ────────────────────────────────────────────
+function UserRows({
+  users,
+  reveal,
+  setReveal,
+  onEdit,
+  onShare,
+  onToggle,
+  onRole,
+}: {
+  users: StaffUser[];
+  reveal: Record<string, boolean>;
+  setReveal: (value: Record<string, boolean>) => void;
+  onEdit: (user: StaffUser) => void;
+  onShare: (user: StaffUser) => void;
+  onToggle: (id: string) => void;
+  onRole: (id: string, patch: Partial<StaffUser>) => void;
+}) {
+  return users.map(function renderUser(user) {
+    return (
+      <UserRow
+        key={user.id}
+        user={user}
+        revealed={Boolean(reveal[user.id])}
+        reveal={reveal}
+        setReveal={setReveal}
+        onEdit={onEdit}
+        onShare={onShare}
+        onToggle={onToggle}
+        onRole={onRole}
+      />
+    );
+  });
+}
+
+function UserRow({
+  user,
+  revealed,
+  reveal,
+  setReveal,
+  onEdit,
+  onShare,
+  onToggle,
+  onRole,
+}: {
+  user: StaffUser;
+  revealed: boolean;
+  reveal: Record<string, boolean>;
+  setReveal: (value: Record<string, boolean>) => void;
+  onEdit: (user: StaffUser) => void;
+  onShare: (user: StaffUser) => void;
+  onToggle: (id: string) => void;
+  onRole: (id: string, patch: Partial<StaffUser>) => void;
+}) {
+  const permissions = userPerms(user);
+  const full = userHasFullAccess(user);
+
+  function handleRoleChange(event: ChangeEvent<HTMLSelectElement>) {
+    onRole(user.id, { role: event.target.value as UserRole });
+  }
+
+  function handleReveal() {
+    setReveal({ ...reveal, [user.id]: !reveal[user.id] });
+  }
+
+  function handleToggle() {
+    onToggle(user.id);
+  }
+
+  function handleEdit() {
+    onEdit(user);
+  }
+
+  function handleShare() {
+    onShare(user);
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="px-3.5 py-[11px]">
+        <Stack direction="row" align="center" gap={2}>
+          <Avatar name={user.name} size="md" />
+          <Stack gap={0}>
+            <Text as="span" className="font-bold text-ink">
+              {user.name}
+            </Text>
+            <Text variant="caption">{user.email || user.phone}</Text>
+          </Stack>
+        </Stack>
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Select className="w-auto max-w-[130px] py-[5px] pl-2 text-[12.5px]" value={user.role} disabled={user.role === "Owner"} onChange={handleRoleChange} aria-label={`Role for ${user.name}`} options={[...RoleOptions()]} />
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        {user.username ? (
+          <Stack gap={1}>
+            <Stack direction="row" align="center" gap={1}>
+              <Text as="span" className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted">
+                ID
+              </Text>
+              <Text as="span" className="min-w-24 font-mono text-[12.5px] font-bold text-ink">
+                {user.username}
+              </Text>
+              <CopyButton text={user.username} label="login ID" />
+            </Stack>
+            <Stack direction="row" align="center" gap={1}>
+              <Text as="span" className="w-[22px] text-[9px] font-extrabold tracking-[0.05em] text-muted">
+                PW
+              </Text>
+              <Text as="span" className="min-w-24 font-mono text-[12.5px] font-bold text-ink">
+                {revealed ? user.password : "••••••••"}
+              </Text>
+              <IconButton label={revealed ? "Hide" : "Reveal"} variant="ghost" className="h-[26px] w-[26px] rounded-[7px] border border-line" onClick={handleReveal}>
+                {revealed ? <IconEyeOff size={13} /> : <IconEye size={13} />}
+              </IconButton>
+              <CopyButton text={user.password || ""} label="password" />
+            </Stack>
+          </Stack>
+        ) : (
+          <Button variant="link" className="text-[12.5px] text-green" onClick={handleEdit}>
+            Set up login
+          </Button>
+        )}
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        {full ? (
+          <Pill tone="gold">
+            <IconShield size={11} /> Full access
+          </Pill>
+        ) : (
+          <Button variant="ghost" size="sm" className="rounded-full border-line-2 bg-wash-2 px-[11px] py-1 text-[12px]" onClick={handleEdit}>
+            {permissions.length} / {ALL_PERM_KEYS.length} modules
+          </Button>
+        )}
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Switch checked={user.active} label={`Toggle ${user.name}`} disabled={user.role === "Owner"} onClick={handleToggle} />
+      </TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px]">
+        <Stack direction="row" gap={1}>
+          <IconButton label="Manage access" onClick={handleEdit}>
+            <IconEdit size={15} />
+          </IconButton>
+          <IconButton label="Share credentials" disabled={!user.username} onClick={handleShare}>
+            <IconShare size={15} />
+          </IconButton>
+        </Stack>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function RoleOptions() {
+  return USER_ROLES.map(renderRoleOption);
+}
+
+function renderRoleOption(role: UserRole) {
+  return { value: String(role), label: String(role) };
+}
+
+function StatCard({
+  tone,
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  tone: "green" | "blue" | "gold" | "teal";
+  icon: ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  const toneClass = {
+    green: "bg-wash text-mid",
+    blue: "bg-blue-bg text-blue",
+    gold: "bg-amber-bg text-gold-d",
+    teal: "bg-teal-bg text-teal",
+  }[tone];
+  return (
+    <Stack className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${toneClass}`}>{icon}</Box>
+      <Text variant="label" className="mt-3 text-[11px] font-bold uppercase tracking-[0.05em] text-muted">
+        {label}
+      </Text>
+      <Text className="mb-2.5 mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
+      <Text variant="caption" className="mt-auto border-t border-line pt-[9px] text-[12px]">
+        {hint}
+      </Text>
+    </Stack>
+  );
+}

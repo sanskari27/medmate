@@ -1,1 +1,1 @@
-export * from "./purchases";
+export * from "./purchases.utils";

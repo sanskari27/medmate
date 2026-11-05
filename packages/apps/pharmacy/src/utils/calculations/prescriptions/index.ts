@@ -1,1 +1,1 @@
-export * from "./prescriptions";
+export * from "./prescriptions.utils";

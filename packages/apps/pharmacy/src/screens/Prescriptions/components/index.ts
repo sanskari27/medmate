@@ -1,3 +1,3 @@
-export * from "./RejectModal";
-export * from "./RxCard";
-export * from "./RxDetail";
+export { RejectModal } from "./RejectModal";
+export { RxCard } from "./RxCard";
+export { RxDetail } from "./RxDetail";

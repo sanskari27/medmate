@@ -1,1 +1,1 @@
-export * from "./ShareCreds";
+export { ShareCreds } from "./ShareCreds";

@@ -1,157 +1,142 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { timeAgo } from "@/utils";
-import { Patient, crmMsg } from "@/utils/calculations/crm";
-import { IconWhatsApp, IconCheck, IconStar } from "@/components/Icon";
+import { crmMsg, type Feedback, type Patient } from "@/utils/calculations/crm";
+import { Box, Button, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
+import { IconCheck, IconStar, IconWhatsApp } from "@/components/atoms";
+import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { Field } from "@/components/molecules/Field";
+import type { CrmViewProps } from "@/screens/Crm/Crm.types";
+import { clampNps, feedbackScore, openWhatsApp } from "@/screens/Crm/Crm.utils";
 
-import { wa } from "@/screens/Crm/utils/wa";
-
-export function FeedbackTab(s: any) {
-  const { patients, profile, crm, addFeedback } = s;
-  const [pk, setPk] = useState("");
+import type { FeedbackTabProps } from "./FeedbackTab.types";
+export function FeedbackTab({ view }: FeedbackTabProps) {
+  const [patientKey, setPatientKey] = useState("");
   const [rating, setRating] = useState(5);
   const [nps, setNps] = useState(9);
   const [comment, setComment] = useState("");
-  const fb = crm.feedbacks;
-  const avg = fb.length ? fb.reduce((a: number, f: any) => a + f.rating, 0) / fb.length : 0;
-  const promoters = fb.filter((f: any) => (f.nps ?? 0) >= 9).length,
-    detractors = fb.filter((f: any) => (f.nps ?? 0) <= 6).length;
-  const npsScore = fb.length ? Math.round(((promoters - detractors) / fb.length) * 100) : 0;
-  const save = async () => {
-    const p = patients.find((x: Patient) => x.key === pk);
-    if (!p) return;
-    const err = await addFeedback({
-      custKey: p.key,
-      custName: p.name,
+  const score = feedbackScore(view.crm.feedbacks);
+
+  function handlePatient(event: ChangeEvent<HTMLSelectElement>) {
+    setPatientKey(event.target.value);
+  }
+  function handleNps(event: ChangeEvent<HTMLInputElement>) {
+    setNps(clampNps(event.target.value));
+  }
+  function handleComment(event: ChangeEvent<HTMLTextAreaElement>) {
+    setComment(event.target.value);
+  }
+  async function save() {
+    const patient = view.patients.find(function match(item) { return item.key === patientKey; });
+    if (!patient) return;
+    const error = await view.addFeedback({
+      custKey: patient.key,
+      custName: patient.name,
       rating,
       nps,
       comment: comment.trim() || undefined,
     });
-    if (!err) setComment("");
-  };
+    if (!error) setComment("");
+  }
+  function requestFeedback() {
+    const patient = view.patients.find(function match(item) { return item.key === patientKey; });
+    if (patient) openWhatsApp(patient.phone, crmMsg.feedback(patient.name, view.profile.name));
+  }
+
   return (
-    <div className="pd-grid-2">
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>Log feedback</h3>
-        </div>
-        <div className="pd-card-pad" style={{ display: "grid", gap: 12 }}>
-          <div className="pd-field">
-            <label>Patient</label>
-            <select className="pd-select" value={pk} onChange={(e) => setPk(e.target.value)}>
-              <option value="">Select patient…</option>
-              {patients.map((p: Patient) => (
-                <option key={p.key} value={p.key}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="pd-field">
-            <label>Rating</label>
-            <div className="pd-flex" style={{ gap: 6 }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  className={`pd-btn ${rating >= n ? "pd-btn-primary" : "pd-btn-ghost"}`}
-                  onClick={() => setRating(n)}
-                >
-                  <IconStar size={15} />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="pd-field">
-            <label>NPS (0–10): would they recommend us?</label>
-            <input
-              className="pd-input"
-              type="number"
-              min={0}
-              max={10}
-              value={nps}
-              onChange={(e) => setNps(Math.max(0, Math.min(10, Number(e.target.value) || 0)))}
-              style={{ width: 90 }}
-            />
-          </div>
-          <div className="pd-field">
-            <label>Comment</label>
-            <textarea
-              className="pd-input"
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="What did they say?"
-            />
-          </div>
-          <div className="pd-flex" style={{ gap: 8 }}>
-            <button className="pd-btn pd-btn-primary" disabled={!pk} onClick={save}>
-              <IconCheck size={15} /> Save feedback
-            </button>
-            <button
-              className="pd-btn pd-btn-ghost"
-              disabled={!pk}
-              onClick={() => {
-                const p = patients.find((x: Patient) => x.key === pk);
-                if (p) wa(p.phone, crmMsg.feedback(p.name, profile.name));
-              }}
-            >
-              <IconWhatsApp size={15} /> Request via WhatsApp
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="pd-card">
-        <div className="pd-card-head">
-          <h3>Feedback & NPS</h3>
-          <span className="sub">{fb.length} responses</span>
-        </div>
-        <div className="pd-card-pad">
-          <div className="pd-summary-chips" style={{ marginBottom: 12 }}>
-            <div className="pd-schip">
-              Avg rating
-              <b>
-                {avg ? avg.toFixed(1) : "—"} <IconStar size={11} />
-              </b>
-            </div>
-            <div className="pd-schip">
-              NPS<b>{fb.length ? npsScore : "—"}</b>
-            </div>
-            <div className="pd-schip">
-              Promoters<b>{promoters}</b>
-            </div>
-            <div className="pd-schip">
-              Detractors<b>{detractors}</b>
-            </div>
-          </div>
-          {fb.length === 0 && (
-            <div className="pd-empty" style={{ padding: 16 }}>
-              <p>No feedback yet.</p>
-            </div>
-          )}
-          {fb.slice(0, 10).map((f: any) => (
-            <div className="pd-row" key={f.id}>
-              <span className="pd-rating">
-                {[1, 2, 3, 4, 5].slice(0, f.rating).map((n) => (
-                  <IconStar key={n} size={13} />
-                ))}
-              </span>
-              <span className="gw">
-                <div className="t">
-                  {f.custName}{" "}
-                  {f.nps != null && (
-                    <span className="pd-muted" style={{ fontSize: 11 }}>
-                      · NPS {f.nps}
-                    </span>
-                  )}
-                </div>
-                <div className="s">{f.comment || "—"}</div>
-              </span>
-              <span className="pd-muted" style={{ fontSize: 11.5 }}>
-                {timeAgo(f.at, s.now)}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Box className="grid gap-4 lg:grid-cols-2">
+      <Card>
+        <CardHeader title="Log feedback" />
+        <CardBody>
+          <Stack gap={3}>
+            <Field label="Patient" htmlFor="feedback-patient">
+              <Select id="feedback-patient" value={patientKey} onChange={handlePatient} options={[{ value: "", label: "Select patient\u2026" }, ...PatientOptions({patients: view.patients})]} />
+            </Field>
+            <Field label="Rating">
+              <Stack direction="row" gap={2}>
+                <StarButtons rating={rating} onSelect={setRating} />
+              </Stack>
+            </Field>
+            <Field label="NPS (0–10): would they recommend us?" htmlFor="feedback-nps">
+              <Input id="feedback-nps" type="number" min={0} max={10} value={nps} onChange={handleNps} className="w-[90px]" />
+            </Field>
+            <Field label="Comment" htmlFor="feedback-comment">
+              <Textarea id="feedback-comment" rows={3} value={comment} onChange={handleComment} placeholder="What did they say?" />
+            </Field>
+            <Stack direction="row" wrap gap={2}>
+              <Button disabled={!patientKey} onClick={save}><IconCheck size={15} /> Save feedback</Button>
+              <Button variant="ghost" disabled={!patientKey} onClick={requestFeedback}><IconWhatsApp size={15} /> Request via WhatsApp</Button>
+            </Stack>
+          </Stack>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title="Feedback & NPS" subtitle={`${view.crm.feedbacks.length} responses`} />
+        <CardBody>
+          <Stack direction="row" wrap gap={2} className="mb-3">
+            <SummaryChip label="Avg rating" value={score.average ? score.average.toFixed(1) : "—"} star />
+            <SummaryChip label="NPS" value={view.crm.feedbacks.length ? String(score.nps) : "—"} />
+            <SummaryChip label="Promoters" value={String(score.promoters)} />
+            <SummaryChip label="Detractors" value={String(score.detractors)} />
+          </Stack>
+          {view.crm.feedbacks.length === 0 ? <EmptyState title="No feedback yet." className="py-4" /> : <FeedbackRows feedbacks={view.crm.feedbacks.slice(0, 10)} now={view.now} />}
+        </CardBody>
+      </Card>
+    </Box>
   );
+}
+
+function PatientOptions({ patients }: { patients: Patient[] }) {
+  return patients.map(function renderOption(patient) {
+    return { value: String(patient.key), label: String(patient.name) };
+  });
+}
+
+function StarButtons({ rating, onSelect }: { rating: number; onSelect: (rating: number) => void }) {
+  return [1, 2, 3, 4, 5].map(function renderStar(score) {
+    return <StarButton key={score} score={score} selected={rating >= score} onSelect={onSelect} />;
+  });
+}
+
+function StarButton({ score, selected, onSelect }: { score: number; selected: boolean; onSelect: (rating: number) => void }) {
+  function handleSelect() {
+    onSelect(score);
+  }
+  return (
+    <Button variant={selected ? "primary" : "ghost"} aria-label={`${score} star`} onClick={handleSelect}>
+      <IconStar size={15} />
+    </Button>
+  );
+}
+
+function SummaryChip({ label, value, star = false }: { label: string; value: string; star?: boolean }) {
+  return (
+    <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
+      {label}
+      <Text className="mt-px flex items-center gap-1 font-display text-[15px] font-extrabold text-dark">
+        {value} {star && value !== "—" ? <IconStar size={11} /> : null}
+      </Text>
+    </Box>
+  );
+}
+
+function FeedbackRows({ feedbacks, now }: { feedbacks: Feedback[]; now: number }) {
+  return feedbacks.map(function renderFeedback(item) {
+    return (
+      <Stack key={item.id} direction="row" align="center" gap={2} className="border-b border-line py-2 last:border-0">
+        <Stack direction="row" className="text-gold-d"><Stars count={item.rating} /></Stack>
+        <Stack className="min-w-0 flex-1">
+          <Text className="font-bold">{item.custName} {item.nps != null ? <Text as="span" variant="caption">· NPS {item.nps}</Text> : null}</Text>
+          <Text variant="caption">{item.comment || "—"}</Text>
+        </Stack>
+        <Text variant="caption">{timeAgo(item.at, now)}</Text>
+      </Stack>
+    );
+  });
+}
+
+function Stars({ count }: { count: number }) {
+  return [1, 2, 3, 4, 5].slice(0, count).map(function renderStar(score) {
+    return <IconStar key={score} size={13} />;
+  });
 }

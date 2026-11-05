@@ -1,2 +1,1 @@
-export { default } from "./EmployeeIdCard";
-export * from "./EmployeeIdCard";
+export { EmployeeIdCard } from "./EmployeeIdCard";

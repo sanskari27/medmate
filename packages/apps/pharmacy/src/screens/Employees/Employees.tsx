@@ -1,373 +1,245 @@
-import { ymd } from "@/screens/Employees/utils/ymd";
-import { fmtDay } from "@/screens/Employees/utils/fmtDay";
-import { csvCell } from "@/screens/Employees/utils/csvCell";
-import { download } from "@/screens/Employees/utils/download";
-import { EmployeeForm } from "@/screens/Employees/components/EmployeeForm";
-import { useMemo, useState } from "react";
+import { useState, type ChangeEvent, type MouseEvent, type ReactNode } from "react";
 import { usePharma } from "@/hooks";
-import {
-  inr,
-  Employee,
-  EMPLOYEE_POSITIONS,
-  EMPLOYMENT_TYPES,
-  employeeTenure,
-  monthlyPayroll,
-} from "@/utils";
-import {
-  IconPlus,
-  IconSearch,
-  IconPrint,
-  IconIdCard,
-  IconUser,
-  IconUsers,
-  IconCash,
-  IconRupee,
-  IconDoc,
-  IconBriefcase,
-} from "@/components/Icon";
-import { Avatar } from "@/components/EntityIcon";
-import EmployeeIdCard from "@/screens/Employees/components/EmployeeIdCard";
+import { EMPLOYEE_POSITIONS, employeeTenure, inr, monthlyPayroll, type Employee } from "@/utils";
+import { formatDayText, toYmd } from "@/utils/date";
+import { Avatar, Box, Button, Input, Pill, Progress, Select, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { IconBriefcase, IconCash, IconDoc, IconIdCard, IconPlus, IconPrint, IconRupee, IconSearch, IconUser, IconUsers } from "@/components/atoms";
+import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
+import { EmployeeForm } from "./components/EmployeeForm";
+import { EmployeeIdCard } from "./components/EmployeeIdCard";
+import { activeEmployeeCount, barPercent, countByPosition, countEmployment, documentTotals, downloadBlob, employeesCsv, filterEmployees } from "./Employees.utils";
+import type { EmployeeDraft, EmployeeStatusFilter } from "./Employees.types";
 
 export default function EmployeesScreen() {
   const { employees, addEmployee, updateEmployee, now, profile } = usePharma();
-  const [q, setQ] = useState("");
-  const [pos, setPos] = useState("all");
-  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [query, setQuery] = useState("");
+  const [position, setPosition] = useState("all");
+  const [status, setStatus] = useState<EmployeeStatusFilter>("all");
   const [editing, setEditing] = useState<Employee | "new" | null>(null);
   const [idCardOf, setIdCardOf] = useState<Employee | null>(null);
 
-  const rows = useMemo(
-    () =>
-      employees
-        .filter((e) => pos === "all" || e.position === pos)
-        .filter((e) => status === "all" || e.status === status)
-        .filter(
-          (e) =>
-            !q.trim() ||
-            `${e.id} ${e.name} ${e.position} ${e.phone} ${e.department ?? ""}`
-              .toLowerCase()
-              .includes(q.toLowerCase()),
-        )
-        .sort((a, b) => a.id.localeCompare(b.id)),
-    [employees, pos, status, q],
-  );
-
-  const active = employees.filter((e) => e.status === "active").length;
+  const rows = filterEmployees(employees, { query, position, status });
+  const active = activeEmployeeCount(employees);
   const payroll = monthlyPayroll(employees);
-  const avgSalary = active ? Math.round(payroll / active) : 0;
-  const totalDocs = employees.reduce((a, e) => a + (e.documents?.length ?? 0), 0);
-  const missingDocs = employees.filter((e) => (e.documents?.length ?? 0) === 0).length;
-  // team composition by position
-  const byPosition = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const e of employees) m.set(e.position, (m.get(e.position) ?? 0) + 1);
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
-  }, [employees]);
-  const posMax = Math.max(1, ...byPosition.map(([, n]) => n));
-  const byType = EMPLOYMENT_TYPES.map((t) => ({
-    t,
-    n: employees.filter((e) => e.employment === t).length,
-  }));
+  const averageSalary = active ? Math.round(payroll / active) : 0;
+  const documents = documentTotals(employees);
+  const byPosition = countByPosition(employees);
+  const positionMax = Math.max(1, ...byPosition.map(function countOf(entry) { return entry[1]; }));
+  const byType = countEmployment(employees);
 
-  const exportCsv = () => {
-    const head = [
-      "Code",
-      "Name",
-      "Position",
-      "Department",
-      "Employment",
-      "Status",
-      "Phone",
-      "Email",
-      "DOB",
-      "Joined",
-      "Monthly salary",
-      "PAN",
-      "Aadhaar",
-      "Bank",
-      "Account name",
-      "Account no",
-      "IFSC",
-      "UPI",
-      "Emergency contact",
-      "Address",
-    ];
-    const lines = rows.map((e) => [
-      e.id,
-      e.name,
-      e.position,
-      e.department ?? "",
-      e.employment,
-      e.status,
-      e.phone,
-      e.email ?? "",
-      e.dob ?? "",
-      e.joinedOn,
-      e.salary,
-      e.pan ?? "",
-      e.aadhaar ?? "",
-      e.bankName ?? "",
-      e.accountName ?? "",
-      e.accountNumber ?? "",
-      e.ifsc ?? "",
-      e.upi ?? "",
-      e.emergencyName ? `${e.emergencyName} ${e.emergencyPhone ?? ""}` : "",
-      e.address ?? "",
-    ]);
-    const csv = [head, ...lines].map((r) => r.map(csvCell).join(",")).join("\n");
-    download(
-      new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }),
-      `employees-${ymd(now)}.csv`,
-    );
-  };
+  function handleQueryChange(event: ChangeEvent<HTMLInputElement>) {
+    setQuery(event.target.value);
+  }
 
+  function handlePositionChange(event: ChangeEvent<HTMLSelectElement>) {
+    setPosition(event.target.value);
+  }
+
+  function handleStatusChange(event: ChangeEvent<HTMLSelectElement>) {
+    setStatus(event.target.value as EmployeeStatusFilter);
+  }
+
+  function handleExport() {
+    downloadBlob(new Blob(["\uFEFF" + employeesCsv(rows)], { type: "text/csv;charset=utf-8;" }), `employees-${toYmd(now)}.csv`);
+  }
+
+  function handleAdd() {
+    setEditing("new");
+  }
+
+  function handleClose() {
+    setEditing(null);
+  }
+
+  function handleCloseCard() {
+    setIdCardOf(null);
+  }
+
+  async function handleSave(draft: EmployeeDraft) {
+    if (editing === "new") {
+      const error = await addEmployee(draft);
+      if (!error) setEditing(null);
+      return;
+    }
+    if (!editing) return;
+    const error = await updateEmployee(editing.id, draft);
+    if (!error) setEditing(null);
+  }
+
+  function handleOpenCardFromForm() {
+    if (!editing || editing === "new") return;
+    setIdCardOf(editing);
+    setEditing(null);
+  }
+
+  function fullTime(item: { employment: string }) { return item.employment === "Full-time"; }
+  function partTime(item: { employment: string }) { return item.employment === "Part-time"; }
+  function contract(item: { employment: string }) { return item.employment === "Contract"; }
   return (
-    <div className="pd-canvas-wide">
-      <div className="pd-toolbar">
-        <select
-          className="pd-select"
-          style={{ width: 170 }}
-          value={pos}
-          onChange={(e) => setPos(e.target.value)}
-        >
-          <option value="all">All positions</option>
-          {EMPLOYEE_POSITIONS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <select
-          className="pd-select"
-          style={{ width: 130 }}
-          value={status}
-          onChange={(e) => setStatus(e.target.value as any)}
-        >
-          <option value="all">All status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <div className="pd-search-inline">
-          <span className="ic">
-            <IconSearch size={17} />
-          </span>
-          <input
-            placeholder="Search name, code, phone…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-        <div className="pd-spacer" />
-        <button className="pd-btn pd-btn-ghost" disabled={!rows.length} onClick={exportCsv}>
-          <IconPrint size={15} /> Export
-        </button>
-        <button className="pd-btn pd-btn-primary" onClick={() => setEditing("new")}>
-          <IconPlus size={16} /> Add Employee
-        </button>
-      </div>
+    <Box className="mx-auto max-w-[1680px]">
+      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+        <Select className="w-[170px]" value={position} onChange={handlePositionChange} aria-label="Position" options={[{ value: "all", label: "All positions" }, ...PositionOptions()]} />
+        <Select className="w-[130px]" value={status} onChange={handleStatusChange} aria-label="Status" options={[{ value: "all", label: "All status" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
+        <Stack direction="row" align="center" gap={2} className="min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
+          <Box className="text-green"><IconSearch size={17} /></Box>
+          <Input variant="plain" aria-label="Search employees" placeholder="Search name, code, phone…" value={query} onChange={handleQueryChange} className="placeholder:text-faint" />
+        </Stack>
+        <Box className="flex-1" />
+        <Button variant="ghost" disabled={!rows.length} onClick={handleExport}><IconPrint size={15} /> Export</Button>
+        <Button variant="primary" onClick={handleAdd}><IconPlus size={16} /> Add Employee</Button>
+      </Stack>
 
-      <div className="pd-stats">
-        <div className="pd-stat">
-          <div className="ic ic-green">
-            <IconUsers size={18} />
-          </div>
-          <div className="lbl">Team size</div>
-          <div className="val">{employees.length}</div>
-          <div className="split">
-            {active} active · {employees.length - active} inactive
-          </div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconCash size={18} />
-          </div>
-          <div className="lbl">Monthly payroll</div>
-          <div className="val">{inr(payroll)}</div>
-          <div className="split">{inr(payroll * 12)}/yr</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconRupee size={18} />
-          </div>
-          <div className="lbl">Avg salary</div>
-          <div className="val">{inr(avgSalary)}</div>
-          <div className="split">per active staff</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-green">
-            <IconDoc size={18} />
-          </div>
-          <div className="lbl">Documents on file</div>
-          <div className="val">{totalDocs}</div>
-          <div className="split">{missingDocs} staff with none</div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-blue">
-            <IconBriefcase size={18} />
-          </div>
-          <div className="lbl">Full-time</div>
-          <div className="val">{byType.find((x) => x.t === "Full-time")?.n ?? 0}</div>
-          <div className="split">
-            {byType.find((x) => x.t === "Part-time")?.n ?? 0} PT ·{" "}
-            {byType.find((x) => x.t === "Contract")?.n ?? 0} contract
-          </div>
-        </div>
-        <div className="pd-stat">
-          <div className="ic ic-gold">
-            <IconUser size={18} />
-          </div>
-          <div className="lbl">Positions</div>
-          <div className="val">{byPosition.length}</div>
-          <div className="split">roles across team</div>
-        </div>
-      </div>
+      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+        <StatCard tone="green" icon={<IconUsers size={18} />} label="Team size" value={String(employees.length)} hint={`${active} active · ${employees.length - active} inactive`} />
+        <StatCard tone="blue" icon={<IconCash size={18} />} label="Monthly payroll" value={inr(payroll)} hint={`${inr(payroll * 12)}/yr`} />
+        <StatCard tone="gold" icon={<IconRupee size={18} />} label="Avg salary" value={inr(averageSalary)} hint="per active staff" />
+        <StatCard tone="green" icon={<IconDoc size={18} />} label="Documents on file" value={String(documents.total)} hint={`${documents.missing} staff with none`} />
+        <StatCard tone="blue" icon={<IconBriefcase size={18} />} label="Full-time" value={String(byType.find(fullTime)?.count ?? 0)} hint={`${byType.find(partTime)?.count ?? 0} PT · ${byType.find(contract)?.count ?? 0} contract`} />
+        <StatCard tone="gold" icon={<IconUser size={18} />} label="Positions" value={String(byPosition.length)} hint="roles across team" />
+      </Box>
 
-      <div className="pd-card" style={{ marginBottom: 16 }}>
-        <div className="pd-card-head">
-          <h3>Team composition</h3>
-          <span className="sub">by role</span>
-        </div>
-        <div className="pd-card-pad">
-          <div className="pd-grid-2">
-            {byPosition.map(([role, n]) => (
-              <div key={role} style={{ marginBottom: 9 }}>
-                <div
-                  className="pd-flex"
-                  style={{ justifyContent: "space-between", fontSize: 12.5, marginBottom: 4 }}
-                >
-                  <span>{role}</span>
-                  <b>{n}</b>
-                </div>
-                <div className="pd-prog">
-                  <i style={{ width: `${(n / posMax) * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <Card className="mb-4">
+        <CardHeader title="Team composition" subtitle="by role" />
+        <CardBody>
+          <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <PositionBars rows={byPosition} max={positionMax} />
+          </Box>
+        </CardBody>
+      </Card>
 
-      <div className="pd-card">
-        <div className="pd-tbl-wrap">
-          <table className="pd-tbl">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Employee</th>
-                <th>Position</th>
-                <th>Phone</th>
-                <th>Joined</th>
-                <th className="num">Salary / mo</th>
-                <th>Docs</th>
-                <th>Status</th>
-                <th>ID card</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((e) => (
-                <tr key={e.id} style={{ cursor: "pointer" }} onClick={() => setEditing(e)}>
-                  <td className="pd-mono" style={{ fontWeight: 700 }}>
-                    {e.id}
-                  </td>
-                  <td>
-                    <div className="prod">
-                      <span className="em" style={{ overflow: "hidden" }}>
-                        <Avatar name={e.name} photo={e.photo} size={34} />
-                      </span>
-                      <span className="nm">{e.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    {e.position}
-                    {e.department ? (
-                      <span className="pd-muted" style={{ fontSize: 11.5 }}>
-                        {" "}
-                        · {e.department}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td style={{ whiteSpace: "nowrap" }}>{e.phone}</td>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    {fmtDay(e.joinedOn)}
-                    <div className="pd-muted" style={{ fontSize: 11 }}>
-                      {employeeTenure(e.joinedOn, now)}
-                    </div>
-                  </td>
-                  <td className="num" style={{ fontWeight: 800 }}>
-                    {inr(e.salary)}
-                  </td>
-                  <td>
-                    {e.documents?.length ? (
-                      <span className="pd-pill pill-gray">
-                        <IconDoc size={11} /> {e.documents.length}
-                      </span>
-                    ) : (
-                      <span className="pd-muted" title="No documents uploaded">
-                        —
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span
-                      className={`pd-pill ${e.status === "active" ? "pill-green" : "pill-gray"}`}
-                    >
-                      {e.status === "active" ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className="pd-btn pd-btn-ghost pd-btn-sm"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        setIdCardOf(e);
-                      }}
-                    >
-                      <IconIdCard size={14} /> ID card
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={9}>
-                    <div className="pd-empty">
-                      <div className="em">
-                        <IconUser size={28} />
-                      </div>
-                      <p>No employees match this filter. Add your first team member.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
+        <Box className="overflow-x-auto">
+          <Table className="border-separate border-spacing-0 text-[13px]">
+            <TableHead>
+              <TableRow className="border-0">
+                <HeaderCell>Code</HeaderCell>
+                <HeaderCell>Employee</HeaderCell>
+                <HeaderCell>Position</HeaderCell>
+                <HeaderCell>Phone</HeaderCell>
+                <HeaderCell>Joined</HeaderCell>
+                <HeaderCell align="right">Salary / mo</HeaderCell>
+                <HeaderCell>Docs</HeaderCell>
+                <HeaderCell>Status</HeaderCell>
+                <HeaderCell>ID card</HeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <EmployeeRows rows={rows} now={now} onEdit={setEditing} onCard={setIdCardOf} />
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9}>
+                    <Stack align="center" className="px-5 py-9 text-center">
+                      <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid"><IconUser size={28} /></Box>
+                      <Text variant="muted">No employees match this filter. Add your first team member.</Text>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </Box>
+      </Box>
 
-      {editing && (
+      {editing ? (
         <EmployeeForm
           initial={editing === "new" ? null : editing}
-          onClose={() => setEditing(null)}
-          onSave={async (data) => {
-            const err =
-              editing === "new" ? await addEmployee(data) : await updateEmployee(editing.id, data);
-            if (!err) setEditing(null);
-          }}
+          onClose={handleClose}
+          onSave={handleSave}
           now={now}
-          onIdCard={
-            editing !== "new"
-              ? () => {
-                  setIdCardOf(editing as Employee);
-                  setEditing(null);
-                }
-              : undefined
-          }
+          onIdCard={editing === "new" ? undefined : handleOpenCardFromForm}
         />
-      )}
+      ) : null}
+      {idCardOf ? <EmployeeIdCard employee={idCardOf} profile={profile} onClose={handleCloseCard} /> : null}
+    </Box>
+  );
+}
 
-      {idCardOf && (
-        <EmployeeIdCard emp={idCardOf} profile={profile} onClose={() => setIdCardOf(null)} />
-      )}
-    </div>
+function PositionOptions() {
+  return EMPLOYEE_POSITIONS.map(renderPosition);
+}
+
+function renderPosition(position: string) {
+  return { value: String(position), label: String(position) };
+}
+
+function HeaderCell({ children, align }: { children: string; align?: "right" }) {
+  return <TableHeaderCell align={align} className="sticky top-0 z-[1] whitespace-nowrap bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted">{children}</TableHeaderCell>;
+}
+
+function PositionBars({ rows, max }: { rows: [string, number][]; max: number }) {
+  function renderBar(entry: [string, number]) {
+    return <PositionBar key={entry[0]} role={entry[0]} count={entry[1]} max={max} />;
+  }
+  return rows.map(renderBar);
+}
+
+function PositionBar({ role, count, max }: { role: string; count: number; max: number }) {
+  return (
+    <Stack gap={1} className="mb-2">
+      <Stack direction="row" justify="between">
+        <Text as="span" className="text-[12.5px]">{role}</Text>
+        <Text as="span" className="text-[12.5px] font-bold">{count}</Text>
+      </Stack>
+      <Progress value={barPercent(count, max)} label={role} />
+    </Stack>
+  );
+}
+
+function EmployeeRows({ rows, now, onEdit, onCard }: { rows: Employee[]; now: number; onEdit: (employee: Employee) => void; onCard: (employee: Employee) => void }) {
+  function renderEmployee(employee: Employee) {
+    return <EmployeeRow key={employee.id} employee={employee} now={now} onEdit={onEdit} onCard={onCard} />;
+  }
+  return rows.map(renderEmployee);
+}
+
+function EmployeeRow({ employee, now, onEdit, onCard }: { employee: Employee; now: number; onEdit: (employee: Employee) => void; onCard: (employee: Employee) => void }) {
+  function handleEdit() {
+    onEdit(employee);
+  }
+  function handleCard(event: MouseEvent) {
+    event.stopPropagation();
+    onCard(employee);
+  }
+  return (
+    <TableRow className="cursor-pointer" onClick={handleEdit}>
+      <TableCell className="px-3.5 py-[11px] font-mono font-bold">{employee.id}</TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Stack direction="row" align="center" gap={2}>
+          <Avatar name={employee.name} src={employee.photo} size="md" />
+          <Text as="span" className="font-bold text-ink">{employee.name}</Text>
+        </Stack>
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        {employee.position}
+        {employee.department ? <Text as="span" variant="muted" className="text-[11.5px]"> · {employee.department}</Text> : null}
+      </TableCell>
+      <TableCell className="whitespace-nowrap px-3.5 py-[11px]">{employee.phone}</TableCell>
+      <TableCell className="whitespace-nowrap px-3.5 py-[11px]">
+        {formatDayText(employee.joinedOn)}
+        <Text variant="caption">{employeeTenure(employee.joinedOn, now)}</Text>
+      </TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px] font-extrabold">{inr(employee.salary)}</TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        {employee.documents?.length ? <Pill tone="gray"><IconDoc size={11} /> {employee.documents.length}</Pill> : <Text as="span" variant="muted" title="No documents uploaded">—</Text>}
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Pill tone={employee.status === "active" ? "green" : "gray"}>{employee.status === "active" ? "Active" : "Inactive"}</Pill>
+      </TableCell>
+      <TableCell className="px-3.5 py-[11px]">
+        <Button variant="ghost" size="sm" onClick={handleCard}><IconIdCard size={14} /> ID card</Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function StatCard({ tone, icon, label, value, hint }: { tone: "green" | "blue" | "gold"; icon: ReactNode; label: string; value: string; hint: string }) {
+  const toneClass = { green: "bg-wash text-mid", blue: "bg-blue-bg text-blue", gold: "bg-amber-bg text-gold-d" }[tone];
+  return (
+    <Stack className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${toneClass}`}>{icon}</Box>
+      <Text variant="label" className="mt-3 text-[11px] font-bold uppercase tracking-[0.05em] text-muted">{label}</Text>
+      <Text className="mb-2.5 mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
+      <Text variant="caption" className="mt-auto border-t border-line pt-[9px] text-[12px]">{hint}</Text>
+    </Stack>
   );
 }

@@ -22,7 +22,7 @@ import {
   expenseTax,
 } from "@/utils";
 
-import { inRange } from "@/screens/Reports/utils/inRange";
+import { timestampInRange } from "@/utils/date";
 import { r0 } from "@/screens/Reports/utils/r0";
 import { exGst } from "@/screens/Reports/utils/exGst";
 import { dOnly } from "@/screens/Reports/utils/dOnly";
@@ -33,9 +33,9 @@ import type { RCol, ReportCtx, ReportResult } from "@/utils/calculations/reportC
 
 export function runReport(id: string, ctx: ReportCtx): ReportResult {
   const { sales, purchases, inventory, now, range } = ctx;
-  const sIn = validSales(sales).filter((s) => inRange(s.createdAt, range));
-  const pIn = purchases.filter((p) => inRange(p.createdAt, range));
-  const eIn = (ctx.expenses ?? []).filter((e) => inRange(e.date, range));
+  const sIn = validSales(sales).filter((s) => timestampInRange(s.createdAt, range));
+  const pIn = purchases.filter((p) => timestampInRange(p.createdAt, range));
+  const eIn = (ctx.expenses ?? []).filter((e) => timestampInRange(e.date, range));
   const costOf = (() => {
     const m = new Map<string, number>();
     for (const p of inventory) m.set(p.id, earliestBatch(p)?.ptr ?? p.batches[0]?.ptr ?? 0);
@@ -704,7 +704,7 @@ export function runReport(id: string, ctx: ReportCtx): ReportResult {
         { name: string; phone: string; bills: number; billed: number; out: number; oldest: number }
       >();
       for (const s of validSales(sales).filter(
-        (s) => inRange(s.createdAt, range) || isOutstanding(s),
+        (s) => timestampInRange(s.createdAt, range) || isOutstanding(s),
       )) {
         const k = partyKey(s);
         const e = m.get(k) ?? {
@@ -716,7 +716,7 @@ export function runReport(id: string, ctx: ReportCtx): ReportResult {
           oldest: 0,
         };
         const pay = saleTotals(s).payable;
-        if (inRange(s.createdAt, range)) {
+        if (timestampInRange(s.createdAt, range)) {
           e.bills++;
           e.billed += pay;
         }

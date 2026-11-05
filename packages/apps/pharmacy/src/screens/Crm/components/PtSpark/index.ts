@@ -1,1 +1,1 @@
-export * from "./PtSpark";
+export { PtSpark } from "./PtSpark";

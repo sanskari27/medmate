@@ -1,466 +1,292 @@
-import { useRef, useState } from "react";
-import {
-  Employee,
-  EMPLOYEE_POSITIONS,
-  EMPLOYMENT_TYPES,
-  EmploymentType,
-  BLOOD_GROUPS,
-  blankEmployee,
-  isValidIfsc,
-  DOC_LABELS,
-  EmployeeDoc,
-} from "@/utils";
-import { IconUpload, IconIdCard, IconX, IconDoc } from "@/components/Icon";
+import { useState, type ChangeEvent } from "react";
+import { BLOOD_GROUPS, DOC_LABELS, EMPLOYEE_POSITIONS, EMPLOYMENT_TYPES, blankEmployee, isValidIfsc, type Employee, type EmployeeDoc, type EmploymentType } from "@/utils";
+import { toYmd } from "@/utils/date";
+import { Box, Button, Heading, Image, Input, Select, Stack, Text } from "@/components/atoms";
+import { IconDoc, IconIdCard, IconUpload } from "@/components/atoms";
+import { Field } from "@/components/molecules/Field";
+import { Modal } from "@/components/molecules/Modal";
+import { documentKind, employeeDraftIsValid, readFileAsDataUrl } from "@/screens/Employees/Employees.utils";
+import type { EmployeeDraft } from "@/screens/Employees/Employees.types";
 
-import { ymd } from "@/screens/Employees/utils/ymd";
-import { Section } from "@/screens/Employees/components/Section";
-import { Field } from "@/screens/Employees/components/Field";
+import type { EmployeeFormProps } from "./EmployeeForm.types";
 
-export function EmployeeForm({
-  initial,
-  onClose,
-  onSave,
-  now,
-  onIdCard,
-}: {
-  initial: Employee | null;
-  onClose: () => void;
-  onSave: (e: Omit<Employee, "id">) => void;
-  onDelete?: () => void;
-  now: number;
-  onIdCard?: () => void;
-}) {
-  const [f, setF] = useState<Omit<Employee, "id">>(() =>
-    initial ? { ...initial } : { ...blankEmployee(), joinedOn: ymd(now) },
-  );
-  const set = (patch: Partial<Employee>) => setF((p) => ({ ...p, ...patch }));
-  const ifscBad = !!f.ifsc && !isValidIfsc(f.ifsc);
-  const valid = f.name.trim() && f.phone.trim() && f.position && f.salary >= 0 && !ifscBad;
-  const photoRef = useRef<HTMLInputElement>(null);
-  const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = () => set({ photo: r.result as string });
-    r.readAsDataURL(file);
-  };
 
-  // ── documents (photo / PDF) ──
-  const docRef = useRef<HTMLInputElement>(null);
+export function EmployeeForm({ initial, onClose, onSave, now, onIdCard }: EmployeeFormProps) {
+  const [form, setForm] = useState<EmployeeDraft>(function initialDraft() {
+    return initial ? { ...initial } : { ...blankEmployee(), joinedOn: toYmd(now) };
+  });
   const [docLabel, setDocLabel] = useState(DOC_LABELS[0]);
-  const addDoc = (doc: EmployeeDoc) =>
-    setF((p) => ({ ...p, documents: [...(p.documents ?? []), doc] }));
-  const onDocs = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    files.forEach((file) => {
-      const kind: "image" | "pdf" =
-        /pdf$/i.test(file.name) || file.type === "application/pdf" ? "pdf" : "image";
-      const r = new FileReader();
-      r.onload = () =>
-        addDoc({
+  const ifscInvalid = Boolean(form.ifsc && !isValidIfsc(form.ifsc));
+  const canSave = employeeDraftIsValid(form, ifscInvalid);
+  const documents = form.documents ?? [];
+
+  function updateForm(patch: Partial<EmployeeDraft>) {
+    setForm(function merge(current) {
+      return { ...current, ...patch };
+    });
+  }
+
+  function openPhotoPicker() {
+    document.getElementById("employee-photo-input")?.click();
+  }
+
+  function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    readFileAsDataUrl(file, function applyPhoto(dataUrl) {
+      updateForm({ photo: dataUrl });
+    });
+  }
+
+  function handleRemovePhoto() {
+    updateForm({ photo: undefined });
+  }
+
+  function handleDocLabelChange(event: ChangeEvent<HTMLSelectElement>) {
+    setDocLabel(event.target.value);
+  }
+
+  function openDocPicker() {
+    document.getElementById("employee-doc-input")?.click();
+  }
+
+  function addDocument(documentFile: EmployeeDoc) {
+    setForm(function append(current) {
+      return { ...current, documents: [...(current.documents ?? []), documentFile] };
+    });
+  }
+
+  function handleDocsChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    for (const file of files) {
+      const kind = documentKind(file);
+      readFileAsDataUrl(file, function applyDocument(dataUrl) {
+        addDocument({
           id: `DOC-${Date.now()}-${Math.round(Math.random() * 1e5)}`,
           label: docLabel,
           kind,
           fileName: file.name,
-          dataUrl: r.result as string,
+          dataUrl,
           at: Date.now(),
         });
-      r.readAsDataURL(file);
-    });
-    e.target.value = "";
-  };
-  const docs = f.documents ?? [];
+      });
+    }
+    event.target.value = "";
+  }
+
+  function handleSave() {
+    onSave(form);
+  }
 
   return (
-    <div className="pd-modal-wrap" onClick={onClose}>
-      <div className="pd-modal" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
-        <div className="pd-modal-head">
-          <h3>
-            {initial ? `Edit ${initial.name}` : "Add Employee"}
-            {initial && (
-              <span className="pd-mono pd-muted" style={{ fontSize: 12, marginLeft: 8 }}>
-                {initial.id}
-              </span>
-            )}
-          </h3>
-          <button className="pd-icon-btn" onClick={onClose}>
-            <IconX size={16} />
-          </button>
-        </div>
-        <div
-          className="pd-modal-body"
-          style={{ display: "grid", gap: 14, maxHeight: "70vh", overflowY: "auto" }}
-        >
-          <Section title="Personal" />
-          {/* photo */}
-          <div className="pd-flex" style={{ gap: 14, alignItems: "center" }}>
-            <input ref={photoRef} type="file" accept="image/*" hidden onChange={onPhoto} />
-            <button
-              onClick={() => photoRef.current?.click()}
-              title="Upload photo"
-              style={{
-                width: 72,
-                height: 86,
-                borderRadius: 10,
-                border: "1px dashed var(--line-2)",
-                background: f.photo ? "#000" : "var(--wash2)",
-                display: "grid",
-                placeItems: "center",
-                overflow: "hidden",
-                padding: 0,
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              {f.photo ? (
-                <img
-                  src={f.photo}
-                  alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <span style={{ color: "var(--muted)", fontSize: 11, textAlign: "center" }}>
-                  <IconUpload size={16} />
-                  <br />
-                  Photo
-                </span>
-              )}
-            </button>
-            <div>
-              <button
-                className="pd-btn pd-btn-ghost pd-btn-sm"
-                onClick={() => photoRef.current?.click()}
-              >
-                <IconUpload size={13} /> {f.photo ? "Change photo" : "Upload photo"}
-              </button>
-              {f.photo && (
-                <button
-                  className="pd-btn pd-btn-ghost pd-btn-sm"
-                  style={{ color: "var(--rose)", marginLeft: 6 }}
-                  onClick={() => set({ photo: undefined })}
-                >
-                  Remove
-                </button>
-              )}
-              <p className="pd-muted" style={{ fontSize: 11.5, marginTop: 6 }}>
-                Used on the digital ID card · passport-style works best
-              </p>
-            </div>
-          </div>
-          <div className="pd-grid-2">
-            <Field label="Full name *" field="name">
-              <input
-                className="pd-input"
-                value={f.name}
-                onChange={(e) => set({ name: e.target.value })}
-                placeholder="e.g. Anjali Menon"
-              />
-            </Field>
-            <Field label="Phone *" field="phone">
-              <input
-                className="pd-input"
-                value={f.phone}
-                onChange={(e) => set({ phone: e.target.value })}
-                placeholder="+91 …"
-              />
-            </Field>
-            <Field label="Email" field="email">
-              <input
-                className="pd-input"
-                value={f.email ?? ""}
-                onChange={(e) => set({ email: e.target.value })}
-                placeholder="name@pharmacy.in"
-              />
-            </Field>
-            <Field label="Date of birth">
-              <input
-                className="pd-input"
-                type="date"
-                value={f.dob ?? ""}
-                onChange={(e) => set({ dob: e.target.value })}
-              />
-            </Field>
-            <Field label="Blood group">
-              <select
-                className="pd-select"
-                value={f.bloodGroup ?? ""}
-                onChange={(e) => set({ bloodGroup: e.target.value })}
-              >
-                <option value="">—</option>
-                {BLOOD_GROUPS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-          <Field label="Address">
-            <input
-              className="pd-input"
-              value={f.address ?? ""}
-              onChange={(e) => set({ address: e.target.value })}
-              placeholder="Residential address"
-            />
-          </Field>
-
-          <Section title="Employment" />
-          <div className="pd-grid-2">
-            <Field label="Position *">
-              <select
-                className="pd-select"
-                value={f.position}
-                onChange={(e) => set({ position: e.target.value })}
-              >
-                {EMPLOYEE_POSITIONS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Department">
-              <input
-                className="pd-input"
-                value={f.department ?? ""}
-                onChange={(e) => set({ department: e.target.value })}
-                placeholder="e.g. Dispensing"
-              />
-            </Field>
-            <Field label="Employment type">
-              <select
-                className="pd-select"
-                value={f.employment}
-                onChange={(e) => set({ employment: e.target.value as EmploymentType })}
-              >
-                {EMPLOYMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Status">
-              <select
-                className="pd-select"
-                value={f.status}
-                onChange={(e) => set({ status: e.target.value as "active" | "inactive" })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </Field>
-            <Field label="Joining date">
-              <input
-                className="pd-input"
-                type="date"
-                value={f.joinedOn}
-                onChange={(e) => set({ joinedOn: e.target.value })}
-              />
-            </Field>
-            <Field label="Monthly salary ₹">
-              <input
-                className="pd-input"
-                inputMode="numeric"
-                value={f.salary || ""}
-                onChange={(e) => set({ salary: Number(e.target.value) || 0 })}
-                placeholder="0"
-              />
-            </Field>
-          </div>
-
-          <Section title="Statutory IDs" />
-          <div className="pd-grid-2">
-            <Field label="PAN">
-              <input
-                className="pd-input"
-                value={f.pan ?? ""}
-                onChange={(e) => set({ pan: e.target.value.toUpperCase() })}
-                placeholder="ABCDE1234F"
-              />
-            </Field>
-            <Field label="Aadhaar">
-              <input
-                className="pd-input"
-                value={f.aadhaar ?? ""}
-                onChange={(e) => set({ aadhaar: e.target.value })}
-                placeholder="XXXX XXXX XXXX"
-              />
-            </Field>
-          </div>
-
-          <Section title={`Documents${docs.length ? ` · ${docs.length}` : ""}`} />
-          <input
-            ref={docRef}
-            type="file"
-            accept="image/*,application/pdf,.pdf"
-            multiple
-            hidden
-            onChange={onDocs}
-          />
-          <div className="pd-flex" style={{ gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-            <div className="pd-field" style={{ flex: "1 1 200px" }}>
-              <label>Document type</label>
-              <select
-                className="pd-select"
-                value={docLabel}
-                onChange={(e) => setDocLabel(e.target.value)}
-              >
-                {DOC_LABELS.map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-            </div>
-            <button
-              type="button"
-              className="pd-btn pd-btn-ghost"
-              onClick={() => docRef.current?.click()}
-            >
-              <IconUpload size={14} /> Upload photo / PDF
-            </button>
-          </div>
-          <p className="pd-muted" style={{ fontSize: 11.5, marginTop: -4 }}>
-            Attach ID proofs & certificates — JPG/PNG or PDF. You can select multiple files.
-          </p>
-          {docs.length === 0 ? (
-            <div
-              className="pd-empty"
-              style={{
-                padding: "18px 10px",
-                border: "1px dashed var(--line-2)",
-                borderRadius: "var(--r)",
-              }}
-            >
-              <div className="em">
-                <IconDoc size={26} />
-              </div>
-              <p>No documents yet — upload Aadhaar, PAN, licence, etc.</p>
-            </div>
-          ) : (
-            <div className="pd-card" style={{ overflow: "hidden" }}>
-              {docs.map((d) => (
-                <div className="pd-docrow" key={d.id}>
-                  {d.kind === "image" ? (
-                    <span className="thumb">
-                      <img src={d.dataUrl} alt="" />
-                    </span>
-                  ) : (
-                    <span className="thumb pdf">
-                      <IconDoc size={18} />
-                    </span>
-                  )}
-                  <span className="gw">
-                    <div className="t">{d.label}</div>
-                    <div className="s">
-                      {d.fileName} · {d.kind === "pdf" ? "PDF" : "Image"}
-                    </div>
-                  </span>
-                  <a
-                    className="pd-btn pd-btn-ghost pd-btn-sm"
-                    href={d.dataUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    View
-                  </a>
-                  <a className="pd-iconbtn" href={d.dataUrl} download={d.fileName} title="Download">
-                    <span style={{ display: "inline-flex", transform: "rotate(180deg)" }}>
-                      <IconUpload size={14} />
-                    </span>
-                  </a>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <Section title="Salary bank account" />
-          <div className="pd-grid-2">
-            <Field label="Bank name">
-              <input
-                className="pd-input"
-                value={f.bankName ?? ""}
-                onChange={(e) => set({ bankName: e.target.value })}
-                placeholder="e.g. HDFC Bank"
-              />
-            </Field>
-            <Field label="Account holder name">
-              <input
-                className="pd-input"
-                value={f.accountName ?? ""}
-                onChange={(e) => set({ accountName: e.target.value })}
-                placeholder="As per bank"
-              />
-            </Field>
-            <Field label="Account number">
-              <input
-                className="pd-input"
-                value={f.accountNumber ?? ""}
-                onChange={(e) => set({ accountNumber: e.target.value })}
-                placeholder="Account no."
-              />
-            </Field>
-            <Field label="IFSC" field="ifsc">
-              <input
-                className="pd-input"
-                style={ifscBad ? { borderColor: "var(--rose)" } : undefined}
-                value={f.ifsc ?? ""}
-                onChange={(e) => set({ ifsc: e.target.value.toUpperCase() })}
-                placeholder="HDFC0001234"
-              />
-              {ifscBad && <span className="pd-field-err">Invalid IFSC</span>}
-            </Field>
-            <Field label="UPI ID">
-              <input
-                className="pd-input"
-                value={f.upi ?? ""}
-                onChange={(e) => set({ upi: e.target.value })}
-                placeholder="name@bank"
-              />
-            </Field>
-          </div>
-
-          <Section title="Emergency contact" />
-          <div className="pd-grid-2">
-            <Field label="Contact name">
-              <input
-                className="pd-input"
-                value={f.emergencyName ?? ""}
-                onChange={(e) => set({ emergencyName: e.target.value })}
-                placeholder="Name"
-              />
-            </Field>
-            <Field label="Contact phone">
-              <input
-                className="pd-input"
-                value={f.emergencyPhone ?? ""}
-                onChange={(e) => set({ emergencyPhone: e.target.value })}
-                placeholder="+91 …"
-              />
-            </Field>
-          </div>
-          <Field label="Notes">
-            <input
-              className="pd-input"
-              value={f.note ?? ""}
-              onChange={(e) => set({ note: e.target.value })}
-              placeholder="Anything else to record"
-            />
-          </Field>
-        </div>
-        <div className="pd-modal-foot">
-          {onIdCard && (
-            <button className="pd-btn pd-btn-ghost" onClick={onIdCard}>
+    <Modal
+      title={initial ? `Edit ${initial.name}` : "Add Employee"}
+      onClose={onClose}
+      className="max-w-[640px]"
+      footer={
+        <>
+          {onIdCard ? (
+            <Button variant="ghost" onClick={onIdCard}>
               <IconIdCard size={14} /> ID card
-            </button>
-          )}
-          <button className="pd-btn pd-btn-ghost" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="pd-btn pd-btn-primary" disabled={!valid} onClick={() => onSave(f)}>
-            {initial ? "Save changes" : "Add employee"}
-          </button>
-        </div>
-      </div>
-    </div>
+            </Button>
+          ) : null}
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" disabled={!canSave} onClick={handleSave}>{initial ? "Save changes" : "Add employee"}</Button>
+        </>
+      }
+    >
+      <Box className="grid max-h-[60vh] gap-3.5 overflow-y-auto">
+        {initial ? <Text variant="caption" className="font-mono">{initial.id}</Text> : null}
+        <SectionTitle title="Personal" />
+        <Stack direction="row" align="center" gap={3}>
+          <Input id="employee-photo-input" type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+          <Button variant="ghost" title="Upload photo" className={form.photo ? "h-[86px] w-[72px] shrink-0 overflow-hidden rounded-[10px] border-dashed bg-black p-0" : "h-[86px] w-[72px] shrink-0 overflow-hidden rounded-[10px] border-dashed bg-wash-2 p-0"} onClick={openPhotoPicker}>
+            {form.photo ? <Image src={form.photo} alt="" fit="cover" className="h-full w-full" /> : <Text variant="caption" className="text-center text-muted"><IconUpload size={16} /> Photo</Text>}
+          </Button>
+          <Stack gap={1}>
+            <Stack direction="row" gap={2}>
+              <Button variant="ghost" size="sm" onClick={openPhotoPicker}><IconUpload size={13} /> {form.photo ? "Change photo" : "Upload photo"}</Button>
+              {form.photo ? <Button variant="ghost" size="sm" className="text-rose" onClick={handleRemovePhoto}>Remove</Button> : null}
+            </Stack>
+            <Text variant="caption">Used on the digital ID card · passport-style works best</Text>
+          </Stack>
+        </Stack>
+        <Box className="grid grid-cols-2 gap-3.5">
+          <TextField label="Full name *" id="employee-name" field="name" value={form.name} onPatch={updateForm} placeholder="e.g. Anjali Menon" />
+          <TextField label="Phone *" id="employee-phone" field="phone" value={form.phone} onPatch={updateForm} placeholder="+91 …" />
+          <TextField label="Email" id="employee-email" field="email" value={form.email ?? ""} onPatch={updateForm} placeholder="name@pharmacy.in" />
+          <TextField label="Date of birth" id="employee-dob" field="dob" value={form.dob ?? ""} onPatch={updateForm} type="date" />
+          <Field label="Blood group" htmlFor="employee-blood">
+            <Select id="employee-blood" value={form.bloodGroup ?? ""} onChange={function handleBlood(event) { updateForm({ bloodGroup: event.target.value }); }} options={[{ value: "", label: "\u2014" }, ...BloodOptions()]} />
+          </Field>
+        </Box>
+        <TextField label="Address" id="employee-address" field="address" value={form.address ?? ""} onPatch={updateForm} placeholder="Residential address" />
+
+        <SectionTitle title="Employment" />
+        <Box className="grid grid-cols-2 gap-3.5">
+          <Field label="Position *" htmlFor="employee-position">
+            <Select id="employee-position" value={form.position} onChange={function handlePosition(event) { updateForm({ position: event.target.value }); }} options={[...EmploymentPositionOptions()]} />
+          </Field>
+          <TextField label="Department" id="employee-department" field="department" value={form.department ?? ""} onPatch={updateForm} placeholder="e.g. Dispensing" />
+          <Field label="Employment type" htmlFor="employee-type">
+            <Select id="employee-type" value={form.employment} onChange={function handleEmployment(event) { updateForm({ employment: event.target.value as EmploymentType }); }} options={[...EmploymentTypeOptions()]} />
+          </Field>
+          <Field label="Status" htmlFor="employee-status">
+            <Select id="employee-status" value={form.status} onChange={function handleStatus(event) { updateForm({ status: event.target.value as Employee["status"] }); }} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
+          </Field>
+          <TextField label="Joining date" id="employee-joined" field="joinedOn" value={form.joinedOn} onPatch={updateForm} type="date" />
+          <TextField label="Monthly salary ₹" id="employee-salary" field="salary" value={form.salary ? String(form.salary) : ""} onPatch={updateSalary} placeholder="0" inputMode="numeric" />
+        </Box>
+
+        <SectionTitle title="Statutory IDs" />
+        <Box className="grid grid-cols-2 gap-3.5">
+          <TextField label="PAN" id="employee-pan" field="pan" value={form.pan ?? ""} onPatch={updateForm} placeholder="ABCDE1234F" transform={toUpperCase} />
+          <TextField label="Aadhaar" id="employee-aadhaar" field="aadhaar" value={form.aadhaar ?? ""} onPatch={updateForm} placeholder="XXXX XXXX XXXX" />
+        </Box>
+
+        <SectionTitle title={documents.length ? `Documents · ${documents.length}` : "Documents"} />
+        <Input id="employee-doc-input" type="file" accept="image/*,application/pdf,.pdf" multiple className="hidden" onChange={handleDocsChange} />
+        <Stack direction="row" align="end" wrap gap={2}>
+          <Field label="Document type" htmlFor="employee-doc-label" className="min-w-[200px] flex-1">
+            <Select id="employee-doc-label" value={docLabel} onChange={handleDocLabelChange} options={[...DocLabelOptions()]} />
+          </Field>
+          <Button variant="ghost" onClick={openDocPicker}><IconUpload size={14} /> Upload photo / PDF</Button>
+        </Stack>
+        <Text variant="caption">Attach ID proofs & certificates — JPG/PNG or PDF. You can select multiple files.</Text>
+        {documents.length === 0 ? (
+          <Stack align="center" className="rounded-md border border-dashed border-line-2 px-2.5 py-[18px] text-center">
+            <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid"><IconDoc size={26} /></Box>
+            <Text variant="muted">No documents yet — upload Aadhaar, PAN, licence, etc.</Text>
+          </Stack>
+        ) : (
+          <Box className="overflow-hidden rounded-md border border-line bg-paper">
+            <DocumentRows documents={documents} />
+          </Box>
+        )}
+
+        <SectionTitle title="Salary bank account" />
+        <Box className="grid grid-cols-2 gap-3.5">
+          <TextField label="Bank name" id="employee-bank" field="bankName" value={form.bankName ?? ""} onPatch={updateForm} placeholder="e.g. HDFC Bank" />
+          <TextField label="Account holder name" id="employee-holder" field="accountName" value={form.accountName ?? ""} onPatch={updateForm} placeholder="As per bank" />
+          <TextField label="Account number" id="employee-account" field="accountNumber" value={form.accountNumber ?? ""} onPatch={updateForm} placeholder="Account no." />
+          <Field label="IFSC" htmlFor="employee-ifsc" error={ifscInvalid ? "Invalid IFSC" : undefined}>
+            <Input id="employee-ifsc" data-field="ifsc" className={ifscInvalid ? "border-rose" : undefined} value={form.ifsc ?? ""} onChange={function handleIfsc(event) { updateForm({ ifsc: event.target.value.toUpperCase() }); }} placeholder="HDFC0001234" />
+          </Field>
+          <TextField label="UPI ID" id="employee-upi" field="upi" value={form.upi ?? ""} onPatch={updateForm} placeholder="name@bank" />
+        </Box>
+
+        <SectionTitle title="Emergency contact" />
+        <Box className="grid grid-cols-2 gap-3.5">
+          <TextField label="Contact name" id="employee-emergency-name" field="emergencyName" value={form.emergencyName ?? ""} onPatch={updateForm} placeholder="Name" />
+          <TextField label="Contact phone" id="employee-emergency-phone" field="emergencyPhone" value={form.emergencyPhone ?? ""} onPatch={updateForm} placeholder="+91 …" />
+        </Box>
+        <TextField label="Notes" id="employee-note" field="note" value={form.note ?? ""} onPatch={updateForm} placeholder="Anything else to record" />
+      </Box>
+    </Modal>
+  );
+
+  function updateSalary(patch: Partial<EmployeeDraft>) {
+    const raw = patch.salary;
+    updateForm({ salary: Number(raw) || 0 });
+  }
+}
+
+function toUpperCase(value: string) {
+  return value.toUpperCase();
+}
+
+function SectionTitle({ title }: { title: string }) {
+  return <Heading level={4} className="border-b border-line pb-1.5 text-[13px] font-extrabold uppercase tracking-[0.04em] text-muted">{title}</Heading>;
+}
+
+function TextField({
+  label,
+  id,
+  field,
+  value,
+  onPatch,
+  placeholder,
+  type = "text",
+  inputMode,
+  transform,
+}: {
+  label: string;
+  id: string;
+  field: keyof EmployeeDraft;
+  value: string;
+  onPatch: (patch: Partial<EmployeeDraft>) => void;
+  placeholder?: string;
+  type?: string;
+  inputMode?: "numeric";
+  transform?: (value: string) => string;
+}) {
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const next = transform ? transform(event.target.value) : event.target.value;
+    onPatch({ [field]: next } as Partial<EmployeeDraft>);
+  }
+  const dataField = field === "name" || field === "phone" || field === "email" ? field : undefined;
+  return (
+    <Field label={label} htmlFor={id}>
+      <Input id={id} data-field={dataField} type={type} inputMode={inputMode} value={value} onChange={handleChange} placeholder={placeholder} />
+    </Field>
+  );
+}
+
+function BloodOptions() {
+  function renderBlood(group: string) {
+    return { value: String(group), label: String(group) };
+  }
+  return BLOOD_GROUPS.map(renderBlood);
+}
+
+function EmploymentPositionOptions() {
+  function renderPosition(position: string) {
+    return { value: String(position), label: String(position) };
+  }
+  return EMPLOYEE_POSITIONS.map(renderPosition);
+}
+
+function EmploymentTypeOptions() {
+  function renderType(employment: string) {
+    return { value: String(employment), label: String(employment) };
+  }
+  return EMPLOYMENT_TYPES.map(renderType);
+}
+
+function DocLabelOptions() {
+  function renderLabel(label: string) {
+    return { value: String(label), label: String(label) };
+  }
+  return DOC_LABELS.map(renderLabel);
+}
+
+function DocumentRows({ documents }: { documents: EmployeeDoc[] }) {
+  function renderDocument(documentFile: EmployeeDoc) {
+    return <DocumentRow key={documentFile.id} documentFile={documentFile} />;
+  }
+  return documents.map(renderDocument);
+}
+
+function DocumentRow({ documentFile }: { documentFile: EmployeeDoc }) {
+  return (
+    <Stack direction="row" align="center" gap={3} className="border-b border-line px-[13px] py-[9px] last:border-0">
+      {documentFile.kind === "image" ? (
+        <Box className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-sm bg-wash text-mid">
+          <Image src={documentFile.dataUrl} alt="" fit="cover" className="h-full w-full" />
+        </Box>
+      ) : (
+        <Box className="grid h-10 w-10 shrink-0 place-items-center rounded-sm bg-rose-bg text-rose"><IconDoc size={18} /></Box>
+      )}
+      <Stack gap={0} className="min-w-0 flex-1">
+        <Text as="span" className="text-[13px] font-bold">{documentFile.label}</Text>
+        <Text variant="caption" className="truncate">{documentFile.fileName} · {documentFile.kind === "pdf" ? "PDF" : "Image"}</Text>
+      </Stack>
+      <Button asChild variant="ghost" size="sm">
+        <a href={documentFile.dataUrl} target="_blank" rel="noreferrer">View</a>
+      </Button>
+      <Button asChild variant="ghost" size="sm" title="Download">
+        <a href={documentFile.dataUrl} download={documentFile.fileName}><Box className="inline-flex rotate-180"><IconUpload size={14} /></Box></a>
+      </Button>
+    </Stack>
   );
 }

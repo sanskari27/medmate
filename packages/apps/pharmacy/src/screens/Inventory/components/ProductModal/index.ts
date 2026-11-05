@@ -1,1 +1,2 @@
-export * from "./ProductModal";
+export { ProductModal } from "./ProductModal";
+export type { ProductModalProps } from "./ProductModal.types";

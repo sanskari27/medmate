@@ -33,12 +33,11 @@ import SalesRegisterScreen from "@/screens/SalesRegister";
 import PatientBillsScreen from "@/screens/PatientBills";
 import DoctorsScreen from "@/screens/Doctors";
 import HospitalBillingScreen from "@/screens/HospitalBilling";
-
-import { LockedFeature } from "@/layouts/DashboardLayout/components/LockedFeature";
+import { Paywall } from "@/components/organisms/Paywall";
 
 export function Canvas() {
   const { route, featureLocked } = usePharma();
-  if (featureLocked(route)) return <LockedFeature route={route} />;
+  if (featureLocked(route)) return <Paywall route={route} />;
   switch (route) {
     case "pos":
       return <PosScreen />;

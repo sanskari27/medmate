@@ -1,1 +1,1 @@
-export * from "./Campaigns";
+export { Campaigns } from "./Campaigns";
