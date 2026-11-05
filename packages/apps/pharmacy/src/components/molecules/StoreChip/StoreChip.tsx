@@ -27,7 +27,7 @@ export function StoreChip({ className, name, open, ...props }: StoreChipProps) {
         <Text as="span" className="text-[12px] leading-[1.3] font-bold text-white">
           {name}
         </Text>
-        <Text as="span" className="block text-[10px] font-semibold text-mint">
+        <Text as="span" className="block text-[10px] leading-[1.3] font-semibold text-mint">
           {open ? "● Online · accepting orders" : "○ Online store paused"}
         </Text>
       </Stack>

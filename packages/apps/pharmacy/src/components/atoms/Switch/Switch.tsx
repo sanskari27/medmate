@@ -3,12 +3,12 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const switchVariants = cva(
-  "relative h-6 w-11 rounded-full transition after:absolute after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-paper after:transition after:content-['']",
+  "relative h-[22px] w-[38px] shrink-0 rounded-[11px] border-0 p-0 transition after:absolute after:top-0.5 after:left-0.5 after:h-[18px] after:w-[18px] after:rounded-full after:bg-paper after:shadow-[0_1px_3px_rgba(0,0,0,0.22)] after:transition after:content-['']",
   {
     variants: {
       checked: {
         true: "bg-mid after:translate-x-4",
-        false: "bg-line-2 after:translate-x-0.5",
+        false: "bg-[#cddcd3] after:translate-x-0",
       },
     },
     defaultVariants: {

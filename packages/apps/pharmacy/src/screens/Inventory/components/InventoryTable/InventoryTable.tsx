@@ -38,7 +38,7 @@ import { expiryTone } from "../../Inventory.utils";
 import type { InventoryTableProps } from "./InventoryTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
 const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
 
 export function InventoryTable({
@@ -71,7 +71,7 @@ export function InventoryTable({
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table>
+        <Table className="border-separate border-spacing-0">
           <TableHead>
             <TableRow>
               <TableHeaderCell className={headCell}>Product</TableHeaderCell>

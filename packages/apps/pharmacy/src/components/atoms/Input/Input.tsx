@@ -3,12 +3,12 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const inputVariants = cva(
-  "w-full text-[13.5px] text-ink outline-none transition disabled:bg-wash disabled:text-faint",
+  "w-full text-[13.5px] [line-height:normal] text-ink outline-none transition max-[767px]:text-[16px] disabled:bg-wash disabled:text-faint",
   {
     variants: {
       variant: {
         default:
-          "rounded-sm border border-line-2 bg-paper px-3 py-[9px] focus:border-mid focus:shadow-focus",
+          "rounded-sm border border-line-2 bg-paper px-3 py-[9px] placeholder:text-faint hover:border-[#b9d0c2] focus:border-mid focus:shadow-focus",
         plain: "border-0 bg-transparent px-0 py-2 shadow-none focus:shadow-none",
       },
       controlSize: {

@@ -80,15 +80,14 @@ function WelcomeIcon({ id }: { id: (typeof WELCOME_POINTS)[number]["key"] }) {
 
 function WelcomePoint({ id, title }: { id: (typeof WELCOME_POINTS)[number]["key"]; title: string }) {
   return (
-    <ListRow
-      className="rounded-md border border-line bg-paper px-3"
-      title={title}
-      leading={
-        <Box className="grid h-9 w-9 place-items-center rounded-sm bg-wash text-mid">
-          <WelcomeIcon id={id} />
-        </Box>
-      }
-    />
+    <Stack direction="row" align="center" className="gap-3 rounded-md border border-line px-3.5 py-3">
+      <Box className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-wash text-mid">
+        <WelcomeIcon id={id} />
+      </Box>
+      <Text as="span" className="text-[13.5px] font-bold text-ink">
+        {title}
+      </Text>
+    </Stack>
   );
 }
 
@@ -103,8 +102,8 @@ function StepDot({ state }: { state: "done" | "current" | "todo" }) {
   return (
     <Box
       className={cn(
-        "h-1.5 flex-1 rounded-full bg-line",
-        state === "done" && "bg-mint",
+        "h-[5px] flex-1 rounded-[3px] bg-line",
+        state === "done" && "bg-light",
         state === "current" && "bg-mid",
       )}
     />
@@ -120,7 +119,7 @@ function StepDots({ step }: { step: number }) {
         return <StepDot key={index} state={state} />;
       }
   return (
-    <Stack direction="row" gap={1} className="mt-3">
+    <Stack direction="row" className="mt-[13px] gap-[5px]">
       {indexes.map(renderDot)}
     </Stack>
   );
@@ -157,7 +156,7 @@ function BusinessTypes({ selected, onToggle }: { selected: string[]; onToggle: (
         return <BusinessTypeChip key={type} label={type} selected={selected.includes(type)} onToggle={onToggle} />;
       }
   return (
-    <Stack direction="row" wrap gap={2}>
+    <Stack direction="row" wrap className="gap-1.5">
       {PHARMACY_BUSINESS_TYPES.map(renderType)}
     </Stack>
   );
@@ -296,16 +295,18 @@ function WizardFeat({
 
 function WelcomeStep() {
   return (
-    <Stack align="center" gap={3} className="py-4 text-center">
-      <Box className="grid h-14 w-14 place-items-center rounded-lg bg-wash text-mid">
+    <Stack align="center" className="py-3.5 text-center">
+      <Box className="inline-grid text-mid">
         <IconStore size={28} />
       </Box>
-      <Heading level={2}>Welcome to your pharmacy console</Heading>
-      <Text variant="muted" className="max-w-xl">
+      <Heading level={2} className="mt-2 text-[23px]">
+        Welcome to your pharmacy console
+      </Heading>
+      <Text className="mx-auto mt-2 max-w-[460px] text-[14px] text-muted">
         A quick setup gets your store ready for GST billing, inventory, online orders & more. It takes about 2
         minutes — you can change everything later in Settings.
       </Text>
-      <Grid columns={2} gap={3} className="w-full max-w-xl text-left">
+      <Grid columns={2} className="mx-auto mt-5 w-full max-w-[520px] gap-2.5 text-left">
         <WelcomePoints />
       </Grid>
     </Stack>
@@ -723,30 +724,40 @@ export function SetupWizard({ className }: SetupWizardProps) {
   }
   const last = step === STEPS.length - 1;
   return (
-    <Stack data-slot="setup-wizard" align="center" className={cn("min-h-dvh bg-canvas px-4 py-8", className)}>
-      <Stack className="w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-paper shadow-card">
-        <Stack gap={1} className="border-b border-line px-5 py-4">
+    <Stack
+      data-slot="setup-wizard"
+      align="center"
+      justify="center"
+      className={cn(
+        "fixed inset-0 z-[90] overflow-y-auto bg-[radial-gradient(60%_50%_at_50%_0%,rgba(143,212,168,0.18),transparent_60%),linear-gradient(135deg,#10301d,#0c2516)] p-6",
+        className,
+      )}
+    >
+      <Stack className="max-h-[92vh] w-full max-w-[800px] overflow-hidden rounded-[20px] bg-paper shadow-pop">
+        <Stack className="border-b border-line px-[26px] pt-[18px] pb-[14px]">
           <Stack direction="row" align="center" justify="between">
             <Stack direction="row" align="center" gap={2}>
-              <Box className="grid h-8 w-8 place-items-center rounded-sm bg-dark text-white">
-                <Text as="span" className="font-bold text-white">
-                  ＋
-                </Text>
+              <Box className="grid h-[30px] w-[30px] place-items-center rounded-sm bg-dark text-[15px] text-white">
+                ＋
               </Box>
-              <Heading level={4}>Namma MedMate · Store setup</Heading>
+              <Heading level={4} className="text-[15px]">
+                Namma MedMate · Store setup
+              </Heading>
             </Stack>
-            <Text variant="caption" className="font-bold">
+            <Text as="span" className="text-[11.5px] font-bold text-muted">
               Step {step + 1} of {STEPS.length}
             </Text>
           </Stack>
-          <Heading level={2}>{STEPS[step].title}</Heading>
-          <Text variant="muted">{STEPS[step].subtitle}</Text>
+          <Heading level={2} className="mt-2 text-[19px]">
+            {STEPS[step].title}
+          </Heading>
+          <Text className="mt-0.5 text-[12.5px] text-muted">{STEPS[step].subtitle}</Text>
           <StepDots step={step} />
         </Stack>
-        <Box className="px-5 py-5">
+        <Box className="overflow-y-auto px-[26px] py-[22px]">
           <StepBody step={step} draft={draft} update={update} />
         </Box>
-        <Stack direction="row" align="center" justify="between" className="border-t border-line px-5 py-4">
+        <Stack direction="row" align="center" justify="between" className="gap-2.5 border-t border-line px-[26px] py-[14px]">
           <Button variant="ghost" disabled={step === 0 || saving} onClick={onBack}>
             Back
           </Button>
@@ -761,7 +772,7 @@ export function SetupWizard({ className }: SetupWizardProps) {
           )}
         </Stack>
       </Stack>
-      <Text variant="caption" className="mt-4">
+      <Text className="mt-3.5 block px-3 pt-2 pb-3 text-center text-[10px] [line-height:15px] tracking-[0.01em] text-faint">
         © 2026 Medmate India Technology Private Limited
       </Text>
     </Stack>

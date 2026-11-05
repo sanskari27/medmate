@@ -16,7 +16,7 @@ const fieldVariants = cva("", {
 
 export type FieldProps = Omit<ComponentProps<typeof Stack>, "children"> &
   VariantProps<typeof fieldVariants> & {
-    label: string;
+    label: ReactNode;
     htmlFor?: string;
     hint?: string;
     error?: string;
@@ -25,14 +25,10 @@ export type FieldProps = Omit<ComponentProps<typeof Stack>, "children"> &
 
 export function Field({ className, label, htmlFor, hint, error, children, ...props }: FieldProps) {
   return (
-    <Stack data-slot="field" gap={2} className={cn(fieldVariants(), className)} {...props}>
+    <Stack data-slot="field" className={cn(fieldVariants(), "gap-1.5", className)} {...props}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {error ? (
-        <Text variant="caption" className="text-rose">
-          {error}
-        </Text>
-      ) : null}
+      {error ? <Text className="text-[12px] font-bold text-rose">{error}</Text> : null}
       {hint && !error ? <Text variant="caption">{hint}</Text> : null}
     </Stack>
   );

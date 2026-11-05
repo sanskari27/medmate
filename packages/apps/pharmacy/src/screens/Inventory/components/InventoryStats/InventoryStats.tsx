@@ -127,7 +127,7 @@ function StatCard({
       <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-tight text-dark tabular-nums">
         {value}
       </Text>
-      <Text variant="caption" className="text-[13px] text-muted">
+      <Text className="mt-auto border-t border-line pt-[9px] text-[12px] [line-height:18px] text-muted">
         {hint}
       </Text>
     </Box>

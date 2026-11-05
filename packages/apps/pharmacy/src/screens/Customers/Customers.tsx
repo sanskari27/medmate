@@ -100,15 +100,15 @@ export default function CustomersScreen() {
         <StatCard tone="gold" icon={<IconReceipt size={18} />} label="Credit outstanding" value={inr(creditDue)} hint="khata / udhaar" />
       </Box>
 
-      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
-        <Stack direction="row" align="center" gap={2} className="min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
+      <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
+        <Stack direction="row" align="center" gap={2} className="h-10 min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
           <Box className="text-green">
             <IconSearch size={17} />
           </Box>
           <Input variant="plain" aria-label="Search customers" placeholder="Search customer name or phone…" value={query} onChange={handleQueryChange} className="placeholder:text-faint" />
         </Stack>
         <Box className="flex-1" />
-        <Stack direction="row" gap={0} className="rounded-sm border border-line bg-wash-2 p-0.5">
+        <Stack direction="row" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
           <SortButton label="Top spenders" selected={sort === "spent"} onSelect={showSpenders} />
           <SortButton label="Most orders" selected={sort === "orders"} onSelect={showOrders} />
           <SortButton label="Recent" selected={sort === "recent"} onSelect={showRecent} />
@@ -172,7 +172,7 @@ export default function CustomersScreen() {
 
 function HeaderCell({ children, align }: { children: string; align?: "right" }) {
   return (
-    <TableHeaderCell align={align} className="sticky top-0 z-[1] whitespace-nowrap bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted">
+    <TableHeaderCell align={align} className="sticky top-0 z-[1] whitespace-nowrap border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted">
       {children}
     </TableHeaderCell>
   );

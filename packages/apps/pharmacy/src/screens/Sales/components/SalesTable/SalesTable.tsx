@@ -17,7 +17,7 @@ import { sortMarker, unitCount, type SalesRow } from "../../Sales.utils";
 import type { SalesTableProps } from "./SalesTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
 const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
 
 export function SalesTable(props: SalesTableProps) {
@@ -36,7 +36,7 @@ export function SalesTable(props: SalesTableProps) {
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table>
+        <Table className="border-separate border-spacing-0">
           <TableHead>
             <TableRow>
               <TableHeaderCell className={headCell}>Invoice</TableHeaderCell>
@@ -189,7 +189,7 @@ function SalesRecord({
       <TableCell className={bodyCell} onClick={stop}>
         <Stack direction="row" justify="end" gap={1}>
           {sale.paid === false ? (
-            <Button variant="gold" size="sm" onClick={markPaid}>
+            <Button variant="gold" size="sm" className="h-[29px]" onClick={markPaid}>
               <IconCash size={13} /> Paid
             </Button>
           ) : null}

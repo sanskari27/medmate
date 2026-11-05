@@ -97,26 +97,34 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
       direction="row"
       align="center"
       gap={4}
-      className={cn("h-[60px] border-b border-line bg-paper px-6", className)}
+      className={cn(
+        "h-[60px] gap-4 border-b border-line bg-paper px-6 max-[1099px]:gap-2.5 max-[1099px]:px-4 max-[767px]:h-auto max-[767px]:flex-wrap max-[767px]:gap-2 max-[767px]:px-3 max-[767px]:pt-2.5 max-[767px]:pb-2.5",
+        className,
+      )}
     >
       <IconButton
         label="Menu"
         variant="ghost"
-        className="hidden print:hidden max-[1099px]:grid"
+        className="hidden h-9 w-9 print:hidden max-[1099px]:grid max-[767px]:h-11"
         onClick={onMenu}
       >
         <MenuGlyph />
       </IconButton>
       {canGoBack ? (
-        <IconButton label="Go back" variant="default" className="print:hidden" onClick={onBack}>
+        <IconButton
+          label="Go back"
+          variant="default"
+          className="-ml-1.5 h-[34px] w-[34px] rounded-sm border-line print:hidden"
+          onClick={onBack}
+        >
           <IconChevronLeft size={19} />
         </IconButton>
       ) : null}
-      <Stack gap={0} className="min-w-0">
+      <Stack gap={0} className="min-w-0 max-[767px]:flex-1">
         <Heading level={1} className="truncate text-[19px] font-bold">
           {meta.title}
         </Heading>
-        <Text as="span" variant="caption" className="truncate text-[12.5px]">
+        <Text as="span" variant="caption" className="truncate text-[12.5px] font-medium">
           {meta.sub}
         </Text>
       </Stack>
@@ -125,7 +133,7 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
           direction="row"
           align="center"
           gap={2}
-          className="ml-auto w-[300px] max-w-full rounded-sm bg-wash-2 px-3 py-1.5 print:hidden"
+          className="ml-auto w-[300px] max-w-full gap-[9px] rounded-sm border border-transparent bg-wash-2 px-3 py-[7px] print:hidden hover:border-line-2 hover:bg-paper max-[1099px]:w-auto max-[1099px]:max-w-[320px] max-[1099px]:min-w-0 max-[1099px]:flex-1 max-[767px]:order-8 max-[767px]:ml-0 max-[767px]:w-full max-[767px]:max-w-none max-[767px]:flex-auto"
         >
           <Box className="text-green">
             <IconSearch size={17} />
@@ -137,6 +145,7 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
             onFocus={onSearchFocus}
             onChange={onSearchChange}
             aria-label="Search medicines, orders, invoices"
+            className="px-[2px] py-px max-[767px]:text-[13.5px]"
           />
         </Stack>
       ) : (
@@ -152,7 +161,7 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
       ) : null}
       {allow("prescriptions") ? (
         <Box className="relative print:hidden">
-          <IconButton label="Notifications" onClick={openPrescriptions}>
+          <IconButton label="Notifications" className="h-9 w-9 rounded-sm border-line max-[767px]:h-11" onClick={openPrescriptions}>
             <IconBell size={19} />
           </IconButton>
           {pendingRx > 0 ? <Box className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose" /> : null}

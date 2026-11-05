@@ -145,7 +145,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  return n;});
  return (<Box>
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className={cn("!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold","!flex-wrap")}>
+ <Box className={cn("!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:![line-height:18px]","!flex-wrap")}>
  <Box>
  <Heading level={3}>
  Sales analytics{""}
@@ -188,7 +188,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  {/* real breakdowns */}
  <Box className={cn("!grid !grid-cols-3 !gap-4 max-[767px]:!grid-cols-1","!mt-4")}>
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>{isHospital ?"Sales by source" :"Channel split"}</Heading>
  <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>
@@ -199,7 +199,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  </Box>
 
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>Payment modes</Heading>
  <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>
@@ -211,7 +211,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  </Box>
 
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>Top categories</Heading>
  <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>

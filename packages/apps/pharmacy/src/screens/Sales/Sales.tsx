@@ -106,12 +106,12 @@ export default function SalesScreen() {
   }
   return (
     <Box className="mx-auto max-w-[1680px]">
-      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+      <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
         <Box>
           <Heading level={2} className="text-[16px]">
             All sales
           </Heading>
-          <Text variant="caption" className="text-[12.5px]">
+          <Text as="span" variant="caption" className="text-[12.5px] leading-[1.5]">
             Every sale from day one to date — counter & online
           </Text>
         </Box>

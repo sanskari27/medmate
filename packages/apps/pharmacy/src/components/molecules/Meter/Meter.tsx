@@ -15,10 +15,10 @@ export function Meter({ className, label, valueLabel, value, tone, ...props }: M
   return (
     <Stack data-slot="meter" gap={1} className={cn(className)} {...props}>
       <Stack direction="row" justify="between">
-        <Text as="span" className="font-semibold">
+        <Text as="span" className="text-[12.5px] font-semibold">
           {label}
         </Text>
-        <Text as="span" variant="muted">
+        <Text as="span" className="text-[12.5px] text-muted">
           {valueLabel}
         </Text>
       </Stack>

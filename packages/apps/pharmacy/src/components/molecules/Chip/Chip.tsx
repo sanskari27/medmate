@@ -4,12 +4,12 @@ import { Button } from "@/components/atoms/Button";
 import { cn } from "@/utils/className";
 
 const chipVariants = cva(
-  "inline-flex h-auto items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-bold shadow-none transition",
+  "inline-flex h-auto items-center gap-[7px] rounded-full border px-3.5 py-[7px] text-[12.5px] font-bold shadow-none transition",
   {
     variants: {
       selected: {
-        true: "border-mid bg-wash text-mid hover:bg-wash",
-        false: "border-line-2 bg-paper text-ink-2 hover:bg-wash-2",
+        true: "border-dark bg-dark text-white hover:border-dark hover:bg-dark hover:text-white",
+        false: "border-line-2 bg-paper text-ink-2 hover:border-[#b9d0c2] hover:bg-wash-2",
       },
     },
     defaultVariants: {

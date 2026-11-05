@@ -151,10 +151,10 @@ export default function DashboardScreen() {
       {/* ── today strip + quick actions ── */}
       <Box className="!mb-3.5 !flex !flex-wrap !items-center !justify-between !gap-5 !rounded-lg !border !border-line !bg-paper !px-5 !py-[18px]">
         <Box className="!min-w-0">
-          <Box className="!font-display !text-[22px] !font-extrabold !text-ink">
+          <Box className="!font-display !text-[23px] !font-extrabold !leading-[1.5] !tracking-[-0.025em] !text-ink">
             {greet}, {who}
           </Box>
-          <Box className="!text-[13px] !text-muted">
+          <Box className="!mt-[5px] !text-[13px] !leading-[1.5] !text-muted">
             {dateStr} ·{" "}
             <Text className="!inline-flex !items-center !gap-1.5 !rounded-full !bg-wash !px-2.5 !py-[3px] !text-[11px] !font-bold !text-mid" as="span">
               <Box className={profile.storeOpen ? "inline-block h-1.5 w-1.5 rounded-full bg-mid shadow-[0_0_0_3px_rgba(47,125,82,0.14)]" : "inline-block h-1.5 w-1.5 rounded-full bg-gold"} />
@@ -162,7 +162,7 @@ export default function DashboardScreen() {
             </Text>
           </Box>
         </Box>
-        <Box className="!flex !w-full !flex-wrap !gap-2">
+        <Box className="!flex !flex-wrap !gap-2">
           {QA.map(renderQA)}
         </Box>
       </Box>
@@ -170,20 +170,20 @@ export default function DashboardScreen() {
       {/* ── metrics rail: context numbers, deliberately not competing cards ── */}
       <Box className="!mb-[22px] !grid !grid-cols-[repeat(auto-fit,minmax(150px,1fr))] !overflow-hidden !rounded-md !border !border-line !bg-paper !shadow-sm [&>*]:!min-w-0 [&>*]:!border-r [&>*]:!border-line [&>*]:!px-4 [&>*]:!py-3 [&>*:last-child]:!border-r-0">
         <Box>
-          <Text as="span" className="block text-[11px] font-bold text-muted">This month</Text>
-          <Text as="span" className="block font-display text-lg font-bold text-dark">{inr(monthRev)}</Text>
+          <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">This month</Text>
+          <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-dark tabular-nums">{inr(monthRev)}</Text>
         </Box>
         <Box>
-          <Text as="span" className="block text-[11px] font-bold text-muted">Avg bill today</Text>
-          <Text as="span" className="block font-display text-lg font-bold text-dark">{inr(avgBill)}</Text>
+          <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">Avg bill today</Text>
+          <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-dark tabular-nums">{inr(avgBill)}</Text>
         </Box>
         <Box>
-          <Text as="span" className="block text-[11px] font-bold text-muted">Items sold today</Text>
-          <Text as="span" className="block font-display text-lg font-bold text-dark">{itemsToday}</Text>
+          <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">Items sold today</Text>
+          <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-dark tabular-nums">{itemsToday}</Text>
         </Box>
         {dueCount > 0 && (<Box className="cursor-pointer" role="button" onClick={goOnClick}>
-            <Text as="span" className="block text-[11px] font-bold text-muted">Dues to collect</Text>
-            <Text as="span" className="block font-display text-lg font-bold text-dark">{dueCount}</Text>
+            <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">Dues to collect</Text>
+            <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-gold-d tabular-nums">{dueCount}</Text>
           </Box>)}
       </Box>
 
@@ -194,7 +194,7 @@ export default function DashboardScreen() {
             <IconArrowRight size={16}/>
           </Text>
           <Box className="flex items-start justify-between">
-            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-wash !text-mid">
+            <Box className="!mb-2.5 !grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-wash !text-mid">
               <IconRupee size={19}/>
             </Box>
             {salesDelta !== 0 && (<Text className={`!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold ${salesDelta >= 0 ? "!bg-wash !text-green" : "!bg-rose-bg !text-rose"}`} as="span">
@@ -204,21 +204,21 @@ export default function DashboardScreen() {
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Today’s sales</Box>
           <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{inr(totalRev)}</Box>
-          <Box className="!h-[30px]">
+          <Box className="!mt-3 !block !h-[30px]">
             <Spark data={dayTotals}/>
           </Box>
           <Box className="mt-auto grid grid-cols-2 gap-2.5 border-t border-line pt-[9px]">
-            <Text as="span">
-              <Text as="span" className="font-bold">
+            <Text as="span" className="flex min-w-0 flex-col gap-px">
+              <Text as="span" className="inline-flex items-center gap-1 text-[13px] font-bold text-ink tabular-nums">
                 <IconGlobe size={12}/> {inr(onlineRev)}
               </Text>
-              <Text as="span" className="text-[11px] font-semibold">Online</Text>
+              <Text as="span" className="text-[10px] font-bold tracking-[0.05em] text-muted uppercase">Online</Text>
             </Text>
-            <Text as="span">
-              <Text as="span" className="font-bold">
+            <Text as="span" className="flex min-w-0 flex-col gap-px">
+              <Text as="span" className="inline-flex items-center gap-1 text-[13px] font-bold text-ink tabular-nums">
                 <IconStore size={12}/> {inr(offlineRev)}
               </Text>
-              <Text as="span" className="text-[11px] font-semibold">Counter</Text>
+              <Text as="span" className="text-[10px] font-bold tracking-[0.05em] text-muted uppercase">Counter</Text>
             </Text>
           </Box>
         </Box>
@@ -227,21 +227,21 @@ export default function DashboardScreen() {
             <IconArrowRight size={16}/>
           </Text>
           <Box className="flex items-start justify-between">
-            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-blue-bg !text-blue">
+            <Box className="!mb-2.5 !grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-blue-bg !text-blue">
               <IconOrders size={19}/>
             </Box>
             {newOrders.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">{newOrders.length} new</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Orders today</Box>
           <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{todays.length}</Box>
-          <Box className="!h-[30px]">
+          <Box className="!mt-3 !block !h-[30px]">
             <Spark data={dayOrders}/>
           </Box>
-          <Box className="mt-auto block border-t border-line pt-[9px] text-xs text-muted">
+          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] leading-[1.2] text-muted">
             {newOrders.length > 0 ? (<>
                 <Text as="span" className={cn("font-bold", "!text-gold-d")}>{newOrders.length}</Text> awaiting action
               </>) : (<>
-                <IconCheck size={12}/> all caught up
+                <span className="inline-flex items-center gap-1"><IconCheck size={12}/> all caught up</span>
               </>)}
           </Box>
         </Box>
@@ -250,52 +250,51 @@ export default function DashboardScreen() {
             <IconArrowRight size={16}/>
           </Text>
           <Box className="flex items-start justify-between">
-            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-amber-bg !text-gold-d">
+            <Box className="!mb-2.5 !grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-amber-bg !text-gold-d">
               <IconRx size={19}/>
             </Box>
             {pendingRx.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">to verify</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Prescriptions</Box>
           <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{pendingRx.length}</Box>
-          <Box className="!h-[30px]">
+          <Box className="!mt-3 !block !h-[30px]">
             <Spark data={dayRx}/>
           </Box>
-          <Box className="mt-auto block border-t border-line pt-[9px] text-xs text-muted">pending review</Box>
+          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] leading-[1.2] text-muted">pending review</Box>
         </Box>
         <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={openAlerts} onKeyDown={kpiKey(openAlerts)} title="See medicines to reorder & expiring stock">
           <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
             <IconArrowRight size={16}/>
           </Text>
           <Box className="flex items-start justify-between">
-            <Box className="!grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-rose-bg !text-rose">
+            <Box className="!mb-2.5 !grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-rose-bg !text-rose">
               <IconAlert size={19}/>
             </Box>
             {lowStock.length + expiring.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold bg-rose-bg text-rose" as="span">action</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Stock alerts</Box>
           <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{lowStock.length + expiring.length}</Box>
-          <Box className="!h-[30px]">
-            {/* stock health mix — the same footprint as a sparkline, so the row stays uniform */}
+          <Box className="!mt-3 !block !h-[30px]">
             <SegmentBar className="h-[7px] overflow-hidden rounded bg-wash" segments={alertSegments} />
-            <Box className="!mt-2 !flex !flex-wrap !gap-3 !text-[12px] !text-muted">
-              <Text as="span">
-                <Box className={cn("!bg-gold")} />
+            <Box className="!mt-2 !flex !gap-3.5 !whitespace-nowrap">
+              <Text as="span" className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-[0.03em] text-muted uppercase">
+                <Box className="inline-block h-[7px] w-[7px] rounded-[2px] bg-gold" />
                 Low stock
               </Text>
-              <Text as="span">
-                <Box className={cn("!bg-rose")} />
+              <Text as="span" className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-[0.03em] text-muted uppercase">
+                <Box className="inline-block h-[7px] w-[7px] rounded-[2px] bg-rose" />
                 Expiring
               </Text>
             </Box>
           </Box>
           <Box className="mt-auto grid grid-cols-2 gap-2.5 border-t border-line pt-[9px]">
-            <Text as="span">
-              <Text as="span" className="font-bold">{lowStock.length}</Text>
-              <Text as="span" className="text-[11px] font-semibold">Low stock</Text>
+            <Text as="span" className="flex min-w-0 flex-col gap-px">
+              <Text as="span" className="text-[13px] font-bold text-ink tabular-nums">{lowStock.length}</Text>
+              <Text as="span" className="text-[10px] font-bold tracking-[0.05em] text-muted uppercase">Low stock</Text>
             </Text>
-            <Text as="span">
-              <Text as="span" className="font-bold">{expiring.length}</Text>
-              <Text as="span" className="text-[11px] font-semibold">Expiring</Text>
+            <Text as="span" className="flex min-w-0 flex-col gap-px">
+              <Text as="span" className="text-[13px] font-bold text-ink tabular-nums">{expiring.length}</Text>
+              <Text as="span" className="text-[10px] font-bold tracking-[0.05em] text-muted uppercase">Expiring</Text>
             </Text>
           </Box>
         </Box>
@@ -396,13 +395,13 @@ export default function DashboardScreen() {
         Icon: (p: { size?: number }) => React.JSX.Element;
         go: () => void;
     }) {
-        return (<Button key={a.label} className="!inline-flex !min-w-0 !items-center !gap-2 !rounded-md !border !border-line !bg-paper !px-3 !py-2.5 !text-[13px] !font-bold !shadow-sm hover:!border-mint" onClick={a.go}>
+        return (<Button key={a.label} className="!inline-flex !h-auto !min-w-0 !items-center !gap-[9px] !rounded-full !border !border-line-2 !bg-paper !py-[7px] !pr-3.5 !pl-[7px] !text-[13px] !font-bold !text-ink !shadow-none hover:!-translate-y-px hover:!border-[#b9d0c2] hover:!bg-wash-2" onClick={a.go}>
               <Text className="!grid !h-[30px] !w-[30px] !shrink-0 !place-items-center !rounded-full !bg-wash !text-mid" as="span">
                 <a.Icon size={16}/>
               </Text>
-              <Text className="flex min-w-0 flex-col items-start text-left" as="span">
-                <Text as="span" className="font-bold">{a.label}</Text>
-                <Text as="span" className="text-[11px] font-semibold">{a.sub}</Text>
+              <Text className="flex min-w-0 flex-col items-start text-left leading-[1.2]" as="span">
+                <Text as="span" className="text-[13px] font-bold text-ink">{a.label}</Text>
+                <Text as="span" className="text-[11px] font-normal text-muted">{a.sub}</Text>
               </Text>
             </Button>);
     }

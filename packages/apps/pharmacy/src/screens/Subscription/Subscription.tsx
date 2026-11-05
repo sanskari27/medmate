@@ -26,7 +26,7 @@ export default function SubscriptionScreen() {
     const statusLabel = subscriptionStatusLabel(lapsed, subscription.status);
     return (<Box className="!mx-auto !max-w-[1680px]">
       {/* status banner */}
-      <Box className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!mb-4.5 !flex !items-center !gap-4 !bg-gradient-to-r from-wash to-paper")}>
+      <Box className="mb-[18px] flex flex-row items-center gap-4 rounded-md border border-line bg-gradient-to-r from-wash to-paper p-[18px] shadow-sm">
         <Text className={cn("!w-[50px] !h-[50px] !rounded-[14px] !text-paper !grid !place-items-center", isFree ? "!bg-gradient-to-br from-green to-mid" : "!bg-gradient-to-br from-gold to-gold-d")} as="span">
           {isFree ? <IconCheck size={26}/> : <IconCrown size={26}/>}
         </Text>
@@ -75,27 +75,27 @@ export default function SubscriptionScreen() {
         </Box>)}
 
       {/* plan comparison + cycle toggle */}
-      <Box className="!mb-2 !flex !items-center !justify-between">
+      <Box className="mb-0 flex items-center justify-between">
         <Heading className={cn("!text-[16px]")} level={2}>Plans</Heading>
         <Text className="text-[12.5px] text-muted" as="span">
           switch anytime · prices exclude {Math.round(GST_RATE * 100)}% GST
         </Text>
       </Box>
-      <Box className={cn("!flex !items-center !gap-2.5", "!justify-center !mt-1 !mx-0 !mb-4.5")}>
+      <Box className="mx-0 mt-3 mb-[18px] flex items-center justify-center gap-2.5">
         <Box className="!inline-flex !max-w-full !flex-wrap !gap-0.5 !rounded-sm !border !border-line !bg-wash-2 !p-0.5">
           <Button className={cycle === "monthly" ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"} onClick={setCycleOnClick}>
             Monthly
           </Button>
           <Button className={cycle === "annual" ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"} onClick={setCycleOnClick2}>
             Annual{" "}
-            <Text className={cn("!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-wash !text-mid", "!ml-1")} as="span">
+            <Text className="inline-flex items-center gap-1 rounded-full bg-wash px-[9px] py-[3px] text-[11px] [line-height:14px] font-bold whitespace-nowrap text-mid" as="span">
               save up to {Math.max(...PLANS.map(annualOff))}%
             </Text>
           </Button>
         </Box>
       </Box>
 
-      <Box id="!grid !gap-4" className="!grid !gap-4">
+      <Box id="plans" className="mb-[18px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-[14px] pt-3">
         {PLANS.map(renderPLANS)}
       </Box>
       {!couponRedeemed && <CouponRedeem onRedeem={redeemCoupon}/>}
@@ -125,7 +125,7 @@ export default function SubscriptionScreen() {
         </Box>)}
     </Box>);
     function getElementByIdOnClick() {
-        const el = document.getElementById("!grid !gap-4");
+        const el = document.getElementById("plans");
         el?.scrollIntoView({ behavior: "smooth" });
     }
     function setCycleOnClick() {
@@ -139,10 +139,10 @@ export default function SubscriptionScreen() {
         const free = p.key === "Essential";
         const price = planPrice(p, cycle);
         return (<Box key={p.key} className={cn("!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm !flex-1 !p-[18px]", "!relative", isCurrent ? "!border-mid" : "!border-line", isCurrent ? "!border-2" : "!border")}>
-              {p.key === "Growth" && (<Text className={cn("!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-amber-bg !text-gold-d", "!absolute -!top-2.5 !right-3.5")} as="span">
+              {p.key === "Growth" && (<Text className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1 rounded-full bg-amber-bg px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap text-gold-d" as="span">
                   <IconStar size={13}/> Popular
                 </Text>)}
-              {free && (<Text className={cn("!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-wash !text-mid", "!absolute -!top-2.5 !right-3.5")} as="span">
+              {free && (<Text className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1 rounded-full bg-wash px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap text-mid" as="span">
                   <IconCheck size={12}/> Free forever
                 </Text>)}
               <Box className={cn("!font-display !font-extrabold !text-[18px] !text-dark")}>
@@ -169,21 +169,21 @@ export default function SubscriptionScreen() {
                 </Box>) : (<Box className={cn("!text-muted", "!text-[11.5px] !mb-3")}>
                   or {inr(annualPerMonth(p))}/mo billed yearly (save {annualOff(p)}%)
                 </Box>)}
-              <Box className="!mt-3 !flex !flex-col !gap-1.5 !text-[13px]">
+              <Box className="mb-[14px] flex flex-col text-[12.5px]">
                 {p.features.map(renderFeature)}
               </Box>
-              {isCurrent && free ? (<Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2 !w-full !mt-auto" disabled>
+              {isCurrent && free ? (<Button variant="ghost" block className="mt-auto" disabled>
                   Current plan
-                </Button>) : (<Button className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2 !w-full !mt-auto" onClick={requestPlanOnClick}>
+                </Button>) : (<Button variant="ghost" block className="mt-auto" onClick={requestPlanOnClick}>
                   {isCurrent ? "Request renewal" : `Request ${p.name}`}
                 </Button>)}
             </Box>);
         function renderFeature(f: string) {
-            return (<Box key={f} className={cn("!flex !items-center !gap-1.5", "!text-[12.5px] !py-[3px] !px-0 !items-start")}>
-                    <Text className={cn("!text-green !mt-px")} as="span">
+            return (<Box key={f} className="flex min-h-[26px] items-start gap-1.5 px-0 py-[3px] text-[12.5px]">
+                    <Text className="mt-px text-green" as="span">
                       <IconCheck size={13}/>
                     </Text>
-                    <Text as="span">{f}</Text>
+                    <Text as="span" className="text-[12.5px] [line-height:1.5]">{f}</Text>
                   </Box>);
         }
         function requestPlanOnClick() {

@@ -108,7 +108,7 @@ export function Inner() {
       {sidebarOpen ? <MenuBackdrop onClose={closeSidebar} /> : null}
       <Grid
         columns={1}
-        className="h-dvh grid-cols-1 gap-0 overflow-hidden min-[1100px]:grid-cols-[16rem_minmax(0,1fr)]"
+        className="h-dvh grid-cols-1 gap-0 overflow-hidden min-[1100px]:grid-cols-[248px_minmax(0,1fr)]"
       >
         <AppSidebar
           open={sidebarOpen}
@@ -117,7 +117,7 @@ export function Inner() {
         />
         <Stack className="h-dvh min-w-0">
           <AppHeader onMenu={toggleSidebar} />
-          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-4 py-5 lg:px-6">
+          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-7 min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10 [&::-webkit-scrollbar]:w-[9px]">
             <Canvas />
           </Box>
         </Stack>

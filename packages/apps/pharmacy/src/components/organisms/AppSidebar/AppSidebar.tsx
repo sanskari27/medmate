@@ -88,10 +88,10 @@ const NAV: NavEntry[] = [
 
 function SidebarBrand() {
   return (
-    <Stack direction="row" align="center" gap={3} className="px-[18px] pt-[18px] pb-4">
+    <Stack direction="row" align="center" className="gap-2.5 px-[18px] pt-[18px] pb-4">
       <BrandMark />
-      <Stack gap={0}>
-        <Text as="span" className="font-display text-[15px] font-extrabold tracking-tight text-white">
+      <span className="block text-[14px] leading-[1.5]">
+        <Text as="span" className="block font-display text-[15px] font-extrabold tracking-[-0.01em] text-white">
           <Text as="span" className="text-gold">
             Namma
           </Text>{" "}
@@ -100,7 +100,7 @@ function SidebarBrand() {
         <Text as="span" className="text-[9px] font-bold tracking-[0.14em] text-mint uppercase">
           Partner Console
         </Text>
-      </Stack>
+      </span>
     </Stack>
   );
 }
@@ -204,19 +204,19 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
     <Stack
       data-slot="app-sidebar"
       className={cn(
-        "h-dvh w-64 shrink-0 bg-sidebar text-white max-[1099px]:fixed max-[1099px]:z-40 max-[1099px]:-translate-x-[105%] max-[1099px]:transition-transform",
+        "h-dvh w-[248px] shrink-0 border-r border-black/20 bg-[linear-gradient(180deg,#10301d,#0c2516)] text-white max-[1099px]:fixed max-[1099px]:z-40 max-[1099px]:-translate-x-[105%] max-[1099px]:transition-transform",
         open && "max-[1099px]:translate-x-0",
         className,
       )}
     >
       <SidebarBrand />
       <StoreChip name={profile.name} open={profile.storeOpen} />
-      <Stack gap={0} className="min-h-0 flex-1 overflow-y-auto px-3 py-1.5">
+      <Stack gap={0} className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5 [&::-webkit-scrollbar]:w-[9px]">
         <SidebarNav entries={entries} route={route} badgeFor={badgeFor} isLocked={isLocked} onChoose={choose} />
       </Stack>
-      <Stack gap={2} className="border-t border-white/10 px-3.5 py-3.5">
+      <Stack gap={0} className="border-t border-white/10 px-3.5 pt-3.5 pb-4">
         <Stack direction="row" align="center" gap={2}>
-          <Avatar name={profile.pharmacist || "Pharmacist"} size="md" className="rounded-[10px] bg-mint text-deep" />
+          <Avatar name={profile.pharmacist || "Pharmacist"} size="md" className="h-[34px] w-[34px] rounded-[10px] bg-mint text-deep" />
           <Stack gap={0} className="min-w-0 flex-1">
             <Text as="span" className="truncate text-[12.5px] font-bold text-white">
               {profile.pharmacist.split(",")[0]}
@@ -234,7 +234,7 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
             Master portal
           </Button>
         ) : null}
-        <Text variant="caption" className="text-white/40">
+        <Text as="span" className="block w-full px-3 pt-2 pb-3 text-center text-[10px] leading-[1.5] tracking-[0.01em] text-white/40">
           © 2026 Medmate India Technology Private Limited
         </Text>
       </Stack>

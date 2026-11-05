@@ -25,7 +25,7 @@ import { orderPayable } from "../../Orders.utils";
 import type { OrderTableProps } from "./OrderTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
 const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
 
 export function OrderTable(props: OrderTableProps) {
@@ -35,7 +35,7 @@ export function OrderTable(props: OrderTableProps) {
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table>
+        <Table className="border-separate border-spacing-0">
           <TableHead>
             <TableRow>
               <TableHeaderCell className={headCell}>Invoice</TableHeaderCell>
@@ -125,17 +125,17 @@ function OrderRow({
         ) : null}
       </TableCell>
       <TableCell className={bodyCell}>
-        <Text as="span" className="font-semibold text-ink">
+        <Text as="span" className="block text-[13px] leading-[1.5] font-semibold text-ink">
           {sale.customer.name}
         </Text>
-        <Text variant="caption">
+        <Text variant="caption" className="block leading-[1.5]">
           {timeAgo(sale.createdAt, now)}
           {sale.customer.phone ? ` · ${sale.customer.phone}` : ""}
         </Text>
       </TableCell>
       <TableCell className={bodyCell}>
         {units} units
-        <Text variant="caption" className="max-w-[200px] truncate">
+        <Text variant="caption" className="block max-w-[200px] truncate leading-[1.5]">
           {names}
         </Text>
       </TableCell>
@@ -196,36 +196,36 @@ function OrderActions({
   return (
     <Stack direction="row" justify="end" wrap gap={1}>
       {sale.paid === false ? (
-        <Button variant="gold" size="sm" onClick={onPaid}>
+        <Button variant="gold" size="sm" className="h-[29px]" onClick={onPaid}>
           <IconCash size={14} /> Mark paid
         </Button>
       ) : null}
       {online && sale.status === "new" ? (
         <>
-          <Button variant="primary" size="sm" onClick={onAdvance}>
+          <Button variant="primary" size="sm" className="h-[29px]" onClick={onAdvance}>
             Accept
           </Button>
-          <Button variant="rose" size="sm" onClick={onCancel}>
+          <Button variant="rose" size="sm" className="h-[29px]" onClick={onCancel}>
             Reject
           </Button>
         </>
       ) : null}
       {online && sale.status === "accepted" ? (
-        <Button variant="primary" size="sm" onClick={onPack}>
+        <Button variant="primary" size="sm" className="h-[29px]" onClick={onPack}>
           <IconBox size={14} /> Pack order
         </Button>
       ) : null}
       {online && sale.status === "packed" ? (
-        <Button variant="primary" size="sm" onClick={onPack}>
+        <Button variant="primary" size="sm" className="h-[29px]" onClick={onPack}>
           <IconTruck size={14} /> Hand to delivery
         </Button>
       ) : null}
       {online && sale.status === "out" ? (
-        <Button variant="gold" size="sm" onClick={onAdvance}>
+        <Button variant="gold" size="sm" className="h-[29px]" onClick={onAdvance}>
           Mark delivered
         </Button>
       ) : null}
-      <Button variant="ghost" size="sm" title="View order history" onClick={onHistory}>
+      <Button variant="ghost" size="sm" className="h-[29px]" title="View order history" onClick={onHistory}>
         <IconClock size={14} /> History
       </Button>
       <IconButton label="Share bill" title="Share bill" onClick={onShare}>

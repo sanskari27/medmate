@@ -89,20 +89,20 @@ export function Paywall({ route, className }: PaywallProps) {
           <IconCrown size={12} /> Paid plan
         </Pill>
         <Heading level={2}>{meta.title} is a premium feature</Heading>
-        <Text variant="muted" className="max-w-[470px] text-[13.5px] leading-relaxed">
+        <Text variant="muted" className="max-w-[470px] text-[13.5px] [line-height:1.55]">
           You're on the{" "}
-          <Text as="span" className="font-bold text-ink">
+          <Text as="span" className="text-[13.5px] leading-[1.55] font-bold text-ink">
             {subscription.plan}
           </Text>{" "}
           plan. Billing / POS, Inventory and Purchases stay open — {meta.title} unlocks with any active paid plan
           from{" "}
-          <Text as="span" className="font-bold text-ink">
+          <Text as="span" className="text-[13.5px] leading-[1.55] font-bold text-ink">
             {inr(price)}/mo
           </Text>
           .
         </Text>
         {care ? (
-          <Stack align="start" gap={2} className="my-1 w-full min-w-[300px] rounded-md border border-line bg-wash-2 px-4 py-4 text-left">
+          <Stack align="start" className="my-1 w-[300px] gap-[7px] rounded-md border border-line bg-wash-2 px-[18px] py-[15px] text-left">
             <PaywallFeatures features={care.features} />
           </Stack>
         ) : null}
@@ -114,7 +114,7 @@ export function Paywall({ route, className }: PaywallProps) {
             See all plans <IconArrowRight size={14} />
           </Button>
         </Stack>
-        <Pill tone="green" className="px-3.5 py-1.5 text-[12px]">
+        <Pill tone="green" className="gap-1.5 px-3.5 py-1.5 text-[13.5px] [line-height:1.55]">
           <IconCheck size={13} /> Free forever: Billing / POS · Inventory · Purchases
         </Pill>
       </Stack>

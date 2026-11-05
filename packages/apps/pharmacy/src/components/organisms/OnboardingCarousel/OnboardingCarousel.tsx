@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -11,14 +11,12 @@ import {
   IconCheck,
   IconGlobe,
   IconHospital,
-  IconMedical,
   IconReceipt,
   IconReports,
   IconRx,
   IconStore,
 } from "@/components/atoms/Icon";
 import { Field } from "@/components/molecules/Field";
-import { Pill } from "@/components/atoms/Pill";
 import { usePharma } from "@/hooks";
 import { api } from "@/services/api/apiClient";
 import type { BusinessType } from "@/types";
@@ -67,20 +65,35 @@ function GlyphView({ glyph: Icon, size }: { glyph: Glyph; size: number }) {
   return <Icon size={size} />;
 }
 
-function BrandLockup({ light }: { light?: boolean }) {
+function BrandLockup() {
+  const gradientId = useId().replace(/:/g, "");
   return (
-    <Stack direction="row" align="center" gap={3}>
-      <Box className={cn("grid h-11 w-11 place-items-center rounded-md", light ? "bg-paper text-mid" : "bg-dark text-white")}>
-        <IconMedical size={26} />
+    <Stack direction="row" align="center" gap={3} className="relative z-[1]">
+      <Box className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white shadow-[0_8px_22px_rgba(0,0,0,0.3)]">
+        <svg width={30} height={30} viewBox="0 0 40 40" fill="none" aria-hidden>
+          <defs>
+            <linearGradient id={gradientId} x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#4A9E6E" />
+              <stop offset="1" stopColor="#1B3D29" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M20 3.5C12.5 3.5 6.5 9.3 6.5 17c0 8.6 10.7 17.3 12.7 18.8a1.4 1.4 0 0 0 1.6 0C22.8 34.3 33.5 25.6 33.5 17 33.5 9.3 27.5 3.5 20 3.5Z"
+            fill={`url(#${gradientId})`}
+          />
+          <circle cx="20" cy="16.5" r="8.7" fill="#fff" />
+          <path d="M18 10.5h4V14h3.5v4H22v3.5h-4V18h-3.5v-4H18z" fill="#2F7D52" />
+          <circle cx="27" cy="9" r="3" fill="#D9A648" stroke="#fff" strokeWidth="1.4" />
+        </svg>
       </Box>
       <Stack gap={0}>
-        <Text as="span" className={cn("font-display text-[16px] font-extrabold", light ? "text-white" : "text-dark")}>
-          <Text as="span" className="text-gold">
+        <Text as="span" className="block font-display text-[17px] leading-none font-extrabold text-white">
+          <Text as="span" className="text-gold not-italic">
             Namma
           </Text>{" "}
           MedMate
         </Text>
-        <Text as="span" className={cn("text-[10px] font-bold tracking-[0.14em] uppercase", light ? "text-mint" : "text-muted")}>
+        <Text as="span" className="text-[9px] font-bold tracking-[0.16em] text-mint uppercase">
           Partner Console
         </Text>
       </Stack>
@@ -88,41 +101,46 @@ function BrandLockup({ light }: { light?: boolean }) {
   );
 }
 
+function TrustRow({ icon: Icon, label }: { icon: Glyph; label: string }) {
+  return (
+    <Stack direction="row" align="center" className="gap-2.5 text-[13.5px] font-semibold text-white/92">
+      <Box className="grid h-7 w-7 place-items-center rounded-sm bg-white/12 text-mint">
+        <Icon size={16} />
+      </Box>
+      <Text as="span" className="text-[13.5px] font-semibold text-white/92">
+        {label}
+      </Text>
+    </Stack>
+  );
+}
+
 function Aside({ type }: { type: BusinessType }) {
   const hospital = type === "hospital";
   return (
-    <Stack className="relative justify-between bg-dark px-8 py-10 text-white lg:w-[44%] lg:max-w-[560px]">
-      <BrandLockup light />
-      <Stack gap={3} className="my-10">
-        <Heading level={1} className="max-w-sm text-white">
-          Run your{hospital ? " hospital" : ""} pharmacy from one screen.
+    <Stack className="relative hidden w-[44%] max-w-[560px] shrink-0 flex-col overflow-hidden bg-[linear-gradient(160deg,#1b3d29,#0c2516_70%)] px-11 py-10 text-white min-[861px]:flex">
+      <Box
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(143,212,168,0.18),transparent_45%),radial-gradient(circle_at_10%_90%,rgba(217,166,72,0.12),transparent_40%)]"
+      />
+      <BrandLockup />
+      <Stack className="relative z-[1] mt-auto">
+        <Heading level={1} className="text-[34px] [line-height:1.12]! tracking-[-0.02em] text-white">
+          Run your{hospital ? " hospital" : ""} pharmacy
+          <br />
+          from one screen.
         </Heading>
-        <Text className="max-w-md text-white/80">
+        <Text className="mt-3.5 max-w-[420px] text-[15px] leading-normal text-white/80">
           Billing, inventory, online orders, GST &{" "}
           {hospital ? "IPD wards, indents and insurance claims." : "customer credit — everything in one console."}
         </Text>
       </Stack>
-      <Stack gap={3}>
-        <Stack direction="row" align="center" gap={2}>
-          <Box className="grid h-8 w-8 place-items-center rounded-sm bg-white/10">
-            <IconRx size={16} />
-          </Box>
-          <Text as="span" className="text-white">
-            Rx-aware billing
-          </Text>
-        </Stack>
-        <Stack direction="row" align="center" gap={2}>
-          <Box className="grid h-8 w-8 place-items-center rounded-sm bg-white/10">
-            <IconReports size={16} />
-          </Box>
-          <Text as="span" className="text-white">
-            GST returns & CA-ready
-          </Text>
-        </Stack>
-        <Text variant="caption" className="text-white/50">
-          © 2026 Medmate India Technology Private Limited · All rights reserved.
-        </Text>
+      <Stack className="relative z-[1] mt-7 gap-2.5">
+        <TrustRow icon={IconRx} label="Rx-aware billing" />
+        <TrustRow icon={IconReports} label="GST returns & CA-ready" />
       </Stack>
+      <Text className="relative z-[1] text-[11px] leading-normal text-white/45">
+        © 2026 Medmate India Technology Private Limited · All rights reserved.
+      </Text>
     </Stack>
   );
 }
@@ -136,7 +154,7 @@ function SlideDot({ index, active, onPick }: { index: number; active: boolean; o
       variant="link"
       aria-label={`Slide ${index + 1}`}
       onClick={onClick}
-      className={cn("h-2 w-2 rounded-full p-0", active ? "bg-mid" : "bg-line")}
+      className={cn("h-2 rounded-full p-0", active ? "w-[22px] bg-mid" : "w-2 bg-line-2")}
     />
   );
 }
@@ -163,22 +181,28 @@ function IntroPhase({
 }) {
   const current = SLIDES[slide];
   return (
-    <Stack align="center" gap={4} className="text-center">
-      <Box className="grid h-16 w-16 place-items-center rounded-lg bg-wash text-mid">
-        <GlyphView glyph={current.icon} size={40} />
-      </Box>
-      <Heading level={2}>{current.title}</Heading>
-      <Text variant="muted">{current.body}</Text>
-      <Stack direction="row" justify="center" gap={2}>
+    <Stack align="center" className="text-center">
+      <Stack align="center" justify="center" className="min-h-[230px] w-full">
+        <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
+          <GlyphView glyph={current.icon} size={40} />
+        </Box>
+        <Heading level={2} className="mt-[18px] max-w-[360px] text-[23px]">
+          {current.title}
+        </Heading>
+        <Text variant="muted" className="mt-3 max-w-[380px] text-[14px] leading-normal">
+          {current.body}
+        </Text>
+      </Stack>
+      <Stack direction="row" justify="center" className="mt-5 gap-2">
         <SlideDots active={slide} onPick={onPick} />
       </Stack>
-      <Button size="lg" block onClick={onStart}>
+      <Button size="lg" block className="mt-[22px]" onClick={onStart}>
         Get started <IconArrowRight size={16} />
       </Button>
-      <Button variant="link" onClick={onLogin}>
+      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onLogin}>
         I already have an account · Log in
       </Button>
-      <Button variant="link" onClick={onStaff}>
+      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onStaff}>
         Namma MedMate staff sign in
       </Button>
     </Stack>
@@ -187,11 +211,11 @@ function IntroPhase({
 
 function Bullet({ text }: { text: string }) {
   return (
-    <Stack direction="row" align="center" gap={2}>
-      <Box className="text-mid">
+    <Stack direction="row" align="center" className="gap-[7px] text-[12.5px] text-ink-2">
+      <Box className="shrink-0 text-mid">
         <IconCheck size={13} />
       </Box>
-      <Text as="span" className="text-[13px]">
+      <Text as="span" className="text-[12.5px] text-ink-2">
         {text}
       </Text>
     </Stack>
@@ -222,25 +246,32 @@ function TypeCard({
       variant="ghost"
       onClick={onClick}
       className={cn(
-        "h-auto w-full flex-col items-stretch gap-3 whitespace-normal px-4 py-4 text-left",
-        selected && "border-mid bg-wash",
+        "relative h-auto w-full flex-col items-stretch gap-0 rounded-md border-[1.5px] px-[18px] py-4 text-left whitespace-normal hover:border-light hover:bg-paper",
+        selected
+          ? "border-mid bg-wash-2 shadow-[0_0_0_3px_rgba(47,125,82,0.12)]"
+          : "border-line-2 bg-paper",
       )}
     >
-      <Stack direction="row" align="center" gap={3}>
-        <Box className="grid h-10 w-10 place-items-center rounded-sm bg-wash text-mid">
-          <GlyphView glyph={item.icon} size={24} />
-        </Box>
-        <Stack gap={0} className="min-w-0 flex-1">
-          <Text as="span" className="font-bold">
-            {item.title}
-          </Text>
-          <Text variant="caption">{item.body}</Text>
-        </Stack>
-        <Box className={cn("h-4 w-4 rounded-full border-2", selected ? "border-mid bg-mid" : "border-line-2")} />
+      <Box className="text-mid">
+        <GlyphView glyph={item.icon} size={30} />
+      </Box>
+      <Stack className="mt-1.5">
+        <Text as="span" className="font-display text-[16px] font-extrabold text-dark">
+          {item.title}
+        </Text>
+        <Text as="span" className="mt-px text-[12.5px] text-muted">
+          {item.body}
+        </Text>
       </Stack>
-      <Stack gap={1}>
+      <Stack className="mt-3 gap-[5px]">
         <Bullets items={item.bullets} />
       </Stack>
+      <Box
+        className={cn(
+          "absolute top-4 right-4 h-5 w-5 rounded-full border-2",
+          selected ? "border-mid bg-mid shadow-[inset_0_0_0_3px_#fff]" : "border-line-2",
+        )}
+      />
     </Button>
   );
 }
@@ -260,13 +291,13 @@ function TypePhase({
           return <TypeCard key={item.key} item={item} selected={type === item.key} onSelect={onType} />;
         }
   return (
-    <Stack gap={4}>
-      <Heading level={2}>Choose your business</Heading>
-      <Text variant="muted">This choice stays with this mobile number.</Text>
-      <Stack gap={3}>
-        {TYPES.map(renderType)}
-      </Stack>
-      <Stack direction="row" justify="between">
+    <Stack>
+      <Heading level={2} className="text-[24px]">
+        Choose your business
+      </Heading>
+      <Text className="text-[13.5px] text-muted">This choice stays with this mobile number.</Text>
+      <Stack className="gap-3">{TYPES.map(renderType)}</Stack>
+      <Stack direction="row" justify="between" className="mt-[22px] gap-2.5">
         <Button variant="ghost" onClick={onBack}>
           Back
         </Button>
@@ -417,8 +448,8 @@ function LoginPhase({
         : "New pharmacies get a code by SMS. After that, sign in with your PIN.";
 
   return (
-    <Stack gap={4}>
-      <Pill tone={staff ? "gold" : "green"}>
+    <Stack>
+      <Text as="span" className="mb-3.5 inline-block w-fit self-start rounded-[99px] bg-wash px-3 py-[5px] text-[12.5px] font-extrabold text-dark [&_svg]:inline [&_svg]:align-baseline">
         {staff ? (
           "Master"
         ) : (
@@ -426,13 +457,21 @@ function LoginPhase({
             <GlyphView glyph={chosen.icon} size={15} /> {chosen.title}
           </>
         )}
-      </Pill>
-      <Heading level={2}>{heading}</Heading>
-      <Text variant="muted">{subtitle}</Text>
+      </Text>
+      <Heading level={2} className="text-[24px]">
+        {heading}
+      </Heading>
+      <Text className="text-[13.5px] text-muted">{subtitle}</Text>
       {!otpSent && !pinMode ? (
-        <Stack gap={3}>
+        <Stack className="gap-3">
           {staff ? null : (
-            <Field label="Business name (optional)">
+            <Field
+              label={
+                <>
+                  Business name <span className="font-semibold text-faint">(optional)</span>
+                </>
+              }
+            >
               <Input
                 value={name}
                 onChange={onName}
@@ -441,11 +480,12 @@ function LoginPhase({
             </Field>
           )}
           <Field label="Mobile number" error={formFault?.field === "phone" ? formFault.message : undefined} data-field="phone">
-            <Stack direction="row" align="center" gap={2}>
-              <Text as="span" className="font-bold">
+            <Stack direction="row" align="stretch" className="gap-2">
+              <Text as="span" className="grid place-items-center rounded-sm border border-line-2 bg-wash px-3.5 font-extrabold text-dark">
                 +91
               </Text>
               <Input
+                className="min-w-0 flex-1"
                 inputMode="numeric"
                 maxLength={10}
                 value={phone}
@@ -457,7 +497,7 @@ function LoginPhase({
               />
             </Stack>
           </Field>
-          <Button size="lg" block disabled={!phoneOk} onClick={continuePhone}>
+          <Button size="lg" block className="mt-[10px]" disabled={!phoneOk} onClick={continuePhone}>
             {staff ? "Send OTP" : "Continue"} <IconArrowRight size={16} />
           </Button>
         </Stack>
@@ -491,7 +531,7 @@ function LoginPhase({
           <Field label="6-digit OTP" error={formFault?.field === "otp" ? formFault.message : undefined} data-field="otp">
             <Input
               ref={otpRef}
-              className="font-mono tracking-[0.3em]"
+              className="text-center text-[22px] font-extrabold tracking-[0.28em]"
               inputMode="numeric"
               maxLength={6}
               value={otp}
@@ -502,12 +542,12 @@ function LoginPhase({
             />
           </Field>
           {devOtp && demoCode ? (
-            <Text variant="caption">
+            <Text className="mt-2.5 rounded-sm border border-dashed border-line-2 bg-wash-2 px-3 py-2 text-[12.5px] text-muted">
               Demo OTP:{" "}
               <Text as="span" className="font-bold">
                 {demoCode}
               </Text>{" "}
-              <Button variant="link" onClick={onFill}>
+              <Button variant="link" className="inline px-1 py-0 text-[12.5px]" onClick={onFill}>
                 Auto-fill
               </Button>
             </Text>
@@ -520,10 +560,10 @@ function LoginPhase({
           </Button>
         </Stack>
       ) : null}
-      <Button variant="link" onClick={onBack}>
+      <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={onBack}>
         ← Back
       </Button>
-      <Text variant="caption" className="text-center">
+      <Text className="mt-4 text-center text-[11px] text-faint">
         By continuing you agree to the Terms of Service & Privacy Policy.
       </Text>
     </Stack>
@@ -577,10 +617,10 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
   }
 
   return (
-    <Stack data-slot="onboarding-carousel" className={cn("min-h-dvh bg-canvas lg:flex-row", className)}>
+    <Stack data-slot="onboarding-carousel" direction="row" className={cn("h-screen w-full overflow-auto bg-canvas max-[767px]:h-auto max-[767px]:min-h-dvh", className)}>
       <Aside type={type} />
-      <Stack align="center" justify="center" className="flex-1 px-4 py-10">
-        <Stack className="w-full max-w-md rounded-lg border border-line bg-paper p-6 shadow-card">
+      <Stack className="grid min-w-0 flex-1 place-items-center p-8 max-[767px]:px-4 max-[767px]:py-5">
+        <Stack className="w-full max-w-[440px]">
           {phase === "intro" ? (
             <IntroPhase slide={slide} onPick={pickSlide} onStart={start} onLogin={login} onStaff={staffLogin} />
           ) : null}
@@ -620,15 +660,17 @@ export function PinSetup() {
     }
   }
   return (
-    <Stack data-slot="pin-setup" align="center" justify="center" className="min-h-dvh bg-canvas px-4">
-      <Stack gap={4} className="w-full max-w-md rounded-lg border border-line bg-paper p-6 shadow-card">
-        <Heading level={2}>Create your login PIN</Heading>
-        <Text variant="muted">
+    <Stack data-slot="pin-setup" className="grid h-screen w-full place-items-center overflow-auto bg-canvas p-8 max-[767px]:h-auto max-[767px]:min-h-dvh max-[767px]:px-4 max-[767px]:py-5">
+      <Stack className="w-full max-w-[440px]">
+        <Heading level={2} className="text-[24px]">
+          Create your login PIN
+        </Heading>
+        <Text className="text-[13.5px] text-muted">
           Use this 4-digit PIN next time. A code is only sent for signup or if you forget the PIN.
         </Text>
         <Field label="4-digit PIN" data-field="pin">
           <Input
-            className="font-mono tracking-[0.3em]"
+            className="text-center text-[22px] font-extrabold tracking-[0.28em]"
             inputMode="numeric"
             maxLength={4}
             type="password"
@@ -639,9 +681,9 @@ export function PinSetup() {
             aria-invalid={formFault?.field === "pin"}
           />
         </Field>
-        <Field label="Confirm PIN" error={formFault?.field === "pin" ? formFault.message : undefined}>
+        <Field className="mt-3" label="Confirm PIN" error={formFault?.field === "pin" ? formFault.message : undefined}>
           <Input
-            className="font-mono tracking-[0.3em]"
+            className="text-center text-[22px] font-extrabold tracking-[0.28em]"
             inputMode="numeric"
             maxLength={4}
             type="password"
@@ -651,10 +693,10 @@ export function PinSetup() {
             placeholder="••••"
           />
         </Field>
-        <Button size="lg" block disabled={pin.length !== 4 || again.length !== 4} onClick={save}>
+        <Button size="lg" block className="mt-[22px]" disabled={pin.length !== 4 || again.length !== 4} onClick={save}>
           <IconCheck size={16} /> Save PIN
         </Button>
-        <Button variant="link" onClick={signOut}>
+        <Button variant="link" className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]" onClick={signOut}>
           Log out
         </Button>
       </Stack>

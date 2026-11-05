@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
-const labelVariants = cva("font-bold text-ink-2", {
+const labelVariants = cva("font-bold tracking-[0.01em] text-ink-2", {
   variants: {
     size: {
       sm: "text-[11px]",

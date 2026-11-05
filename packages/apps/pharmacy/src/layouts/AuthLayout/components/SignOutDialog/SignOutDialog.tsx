@@ -25,7 +25,7 @@ export function SignOutDialog({ onCancel, onConfirm }: SignOutDialogProps) {
 export function SaveConfirm({ title, body, onCancel, onConfirm }: SaveConfirmProps) {
   useDismissOnEscape(onCancel);
   return (
-    <ConfirmDialog title={title} body={body} onClose={onCancel} size="sm">
+    <ConfirmDialog title={title} body={body} onClose={onCancel} tone="positive">
       <Button variant="ghost" onClick={onCancel}>
         Cancel
       </Button>

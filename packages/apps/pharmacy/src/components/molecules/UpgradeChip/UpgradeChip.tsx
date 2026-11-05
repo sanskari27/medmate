@@ -22,7 +22,7 @@ export function UpgradeChip({ className, children, type = "button", ...props }: 
     >
       <IconCrown size={14} />
       {children ?? (
-        <Text as="span" className="text-[12.5px] font-extrabold text-gold-d">
+        <Text as="span" className="text-[12.5px] font-extrabold text-gold-d max-[767px]:sr-only">
           Essential · Upgrade
         </Text>
       )}

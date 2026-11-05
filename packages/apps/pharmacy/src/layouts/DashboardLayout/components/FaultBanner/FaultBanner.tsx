@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { IconButton, Stack, Text } from "@/components/atoms";
+import { IconButton, Text } from "@/components/atoms";
 import { Alert } from "@/components/molecules/Alert";
 import { usePharma } from "@/hooks";
 
@@ -20,14 +20,17 @@ export function FaultBanner() {
     <Alert
       role="alert"
       tone="rose"
-      className="fixed top-4 left-1/2 z-[300] w-[min(480px,calc(100%-2rem))] -translate-x-1/2 shadow-card"
+      className="fixed top-4 left-1/2 z-[300] flex w-[min(480px,calc(100%-2rem))] -translate-x-1/2 items-start gap-2.5 rounded-md px-3.5 py-3 text-[13.5px] shadow-pop"
     >
-      <Stack direction="row" align="start" justify="between" gap={2}>
-        <Text className="font-bold text-rose">{formFault.message}</Text>
-        <IconButton label="Dismiss error" variant="close" onClick={clearFault}>
-          ×
-        </IconButton>
-      </Stack>
+      <Text className="text-[13.5px] font-bold text-rose">{formFault.message}</Text>
+      <IconButton
+        label="Dismiss error"
+        variant="close"
+        onClick={clearFault}
+        className="ml-auto h-auto w-auto p-0 text-[18px] leading-none text-rose hover:text-rose"
+      >
+        ×
+      </IconButton>
     </Alert>
   );
 }

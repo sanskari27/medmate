@@ -31,7 +31,7 @@ export default function ExpensesScreen() {
       <Box className="!mb-4 !flex !flex-wrap !items-center !gap-2.5">
         {period.node}
         <Select value={cat} onChange={setCatOnChange} className={cn("", "!w-[200px]")} options={[{ value: "all", label: "All expense categories" }, ...expenseCategories.map(renderExpenseCategory)]} />
-        <Box className="!flex !max-w-[360px] !min-w-[240px] !flex-1 !items-center !gap-2 !rounded-sm !border !border-line-2 !bg-paper !px-3 !py-2 [&_input]:!w-full [&_input]:!border-0 [&_input]:!bg-transparent [&_input]:!text-[13.5px] [&_input]:!text-ink [&_input]:!outline-none">
+        <Box className="!flex !h-10 !max-w-[360px] !min-w-[240px] !flex-1 !items-center !gap-2 !rounded-sm !border !border-line-2 !bg-paper !px-3 !py-2 [&_input]:!h-auto [&_input]:!w-full [&_input]:!border-0 [&_input]:!bg-transparent [&_input]:!py-0 [&_input]:!text-[13.5px] [&_input]:!text-ink [&_input]:!outline-none">
           <Text className="!text-green" as="span">
             <IconSearch size={17}/>
           </Text>

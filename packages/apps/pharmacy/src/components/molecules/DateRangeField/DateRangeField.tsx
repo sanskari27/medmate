@@ -11,7 +11,7 @@ import { cn } from "@/utils/className";
 import { RANGE_PRESETS, resolveRange, type RangePreset, type ResolvedRange } from "@/utils/date";
 
 const triggerVariants = cva(
-  "inline-flex h-auto min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] font-normal text-ink shadow-none hover:bg-paper",
+  "inline-flex h-[38px] min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] font-normal text-ink shadow-none hover:bg-paper",
 );
 
 const menuVariants = cva(
@@ -178,10 +178,10 @@ export function DateRangeField({
         <Box className="text-mid">
           <IconCalendar size={15} />
         </Box>
-        <Text as="span" className="font-bold">
+        <Text as="span" className="text-[13.5px] font-bold [line-height:normal]">
           {resolved.label}
         </Text>
-        <Text as="span" className="ml-auto text-[11px] opacity-50">
+        <Text as="span" className="ml-auto text-[11px] [line-height:normal] opacity-50">
           ▾
         </Text>
       </Button>

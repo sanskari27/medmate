@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const selectVariants = cva(
-  "w-full rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] text-ink outline-none transition focus:border-mid focus:shadow-focus disabled:bg-wash disabled:text-faint",
+  "w-full rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] [line-height:normal] text-ink outline-none transition max-[767px]:text-[16px] focus:border-mid focus:shadow-focus disabled:bg-wash disabled:text-faint",
   {
     variants: {
       controlSize: {

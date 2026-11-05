@@ -65,7 +65,7 @@ export function InventoryToolbar({
   }
 
   return (
-    <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+    <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
       <Box className="inline-flex max-w-full flex-wrap gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
         {filters.map(renderFilter)}
       </Box>
@@ -74,7 +74,7 @@ export function InventoryToolbar({
         direction="row"
         align="center"
         gap={2}
-        className="max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2"
+        className="h-10 max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2"
       >
         <Box className="text-green">
           <IconSearch size={17} />
@@ -84,7 +84,7 @@ export function InventoryToolbar({
           placeholder="Search by name, salt, brand…"
           value={searchQuery}
           onChange={changeSearch}
-          className="py-0 text-[13.5px]"
+          className="px-[2px] py-px text-[13.5px]"
         />
       </Stack>
       <Button variant="ghost" size="sm" disabled={!canExport} title="Download this view as Excel (CSV)" onClick={onExcel}>

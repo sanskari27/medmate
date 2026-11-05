@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
-const headingVariants = cva("m-0 font-display font-extrabold tracking-tight text-dark", {
+const headingVariants = cva("m-0 font-display font-extrabold [line-height:1.18] tracking-[-0.02em] text-dark", {
   variants: {
     level: {
       1: "text-[28px]",
