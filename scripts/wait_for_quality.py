@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Block one application deploy until its quality gates have succeeded.
+"""Block one application deploy until the quality gates recorded for it have succeeded.
 
-Applications with no quality keys, and applications whose files did not
-change, return immediately. Gate jobs publish a commit status named
-quality/<app>/<gate>.
+The quality workflow decides which changed applications to check and records
+quality/<app>/<gate>. This script only reads those results. It does not diff
+the previous commit.
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ import subprocess
 import sys
 import time
 
-from list_quality_gates import changed_app_names
 from medmate_contract import load_projects
 
 POLL_SECONDS = 10
@@ -57,10 +56,6 @@ def main() -> int:
     if not gates:
         print(f"{app}: no quality gates", flush=True)
         return 0
-    known = [item["name"] for item in load_projects()]
-    if app not in changed_app_names(known):
-        print(f"{app}: application files did not change", flush=True)
-        return 0
     if project.get("errors"):
         for error in project["errors"]:
             print(error, file=sys.stderr)
@@ -76,6 +71,10 @@ def main() -> int:
         if failed:
             print(f"{app}: quality gates failed: {', '.join(failed)}", file=sys.stderr)
             return 1
+        recorded = [gate for gate in gates if found.get(f"quality/{app}/{gate}")]
+        if not recorded:
+            print(f"{app}: no quality gates ran for this publish", flush=True)
+            return 0
         pending = [gate for context, gate in wanted.items() if found.get(context) != "success"]
         if not pending:
             print(f"{app}: quality gates passed ({', '.join(gates)})", flush=True)
