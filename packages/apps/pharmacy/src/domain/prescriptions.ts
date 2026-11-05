@@ -16,26 +16,28 @@ export type Prescription = {
   uploadedAt: number;
   channel: Channel;
   status: RxStatus;
-  items: string[];            // product ids the pharmacist verified
+  items: string[]; // product ids the pharmacist verified
   note?: string;
-  kind: RxKind;               // uploaded photo vs Namma MedMate digital Rx
+  kind: RxKind; // uploaded photo vs Namma MedMate digital Rx
   fileType?: "image" | "pdf"; // uploaded file format (default image)
-  image?: string;             // uploaded photo (data URL) — for kind "uploaded"
-  regNo?: string;             // doctor's medical-council reg no (digital)
-  signedAt?: number;          // e-signature timestamp (digital)
-  meds?: RxMed[];             // structured medicines with dosage (digital)
-  approvedAt?: number;        // when the pharmacist approved it
-  dispensedAt?: number;       // when it was billed & dispensed
-  rejectedAt?: number;        // when it was rejected
-  rejectReason?: string;      // why it was rejected (shown to customer)
-  reviewedBy?: string;        // pharmacist who actioned it
-  urgent?: boolean;           // patient flagged it urgent
+  image?: string; // uploaded photo (data URL) — for kind "uploaded"
+  regNo?: string; // doctor's medical-council reg no (digital)
+  signedAt?: number; // e-signature timestamp (digital)
+  meds?: RxMed[]; // structured medicines with dosage (digital)
+  approvedAt?: number; // when the pharmacist approved it
+  dispensedAt?: number; // when it was billed & dispensed
+  rejectedAt?: number; // when it was rejected
+  rejectReason?: string; // why it was rejected (shown to customer)
+  reviewedBy?: string; // pharmacist who actioned it
+  urgent?: boolean; // patient flagged it urgent
 };
 const xmlEsc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 // Build a believable "scanned paper prescription" image (used when a real photo
 // isn't attached) so the pharmacist can view an uploaded-style Rx.
 export const rxImageDataUrl = (rx: Prescription): string => {
-  const body = (rx.note ? [rx.note] : []).concat((rx.meds ?? []).map((m) => `${m.name} — ${m.dose}`)).slice(0, 6);
+  const body = (rx.note ? [rx.note] : [])
+    .concat((rx.meds ?? []).map((m) => `${m.name} — ${m.dose}`))
+    .slice(0, 6);
   const lines = body.length ? body : ["Tab. as advised", "Take after food", "Review after 2 weeks"];
   const sig = rx.doctor.replace(/^Dr\.?\s*/i, "");
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='560' viewBox='0 0 420 560'>
@@ -56,11 +58,13 @@ ${lines.map((l, i) => `<text x='30' y='${182 + i * 46}' fill='#243' font-family=
 };
 
 // ── prescription analytics helpers ──
-export const RX_SLA_MINS = 120;                              // target: review within 2 hours
+export const RX_SLA_MINS = 120; // target: review within 2 hours
 export const rxNeedsAction = (r: Prescription) => r.status === "pending" || r.status === "approved";
 // minutes a pending Rx has been waiting (0 for actioned ones)
-export const rxWaitMins = (r: Prescription, now: number) => r.status === "pending" ? Math.max(0, Math.round((now - r.uploadedAt) / 60000)) : 0;
-export const rxOverdue = (r: Prescription, now: number) => r.status === "pending" && rxWaitMins(r, now) > RX_SLA_MINS;
+export const rxWaitMins = (r: Prescription, now: number) =>
+  r.status === "pending" ? Math.max(0, Math.round((now - r.uploadedAt) / 60000)) : 0;
+export const rxOverdue = (r: Prescription, now: number) =>
+  r.status === "pending" && rxWaitMins(r, now) > RX_SLA_MINS;
 // upload → dispensed/rejected turnaround in minutes (null if still open)
 export const rxTurnaroundMins = (r: Prescription): number | null => {
   const end = r.dispensedAt ?? r.rejectedAt;
@@ -74,16 +78,21 @@ export type RxAvailability = {
   inStock: number;
   outOfStock: InvProduct[];
 };
-export const rxAvailability = (prescription: Prescription, inventory: InvProduct[]): RxAvailability => {
+export const rxAvailability = (
+  prescription: Prescription,
+  inventory: InvProduct[],
+): RxAvailability => {
   const items = prescription.items.flatMap((productId) => {
     const product = inventory.find((row) => row.id === productId);
     if (!product) return [];
-    return [{
-      product,
-      stock: stockOf(product),
-      price: sellPrice(product),
-      rx: SCHEDULE_META[product.schedule].rx,
-    }];
+    return [
+      {
+        product,
+        stock: stockOf(product),
+        price: sellPrice(product),
+        rx: SCHEDULE_META[product.schedule].rx,
+      },
+    ];
   });
   return {
     items,

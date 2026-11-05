@@ -1,9 +1,27 @@
 /** API and database money is integer paise. Screen math stays in rupees. */
 
 const MONEY_KEYS = new Set([
-  "mrp", "ptr", "price", "amount", "discount", "onlinePrice", "purchasePrice",
-  "total", "taxable", "salary", "creditLimit", "approvedAmount", "outstanding",
-  "spent", "avgOrder", "given", "repaid", "payable", "reward", "fee", "paid",
+  "mrp",
+  "ptr",
+  "price",
+  "amount",
+  "discount",
+  "onlinePrice",
+  "purchasePrice",
+  "total",
+  "taxable",
+  "salary",
+  "creditLimit",
+  "approvedAmount",
+  "outstanding",
+  "spent",
+  "avgOrder",
+  "given",
+  "repaid",
+  "payable",
+  "reward",
+  "fee",
+  "paid",
 ]);
 
 function isMoney(key: string, obj: Record<string, unknown>): boolean {
@@ -36,10 +54,20 @@ export function fromPaise<T>(node: T): T {
   return convert(node, false) as T;
 }
 
-type ReportLike = { columns: { money?: boolean }[]; rows: (string | number)[][]; totals?: (string | number)[] };
+type ReportLike = {
+  columns: { money?: boolean }[];
+  rows: (string | number)[][];
+  totals?: (string | number)[];
+};
 
 export function reportToPaise<T extends ReportLike>(report: T): T {
-  const cell = (row: (string | number)[]) => row.map((value, i) =>
-    report.columns[i]?.money && typeof value === "number" ? Math.round(value * 100) : value);
-  return { ...report, rows: report.rows.map(cell), totals: report.totals ? cell(report.totals) : report.totals };
+  const cell = (row: (string | number)[]) =>
+    row.map((value, i) =>
+      report.columns[i]?.money && typeof value === "number" ? Math.round(value * 100) : value,
+    );
+  return {
+    ...report,
+    rows: report.rows.map(cell),
+    totals: report.totals ? cell(report.totals) : report.totals,
+  };
 }

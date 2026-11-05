@@ -1,88 +1,6 @@
-import { useEffect, useState } from "react";
-import { PharmaProvider, usePharma, Route } from "@/app/session/pharmacy-provider";
-import { PLANS, inr, planPrice, canSeeRoute } from "@/domain";
-import {
-  IconDashboard, IconPos, IconOrders, IconInventory, IconRx, IconStore,
-  IconOffer, IconReports, IconSettings, IconSearch, IconBell, IconTruck,
-  IconUsers, IconCustomers, IconSend, IconKiosk, IconShare, IconReceipt,
-  IconCrown, IconGift, IconHelp, IconUser, IconRupee, IconCash, IconChevronLeft,
-  IconLock, IconCheck, IconSparkle, IconArrowRight,
-} from "@/components/Icon";
-import DashboardScreen from "@/features/dashboard/DashboardScreen";
-import PosScreen from "@/features/pos/PosScreen";
-import OrdersScreen from "@/features/orders/OrdersScreen";
-import SalesScreen from "@/features/sales/SalesScreen";
-import InventoryScreen from "@/features/inventory/InventoryScreen";
-import RackMapScreen from "@/features/rackmap/RackMapScreen";
-import PurchasesScreen from "@/features/purchasing/PurchasesScreen";
-import ReorderScreen from "@/features/purchasing/ReorderScreen";
-import DistributorsScreen from "@/features/purchasing/DistributorsScreen";
-import PrescriptionsScreen from "@/features/prescriptions/PrescriptionsScreen";
-import OnlineStoreScreen from "@/features/online/OnlineStoreScreen";
-import OffersScreen from "@/features/offers/OffersScreen";
-import KioskScreen from "@/features/kiosk/KioskScreen";
-import ReportsScreen from "@/features/reports/ReportsScreen";
-import CAReportScreen from "@/features/ca/CAReportScreen";
-import CustomersScreen from "@/features/customers/CustomersScreen";
-import AccountScreen from "@/features/account/AccountScreen";
-import UsersScreen from "@/features/users/UsersScreen";
-import InvoiceSettingsScreen from "@/features/invoicing/InvoiceSettingsScreen";
-import SubscriptionScreen from "@/features/subscription/SubscriptionScreen";
-import ReferScreen from "@/features/referrals/ReferScreen";
-import SupportScreen from "@/features/support/SupportScreen";
-import SettingsScreen from "@/features/settings/SettingsScreen";
-import ExpensesScreen from "@/features/expenses/ExpensesScreen";
-import EmployeesScreen from "@/features/employees/EmployeesScreen";
-import KhataScreen from "@/features/khata/KhataScreen";
-import CrmScreen from "@/features/crm/CrmScreen";
-import WardsScreen from "@/features/hospital/wards/WardsScreen";
-import IndentsScreen from "@/features/hospital/indents/IndentsScreen";
-import DepartmentsScreen from "@/features/hospital/departments/DepartmentsScreen";
-import SalesRegisterScreen from "@/features/hospital/sales-register/SalesRegisterScreen";
-import PatientBillsScreen from "@/features/hospital/patient-bills/PatientBillsScreen";
-import DoctorsScreen from "@/features/hospital/doctors/DoctorsScreen";
-import HospitalBillingScreen from "@/features/hospital/billing/HospitalBillingScreen";
-import SetupWizard from "@/features/auth/SetupWizard";
-import Onboarding, { PinSetup } from "@/features/auth/Onboarding";
-import MasterPortal from "@/features/master/MasterPortal";
-import { api } from "@/lib/api";
-
-const NAV: { key: Route; label: string; Icon: (p: { size?: number }) => React.ReactNode; group?: string; hospital?: boolean }[] = [
-  { key: "dashboard", label: "Dashboard", Icon: IconDashboard },
-  { key: "pos", label: "Billing / POS", Icon: IconPos },
-  { key: "orders", label: "Orders", Icon: IconOrders },
-  { key: "sales", label: "Sales", Icon: IconRupee },
-  { key: "prescriptions", label: "Prescriptions", Icon: IconRx },
-  { key: "customers", label: "Customers", Icon: IconCustomers },
-  { key: "khata", label: "Credit · Khata", Icon: IconReceipt },
-  { key: "crm", label: "CRM · Patients", Icon: IconUsers },
-  { key: "wards", label: "IPD · Wards", Icon: IconStore, group: "Hospital", hospital: true },
-  { key: "hospbill", label: "Hospital Billing", Icon: IconReceipt, hospital: true },
-  { key: "ptbills", label: "Active Patients", Icon: IconCustomers, hospital: true },
-  { key: "salesreg", label: "Sales Register", Icon: IconRupee, hospital: true },
-  { key: "indents", label: "Ward Indents", Icon: IconReceipt, hospital: true },
-  { key: "departments", label: "Departments", Icon: IconUsers, hospital: true },
-  { key: "doctors", label: "Doctors", Icon: IconRx, hospital: true },
-  { key: "inventory", label: "Inventory", Icon: IconInventory, group: "Catalogue" },
-  { key: "rackmap", label: "Rack & Locations", Icon: IconStore },
-  { key: "purchases", label: "Purchases", Icon: IconTruck },
-  { key: "reorder", label: "Reorder · Distributor", Icon: IconSend },
-  { key: "distributors", label: "Distributors", Icon: IconTruck },
-  { key: "online", label: "Online Store", Icon: IconStore },
-  { key: "offers", label: "Offers", Icon: IconOffer },
-  { key: "kiosk", label: "Self-Order Kiosk", Icon: IconKiosk },
-  { key: "reports", label: "Reports", Icon: IconReports, group: "Business" },
-  { key: "expenses", label: "Expenses", Icon: IconCash },
-  { key: "ca", label: "CA / Accountant", Icon: IconShare },
-  { key: "account", label: "Account", Icon: IconUser, group: "Account" },
-  { key: "employees", label: "Employees", Icon: IconUsers },
-  { key: "users", label: "Manage Users", Icon: IconUsers },
-  { key: "invoicing", label: "Invoice Settings", Icon: IconReceipt },
-  { key: "subscription", label: "Subscription", Icon: IconCrown },
-  { key: "refer", label: "Refer & Earn", Icon: IconGift },
-  { key: "settings", label: "Settings", Icon: IconSettings },
-  { key: "support", label: "Help & Support", Icon: IconHelp },
-];
+import { usePharma, Route } from "@/app/session/pharmacy-provider";
+import { PLANS, inr, planPrice } from "@/domain";
+import { IconCrown, IconLock, IconCheck, IconSparkle, IconArrowRight } from "@/components/Icon";
 
 const PAGE_META: Record<Route, { title: string; sub: string }> = {
   dashboard: { title: "Dashboard", sub: "Today at a glance" },
@@ -131,18 +49,35 @@ export function LockedFeature({ route }: { route: Route }) {
   return (
     <div className="pd-canvas-wide">
       <div className="pd-paywall">
-        <span className="pd-paywall-ic"><IconLock size={30} /></span>
-        <span className="pd-pill pill-gold" style={{ marginBottom: 10 }}><IconCrown size={12} /> Paid plan</span>
+        <span className="pd-paywall-ic">
+          <IconLock size={30} />
+        </span>
+        <span className="pd-pill pill-gold" style={{ marginBottom: 10 }}>
+          <IconCrown size={12} /> Paid plan
+        </span>
         <h2>{meta.title} is a premium feature</h2>
-        <p>You're on the <b>{subscription.plan}</b> plan. Billing / POS, Inventory and Purchases stay open — {meta.title} unlocks with any active paid plan from <b>{inr(price)}/mo</b>.</p>
+        <p>
+          You're on the <b>{subscription.plan}</b> plan. Billing / POS, Inventory and Purchases stay
+          open — {meta.title} unlocks with any active paid plan from <b>{inr(price)}/mo</b>.
+        </p>
         <div className="pd-paywall-feats">
-          {care.features.map((f) => <div key={f}><IconCheck size={14} /> {f}</div>)}
+          {care.features.map((f) => (
+            <div key={f}>
+              <IconCheck size={14} /> {f}
+            </div>
+          ))}
         </div>
         <div className="pd-paywall-cta">
-          <button className="pd-btn pd-btn-primary" onClick={() => go("subscription")}><IconSparkle size={15} /> Upgrade to unlock</button>
-          <button className="pd-btn pd-btn-ghost" onClick={() => go("subscription")}>See all plans <IconArrowRight size={14} /></button>
+          <button className="pd-btn pd-btn-primary" onClick={() => go("subscription")}>
+            <IconSparkle size={15} /> Upgrade to unlock
+          </button>
+          <button className="pd-btn pd-btn-ghost" onClick={() => go("subscription")}>
+            See all plans <IconArrowRight size={14} />
+          </button>
         </div>
-        <p className="pd-paywall-free"><IconCheck size={13} /> Free forever: Billing / POS · Inventory · Purchases</p>
+        <p className="pd-paywall-free">
+          <IconCheck size={13} /> Free forever: Billing / POS · Inventory · Purchases
+        </p>
       </div>
     </div>
   );

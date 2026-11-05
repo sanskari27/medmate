@@ -1,5 +1,4 @@
-export const inr = (n: number) =>
-  "₹" + Math.round(n).toLocaleString("en-IN");
+export const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 export const inr2 = (n: number) =>
   "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -31,7 +30,13 @@ export const timeAgo = (ts: number, now: number) => {
 
 export const fmtDateTime = (ts: number) => {
   const d = new Date(ts);
-  return d.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 // WhatsApp / SMS compose links (open the messaging app prefilled — user sends)
@@ -40,4 +45,5 @@ export const waLink = (phone: string, text: string) => {
   const d = phoneDigits(phone);
   return `https://wa.me/${d.length === 10 ? "91" + d : d}?text=${encodeURIComponent(text)}`;
 };
-export const smsLink = (phone: string, text: string) => `sms:${phone.replace(/\s/g, "")}?&body=${encodeURIComponent(text)}`;
+export const smsLink = (phone: string, text: string) =>
+  `sms:${phone.replace(/\s/g, "")}?&body=${encodeURIComponent(text)}`;

@@ -40,6 +40,8 @@ export const pathForRoute: Record<Route, string> = {
 };
 
 export function routeFromPath(pathname: string): Route {
-  const match = (Object.entries(pathForRoute) as [Route, string][]).find(([, routePath]) => routePath === pathname);
+  const match = (Object.entries(pathForRoute) as [Route, string][]).find(
+    ([, routePath]) => routePath === pathname,
+  );
   return match?.[0] ?? "dashboard";
 }

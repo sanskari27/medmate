@@ -1,5 +1,8 @@
 name: server-core
 kind: java
+quality:
+  compile: true
+  test: true
 routing:
   records:
     - zone: nammamedmate.com

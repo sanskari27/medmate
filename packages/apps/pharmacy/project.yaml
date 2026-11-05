@@ -1,5 +1,10 @@
 name: pharmacy
 kind: react
+quality:
+  typecheck: true
+  lint: true
+  format: true
+  test: true
 routing:
   records:
     - zone: nammamedmate.com

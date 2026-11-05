@@ -4,7 +4,10 @@ const FIELDS: [RegExp, string][] = [
   [/gstin/i, "gstin"],
   [/ifsc/i, "ifsc"],
   [/mobile|phone/i, "phone"],
-  [/otp|\d-digit code|code was not accepted|request a new code|code has expired|another code|too many codes/i, "otp"],
+  [
+    /otp|\d-digit code|code was not accepted|request a new code|code has expired|another code|too many codes/i,
+    "otp",
+  ],
   [/pin/i, "pin"],
   [/e-?mail/i, "email"],
   [/amount|must be positive/i, "amount"],
@@ -24,7 +27,10 @@ export function fieldFrom(message: string): string | undefined {
 export function faultOf(err: unknown, fallback = "Save failed"): SaveFault {
   let message = err instanceof Error && err.message ? err.message : fallback;
   if (message === "Failed to fetch") message = "Could not reach the server. Check your connection.";
-  const given = err && typeof err === "object" && "field" in err ? (err as { field?: unknown }).field : undefined;
+  const given =
+    err && typeof err === "object" && "field" in err
+      ? (err as { field?: unknown }).field
+      : undefined;
   const field = typeof given === "string" && given ? given : fieldFrom(message);
   return field ? { message, field } : { message };
 }

@@ -1,49 +1,184 @@
 /* vertical divider between filter groups */
-.tb-divider{width:1px;align-self:stretch;background:var(--line);margin:2px 2px}
+.tb-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+  margin: 2px 2px;
+}
 
 /* Date range picker */
-.date-range{display:flex;align-items:center;gap:6px;background:var(--surface);
-  border:1px solid var(--line-2);border-radius:9px;padding:5px 10px}
-.date-inp{border:none;background:none;font:inherit;font-size:12px;font-weight:600;
-  color:var(--ink);outline:none;cursor:pointer;width:110px}
-.date-inp::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
-.date-sep{font-size:12px;color:var(--ink-3);font-weight:600}
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  padding: 5px 10px;
+}
+.date-inp {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+  width: 110px;
+}
+.date-inp::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+  cursor: pointer;
+}
+.date-sep {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 600;
+}
 
 /* ---------- Bed Availability Matrix ---------- */
-.bed-badge{display:inline-flex;padding:2px 9px;border-radius:7px;
-  font-family:var(--font-mono);font-weight:700;font-size:12px}
-.bed-ok  {background:var(--tint);color:var(--primary)}
-.bed-warn{background:var(--lgold);color:#9a6a18}
-.bed-crit{background:#fbe3da;color:var(--r-crit)}
+.bed-badge {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 7px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+}
+.bed-ok {
+  background: var(--tint);
+  color: var(--primary);
+}
+.bed-warn {
+  background: var(--lgold);
+  color: #9a6a18;
+}
+.bed-crit {
+  background: #fbe3da;
+  color: var(--r-crit);
+}
 
-.bed-status{display:inline-flex;padding:3px 10px;border-radius:20px;
-  font-size:11px;font-weight:700;letter-spacing:.02em}
-.bed-status.bed-ok  {background:#e6f4e4;color:var(--primary)}
-.bed-status.bed-warn{background:var(--lgold);color:#9a6a18}
-.bed-status.bed-crit{background:#fbe3da;color:var(--r-crit)}
+.bed-status {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.bed-status.bed-ok {
+  background: #e6f4e4;
+  color: var(--primary);
+}
+.bed-status.bed-warn {
+  background: var(--lgold);
+  color: #9a6a18;
+}
+.bed-status.bed-crit {
+  background: #fbe3da;
+  color: var(--r-crit);
+}
 
 /* ---------- Logistics & Emergency Response ---------- */
 /* resource summary strip — horizontally scrollable */
-.logi-strip{display:flex;gap:var(--gap);overflow-x:auto;padding-bottom:6px;margin-bottom:14px;
-  scrollbar-width:thin;scroll-snap-type:x proximity}
-.logi-strip > .panel{flex:0 0 clamp(240px,26%,320px);scroll-snap-align:start}
-.logi-strip::-webkit-scrollbar{height:8px}
-.logi-strip::-webkit-scrollbar-thumb{background:var(--soft);border-radius:8px}
-.logi-strip::-webkit-scrollbar-track{background:var(--tint);border-radius:8px}
+.logi-strip {
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+.logi-strip > .panel {
+  flex: 0 0 clamp(240px, 26%, 320px);
+  scroll-snap-align: start;
+}
+.logi-strip::-webkit-scrollbar {
+  height: 8px;
+}
+.logi-strip::-webkit-scrollbar-thumb {
+  background: var(--soft);
+  border-radius: 8px;
+}
+.logi-strip::-webkit-scrollbar-track {
+  background: var(--tint);
+  border-radius: 8px;
+}
 
 /* government action & allocation panel */
-.govt-action{display:flex;gap:12px;padding:13px 15px;margin-bottom:14px;
-  background:var(--tint-gold);border:1px solid rgba(207,152,70,.4);border-radius:var(--r-md)}
-.ga-icon{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
-  background:var(--gold);color:#fff}
-.ga-body{flex:1;min-width:0}
-.ga-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px}
-.ga-title{font-family:var(--font-head);font-weight:800;font-size:13.5px;color:#7a4f10}
-.ga-sub{font-size:11.5px;color:var(--ink-2)}
-.ga-sub b{color:#9a6a18;font-weight:800}
-.ga-rec{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--ink-2);
-  font-weight:600;margin-bottom:11px}
-.ga-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;
-  background:var(--surface);border:1px solid rgba(207,152,70,.35);font-weight:700;color:#9a6a18}
-.ga-chip.ok{color:var(--primary);border-color:rgba(33,114,18,.3)}
-.ga-actions{display:flex;gap:8px;flex-wrap:wrap}
+.govt-action {
+  display: flex;
+  gap: 12px;
+  padding: 13px 15px;
+  margin-bottom: 14px;
+  background: var(--tint-gold);
+  border: 1px solid rgba(207, 152, 70, 0.4);
+  border-radius: var(--r-md);
+}
+.ga-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--gold);
+  color: #fff;
+}
+.ga-body {
+  flex: 1;
+  min-width: 0;
+}
+.ga-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+.ga-title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #7a4f10;
+}
+.ga-sub {
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+.ga-sub b {
+  color: #9a6a18;
+  font-weight: 800;
+}
+.ga-rec {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  font-weight: 600;
+  margin-bottom: 11px;
+}
+.ga-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid rgba(207, 152, 70, 0.35);
+  font-weight: 700;
+  color: #9a6a18;
+}
+.ga-chip.ok {
+  color: var(--primary);
+  border-color: rgba(33, 114, 18, 0.3);
+}
+.ga-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

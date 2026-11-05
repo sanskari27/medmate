@@ -1,54 +1,51 @@
-import { useState, useMemo, useEffect, ReactNode } from "react";
-import { usePharma } from "@/app/session/pharmacy-provider";
-import {
-  inr, inr2, computeInvoice, Sale, PAY_LABEL, PayMode, Channel, OrderStatus,
-  STATUS_LABEL, channelLabel, catLabel, CATEGORIES, purchaseTotals,
-  earliestBatch, stockOf, fmtDateTime,
-} from "@/domain";
-import { IconPrint, IconRupee, IconSearch, IconSparkle, IconReceipt, IconDoc, IconBox, IconUsers, IconDownload, IconChart, IconTrendUp, IconStar } from "@/components/Icon"
+import { useState } from "react";
+import { inr, catLabel, CATEGORIES, stockOf } from "@/domain";
+import { IconSearch, IconBox } from "@/components/Icon";
 import { monogramOf } from "@/components/entityIcon";
-import { usePeriod } from "@/components/PeriodFilter";
-import {
-  REPORT_CATALOG, CAT_LABEL, ReportCat, ReportMeta, runReport, ReportResult, reportById,
-} from "@/features/reports/reportCatalog";
-import { exportCatalogCsv, exportCatalogPdf } from "@/features/reports/reportExport";
-
-;
-
-type Tab = "overview" | "sales" | "products" | "accounts";
-
-const CAT_ICON: Record<ReportCat, ReactNode> = { favourite: <IconSparkle size={15} />, gst: <IconReceipt size={15} />, transaction: <IconDoc size={15} />, item: <IconBox size={15} />, party: <IconUsers size={15} /> };
-
-const FILTER_PRED: Record<string, (m: ReportMeta) => boolean> = {
-  Party: (m) => m.cat === "party",
-  Category: (m) => /categor/i.test(m.name) || m.cat === "item",
-  "Payment Collection": (m) => ["cash-bank", "receivable-ageing", "party-outstanding", "party-ledger", "tcs-receivable", "tds-payable", "tds-receivable"].includes(m.id),
-  Item: (m) => m.cat === "item",
-  "Invoice Details": (m) => ["audit-trail", "bill-wise-profit", "gstr1", "gst-sales-hsn", "sales-summary", "purchase-summary"].includes(m.id),
-  Summary: (m) => /summary/i.test(m.name) || m.fav === true,
-};
-
-const FILTERS = Object.keys(FILTER_PRED);
-
-type SSort = "date" | "total" | "items" | "customer";
-
 type PSort = "units" | "revenue" | "profit" | "margin" | "stock";
 
-export function ProductsReport({ enriched, inventory, costOf }: { enriched: any[]; inventory: any[]; costOf: (id: string) => number }) {
+export function ProductsReport({
+  enriched,
+  inventory,
+  costOf,
+}: {
+  enriched: any[];
+  inventory: any[];
+  costOf: (id: string) => number;
+}) {
   const [cat, setCat] = useState("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<PSort>("revenue");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
-  const toggle = (k: PSort) => { if (sort === k) setDir((d) => (d === "asc" ? "desc" : "asc")); else { setSort(k); setDir("desc"); } };
+  const toggle = (k: PSort) => {
+    if (sort === k) setDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSort(k);
+      setDir("desc");
+    }
+  };
 
   // aggregate per product
-  const agg = new Map<string, { id: string; name: string; units: number; revenue: number; cogs: number }>();
-  enriched.forEach((r: any) => r.s.items.forEach((i: any) => {
-    const ex = (i.price * i.qty) / (1 + i.gst / 100);
-    const cur = agg.get(i.productId) ?? { id: i.productId, name: i.name, units: 0, revenue: 0, cogs: 0 };
-    cur.units += i.qty; cur.revenue += ex; cur.cogs += costOf(i.productId) * i.qty;
-    agg.set(i.productId, cur);
-  }));
+  const agg = new Map<
+    string,
+    { id: string; name: string; units: number; revenue: number; cogs: number }
+  >();
+  enriched.forEach((r: any) =>
+    r.s.items.forEach((i: any) => {
+      const ex = (i.price * i.qty) / (1 + i.gst / 100);
+      const cur = agg.get(i.productId) ?? {
+        id: i.productId,
+        name: i.name,
+        units: 0,
+        revenue: 0,
+        cogs: 0,
+      };
+      cur.units += i.qty;
+      cur.revenue += ex;
+      cur.cogs += costOf(i.productId) * i.qty;
+      agg.set(i.productId, cur);
+    }),
+  );
 
   let rows = [...agg.values()].map((a) => {
     const p = inventory.find((x) => x.id === a.id);
@@ -57,7 +54,11 @@ export function ProductsReport({ enriched, inventory, costOf }: { enriched: any[
     const stock = p ? stockOf(p) : 0;
     return { ...a, profit, margin, stock, category: p?.category ?? "—" };
   });
-  rows = rows.filter((r) => (cat === "all" || r.category === cat) && (!q || r.name.toLowerCase().includes(q.toLowerCase())));
+  rows = rows.filter(
+    (r) =>
+      (cat === "all" || r.category === cat) &&
+      (!q || r.name.toLowerCase().includes(q.toLowerCase())),
+  );
   rows.sort((a, b) => {
     const m = dir === "asc" ? 1 : -1;
     if (sort === "units") return (a.units - b.units) * m;
@@ -75,16 +76,43 @@ export function ProductsReport({ enriched, inventory, costOf }: { enriched: any[
   return (
     <>
       <div className="pd-summary-chips">
-        <div className="pd-schip">Products sold<b>{agg.size}</b></div>
-        <div className="pd-schip">Units<b>{rows.reduce((a, r) => a + r.units, 0)}</b></div>
-        <div className="pd-schip">Revenue (ex-GST)<b>{inr(rows.reduce((a, r) => a + r.revenue, 0))}</b></div>
-        <div className="pd-schip">Gross profit<b>{inr(rows.reduce((a, r) => a + r.profit, 0))}</b></div>
-        <div className="pd-schip">No sales (window)<b>{notSold}</b></div>
+        <div className="pd-schip">
+          Products sold<b>{agg.size}</b>
+        </div>
+        <div className="pd-schip">
+          Units<b>{rows.reduce((a, r) => a + r.units, 0)}</b>
+        </div>
+        <div className="pd-schip">
+          Revenue (ex-GST)<b>{inr(rows.reduce((a, r) => a + r.revenue, 0))}</b>
+        </div>
+        <div className="pd-schip">
+          Gross profit<b>{inr(rows.reduce((a, r) => a + r.profit, 0))}</b>
+        </div>
+        <div className="pd-schip">
+          No sales (window)<b>{notSold}</b>
+        </div>
       </div>
 
       <div className="pd-toolbar pd-no-print">
-        <div className="pd-search-inline"><span className="ic"><IconSearch size={17} /></span><input placeholder="Search product…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <select className="pd-select" style={{ width: 160 }} value={cat} onChange={(e) => setCat(e.target.value)}><option value="all">All categories</option>{CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}</select>
+        <div className="pd-search-inline">
+          <span className="ic">
+            <IconSearch size={17} />
+          </span>
+          <input placeholder="Search product…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <select
+          className="pd-select"
+          style={{ width: 160 }}
+          value={cat}
+          onChange={(e) => setCat(e.target.value)}
+        >
+          <option value="all">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.key} value={c.key}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="pd-card">
@@ -92,29 +120,87 @@ export function ProductsReport({ enriched, inventory, costOf }: { enriched: any[
           <table className="pd-tbl">
             <thead>
               <tr>
-                <th>Product</th><th>Category</th>
-                <th className={`sort num${sort === "units" ? " on" : ""}`} onClick={() => toggle("units")}>Units<span className="ar">{ar("units")}</span></th>
-                <th className={`sort num${sort === "revenue" ? " on" : ""}`} onClick={() => toggle("revenue")}>Revenue<span className="ar">{ar("revenue")}</span></th>
+                <th>Product</th>
+                <th>Category</th>
+                <th
+                  className={`sort num${sort === "units" ? " on" : ""}`}
+                  onClick={() => toggle("units")}
+                >
+                  Units<span className="ar">{ar("units")}</span>
+                </th>
+                <th
+                  className={`sort num${sort === "revenue" ? " on" : ""}`}
+                  onClick={() => toggle("revenue")}
+                >
+                  Revenue<span className="ar">{ar("revenue")}</span>
+                </th>
                 <th className="num">COGS</th>
-                <th className={`sort num${sort === "profit" ? " on" : ""}`} onClick={() => toggle("profit")}>Profit<span className="ar">{ar("profit")}</span></th>
-                <th className={`sort num${sort === "margin" ? " on" : ""}`} onClick={() => toggle("margin")}>Margin<span className="ar">{ar("margin")}</span></th>
-                <th className={`sort num${sort === "stock" ? " on" : ""}`} onClick={() => toggle("stock")}>In stock<span className="ar">{ar("stock")}</span></th>
+                <th
+                  className={`sort num${sort === "profit" ? " on" : ""}`}
+                  onClick={() => toggle("profit")}
+                >
+                  Profit<span className="ar">{ar("profit")}</span>
+                </th>
+                <th
+                  className={`sort num${sort === "margin" ? " on" : ""}`}
+                  onClick={() => toggle("margin")}
+                >
+                  Margin<span className="ar">{ar("margin")}</span>
+                </th>
+                <th
+                  className={`sort num${sort === "stock" ? " on" : ""}`}
+                  onClick={() => toggle("stock")}
+                >
+                  In stock<span className="ar">{ar("stock")}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
-                  <td><div className="prod"><span className="em">{monogramOf(r.name)}</span><span className="nm">{r.name}</span></div></td>
+                  <td>
+                    <div className="prod">
+                      <span className="em">{monogramOf(r.name)}</span>
+                      <span className="nm">{r.name}</span>
+                    </div>
+                  </td>
                   <td>{catLabel(r.category)}</td>
-                  <td className="num" style={{ fontWeight: 700 }}>{r.units}</td>
+                  <td className="num" style={{ fontWeight: 700 }}>
+                    {r.units}
+                  </td>
                   <td className="num">{inr(r.revenue)}</td>
                   <td className="num pd-muted">{inr(r.cogs)}</td>
-                  <td className="num" style={{ fontWeight: 700, color: r.profit >= 0 ? "var(--green)" : "var(--rose)" }}>{inr(r.profit)}</td>
-                  <td className="num"><span className={`pd-pill ${r.margin >= 30 ? "pill-green" : r.margin >= 15 ? "pill-gold" : "pill-rose"}`}>{r.margin.toFixed(0)}%</span></td>
+                  <td
+                    className="num"
+                    style={{
+                      fontWeight: 700,
+                      color: r.profit >= 0 ? "var(--green)" : "var(--rose)",
+                    }}
+                  >
+                    {inr(r.profit)}
+                  </td>
+                  <td className="num">
+                    <span
+                      className={`pd-pill ${r.margin >= 30 ? "pill-green" : r.margin >= 15 ? "pill-gold" : "pill-rose"}`}
+                    >
+                      {r.margin.toFixed(0)}%
+                    </span>
+                  </td>
                   <td className="num">{r.stock}</td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={8}><div className="pd-empty"><div className="em"><IconBox size={30} /></div><p>No products sold in this period / filter.</p></div></td></tr>}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="pd-empty">
+                      <div className="em">
+                        <IconBox size={30} />
+                      </div>
+                      <p>No products sold in this period / filter.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

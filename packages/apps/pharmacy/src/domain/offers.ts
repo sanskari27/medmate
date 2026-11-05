@@ -8,10 +8,10 @@ export type Offer = {
   title: string;
   code: string;
   type: OfferType;
-  value: number;              // % or ₹
+  value: number; // % or ₹
   scope: OfferScope;
-  target?: string;            // category key or product id
-  online: boolean;            // show on customer app
+  target?: string; // category key or product id
+  online: boolean; // show on customer app
   active: boolean;
 };
 

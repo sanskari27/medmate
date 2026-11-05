@@ -1,5 +1,11 @@
 import { inr, fmtDateTime, PharmacyProfile } from "@/domain";
-import { WardSupplyItem, WardSupplyReason, reasonMeta, HospitalAccount, itemMrp } from "@/features/hospital/hospitalAccount";
+import {
+  WardSupplyItem,
+  WardSupplyReason,
+  reasonMeta,
+  HospitalAccount,
+  itemMrp,
+} from "@/features/hospital/hospitalAccount";
 import { IconPrint, IconCheck } from "@/components/Icon";
 
 // Ward-supply credit invoice — shown before sending to the hospital, and re-viewable after.
@@ -17,14 +23,31 @@ export type SupplyInvoiceData = {
   items: WardSupplyItem[];
 };
 
-export default function WardSupplyInvoice({ data, profile, account, onClose, onEdit, onConfirm }: {
-  data: SupplyInvoiceData; profile: PharmacyProfile; account: HospitalAccount;
-  onClose: () => void; onEdit?: () => void; onConfirm?: () => void;
+export default function WardSupplyInvoice({
+  data,
+  profile,
+  account,
+  onClose,
+  onEdit,
+  onConfirm,
+}: {
+  data: SupplyInvoiceData;
+  profile: PharmacyProfile;
+  account: HospitalAccount;
+  onClose: () => void;
+  onEdit?: () => void;
+  onConfirm?: () => void;
 }) {
   const rows = data.items.map((it) => {
     const mrp = itemMrp(it, account.discountPct);
     const disc = mrp > 0 ? Math.round((1 - it.price / mrp) * 100) : 0;
-    return { ...it, mrp, disc, mrpAmount: Math.round(mrp * it.qty * 100) / 100, amount: Math.round(it.price * it.qty * 100) / 100 };
+    return {
+      ...it,
+      mrp,
+      disc,
+      mrpAmount: Math.round(mrp * it.qty * 100) / 100,
+      amount: Math.round(it.price * it.qty * 100) / 100,
+    };
   });
   const mrpTotal = rows.reduce((a, r) => a + r.mrpAmount, 0);
   const creditTotal = rows.reduce((a, r) => a + r.amount, 0);
@@ -36,11 +59,29 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
       <style>{CSS}</style>
       <div className="wsi-modal" onClick={(e) => e.stopPropagation()}>
         <div className="wsi-controls">
-          <b>{draft ? "Invoice preview — review before sending to hospital" : `Invoice ${data.invoiceNo}`}</b>
+          <b>
+            {draft
+              ? "Invoice preview — review before sending to hospital"
+              : `Invoice ${data.invoiceNo}`}
+          </b>
           <span style={{ flex: 1 }} />
-          <button className="wsi-btn" onClick={() => window.print()}><IconPrint size={14} /> Print / Save PDF</button>
-          {onEdit && <button className="wsi-btn" onClick={onEdit}>← Edit</button>}
-          {onConfirm ? <button className="wsi-btn wsi-primary" onClick={onConfirm}><IconCheck size={14} /> Confirm &amp; send to hospital</button> : <button className="wsi-btn" onClick={onClose}>Close</button>}
+          <button className="wsi-btn" onClick={() => window.print()}>
+            <IconPrint size={14} /> Print / Save PDF
+          </button>
+          {onEdit && (
+            <button className="wsi-btn" onClick={onEdit}>
+              ← Edit
+            </button>
+          )}
+          {onConfirm ? (
+            <button className="wsi-btn wsi-primary" onClick={onConfirm}>
+              <IconCheck size={14} /> Confirm &amp; send to hospital
+            </button>
+          ) : (
+            <button className="wsi-btn" onClick={onClose}>
+              Close
+            </button>
+          )}
         </div>
 
         <div className="wsi-print-area">
@@ -52,9 +93,18 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
                 <div className="wsi-sub">Ward supply · billed to hospital on credit</div>
               </div>
               <div className="wsi-no">
-                <div><span>Invoice no.</span><b>{data.invoiceNo}</b></div>
-                <div><span>Date</span><b>{fmtDateTime(data.at)}</b></div>
-                <div><span>Terms</span><b>{account.creditTerms}</b></div>
+                <div>
+                  <span>Invoice no.</span>
+                  <b>{data.invoiceNo}</b>
+                </div>
+                <div>
+                  <span>Date</span>
+                  <b>{fmtDateTime(data.at)}</b>
+                </div>
+                <div>
+                  <span>Terms</span>
+                  <b>{account.creditTerms}</b>
+                </div>
               </div>
             </div>
 
@@ -64,7 +114,9 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
                 <span className="lbl">Supplied by</span>
                 <b>{profile.name}</b>
                 <p>{profile.address}</p>
-                <p>GSTIN: {profile.gstin || "—"} · DL: {profile.dlNo || "—"}</p>
+                <p>
+                  GSTIN: {profile.gstin || "—"} · DL: {profile.dlNo || "—"}
+                </p>
               </div>
               <div className="wsi-party">
                 <span className="lbl">Bill to (credit account)</span>
@@ -76,15 +128,45 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
 
             {/* meta */}
             <div className="wsi-meta">
-              <div><span>Ward</span><b>{data.wardName}</b></div>
-              <div><span>Reason</span><b>{reasonMeta(data.reason).label}</b></div>
-              <div><span>Indent ref</span><b>{data.indentId || data.refDoc || "—"}</b></div>
-              <div><span>Patient (refill)</span><b>{data.patientId ? `${data.patientId}${data.patientName ? " · " + data.patientName : ""}` : "—"}</b></div>
+              <div>
+                <span>Ward</span>
+                <b>{data.wardName}</b>
+              </div>
+              <div>
+                <span>Reason</span>
+                <b>{reasonMeta(data.reason).label}</b>
+              </div>
+              <div>
+                <span>Indent ref</span>
+                <b>{data.indentId || data.refDoc || "—"}</b>
+              </div>
+              <div>
+                <span>Patient (refill)</span>
+                <b>
+                  {data.patientId
+                    ? `${data.patientId}${data.patientName ? " · " + data.patientName : ""}`
+                    : "—"}
+                </b>
+              </div>
             </div>
 
             {/* lines */}
             <table className="wsi-table">
-              <thead><tr><th>#</th><th>Medicine</th><th>Batch</th><th>Exp</th><th>HSN</th><th className="n">GST%</th><th className="n">Qty</th><th className="n">MRP</th><th className="n">Credit price</th><th className="n">Disc%</th><th className="n">Amount</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Medicine</th>
+                  <th>Batch</th>
+                  <th>Exp</th>
+                  <th>HSN</th>
+                  <th className="n">GST%</th>
+                  <th className="n">Qty</th>
+                  <th className="n">MRP</th>
+                  <th className="n">Credit price</th>
+                  <th className="n">Disc%</th>
+                  <th className="n">Amount</th>
+                </tr>
+              </thead>
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={i}>
@@ -96,9 +178,13 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
                     <td className="n">{r.gst}%</td>
                     <td className="n">{r.qty}</td>
                     <td className="n">{inr(r.mrp)}</td>
-                    <td className="n"><b>{inr(r.price)}</b></td>
+                    <td className="n">
+                      <b>{inr(r.price)}</b>
+                    </td>
                     <td className="n">{r.disc}%</td>
-                    <td className="n"><b>{inr(r.amount)}</b></td>
+                    <td className="n">
+                      <b>{inr(r.amount)}</b>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -106,14 +192,33 @@ export default function WardSupplyInvoice({ data, profile, account, onClose, onE
 
             {/* totals */}
             <div className="wsi-totals">
-              <div className="wsi-tline"><span>MRP value (for patient billing)</span><b>{inr(mrpTotal)}</b></div>
-              <div className="wsi-tline grand"><span>Billed to hospital (credit, GST incl.)</span><b>{inr(creditTotal)}</b></div>
-              <div className="wsi-tline"><span>Hospital margin if billed at MRP</span><b className="green">{inr(margin)}</b></div>
+              <div className="wsi-tline">
+                <span>MRP value (for patient billing)</span>
+                <b>{inr(mrpTotal)}</b>
+              </div>
+              <div className="wsi-tline grand">
+                <span>Billed to hospital (credit, GST incl.)</span>
+                <b>{inr(creditTotal)}</b>
+              </div>
+              <div className="wsi-tline">
+                <span>Hospital margin if billed at MRP</span>
+                <b className="green">{inr(margin)}</b>
+              </div>
             </div>
 
-            <p className="wsi-note">Goods supplied to the ward and billed to <b>{account.name}</b> on credit at the institutional rate ({account.discountPct}% off MRP). <b>MRP</b> is shown so the hospital can bill the patient; the hospital settles this invoice with the pharmacy. Prices are GST-inclusive. This is a computer-generated invoice.</p>
+            <p className="wsi-note">
+              Goods supplied to the ward and billed to <b>{account.name}</b> on credit at the
+              institutional rate ({account.discountPct}% off MRP). <b>MRP</b> is shown so the
+              hospital can bill the patient; the hospital settles this invoice with the pharmacy.
+              Prices are GST-inclusive. This is a computer-generated invoice.
+            </p>
 
-            <div className="wsi-sign"><i />For {profile.name}<br />Authorised signatory</div>
+            <div className="wsi-sign">
+              <i />
+              For {profile.name}
+              <br />
+              Authorised signatory
+            </div>
           </div>
         </div>
       </div>

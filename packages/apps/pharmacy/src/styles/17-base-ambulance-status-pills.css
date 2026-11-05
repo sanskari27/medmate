@@ -1,40 +1,140 @@
 /* ambulance status pills */
-.as-available{background:#e6f4e4;color:var(--primary)}
-.as-ontrip{background:var(--lgold);color:#9a6a18}
-.as-enroute{background:#e4eef9;color:#2c63a8}
-.as-dispatched{background:#efe6f7;color:#6b3d9e}
-.as-standby{background:var(--tint);color:var(--deep)}
-.as-maintenance{background:var(--tint-gold);color:#9a6a18}
-.as-offline{background:var(--tint);color:var(--ink-3)}
+.as-available {
+  background: #e6f4e4;
+  color: var(--primary);
+}
+.as-ontrip {
+  background: var(--lgold);
+  color: #9a6a18;
+}
+.as-enroute {
+  background: #e4eef9;
+  color: #2c63a8;
+}
+.as-dispatched {
+  background: #efe6f7;
+  color: #6b3d9e;
+}
+.as-standby {
+  background: var(--tint);
+  color: var(--deep);
+}
+.as-maintenance {
+  background: var(--tint-gold);
+  color: #9a6a18;
+}
+.as-offline {
+  background: var(--tint);
+  color: var(--ink-3);
+}
 
 /* ============================================================
    Insurance & Claims module
    ============================================================ */
-.clm-scheme{display:inline-flex;padding:2px 9px;border-radius:7px;background:var(--tint);
-  font-size:11px;font-weight:700;color:var(--deep)}
-.clm-fraud{margin-left:5px;color:var(--r-crit);font-weight:800}
+.clm-scheme {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 7px;
+  background: var(--tint);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--deep);
+}
+.clm-fraud {
+  margin-left: 5px;
+  color: var(--r-crit);
+  font-weight: 800;
+}
 /* claim status pills (reuse d-status base shape) */
-.cs-disbursed{background:#e6f4e4;color:var(--primary)}
-.cs-approved{background:#e6f4e4;color:var(--r-stable)}
-.cs-underreview{background:#e4eef9;color:#2c63a8}
-.cs-queryraised{background:var(--tint-gold);color:#9a6a18}
-.cs-pending{background:var(--tint);color:var(--ink-2)}
-.cs-rejected{background:#fbe3da;color:var(--r-crit)}
+.cs-disbursed {
+  background: #e6f4e4;
+  color: var(--primary);
+}
+.cs-approved {
+  background: #e6f4e4;
+  color: var(--r-stable);
+}
+.cs-underreview {
+  background: #e4eef9;
+  color: #2c63a8;
+}
+.cs-queryraised {
+  background: var(--tint-gold);
+  color: #9a6a18;
+}
+.cs-pending {
+  background: var(--tint);
+  color: var(--ink-2);
+}
+.cs-rejected {
+  background: #fbe3da;
+  color: var(--r-crit);
+}
 
 /* ============================================================
    Healthcare Facilities module
    ============================================================ */
-.fac-ownbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;box-shadow:var(--sh-sm)}
-.fac-ownseg button{padding:5px 12px;font-size:12px}
+.fac-ownbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  box-shadow: var(--sh-sm);
+}
+.fac-ownseg button {
+  padding: 5px 12px;
+  font-size: 12px;
+}
 
 /* KPI ribbon */
-.fac-ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.fac-kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
-  padding:13px 15px;box-shadow:var(--sh-sm)}
-.fac-kpi-h{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--ink-3);
-  text-transform:uppercase;letter-spacing:.03em}
-.fac-kpi-h svg{color:var(--olive)}
-.fac-kpi-v{font-family:var(--font-head);font-weight:800;font-size:27px;color:var(--deep);margin-top:6px;line-height:1}
-.fac-kpi-of{font-size:14px;color:var(--ink-3);font-weight:700}
-.fac-kpi-split{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:11px;color:var(--ink-3);font-weight:600}
+.fac-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.fac-kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 13px 15px;
+  box-shadow: var(--sh-sm);
+}
+.fac-kpi-h {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.fac-kpi-h svg {
+  color: var(--olive);
+}
+.fac-kpi-v {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 27px;
+  color: var(--deep);
+  margin-top: 6px;
+  line-height: 1;
+}
+.fac-kpi-of {
+  font-size: 14px;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+.fac-kpi-split {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 600;
+}

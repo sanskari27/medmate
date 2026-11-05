@@ -2,7 +2,13 @@ import { useRef, useState } from "react";
 import { Employee, PharmacyProfile } from "@/domain";
 import { IconPrint, IconPlus, IconUpload, IconX } from "@/components/Icon";
 
-const fmtDay = (s?: string) => { if (!s) return "—"; const d = new Date(s); return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); };
+const fmtDay = (s?: string) => {
+  if (!s) return "—";
+  const d = new Date(s);
+  return isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 const ACCENTS = [
   { key: "Forest", from: "#1B3D29", to: "#2F7D52" },
@@ -15,9 +21,27 @@ const ACCENTS = [
 
 // Digital staff ID card — front + back, customisable (orientation / accent / logo).
 // Self-contained styles (incl. @media print) so it works on desktop + phone.
-export default function EmployeeIdCard({ emp, profile, onClose }: { emp: Employee; profile: PharmacyProfile; onClose: () => void }) {
-  const initials = emp.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  const validThru = (() => { const d = new Date(emp.joinedOn); if (isNaN(d.getTime())) return "—"; d.setFullYear(d.getFullYear() + 3); return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" }); })();
+export default function EmployeeIdCard({
+  emp,
+  profile,
+  onClose,
+}: {
+  emp: Employee;
+  profile: PharmacyProfile;
+  onClose: () => void;
+}) {
+  const initials = emp.name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const validThru = (() => {
+    const d = new Date(emp.joinedOn);
+    if (isNaN(d.getTime())) return "—";
+    d.setFullYear(d.getFullYear() + 3);
+    return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  })();
 
   const [orient, setOrient] = useState<"landscape" | "portrait">("landscape");
   const [accent, setAccent] = useState(ACCENTS[0]);
@@ -25,10 +49,21 @@ export default function EmployeeIdCard({ emp, profile, onClose }: { emp: Employe
   const [showBack, setShowBack] = useState(true);
   const [logo, setLogo] = useState<string | undefined>(profile.logo);
   const logoRef = useRef<HTMLInputElement>(null);
-  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => setLogo(r.result as string); r.readAsDataURL(f); e.target.value = ""; };
+  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => setLogo(r.result as string);
+    r.readAsDataURL(f);
+    e.target.value = "";
+  };
 
   const cardCls = `idc-card${orient === "portrait" ? " portrait" : ""}`;
-  const LogoMark = ({ sm }: { sm?: boolean }) => <span className={`idc-logo${sm ? " sm" : ""}`}>{logo ? <img src={logo} alt="" /> : <IconPlus size={sm ? 14 : 18} />}</span>;
+  const LogoMark = ({ sm }: { sm?: boolean }) => (
+    <span className={`idc-logo${sm ? " sm" : ""}`}>
+      {logo ? <img src={logo} alt="" /> : <IconPlus size={sm ? 14 : 18} />}
+    </span>
+  );
 
   return (
     <div className="idc-wrap" onClick={onClose}>
@@ -37,8 +72,12 @@ export default function EmployeeIdCard({ emp, profile, onClose }: { emp: Employe
         <div className="idc-controls">
           <b>Digital Employee ID — {emp.name}</b>
           <span style={{ flex: 1 }} />
-          <button className="idc-btn idc-btn-primary" onClick={() => window.print()}><IconPrint size={14} /> Print / Save PDF</button>
-          <button className="idc-btn" onClick={onClose}><IconX size={13} /> Close</button>
+          <button className="idc-btn idc-btn-primary" onClick={() => window.print()}>
+            <IconPrint size={14} /> Print / Save PDF
+          </button>
+          <button className="idc-btn" onClick={onClose}>
+            <IconX size={13} /> Close
+          </button>
         </div>
 
         {/* ── customise bar (not printed) ── */}
@@ -46,53 +85,115 @@ export default function EmployeeIdCard({ emp, profile, onClose }: { emp: Employe
           <div className="idc-ctl">
             <label>Orientation</label>
             <div className="idc-seg">
-              <button className={orient === "landscape" ? "on" : ""} onClick={() => setOrient("landscape")}>▭ Horizontal</button>
-              <button className={orient === "portrait" ? "on" : ""} onClick={() => setOrient("portrait")}>▯ Vertical</button>
+              <button
+                className={orient === "landscape" ? "on" : ""}
+                onClick={() => setOrient("landscape")}
+              >
+                ▭ Horizontal
+              </button>
+              <button
+                className={orient === "portrait" ? "on" : ""}
+                onClick={() => setOrient("portrait")}
+              >
+                ▯ Vertical
+              </button>
             </div>
           </div>
           <div className="idc-ctl">
             <label>Theme</label>
             <div className="idc-swatches">
-              {ACCENTS.map((a) => <button key={a.key} title={a.key} className={`idc-sw${accent.key === a.key ? " on" : ""}`} style={{ background: `linear-gradient(135deg,${a.from},${a.to})` }} onClick={() => setAccent(a)} />)}
+              {ACCENTS.map((a) => (
+                <button
+                  key={a.key}
+                  title={a.key}
+                  className={`idc-sw${accent.key === a.key ? " on" : ""}`}
+                  style={{ background: `linear-gradient(135deg,${a.from},${a.to})` }}
+                  onClick={() => setAccent(a)}
+                />
+              ))}
             </div>
           </div>
           <div className="idc-ctl">
             <label>Logo</label>
             <input ref={logoRef} type="file" accept="image/*" hidden onChange={onLogo} />
-            <button className="idc-btn idc-btn-sm" onClick={() => logoRef.current?.click()}><IconUpload size={12} /> {logo ? "Change" : "Upload"}</button>
-            {logo && logo !== profile.logo && <button className="idc-btn idc-btn-sm" onClick={() => setLogo(profile.logo)}>Reset</button>}
+            <button className="idc-btn idc-btn-sm" onClick={() => logoRef.current?.click()}>
+              <IconUpload size={12} /> {logo ? "Change" : "Upload"}
+            </button>
+            {logo && logo !== profile.logo && (
+              <button className="idc-btn idc-btn-sm" onClick={() => setLogo(profile.logo)}>
+                Reset
+              </button>
+            )}
           </div>
           <div className="idc-ctl grow">
             <label>Band text</label>
-            <input className="idc-inp" value={band} onChange={(e) => setBand(e.target.value)} placeholder="EMPLOYEE IDENTITY CARD" />
+            <input
+              className="idc-inp"
+              value={band}
+              onChange={(e) => setBand(e.target.value)}
+              placeholder="EMPLOYEE IDENTITY CARD"
+            />
           </div>
-          <label className="idc-check"><input type="checkbox" checked={showBack} onChange={(e) => setShowBack(e.target.checked)} /> Show back</label>
+          <label className="idc-check">
+            <input
+              type="checkbox"
+              checked={showBack}
+              onChange={(e) => setShowBack(e.target.checked)}
+            />{" "}
+            Show back
+          </label>
         </div>
 
-        <div className="idc-print-area" style={{ ["--af" as string]: accent.from, ["--at" as string]: accent.to }}>
+        <div
+          className="idc-print-area"
+          style={{ ["--af" as string]: accent.from, ["--at" as string]: accent.to }}
+        >
           <div className="idc-cards">
             {/* ───── FRONT ───── */}
             <div className={cardCls}>
               <span className="idc-tag">FRONT</span>
               <div className="idc-top">
                 <LogoMark />
-                <div className="idc-org"><b>{profile.name}</b><small>{profile.tagline || "Staff Identity Card"}</small></div>
+                <div className="idc-org">
+                  <b>{profile.name}</b>
+                  <small>{profile.tagline || "Staff Identity Card"}</small>
+                </div>
               </div>
               <div className="idc-band">{band || "EMPLOYEE IDENTITY CARD"}</div>
               <div className="idc-body">
-                <div className="idc-photo">{emp.photo ? <img src={emp.photo} alt={emp.name} /> : <span>{initials}</span>}</div>
+                <div className="idc-photo">
+                  {emp.photo ? <img src={emp.photo} alt={emp.name} /> : <span>{initials}</span>}
+                </div>
                 <div className="idc-info">
                   <div className="idc-name">{emp.name}</div>
-                  <div className="idc-role">{emp.position}{emp.department ? ` · ${emp.department}` : ""}</div>
+                  <div className="idc-role">
+                    {emp.position}
+                    {emp.department ? ` · ${emp.department}` : ""}
+                  </div>
                   <div className="idc-rows">
-                    <div><span>ID</span><b className="mono">{emp.id}</b></div>
-                    <div><span>Phone</span><b>{emp.phone || "—"}</b></div>
-                    <div><span>Blood</span><b>{emp.bloodGroup || "—"}</b></div>
-                    <div><span>Type</span><b>{emp.employment}</b></div>
+                    <div>
+                      <span>ID</span>
+                      <b className="mono">{emp.id}</b>
+                    </div>
+                    <div>
+                      <span>Phone</span>
+                      <b>{emp.phone || "—"}</b>
+                    </div>
+                    <div>
+                      <span>Blood</span>
+                      <b>{emp.bloodGroup || "—"}</b>
+                    </div>
+                    <div>
+                      <span>Type</span>
+                      <b>{emp.employment}</b>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="idc-foot"><span>Joined {fmtDay(emp.joinedOn)}</span><span>Valid thru {validThru}</span></div>
+              <div className="idc-foot">
+                <span>Joined {fmtDay(emp.joinedOn)}</span>
+                <span>Valid thru {validThru}</span>
+              </div>
             </div>
 
             {/* ───── BACK ───── */}
@@ -101,20 +202,68 @@ export default function EmployeeIdCard({ emp, profile, onClose }: { emp: Employe
                 <span className="idc-tag">BACK</span>
                 <div className="idc-top sm">
                   <LogoMark sm />
-                  <div className="idc-org"><b>{profile.name}</b></div>
+                  <div className="idc-org">
+                    <b>{profile.name}</b>
+                  </div>
                 </div>
                 <div className="idc-backrows">
-                  <div><span>Employee</span><b>{emp.name} · {emp.id}</b></div>
-                  <div><span>Designation</span><b>{emp.position}</b></div>
-                  <div><span>Emergency contact</span><b>{emp.emergencyName ? `${emp.emergencyName} · ${emp.emergencyPhone || ""}` : "—"}</b></div>
-                  <div><span>Issued by</span><b>{profile.name}</b></div>
-                  <div><span>Address</span><b className="wrap">{profile.address || `${profile.city}, ${profile.state}`}</b></div>
-                  <div><span>Contact</span><b>{profile.phone}</b></div>
+                  <div>
+                    <span>Employee</span>
+                    <b>
+                      {emp.name} · {emp.id}
+                    </b>
+                  </div>
+                  <div>
+                    <span>Designation</span>
+                    <b>{emp.position}</b>
+                  </div>
+                  <div>
+                    <span>Emergency contact</span>
+                    <b>
+                      {emp.emergencyName
+                        ? `${emp.emergencyName} · ${emp.emergencyPhone || ""}`
+                        : "—"}
+                    </b>
+                  </div>
+                  <div>
+                    <span>Issued by</span>
+                    <b>{profile.name}</b>
+                  </div>
+                  <div>
+                    <span>Address</span>
+                    <b className="wrap">{profile.address || `${profile.city}, ${profile.state}`}</b>
+                  </div>
+                  <div>
+                    <span>Contact</span>
+                    <b>{profile.phone}</b>
+                  </div>
                 </div>
-                <div className="idc-barcode" aria-label={`barcode ${emp.id}`}><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><span>{emp.id}</span></div>
+                <div className="idc-barcode" aria-label={`barcode ${emp.id}`}>
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <span>{emp.id}</span>
+                </div>
                 <div className="idc-backfoot">
-                  <div className="idc-sign"><i />Authorised signatory</div>
-                  <p>If found, please return to the issuer above. This card remains the property of {profile.name} and must be surrendered on cessation of employment.</p>
+                  <div className="idc-sign">
+                    <i />
+                    Authorised signatory
+                  </div>
+                  <p>
+                    If found, please return to the issuer above. This card remains the property of{" "}
+                    {profile.name} and must be surrendered on cessation of employment.
+                  </p>
                 </div>
               </div>
             )}
