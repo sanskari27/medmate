@@ -38,8 +38,10 @@ import { expiryTone } from "../../Inventory.utils";
 import type { InventoryTableProps } from "./InventoryTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
-const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const goldPill =
+  "inline-flex cursor-pointer items-center gap-[5px] rounded-full border-0 bg-amber-bg px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap text-gold-d";
 
 export function InventoryTable({
   products,
@@ -71,7 +73,7 @@ export function InventoryTable({
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table className="border-separate border-spacing-0">
+        <Table className="border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
           <TableHead>
             <TableRow>
               <TableHeaderCell className={headCell}>Product</TableHeaderCell>
@@ -108,7 +110,12 @@ export function InventoryTable({
                         : "No products match this filter."}
                     </Text>
                     {catalogueEmpty ? (
-                      <Button variant="primary" size="sm" className="mt-2.5" onClick={addStock}>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="mt-2.5 active:translate-y-px"
+                        onClick={addStock}
+                      >
                         <IconTruck size={14} /> New purchase entry
                       </Button>
                     ) : null}
@@ -158,23 +165,31 @@ function InventoryRow({
   }
   const looseOn = product.looseAllowed ?? true;
   return (
-    <TableRow className="cursor-pointer hover:bg-wash-2" onClick={open}>
+    <TableRow
+      className="cursor-pointer transition-colors duration-100 hover:bg-wash-2"
+      onClick={open}
+    >
       <TableCell className={bodyCell}>
-        <Stack direction="row" align="center" gap={2}>
-          <Box className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-wash text-[17px]">
-            <Thumb p={product} />
+        <Stack direction="row" align="center" className="gap-[10px]">
+          <Box className="grid h-[34px] w-[34px] shrink-0 place-items-center overflow-hidden rounded-[9px] bg-wash text-[17px] leading-none text-mid">
+            <Thumb
+              p={product}
+              className="font-display text-[17px] leading-none font-[750] tracking-[-0.02em]"
+            />
           </Box>
-          <Box>
-            <Text as="span" className="font-bold text-ink">
+          <Box className="min-w-0">
+            <Text as="span" className="text-[13px] font-bold text-ink">
               {product.name}
             </Text>
-            <Text variant="caption">
+            <Text variant="caption" className="leading-normal">
               {product.composition} · {product.manufacturer}
             </Text>
           </Box>
         </Stack>
       </TableCell>
-      <TableCell className={`${bodyCell} whitespace-nowrap`}>{catLabel(product.category)}</TableCell>
+      <TableCell className={`${bodyCell} whitespace-nowrap`}>
+        {catLabel(product.category)}
+      </TableCell>
       <TableCell className={bodyCell}>
         <ScheduleTag schedule={product.schedule} />
       </TableCell>
@@ -187,14 +202,14 @@ function InventoryRow({
             <IconPin size={11} /> {locationCodes(product).join(" · ")}
           </Text>
         ) : (
-          <Button
-            variant="ghost"
-            className="h-auto rounded-full border-0 bg-amber-bg px-[9px] py-[3px] text-[11px] font-bold text-gold-d"
+          <button
+            type="button"
+            className={goldPill}
             title="Not assigned to a rack — click to allocate"
             onClick={openRacks}
           >
             <IconAlert size={11} /> Unallocated
-          </Button>
+          </button>
         )}
       </TableCell>
       <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
@@ -206,7 +221,7 @@ function InventoryRow({
         ) : null}
       </TableCell>
       <TableCell className={bodyCell}>
-        <StockPill p={product} now={now} />
+        <StockPill p={product} now={now} className="gap-[5px]" />
       </TableCell>
       <TableCell align="right" className={`${bodyCell} font-bold text-ink`}>
         {inr(mrpOf(product))}
@@ -215,7 +230,7 @@ function InventoryRow({
         {inr(stockValue(product))}
       </TableCell>
       <TableCell className={bodyCell} onClick={stop}>
-        <Stack direction="row" align="center" gap={1}>
+        <Stack direction="row" align="center" className="gap-[6px]">
           {isLooseEligible(product) ? (
             <>
               <Switch checked={looseOn} label="Toggle loose selling" onClick={toggleLoose} />
@@ -234,7 +249,7 @@ function InventoryRow({
         </Stack>
       </TableCell>
       <TableCell className={bodyCell} onClick={stop}>
-        <Stack direction="row" justify="end">
+        <Stack direction="row" justify="end" className="gap-[6px]">
           <IconButton label="Edit" title="Edit" onClick={edit}>
             <IconEdit size={15} />
           </IconButton>

@@ -18,16 +18,15 @@ export function OrderFilters({ filter, counts, searchQuery, onFilter, onSearch }
     onSearch(event.target.value);
   }
   return (
-    <Stack direction="row" align="center" wrap gap={2} className="mb-4">
-      <Box className="inline-flex flex-wrap gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
+    <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
+      <Box className="inline-flex max-w-full flex-wrap gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
         {FILTERS.map(renderFilter)}
       </Box>
-      <Box className="min-w-4 flex-1" />
+      <Box className="flex-1" />
       <Stack
         direction="row"
         align="center"
-        gap={2}
-        className="h-10 max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2"
+        className="max-w-[360px] min-w-[240px] flex-1 gap-2 rounded-sm border border-line-2 bg-paper px-3 py-2 max-md:max-w-none max-md:min-w-0 max-md:basis-full"
       >
         <Box className="text-green">
           <IconSearch size={17} />
@@ -37,7 +36,7 @@ export function OrderFilters({ filter, counts, searchQuery, onFilter, onSearch }
           placeholder="Search invoice, customer, phone…"
           value={searchQuery}
           onChange={changeSearch}
-          className="py-0"
+          className="py-0 text-[13.5px] text-ink placeholder:text-faint"
         />
       </Stack>
     </Stack>
@@ -64,8 +63,10 @@ function FilterButton({
       size="sm"
       onClick={select}
       className={cn(
-        "h-7 gap-[3px] border-0 px-[13px] py-1.5 text-[12.5px] shadow-none [&_svg]:inline [&_svg]:align-[-2px]",
-        selected ? "bg-paper text-dark shadow-sm" : "bg-transparent text-muted",
+        "h-auto items-baseline gap-0 border-0 px-[13px] py-1.5 text-[12.5px] !leading-[1.5] shadow-none",
+        selected
+          ? "bg-paper text-dark shadow-sm hover:bg-paper hover:text-dark"
+          : "bg-transparent text-muted hover:bg-transparent hover:text-muted",
       )}
     >
       <FilterLabel filterKey={filterKey} /> ({count})

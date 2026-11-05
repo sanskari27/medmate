@@ -1,16 +1,18 @@
 import type { HBarProps } from "./HBar.types";
-import type { ProgressTone } from "@/components/atoms/Progress";
-import { Meter } from "@/components/molecules/Meter";
-
-function toneFor(color: string): ProgressTone {
-  if (color.includes("blue")) return "blue";
-  if (color.includes("gold")) return "gold";
-  if (color.includes("rose")) return "rose";
-  if (color.includes("amber")) return "amber";
-  if (color.includes("teal")) return "teal";
-  return "mid";
-}
 
 export function HBar({ label, right, pct, color }: HBarProps) {
-  return <Meter className="mb-[11px]" label={label} valueLabel={right} value={Math.max(2, pct)} tone={toneFor(color)} />;
+  return (
+    <div className="mb-[11px]">
+      <div className="mb-1 flex items-center justify-between text-[12.5px]">
+        <span className="font-semibold">{label}</span>
+        <span className="text-muted">{right}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-[6px] bg-wash">
+        <div
+          className="h-full rounded-[6px] transition-[width] duration-[250ms]"
+          style={{ width: `${Math.max(2, pct)}%`, background: color }}
+        />
+      </div>
+    </div>
+  );
 }

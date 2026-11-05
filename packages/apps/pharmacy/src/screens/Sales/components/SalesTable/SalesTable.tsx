@@ -17,8 +17,11 @@ import { sortMarker, unitCount, type SalesRow } from "../../Sales.utils";
 import type { SalesTableProps } from "./SalesTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
-const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+  "sticky top-0 z-[1] whitespace-nowrap border-b border-line bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
+const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const footCell =
+  "border-t-2 border-b-0 border-line-2 bg-wash-2 px-3.5 py-[11px] align-middle text-[13px] font-extrabold text-ink-2";
+const numHead = "text-right font-semibold tabular-nums text-ink";
 
 export function SalesTable(props: SalesTableProps) {
   function renderRow(row: SalesRow) {
@@ -36,9 +39,9 @@ export function SalesTable(props: SalesTableProps) {
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
       <Box className="overflow-x-auto">
-        <Table className="border-separate border-spacing-0">
+        <Table className="border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
           <TableHead>
-            <TableRow>
+            <TableRow className="border-b-0">
               <TableHeaderCell className={headCell}>Invoice</TableHeaderCell>
               <SortHeader label="Date / time" sortKey="date" {...props} />
               <SortHeader label="Customer" sortKey="customer" {...props} />
@@ -46,7 +49,7 @@ export function SalesTable(props: SalesTableProps) {
               <SortHeader label="Units" sortKey="items" align="right" {...props} />
               <TableHeaderCell className={headCell}>Payment</TableHeaderCell>
               <TableHeaderCell className={headCell}>Status</TableHeaderCell>
-              <TableHeaderCell align="right" className={headCell}>
+              <TableHeaderCell align="right" className={cn(headCell, numHead)}>
                 GST
               </TableHeaderCell>
               <SortHeader label="Total" sortKey="total" align="right" {...props} />
@@ -56,31 +59,36 @@ export function SalesTable(props: SalesTableProps) {
           <TableBody>
             {props.rows.map(renderRow)}
             {props.rows.length === 0 ? (
-              <TableRow>
+              <TableRow className="border-b-0">
                 <TableCell colSpan={10} className={bodyCell}>
-                  <Stack align="center" className="px-5 py-9 text-center">
+                  <Stack align="center" className="px-5 py-9 text-center text-muted">
                     <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid">
                       <IconReceipt size={30} />
                     </Box>
-                    <Text variant="muted">No sales in this period / filter.</Text>
+                    <Text variant="muted" className="!mx-auto !my-0 max-w-[340px]">
+                      No sales in this period / filter.
+                    </Text>
                   </Stack>
                 </TableCell>
               </TableRow>
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className={`${bodyCell} border-t-2 border-line-2 bg-wash-2 font-extrabold`}>
+            ) : null}
+          </TableBody>
+          {props.rows.length > 0 ? (
+            <tfoot>
+              <TableRow className="border-b-0">
+                <TableCell colSpan={7} className={footCell}>
                   Total · {props.rows.length} bills · {props.units} units
                 </TableCell>
-                <TableCell align="right" className={`${bodyCell} border-t-2 border-line-2 bg-wash-2 font-extrabold text-ink`}>
+                <TableCell align="right" className={cn(footCell, "text-ink")}>
                   {props.tax}
                 </TableCell>
-                <TableCell align="right" className={`${bodyCell} border-t-2 border-line-2 bg-wash-2 font-extrabold text-ink`}>
+                <TableCell align="right" className={cn(footCell, "text-ink")}>
                   {props.net}
                 </TableCell>
-                <TableCell className={`${bodyCell} border-t-2 border-line-2 bg-wash-2`} />
+                <TableCell className={footCell} />
               </TableRow>
-            )}
-          </TableBody>
+            </tfoot>
+          ) : null}
         </Table>
       </Box>
     </Box>
@@ -106,11 +114,16 @@ function SortHeader({
   return (
     <TableHeaderCell
       align={align}
-      className={cn(headCell, "cursor-pointer select-none hover:text-mid", active && "text-mid")}
+      className={cn(
+        headCell,
+        "cursor-pointer select-none hover:text-mid",
+        align === "right" && numHead,
+        active && "text-mid",
+      )}
       onClick={sortBy}
     >
       {label}
-      <Text as="span" className="ml-[3px] text-[9px]">
+      <Text as="span" className="ml-[3px] text-[9px] text-current opacity-90">
         {sortMarker(active, direction)}
       </Text>
     </TableHeaderCell>
@@ -147,20 +160,20 @@ function SalesRecord({
     event.stopPropagation();
   }
   return (
-    <TableRow className="cursor-pointer hover:bg-wash-2" onClick={openHistory}>
-      <TableCell className={`${bodyCell} font-mono font-bold text-ink`}>
+    <TableRow className="cursor-pointer border-b-0 transition-colors duration-100 hover:bg-wash-2" onClick={openHistory}>
+      <TableCell className={`${bodyCell} font-mono font-bold`}>
         {sale.id}
-        {sale.rx ? <Tag tone="rx" className="ml-[5px]">Rx</Tag> : null}
+        {sale.rx ? <Tag tone="rx" className="ml-[5px] border-[#f3c7c7]">Rx</Tag> : null}
       </TableCell>
       <TableCell className={`${bodyCell} whitespace-nowrap`}>
         {fmtDateTime(sale.createdAt)}
-        <Text variant="caption" className="text-[11px]">
+        <Text variant="caption" className="text-[11px] leading-[1.5]">
           {timeAgo(sale.createdAt, now)}
         </Text>
       </TableCell>
       <TableCell className={bodyCell}>
         {sale.customer.name}
-        {sale.customer.phone ? <Text variant="caption">{sale.customer.phone}</Text> : null}
+        {sale.customer.phone ? <Text variant="caption" className="leading-[1.5]">{sale.customer.phone}</Text> : null}
       </TableCell>
       <TableCell className={bodyCell}>
         <ChannelPill channel={sale.channel} />
@@ -170,7 +183,7 @@ function SalesRecord({
       </TableCell>
       <TableCell className={bodyCell}>
         {sale.paid === false ? (
-          <Pill tone="rose" dot>
+          <Pill tone="rose" dot className="gap-[5px]">
             Unpaid
           </Pill>
         ) : (
@@ -187,9 +200,14 @@ function SalesRecord({
         {inr(totals.payable)}
       </TableCell>
       <TableCell className={bodyCell} onClick={stop}>
-        <Stack direction="row" justify="end" gap={1}>
+        <Stack direction="row" justify="end" className="gap-1.5">
           {sale.paid === false ? (
-            <Button variant="gold" size="sm" className="h-[29px]" onClick={markPaid}>
+            <Button
+              variant="gold"
+              size="sm"
+              className="border-[#10301d14] !leading-[1.5] hover:border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100 active:translate-y-px"
+              onClick={markPaid}
+            >
               <IconCash size={13} /> Paid
             </Button>
           ) : null}

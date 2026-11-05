@@ -1,7 +1,6 @@
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
-import { Pill } from "@/components/atoms/Pill";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import { IconArrowRight, IconCheck, IconCrown, IconLock, IconSparkle } from "@/components/atoms/Icon";
@@ -80,15 +79,24 @@ export function Paywall({ route, className }: PaywallProps) {
     go("subscription");
   }
   return (
-    <Stack data-slot="paywall" align="center" className={cn("mx-auto my-9 w-full max-w-[640px]", className)}>
-      <Stack align="center" gap={3} className="w-full rounded-xl border border-line bg-paper px-8 py-10 text-center shadow-sm">
-        <Box className="grid h-[68px] w-[68px] place-items-center rounded-lg bg-wash text-mid">
+    <Stack data-slot="paywall" align="center" className={cn("mx-auto my-9 w-full max-w-[640px] max-[767px]:my-2", className)}>
+      <Stack
+        align="center"
+        gap={0}
+        className="w-full rounded-[18px] border border-line bg-paper px-8 py-10 text-center shadow-sm max-[767px]:px-4 max-[767px]:py-6"
+      >
+        <Box className="mb-3.5 grid h-[68px] w-[68px] place-items-center rounded-[18px] bg-[linear-gradient(135deg,var(--color-wash),var(--color-wash-2))] text-mid">
           <IconLock size={30} />
         </Box>
-        <Pill tone="gold">
+        <Text
+          as="span"
+          className="mb-2.5 inline-flex items-center gap-[5px] rounded-[20px] bg-amber-bg px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap text-gold-d"
+        >
           <IconCrown size={12} /> Paid plan
-        </Pill>
-        <Heading level={2}>{meta.title} is a premium feature</Heading>
+        </Text>
+        <Heading level={2} className="mb-2 text-[22px] max-[767px]:text-[20px]">
+          {meta.title} is a premium feature
+        </Heading>
         <Text variant="muted" className="max-w-[470px] text-[13.5px] [line-height:1.55]">
           You're on the{" "}
           <Text as="span" className="text-[13.5px] leading-[1.55] font-bold text-ink">
@@ -102,11 +110,11 @@ export function Paywall({ route, className }: PaywallProps) {
           .
         </Text>
         {care ? (
-          <Stack align="start" className="my-1 w-[300px] gap-[7px] rounded-md border border-line bg-wash-2 px-[18px] py-[15px] text-left">
+          <Stack align="start" className="my-[18px] min-w-[300px] max-w-full gap-[7px] rounded-md border border-line bg-wash-2 px-[18px] py-[15px] text-left">
             <PaywallFeatures features={care.features} />
           </Stack>
         ) : null}
-        <Stack direction="row" justify="center" wrap gap={2}>
+        <Stack direction="row" justify="center" wrap className="mb-4 gap-2.5">
           <Button onClick={openPlans}>
             <IconSparkle size={15} /> Upgrade to unlock
           </Button>
@@ -114,9 +122,9 @@ export function Paywall({ route, className }: PaywallProps) {
             See all plans <IconArrowRight size={14} />
           </Button>
         </Stack>
-        <Pill tone="green" className="gap-1.5 px-3.5 py-1.5 text-[13.5px] [line-height:1.55]">
+        <Text as="span" className="inline-flex items-center gap-1.5 rounded-[20px] bg-wash px-3.5 py-1.5 text-[12px] font-bold text-mid">
           <IconCheck size={13} /> Free forever: Billing / POS · Inventory · Purchases
-        </Pill>
+        </Text>
       </Stack>
     </Stack>
   );

@@ -1,10 +1,9 @@
 import { useState, type ChangeEvent } from "react";
 import { timeAgo } from "@/utils";
 import { crmMsg, type Feedback, type Patient } from "@/utils/calculations/crm";
-import { Box, Button, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
+import { Box, Button, Heading, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
 import { IconCheck, IconStar, IconWhatsApp } from "@/components/atoms";
-import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
-import { EmptyState } from "@/components/molecules/EmptyState";
+import { Card, CardBody } from "@/components/molecules/Card";
 import { Field } from "@/components/molecules/Field";
 import type { CrmViewProps } from "@/screens/Crm/Crm.types";
 import { clampNps, feedbackScore, openWhatsApp } from "@/screens/Crm/Crm.utils";
@@ -44,10 +43,12 @@ export function FeedbackTab({ view }: FeedbackTabProps) {
   }
 
   return (
-    <Box className="grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader title="Log feedback" />
-        <CardBody>
+    <Box className="grid grid-cols-1 gap-4 min-[768px]:grid-cols-[1.5fr_1fr]">
+      <Card className="rounded-md shadow-sm">
+        <Stack direction="row" align="center" className="border-b border-line px-[18px] py-[15px]">
+          <Heading level={3} className="text-[15px] font-bold tracking-normal">Log feedback</Heading>
+        </Stack>
+        <CardBody className="px-[18px] pb-[18px]">
           <Stack gap={3}>
             <Field label="Patient" htmlFor="feedback-patient">
               <Select id="feedback-patient" value={patientKey} onChange={handlePatient} options={[{ value: "", label: "Select patient\u2026" }, ...PatientOptions({patients: view.patients})]} />
@@ -70,16 +71,19 @@ export function FeedbackTab({ view }: FeedbackTabProps) {
           </Stack>
         </CardBody>
       </Card>
-      <Card>
-        <CardHeader title="Feedback & NPS" subtitle={`${view.crm.feedbacks.length} responses`} />
-        <CardBody>
+      <Card className="rounded-md shadow-sm">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+          <Heading level={3} className="text-[15px] font-bold tracking-normal">Feedback & NPS</Heading>
+          <Text className="text-[12.5px] text-muted">{view.crm.feedbacks.length} responses</Text>
+        </Stack>
+        <CardBody className="px-[18px] pb-[18px]">
           <Stack direction="row" wrap gap={2} className="mb-3">
             <SummaryChip label="Avg rating" value={score.average ? score.average.toFixed(1) : "—"} star />
             <SummaryChip label="NPS" value={view.crm.feedbacks.length ? String(score.nps) : "—"} />
             <SummaryChip label="Promoters" value={String(score.promoters)} />
             <SummaryChip label="Detractors" value={String(score.detractors)} />
           </Stack>
-          {view.crm.feedbacks.length === 0 ? <EmptyState title="No feedback yet." className="py-4" /> : <FeedbackRows feedbacks={view.crm.feedbacks.slice(0, 10)} now={view.now} />}
+          {view.crm.feedbacks.length === 0 ? <Text className="px-4 py-4 text-center text-[13px] text-muted">No feedback yet.</Text> : <FeedbackRows feedbacks={view.crm.feedbacks.slice(0, 10)} now={view.now} />}
         </CardBody>
       </Card>
     </Box>

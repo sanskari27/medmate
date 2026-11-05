@@ -2305,7 +2305,7 @@ export function PharmaProvider({ children}: { children: React.ReactNode}) {
   }
   if (!hydrated) {
     return (
-      <Box className="grid min-h-dvh place-items-center bg-canvas text-sm text-muted">Loading pharmacy…</Box>
+      <div>Loading pharmacy…</div>
     );
   }
   return (

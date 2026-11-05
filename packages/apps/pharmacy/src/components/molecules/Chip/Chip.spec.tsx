@@ -11,8 +11,8 @@ describe("Chip", () => {
 
     view.rerender(<Chip selected>All</Chip>);
     const selected = screen.getByRole("button", { name: "All" });
-    expect(selected.className.includes("border-mid")).toBe(true);
-    expect(selected.className.includes("bg-wash")).toBe(true);
+    expect(selected.className.includes("border-dark")).toBe(true);
+    expect(selected.className.includes("bg-dark")).toBe(true);
     expect(selected.getAttribute("aria-pressed")).toBe("true");
   });
 });

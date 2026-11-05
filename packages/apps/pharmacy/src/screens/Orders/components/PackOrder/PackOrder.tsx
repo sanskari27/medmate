@@ -7,7 +7,6 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
 import { MonoText } from "@/components/atoms/MonoText";
 import { Pill } from "@/components/atoms/Pill";
-import { Progress } from "@/components/atoms/Progress";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import {
@@ -42,6 +41,18 @@ const PACK_RAIL: { key: PackStep; label: string }[] = [
   { key: "handover", label: "Seal packet" },
   { key: "done", label: "Hand to delivery" },
 ];
+const modalWrap =
+  "fixed inset-0 z-[100] flex animate-[pdFade_.16s_ease] items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px] max-md:items-end max-md:p-0";
+const modalCard =
+  "flex max-h-[90vh] w-full max-w-[720px] animate-[pdPop_.2s_cubic-bezier(.2,.9,.3,1.2)] flex-col overflow-hidden rounded-lg bg-paper shadow-pop max-md:max-h-[92dvh] max-md:max-w-none max-md:rounded-t-lg max-md:rounded-b-none";
+const closeBtn = "h-8 w-8 rounded-sm border-0 bg-wash-2 text-ink-2 hover:bg-wash hover:text-ink-2";
+const footBtn = "h-auto !leading-[1.5] active:translate-y-px max-md:flex-1";
+const goldBtn = "border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100";
+const smBtn = "h-auto !leading-[1.5]";
+const factGrid =
+  "mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line md:grid-cols-3";
+const qtyBtn =
+  "h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-0 disabled:bg-wash-2 disabled:text-mid disabled:opacity-40 disabled:shadow-none";
 
 export default function PackOrder({ saleId, onClose }: PackOrderProps) {
   const {
@@ -149,21 +160,19 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
   }
 
   return (
-    <Box
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
-      onClick={onClose}
-    >
+    <Box className={modalWrap} onClick={onClose}>
+      <ModalMotion />
       <Box
         role="dialog"
         aria-modal="true"
         aria-label={`Pack & dispatch · ${sale.id}`}
-        className="flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        className={modalCard}
         onClick={keepOpen}
       >
-        <Stack direction="row" align="start" justify="between" className="border-b border-line px-5 py-4 print:hidden">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-5 py-4 print:hidden">
           <Box>
             <Heading level={3} className="text-[17px]">
-              Pack & dispatch · <MonoText size="sm">{sale.id}</MonoText>
+              Pack & dispatch · <MonoText className="text-[17px] font-extrabold">{sale.id}</MonoText>
             </Heading>
             <Text variant="muted" className="mt-[3px] text-[12.5px]">
               {sale.customer.name}
@@ -171,7 +180,7 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
               {sale.customer.address ? ` · ${sale.customer.address}` : ""}
             </Text>
           </Box>
-          <IconButton label="Close" className="border-0 bg-wash-2" onClick={onClose}>
+          <IconButton label="Close" className={closeBtn} onClick={onClose}>
             <IconX size={18} />
           </IconButton>
         </Stack>
@@ -189,12 +198,11 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                   {done} / {total} units packed
                 </Text>
               </Stack>
-              <Progress value={total ? (done / total) * 100 : 0} label="Units packed" />
+              <PackBar done={done} total={total} />
               <Stack
                 direction="row"
                 align="center"
-                gap={2}
-                className="my-3 rounded-sm border-[1.5px] border-mid bg-wash-2 py-1 pr-1.5 pl-[11px]"
+                className="mt-3 mb-3.5 gap-2 rounded-sm border-[1.5px] border-mid bg-wash-2 py-1 pr-1.5 pl-[11px]"
               >
                 <Box className="text-ink">
                   <IconCamera size={15} />
@@ -206,9 +214,9 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                   value={scan}
                   onChange={changeScan}
                   onKeyDown={submitOnEnter}
-                  className="py-1.5 text-[13.5px]"
+                  className="px-0.5 py-1.5 text-[13.5px] placeholder:text-faint"
                 />
-                <Button variant="primary" size="sm" onClick={addScan} disabled={!scan.trim()}>
+                <Button variant="primary" size="sm" className={smBtn} onClick={addScan} disabled={!scan.trim()}>
                   Add
                 </Button>
               </Stack>
@@ -234,15 +242,18 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                     {sale.fulfillment?.sealedAt ? ` · ${fmtDateTime(sale.fulfillment.sealedAt)}` : ""}
                   </Text>
                 </Box>
-                <Button variant="ghost" size="sm" onClick={printPacket}>
+                <Button variant="ghost" size="sm" className={smBtn} onClick={printPacket}>
                   <IconPrint size={14} /> Print invoice
                 </Button>
               </Stack>
-              <Text variant="label" className="text-[11px] tracking-[0.08em] text-faint uppercase">
+              <Text
+                variant="label"
+                className="mb-0.5 block text-[11px] font-extrabold tracking-[0.08em] text-faint uppercase"
+              >
                 Assign delivery partner
               </Text>
-              <Box className="mt-2 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                <Field label="Delivery partner name" htmlFor="pack-rider-name" className="sm:col-span-2">
+              <Box className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+                <Field label="Delivery partner name" htmlFor="pack-rider-name" className="md:col-span-2">
                   <Input
                     id="pack-rider-name"
                     autoFocus
@@ -270,7 +281,7 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
                 </Field>
               </Box>
               <Text variant="muted" className="mt-2.5 text-[12px]">
-                Match the packet&apos;s <MonoText size="sm" className="font-bold">{sale.id}</MonoText> label to the order
+                Match the packet&apos;s <MonoText className="text-[12px] font-bold">{sale.id}</MonoText> label to the order
                 before handing it over.
               </Text>
               <Invoice sale={sale} profile={profile} className="print-area absolute top-0 -left-[99999px]" />
@@ -278,22 +289,23 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
           ) : null}
           {step === "done" ? <DispatchedView sale={sale} /> : null}
         </Box>
-        <Stack direction="row" align="center" justify="between" gap={2} className="border-t border-line px-5 py-3.5 print:hidden">
-          <Button variant="ghost" onClick={onClose}>
+        <Stack direction="row" align="center" className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap">
+          <Button variant="ghost" className={footBtn} onClick={onClose}>
             Close
           </Button>
+          <Box className="flex-1" />
           {step === "pack" ? (
-            <Button variant="primary" disabled={!ready} onClick={seal}>
+            <Button variant="primary" className={footBtn} disabled={!ready} onClick={seal}>
               {ready ? "Seal packet & generate invoice →" : `Scan all ${total} units to continue`}
             </Button>
           ) : null}
           {step === "handover" ? (
-            <Button variant="primary" disabled={!rider.name.trim()} onClick={handOver}>
+            <Button variant="primary" className={footBtn} disabled={!rider.name.trim()} onClick={handOver}>
               <IconTruck size={15} /> Hand to delivery partner
             </Button>
           ) : null}
           {step === "done" && sale.status === "out" ? (
-            <Button variant="gold" onClick={markDelivered}>
+            <Button variant="gold" className={cn(footBtn, goldBtn)} onClick={markDelivered}>
               Mark delivered
             </Button>
           ) : null}
@@ -308,7 +320,7 @@ function PackRail({ current }: { current: PackStep }) {
     return <PackMark key={item.key} item={item} index={index} current={current} />;
   }
   return (
-    <Stack direction="row" gap={2}>
+    <Stack direction="row" className="gap-2 max-md:flex-col">
       {PACK_RAIL.map(renderMark)}
     </Stack>
   );
@@ -328,9 +340,8 @@ function PackMark({
     <Stack
       direction="row"
       align="center"
-      gap={2}
       className={cn(
-        "flex-1 rounded-[9px] border px-2.5 py-2 text-[12px] font-bold",
+        "flex-1 gap-[7px] rounded-[9px] border px-2.5 py-2 text-[12px] font-bold",
         tone === "on" && "border-mid bg-wash text-dark",
         tone === "done" && "border-line bg-wash-2 text-mid",
         tone === "idle" && "border-line bg-wash-2 text-muted",
@@ -372,21 +383,18 @@ function PackLineRow({
     <Stack
       direction="row"
       align="center"
-      gap={2}
-      className={cn("border-b border-line px-3.5 py-2.5 last:border-b-0", full && "bg-wash-2")}
+      className={cn("gap-2.5 border-b border-line px-3.5 py-2.5 last:border-b-0", full && "bg-wash-2")}
     >
       <Box className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-sm bg-wash text-[17px]">
         {product ? <Thumb p={product} /> : <IconPill size={15} />}
       </Box>
-      <Box className="min-w-0 flex-1">
-        <Text as="span" className="block truncate text-[13px] font-bold">
-          {line.name}
-        </Text>
-        <Text variant="caption">
+      <Text as="span" className="block min-w-0 flex-1 truncate text-[13px] font-bold whitespace-nowrap text-ink">
+        {line.name}
+        <Text as="span" className="text-[11px] font-bold text-muted">
           {line.batchNo ? ` · batch ${line.batchNo}` : product ? ` · ${product.composition}` : ""}
         </Text>
-      </Box>
-      <Pill tone={full ? "green" : "gray"} className="min-w-[54px] justify-center">
+      </Text>
+      <Pill tone={full ? "green" : "gray"} className="min-w-[54px] justify-center gap-[5px]">
         {line.scanned}/{line.qty}
       </Pill>
       <Stack direction="row" align="center" className="overflow-hidden rounded-sm border border-line-2">
@@ -396,7 +404,7 @@ function PackLineRow({
           aria-label="un-pick"
           disabled={line.scanned <= 0}
           onClick={less}
-          className="h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] text-mid shadow-none"
+          className={qtyBtn}
         >
           −
         </Button>
@@ -409,7 +417,7 @@ function PackLineRow({
           aria-label="pick manually"
           disabled={full}
           onClick={more}
-          className="h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] text-mid shadow-none"
+          className={qtyBtn}
         >
           +
         </Button>
@@ -441,7 +449,7 @@ function DispatchedView({ sale }: { sale: Sale }) {
           </Text>
         </Box>
       </Stack>
-      <Box className="grid grid-cols-1 overflow-hidden rounded-md border border-line bg-line sm:grid-cols-3">
+      <Box className={factGrid}>
         <Fact label="Order" value={sale.id} mono />
         <Fact label="Customer" value={sale.customer.name} />
         <Fact label="Deliver to" value={sale.customer.address ?? "—"} />
@@ -457,6 +465,33 @@ function DispatchedView({ sale }: { sale: Sale }) {
         </Text>
       ) : null}
     </>
+  );
+}
+
+function ModalMotion() {
+  return (
+    <style>
+      {"@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"}
+    </style>
+  );
+}
+
+function PackBar({ done, total }: { done: number; total: number }) {
+  const width = `${total ? (done / total) * 100 : 0}%`;
+  return (
+    <Box
+      role="progressbar"
+      aria-label="Units packed"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={total ? Math.round((done / total) * 100) : 0}
+      className="h-2 overflow-hidden rounded-full bg-wash"
+    >
+      <Box
+        className="h-full rounded-full bg-[linear-gradient(90deg,var(--color-mid),var(--color-green))] transition-[width] duration-[250ms]"
+        style={{ width }}
+      />
+    </Box>
   );
 }
 

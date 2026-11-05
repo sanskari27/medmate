@@ -558,12 +558,14 @@ function FeaturesStep({ draft, update }: { draft: Draft; update: (patch: Partial
 
 function CatalogueStep() {
   return (
-    <Stack align="center" gap={3} className="py-6 text-center">
-      <Box className="grid h-14 w-14 place-items-center rounded-lg bg-wash text-mid">
+    <Stack align="center" gap={0} className="py-3.5 text-center">
+      <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
         <IconFolder size={28} />
       </Box>
-      <Heading level={2}>Your catalogue starts empty</Heading>
-      <Text variant="muted" className="max-w-xl">
+      <Heading level={2} className="mt-2 text-[23px]">
+        Your catalogue starts empty
+      </Heading>
+      <Text className="mx-auto mt-2 max-w-[460px] text-[14px] text-muted">
         Add medicines under Inventory, or enter a distributor bill under Purchases and stock is created from that
         bill. Nothing is preloaded.
       </Text>
@@ -573,9 +575,11 @@ function CatalogueStep() {
 
 function ReviewLine({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" justify="between" gap={3} className="border-b border-line py-2">
-      <Text variant="muted">{label}</Text>
-      <Text as="span" className="text-right font-bold">
+    <Stack direction="row" justify="between" className="border-b border-line py-[7px] text-[12.5px]">
+      <Text as="span" className="text-[12.5px] text-muted">
+        {label}
+      </Text>
+      <Text as="span" className="text-right text-[12.5px] font-bold text-ink">
         {value}
       </Text>
     </Stack>
@@ -597,12 +601,12 @@ function ReviewStep({ draft }: { draft: Draft }) {
           <Heading level={3} className="text-[18px]">
             {draft.name || "Your pharmacy"}
           </Heading>
-          <Text variant="caption">
+          <Text as="span" className="text-[12.5px] text-muted">
             {draft.businessTypes.join(", ") || "Retail Pharmacy"} · {draft.city}, {draft.state}
           </Text>
         </Stack>
       </Stack>
-      <Stack gap={0}>
+      <Box className="grid grid-cols-2 gap-x-[18px] gap-y-1">
         <ReviewLine label="GSTIN" value={attached(draft.gstin, draft.gstFile)} />
         <ReviewLine label="PAN" value={attached(draft.pan, draft.panFile)} />
         <ReviewLine label="Drug Licence" value={attached(draft.dlNo, draft.dlFile)} />
@@ -615,7 +619,7 @@ function ReviewStep({ draft }: { draft: Draft }) {
         <ReviewLine label="Kiosk" value={draft.kioskEnabled ? "On" : "Off"} />
         <ReviewLine label="Loose selling" value={draft.looseDefault ? "On" : "Off"} />
         <ReviewLine label="Catalogue" value="Empty — you add stock" />
-      </Stack>
+      </Box>
       <Alert tone="green" className="text-center">
         <Text as="span" className="text-[13px] text-mid">
           <IconSparkle size={13} /> You’re all set! Click <Text as="span" className="font-bold">Finish setup</Text> to open your dashboard.

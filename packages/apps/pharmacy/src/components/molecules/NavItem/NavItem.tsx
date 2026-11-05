@@ -7,15 +7,15 @@ import { Text } from "@/components/atoms/Text";
 import { cn } from "@/utils/className";
 
 const navItemVariants = cva(
-  "relative h-auto w-full justify-start gap-[11px] rounded-sm border-0 bg-transparent px-3 py-2 text-left text-[13px] font-semibold text-white/65 shadow-none hover:bg-white/[0.07] hover:text-white",
+  "relative h-auto w-full justify-start gap-[11px] rounded-sm border-0 bg-transparent px-3 py-2 text-left text-[13px] font-semibold text-[#ffffffa8] shadow-none transition-[background-color,color] duration-[140ms] hover:bg-[#ffffff12] hover:text-white active:translate-y-0 max-[767px]:min-h-11",
   {
     variants: {
       active: {
-        true: "bg-white/10 font-bold text-white before:absolute before:top-1/2 before:-left-3 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-mint before:content-['']",
+        true: "bg-[#ffffff1a] font-bold text-white before:absolute before:top-1/2 before:-left-3 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-mint before:content-['']",
         false: "",
       },
       locked: {
-        true: "opacity-[0.58] hover:bg-white/5 hover:opacity-[0.85]",
+        true: "opacity-[0.58] hover:bg-[#ffffff0d] hover:opacity-[0.85]",
         false: "",
       },
     },

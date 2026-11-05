@@ -1,6 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import { usePharma } from "@/hooks";
-import { Box, Button, Input, Progress, Stack, Text } from "@/components/atoms";
+import { Box, Button, Heading, Input, Progress, Stack, Text } from "@/components/atoms";
 import {
   IconAlert,
   IconArrowRight,
@@ -15,7 +15,6 @@ import {
   IconShield,
   IconStethoscope,
 } from "@/components/atoms";
-import { EmptyState } from "@/components/molecules/EmptyState";
 import { SegmentBar } from "@/components/molecules/BarChart";
 import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { RX_SLA_MINS, inr, type Prescription, type RxStatus } from "@/utils";
@@ -146,13 +145,13 @@ export default function PrescriptionsScreen() {
           title="Ready to bill"
         />
         <StatCard tone="bg-wash text-mid" icon={<IconRupee size={18} />} label="Dispensed today" value={String(metrics.dispensedToday.length)} detail={`${inr(metrics.dispensedTodayValue)} billed`} />
-        <StatCard tone="bg-[#e2f2f4] text-[#1f7d8c]" icon={<IconBolt size={18} />} label="Avg turnaround" value={turnaroundLabel(metrics.averageTurnaround)} detail="upload → dispensed" />
+        <StatCard tone="bg-[#e2f2f4] text-teal" icon={<IconBolt size={18} />} label="Avg turnaround" value={turnaroundLabel(metrics.averageTurnaround)} detail="upload → dispensed" />
         <StatCard tone="bg-[#efeafc] text-[#6d4fc4]" icon={<IconPill size={18} />} label="Digital share" value={`${digitalPct}%`} detail={`${metrics.digital} digital · ${metrics.uploaded} uploaded`} />
         <StatCard tone="bg-wash text-mid" icon={<IconShield size={18} />} label="SLA on-time" value={`${slaPct}%`} detail="pending within 2h" />
       </Box>
 
       {metrics.overdue.length > 0 && tab !== "pending" ? (
-        <Button variant="ghost" block className="mb-0 mt-3.5 h-auto justify-start rounded-md border-[#f3c9c9] bg-gradient-to-r from-[#fdecec] to-[#fff6f6] px-[15px] py-[11px] text-[13px] font-semibold text-[#a0281f] hover:border-rose" onClick={showPending}>
+        <Button variant="ghost" block className="mb-0 mt-3.5 h-auto justify-start gap-2 rounded-md border-[#f3c9c9] bg-gradient-to-r from-[#fdecec] to-[#fff6f6] px-[15px] py-[11px] text-[13px] font-semibold text-[#a0281f] hover:border-rose" onClick={showPending}>
           <IconAlert size={16} />
           <Text as="span" className="font-extrabold text-[#a0281f]">{metrics.overdue.length} prescription{metrics.overdue.length > 1 ? "s" : ""}</Text>
           waiting more than {RX_SLA_MINS / 60}h — review now <IconArrowRight size={14} />
@@ -160,8 +159,8 @@ export default function PrescriptionsScreen() {
       ) : null}
 
       <Box className="my-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Box className="rounded-lg border border-line bg-paper p-4 shadow-sm">
-          <Stack direction="row" align="center" gap={2} className="mb-3 font-display text-[13px] font-extrabold text-mid">
+        <Box className="rounded-md border border-line bg-paper p-[18px] shadow-sm">
+          <Stack direction="row" align="center" className="mb-3 gap-[7px] font-display text-[13px] font-extrabold text-mid">
             <IconStethoscope size={15} /> Top prescribers
           </Stack>
           {metrics.topDoctors.length === 0 ? (
@@ -170,8 +169,8 @@ export default function PrescriptionsScreen() {
             <DoctorBars doctors={metrics.topDoctors} />
           )}
         </Box>
-        <Box className="rounded-lg border border-line bg-paper p-4 shadow-sm">
-          <Stack direction="row" align="center" gap={2} className="mb-3 font-display text-[13px] font-extrabold text-mid">
+        <Box className="rounded-md border border-line bg-paper p-[18px] shadow-sm">
+          <Stack direction="row" align="center" className="mb-3 gap-[7px] font-display text-[13px] font-extrabold text-mid">
             <IconChart size={15} /> Source & compliance
           </Stack>
           <SegmentBar
@@ -181,7 +180,7 @@ export default function PrescriptionsScreen() {
               { key: "uploaded", value: metrics.uploaded, color: "var(--color-mid)", label: "Uploaded" },
             ]}
           />
-          <Stack direction="row" gap={4} className="my-2 text-[12px] text-ink-2">
+          <Stack direction="row" gap={4} className="mt-[9px] mb-3 text-[12px] text-ink-2">
             <Text as="span"><Box className="mr-1 inline-block h-2.5 w-2.5 rounded-[3px] bg-[#8a6ee0]" /> Digital {metrics.digital}</Text>
             <Text as="span"><Box className="mr-1 inline-block h-2.5 w-2.5 rounded-[3px] bg-mid" /> Uploaded {metrics.uploaded}</Text>
           </Stack>
@@ -194,23 +193,29 @@ export default function PrescriptionsScreen() {
         </Box>
       </Box>
 
-      <Stack direction="row" align="center" wrap gap={2} className="mb-4">
-        <SegmentedControl label="Prescription status">
+      <Stack direction="row" align="center" wrap className="mb-4 gap-[10px]">
+        <SegmentedControl label="Prescription status" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
           <StatusTabs tab={tab} prescriptions={prescriptions} onSelect={setTab} />
         </SegmentedControl>
         <Box className="flex-1" />
-        <SegmentedControl label="Prescription source">
+        <SegmentedControl label="Prescription source" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
           <KindTabs kind={kind} onSelect={setKind} />
         </SegmentedControl>
-        <Stack direction="row" align="center" gap={2} className="min-w-[180px] max-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
+        <Stack direction="row" align="center" gap={2} className="min-w-[240px] max-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
           <Box className="text-green"><IconSearch size={15} /></Box>
-          <Input variant="plain" aria-label="Search prescriptions" placeholder="Search patient, doctor, Rx no…" value={query} onChange={handleQuery} className="placeholder:text-faint" />
+          <Input variant="plain" aria-label="Search prescriptions" placeholder="Search patient, doctor, Rx no…" value={query} onChange={handleQuery} className="py-0 placeholder:text-faint" />
         </Stack>
       </Stack>
 
       {list.length === 0 ? (
-        <Box className="rounded-lg border border-line bg-paper shadow-sm">
-          <EmptyState title="Nothing here" body="No prescriptions match this view." />
+        <Box className="rounded-md border border-line bg-paper p-[18px] shadow-sm">
+          <Stack align="center" className="px-5 py-9 text-center text-muted">
+            <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid">
+              <IconDoc size={28} />
+            </Box>
+            <Heading level={4} className="mb-[5px] text-[15px] font-bold tracking-normal text-ink">Nothing here</Heading>
+            <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No prescriptions match this view.</Text>
+          </Stack>
         </Box>
       ) : (
         <Box className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-4">
@@ -268,13 +273,17 @@ function StatCard({
       onClick={onClick}
       onKeyDown={onKeyDown}
       title={title}
-      className="relative flex flex-col overflow-hidden rounded-lg border border-line bg-paper px-[18px] py-4 shadow-sm"
+      className={`group relative flex flex-col overflow-hidden rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm ${onClick ? "cursor-pointer transition hover:-translate-y-0.5 hover:border-line-2 hover:shadow-card" : ""}`}
     >
-      {onClick ? <Box className="absolute top-3 right-3 text-muted"><IconArrowRight size={16} /></Box> : null}
+      {onClick ? (
+        <Box className="absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100">
+          <IconArrowRight size={16} />
+        </Box>
+      ) : null}
       <Box className={`grid h-8 w-8 place-items-center rounded-[9px] ${tone}`}>{icon}</Box>
       <Text variant="label" className="mt-3 text-[11px] uppercase tracking-[0.05em]">{label}</Text>
       <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">{value}</Text>
-      <Text variant="caption" className="border-t border-line pt-[9px] text-[12px]">{detail}</Text>
+      <Text variant="caption" className="mt-auto border-t border-line pt-[9px] text-[12px]">{detail}</Text>
     </Box>
   );
 }
@@ -282,7 +291,7 @@ function StatCard({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <Stack gap={0}>
-      <Text variant="label" className="text-[10.5px] uppercase tracking-[0.05em]">{label}</Text>
+      <Text variant="label" className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-muted">{label}</Text>
       <Text className="text-[15px] font-bold">{value}</Text>
     </Stack>
   );
@@ -303,9 +312,7 @@ function DoctorBar({ name, count, max }: { name: string; count: number; max: num
         <Text as="span">{name}</Text>
         <Text as="span" className="font-bold">{count} Rx</Text>
       </Stack>
-      <Box className="h-1.5 overflow-hidden rounded-full bg-wash">
-        <Progress value={shareWidth(count, max)} />
-      </Box>
+      <Progress className="h-[7px] rounded-[5px]" value={shareWidth(count, max)} />
     </Box>
   );
 }
@@ -341,7 +348,7 @@ function KindTabs({ kind, onSelect }: { kind: RxKindFilter; onSelect: (kind: RxK
 
 function FilterTab({ label, selected, onSelect }: { label: string; selected: boolean; onSelect: () => void }) {
   return (
-    <Button size="sm" variant="ghost" className={selected ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={onSelect}>
+    <Button size="sm" variant="ghost" className={selected ? "rounded-[6px] border-0 bg-paper px-[13px] py-1.5 text-[12.5px] font-bold text-dark shadow-sm hover:bg-paper" : "rounded-[6px] border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] font-bold text-muted shadow-none hover:bg-transparent"} onClick={onSelect}>
       {label}
     </Button>
   );

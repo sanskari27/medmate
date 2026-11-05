@@ -12,7 +12,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
     return <TimelineStep key={step} step={step} position={position} index={index} />;
   }
   return (
-    <Stack direction="row" justify="between" className="my-1 mb-[18px] gap-0 print:hidden">
+    <Stack direction="row" align="center" justify="between" className="my-1 mb-[18px] gap-0 print:hidden">
       {ONLINE_FLOW.map(renderStep)}
     </Stack>
   );

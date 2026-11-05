@@ -28,6 +28,7 @@ export function RejectModal({
       title={`Reject ${rx.id}`}
       size="sm"
       className="max-w-[460px]"
+      overlayClassName="z-[100] bg-[#0d201580] p-6 backdrop-blur-[3px]"
       onClose={onClose}
       footer={
         <Stack direction="row" justify="end" gap={2}>
@@ -37,7 +38,7 @@ export function RejectModal({
       }
     >
       <Text variant="muted" className="text-[12.5px]">Pick a reason — {rx.patient} will see this so they can fix & re-upload.</Text>
-      <Stack gap={2} className="mt-3">
+      <Stack className="mt-3 gap-[7px]">
         <ReasonOptions reason={reason} onSelect={setReason} />
       </Stack>
       <Field label="Or write your own" htmlFor="reject-reason" className="mt-2.5">
@@ -58,7 +59,7 @@ function ReasonOption({ option, selected, onSelect }: { option: string; selected
     onSelect(option);
   }
   return (
-    <Button variant="ghost" className={`h-auto justify-start whitespace-normal text-left ${selected ? "border-mid bg-wash text-dark" : ""}`} onClick={handleSelect}>
+    <Button variant="ghost" className={`h-auto justify-start gap-[7px] rounded-[9px] px-[11px] py-[9px] text-left text-[12.5px] font-normal whitespace-normal ${selected ? "border-rose bg-rose-bg font-semibold text-[#a0281f] hover:bg-rose-bg" : "text-ink-2 hover:bg-wash-2"}`} onClick={handleSelect}>
       {selected ? <IconCheck size={13} /> : null}
       {option}
     </Button>

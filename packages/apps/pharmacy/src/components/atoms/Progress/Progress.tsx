@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { clampPercent, cn } from "@/utils/className";
 
-const progressVariants = cva("h-full rounded-full", {
+const progressVariants = cva("h-full rounded-[inherit] transition-[width] duration-[250ms]", {
   variants: {
     tone: {
       mid: "bg-mid",

@@ -3,8 +3,6 @@ import { Box, Button, Heading, Table, TableBody, TableCell, TableHead, TableHead
 import { cn } from "@/utils/className";
 import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
 import { Spark } from "@/components/molecules/Sparkline";
-import { SegmentBar } from "@/components/molecules/BarChart";
-import { Progress } from "@/components/atoms/Progress";
 import { SalesAnalytics } from "@/screens/Dashboard/components/SalesAnalytics";
 import { useMemo } from "react";
 import { usePharma } from "@/hooks";
@@ -95,10 +93,7 @@ export default function DashboardScreen() {
         }
         return out;
     }, [prescriptions, now]);
-    const alertSegments = [
-        { key: "low", value: lowStock.length, color: "var(--color-gold)", label: "Low stock" },
-        { key: "expiring", value: expiring.length, color: "var(--color-rose)", label: "Expiring" },
-    ];
+    const alertTotal = lowStock.length + expiring.length;
     const yday = dayTotals[5] ?? 0;
     const salesDelta = yday > 0 ? Math.round(((totalRev - yday) / yday) * 100) : totalRev > 0 ? 100 : 0;
     const itemsToday = todays.reduce((a, s) => a + s.items.reduce((x, i) => x + i.qty, 0), 0);
@@ -149,15 +144,15 @@ export default function DashboardScreen() {
     ];
     return (<Box className="!mx-auto !max-w-[1680px]">
       {/* ── today strip + quick actions ── */}
-      <Box className="!mb-3.5 !flex !flex-wrap !items-center !justify-between !gap-5 !rounded-lg !border !border-line !bg-paper !px-5 !py-[18px]">
+      <Box className="!mb-3.5 !flex !flex-wrap !items-center !justify-between !gap-5 !rounded-lg !border !border-line !px-5 !py-[18px] !shadow-sm" style={{ background: "linear-gradient(112deg, var(--color-paper) 0%, var(--color-paper) 52%, var(--color-wash-2) 100%)" }}>
         <Box className="!min-w-0">
-          <Box className="!font-display !text-[23px] !font-extrabold !leading-[1.5] !tracking-[-0.025em] !text-ink">
+          <Box className="!font-display !text-[23px] !font-extrabold !leading-[1.5] !tracking-[-0.025em] !text-dark">
             {greet}, {who}
           </Box>
-          <Box className="!mt-[5px] !text-[13px] !leading-[1.5] !text-muted">
-            {dateStr} ·{" "}
+          <Box className="!mt-[5px] !flex !flex-wrap !items-center !gap-2.5 !text-[13px] !leading-[1.5] !text-muted">
+            <span>{dateStr} ·</span>
             <Text className="!inline-flex !items-center !gap-1.5 !rounded-full !bg-wash !px-2.5 !py-[3px] !text-[11px] !font-bold !text-mid" as="span">
-              <Box className={profile.storeOpen ? "inline-block h-1.5 w-1.5 rounded-full bg-mid shadow-[0_0_0_3px_rgba(47,125,82,0.14)]" : "inline-block h-1.5 w-1.5 rounded-full bg-gold"} />
+              <Box className={profile.storeOpen ? "inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-mid shadow-[0_0_0_3px_rgba(47,125,82,0.14)]" : "inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#d9a648]"} />
               {profile.storeOpen ? "Store open" : "Store paused"}
             </Text>
           </Box>
@@ -181,7 +176,7 @@ export default function DashboardScreen() {
           <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">Items sold today</Text>
           <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-dark tabular-nums">{itemsToday}</Text>
         </Box>
-        {dueCount > 0 && (<Box className="cursor-pointer" role="button" onClick={goOnClick}>
+        {dueCount > 0 && (<Box className="cursor-pointer transition-colors duration-[120ms] hover:bg-wash-2" role="button" onClick={goOnClick}>
             <Text as="span" className="block text-[10.5px] font-bold tracking-[0.05em] text-muted uppercase">Dues to collect</Text>
             <Text as="span" className="mt-[3px] block font-display text-[18px] font-extrabold [line-height:1.5] text-gold-d tabular-nums">{dueCount}</Text>
           </Box>)}
@@ -203,9 +198,9 @@ export default function DashboardScreen() {
               </Text>)}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Today’s sales</Box>
-          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{inr(totalRev)}</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-[-0.03em] !text-dark !tabular-nums">{inr(totalRev)}</Box>
           <Box className="!mt-3 !block !h-[30px]">
-            <Spark data={dayTotals}/>
+            <Spark color="var(--color-mid)" data={dayTotals}/>
           </Box>
           <Box className="mt-auto grid grid-cols-2 gap-2.5 border-t border-line pt-[9px]">
             <Text as="span" className="flex min-w-0 flex-col gap-px">
@@ -233,13 +228,13 @@ export default function DashboardScreen() {
             {newOrders.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">{newOrders.length} new</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Orders today</Box>
-          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{todays.length}</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-[-0.03em] !text-dark !tabular-nums">{todays.length}</Box>
           <Box className="!mt-3 !block !h-[30px]">
-            <Spark data={dayOrders}/>
+            <Spark color="var(--color-mid)" data={dayOrders}/>
           </Box>
-          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] leading-[1.2] text-muted">
+          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] text-muted">
             {newOrders.length > 0 ? (<>
-                <Text as="span" className={cn("font-bold", "!text-gold-d")}>{newOrders.length}</Text> awaiting action
+                <Text as="span" className="!text-[12px] !font-bold !text-gold-d">{newOrders.length}</Text> awaiting action
               </>) : (<>
                 <span className="inline-flex items-center gap-1"><IconCheck size={12}/> all caught up</span>
               </>)}
@@ -256,11 +251,11 @@ export default function DashboardScreen() {
             {pendingRx.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold !bg-amber-bg !text-gold-d" as="span">to verify</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Prescriptions</Box>
-          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{pendingRx.length}</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-[-0.03em] !text-dark !tabular-nums">{pendingRx.length}</Box>
           <Box className="!mt-3 !block !h-[30px]">
-            <Spark data={dayRx}/>
+            <Spark color="var(--color-mid)" data={dayRx}/>
           </Box>
-          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] leading-[1.2] text-muted">pending review</Box>
+          <Box className="mt-auto block border-t border-line pt-[9px] text-[12px] text-muted">pending review</Box>
         </Box>
         <Box className="group !relative !flex !flex-col !overflow-hidden !rounded-md !border !border-line !bg-paper !px-[18px] !py-4 !shadow-sm !cursor-pointer !transition hover:!-translate-y-0.5 hover:!border-line-2 hover:!shadow-card focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-mid" role="button" tabIndex={0} onClick={openAlerts} onKeyDown={kpiKey(openAlerts)} title="See medicines to reorder & expiring stock">
           <Text className="pointer-events-none absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" as="span">
@@ -270,18 +265,21 @@ export default function DashboardScreen() {
             <Box className="!mb-2.5 !grid !h-8 !w-8 !place-items-center !rounded-[9px] !text-[17px] !bg-rose-bg !text-rose">
               <IconAlert size={19}/>
             </Box>
-            {lowStock.length + expiring.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !px-2 !py-[3px] !text-[11px] !font-extrabold bg-rose-bg text-rose" as="span">action</Text>}
+            {lowStock.length + expiring.length > 0 && <Text className="!inline-flex !items-center !gap-[3px] !rounded-full !bg-rose-bg !px-2 !py-[3px] !text-[11px] !font-extrabold !text-rose" as="span">action</Text>}
           </Box>
           <Box className="!mt-3 !text-[11px] !font-bold !uppercase !tracking-[0.05em] !text-muted">Stock alerts</Box>
-          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums">{lowStock.length + expiring.length}</Box>
+          <Box className="!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-[-0.03em] !text-dark !tabular-nums">{lowStock.length + expiring.length}</Box>
           <Box className="!mt-3 !block !h-[30px]">
-            <SegmentBar className="h-[7px] overflow-hidden rounded bg-wash" segments={alertSegments} />
+            <Box className="flex h-[7px] overflow-hidden rounded-[4px] bg-wash">
+              <Box className="h-full bg-gold" style={{ width: `${alertTotal ? (lowStock.length / alertTotal) * 100 : 0}%` }} />
+              <Box className="h-full bg-rose" style={{ width: `${alertTotal ? (expiring.length / alertTotal) * 100 : 0}%` }} />
+            </Box>
             <Box className="!mt-2 !flex !gap-3.5 !whitespace-nowrap">
-              <Text as="span" className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-[0.03em] text-muted uppercase">
+              <Text as="span" className="!inline-flex !items-center !gap-1 !text-[9.5px] !font-bold !tracking-[0.03em] !text-muted !uppercase">
                 <Box className="inline-block h-[7px] w-[7px] rounded-[2px] bg-gold" />
                 Low stock
               </Text>
-              <Text as="span" className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-[0.03em] text-muted uppercase">
+              <Text as="span" className="!inline-flex !items-center !gap-1 !text-[9.5px] !font-bold !tracking-[0.03em] !text-muted !uppercase">
                 <Box className="inline-block h-[7px] w-[7px] rounded-[2px] bg-rose" />
                 Expiring
               </Text>
@@ -310,11 +308,11 @@ export default function DashboardScreen() {
           </Box>
           <Box className={cn("!flex-1 !p-[18px]", "!pt-1 !pb-1.5")}>
             {newOrders.length === 0 && pendingRx.length === 0 && lowStock.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-[26px] !px-2.5")}>
-                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-[21px] leading-none text-mid">
                   <IconCheck size={30}/>
                 </Box>
                 <Heading level={3}>All clear</Heading>
-                <Text>No pending orders, prescriptions or stock alerts.</Text>
+                <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No pending orders, prescriptions or stock alerts.</Text>
               </Box>) : (<>
                 {newOrders.slice(0, 2).map(renderO)}
                 {pendingRx.slice(0, 2).map(renderR)}
@@ -335,10 +333,10 @@ export default function DashboardScreen() {
           </Box>
           <Box className={cn("!flex-1 !p-[18px]", "!pt-1 !pb-1.5")}>
             {expiring.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-[26px] !px-2.5")}>
-                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-[21px] leading-none text-mid">
                   <IconCalendar size={30}/>
                 </Box>
-                <Text>No medicines expiring in the next 4 months.</Text>
+                <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No medicines expiring in the next 4 months.</Text>
               </Box>) : (expiring.slice(0, 5).map(renderP2))}
           </Box>
         </Box>
@@ -356,10 +354,10 @@ export default function DashboardScreen() {
           </Box>
           <Box className={cn("!flex-1 !p-[18px]", "!pt-2")}>
             {topSellers.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink", "!py-6 !px-2.5")}>
-                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-[21px] leading-none text-mid">
+                <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-[21px] leading-none text-mid">
                   <IconStar size={28}/>
                 </Box>
-                <Text>No sales yet in the last 7 days.</Text>
+                <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No sales yet in the last 7 days.</Text>
               </Box>) : (topSellers.map(renderTopSeller))}
           </Box>
         </Box>
@@ -372,13 +370,13 @@ export default function DashboardScreen() {
             </Button>
           </Box>
           <Box className="!overflow-x-auto">
-            <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2">
+            <Table className="!w-full !border-separate !border-spacing-0 !text-[13px] [&_th]:!sticky [&_th]:!top-0 [&_th]:!z-[1] [&_th]:!border-b [&_th]:!border-line [&_th]:!bg-wash-2 [&_th]:!px-3.5 [&_th]:!py-[11px] [&_th]:!text-left [&_th]:!text-[10.5px] [&_th]:!font-bold [&_th]:!uppercase [&_th]:!tracking-[0.07em] [&_th]:!whitespace-nowrap [&_th]:!text-muted [&_td]:!border-b [&_td]:!border-line [&_td]:!px-3.5 [&_td]:!py-[11px] [&_td]:!align-middle [&_td]:!text-ink-2 [&_tbody_tr:last-child_td]:!border-b-0 [&_th.num]:!text-right [&_th.num]:!font-semibold [&_th.num]:!text-ink [&_td.num]:!text-right [&_td.num]:!font-extrabold [&_td.num]:!tabular-nums [&_td.num]:!text-ink">
               <TableHead>
-                <TableRow>
+                <TableRow className="!border-0">
                   <TableHeaderCell>Invoice</TableHeaderCell>
                   <TableHeaderCell>Customer</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
-                  <TableHeaderCell className="text-right tabular-nums font-semibold text-ink">Amount</TableHeaderCell>
+                  <TableHeaderCell className="num">Amount</TableHeaderCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -395,7 +393,7 @@ export default function DashboardScreen() {
         Icon: (p: { size?: number }) => React.JSX.Element;
         go: () => void;
     }) {
-        return (<Button key={a.label} className="!inline-flex !h-auto !min-w-0 !items-center !gap-[9px] !rounded-full !border !border-line-2 !bg-paper !py-[7px] !pr-3.5 !pl-[7px] !text-[13px] !font-bold !text-ink !shadow-none hover:!-translate-y-px hover:!border-[#b9d0c2] hover:!bg-wash-2" onClick={a.go}>
+        return (<Button key={a.label} className="!inline-flex !h-auto !min-w-0 !items-center !justify-start !gap-[9px] !whitespace-normal !rounded-full !border !border-line-2 !bg-paper !py-[7px] !pr-3.5 !pl-[7px] !text-left !text-[13px] !font-bold !text-ink !shadow-none hover:!-translate-y-px hover:!border-[#b9d0c2] hover:!bg-wash-2" onClick={a.go}>
               <Text className="!grid !h-[30px] !w-[30px] !shrink-0 !place-items-center !rounded-full !bg-wash !text-mid" as="span">
                 <a.Icon size={16}/>
               </Text>
@@ -418,8 +416,8 @@ export default function DashboardScreen() {
         return go("prescriptions");
     }
     function renderO(o: Sale) {
-        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={o.id}>
-                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-3 last:!border-b-0" key={o.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-[750] leading-none tracking-[-0.02em] text-mid" as="span">
                       <IconGlobe size={18}/>
                     </Text>
                     <Text className="min-w-0 flex-1" as="span">
@@ -428,7 +426,7 @@ export default function DashboardScreen() {
                         {o.customer.name} · {o.items.length} items · {timeAgo(o.createdAt, now)}
                       </Box>
                     </Text>
-                    <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={goOnClick5}>
+                    <Button className="!h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs !border-[rgba(16,48,29,0.1)] !bg-mid !text-white !shadow-sm hover:!bg-green" onClick={goOnClick5}>
                       Review
                     </Button>
                   </Box>);
@@ -437,8 +435,8 @@ export default function DashboardScreen() {
         }
     }
     function renderR(r: Prescription) {
-        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={r.id}>
-                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-3 last:!border-b-0" key={r.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-[750] leading-none tracking-[-0.02em] text-mid" as="span">
                       <IconRx size={18}/>
                     </Text>
                     <Text className="min-w-0 flex-1" as="span">
@@ -456,8 +454,8 @@ export default function DashboardScreen() {
         }
     }
     function renderP(p: InvProduct) {
-        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={p.id}>
-                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-3 last:!border-b-0" key={p.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-[750] leading-none tracking-[-0.02em] text-mid" as="span">
                       <IconBox size={18}/>
                     </Text>
                     <Text className="min-w-0 flex-1" as="span">
@@ -481,15 +479,15 @@ export default function DashboardScreen() {
         const b = earliestBatch(p)!;
         const mo = monthsToExpiry(b.expiry, now);
         const expired = mo < 0;
-        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-2.5 last:!border-b-0" key={p.id}>
-                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-bold leading-none text-mid" as="span">{monogramOf(p.name)}</Text>
+        return (<Box className="!flex !items-center !gap-3 !border-b !border-line !py-3 last:!border-b-0" key={p.id}>
+                    <Text className="grid h-[38px] w-[38px] shrink-0 place-items-center overflow-hidden rounded-[10px] bg-wash text-[18px] font-display font-[750] leading-none tracking-[-0.02em] text-mid" as="span">{monogramOf(p.name)}</Text>
                     <Text className="min-w-0 flex-1" as="span">
                       <Box className="text-[13.5px] font-bold text-ink">{p.name}</Box>
                       <Box className="text-xs text-muted">
                         Batch {b.batchNo} · {catLabel(p.category)} · {b.qty} units
                       </Box>
                     </Text>
-                    <Text className={`!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold ${expired ?"!bg-rose-bg !text-rose" :"!bg-amber-bg !text-gold-d"}`} as="span">
+                    <Text className={`!inline-flex !items-center !gap-[5px] !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold ${expired ?"!bg-rose-bg !text-rose" :"!bg-amber-bg !text-gold-d"}`} as="span">
                       {expired ? "Expired" : `${mo} mo · ${b.expiry}`}
                     </Text>
                   </Box>);
@@ -505,17 +503,17 @@ export default function DashboardScreen() {
     }, i: number) {
         const p = inventory.find(matchInventory);
         return (<Box className="!flex !items-center !gap-[11px] !border-b !border-line !py-[9px] last:!border-b-0" key={t.id}>
-                    <Text className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-wash text-[11px] font-extrabold text-mid" as="span">{i + 1}</Text>
-                    <Text className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-wash text-base text-mid" as="span">{p ? <Thumb p={p}/> : <IconBox size={16}/>}</Text>
+                    <Text className="grid h-5 w-5 shrink-0 place-items-center rounded-xs bg-wash text-[11px] font-extrabold text-mid" as="span">{i + 1}</Text>
+                    <Text className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-sm bg-wash text-base text-mid" as="span">{p ? <Thumb p={p} className="!text-base !font-[750] !leading-none !tracking-[-0.02em]"/> : <IconBox size={16}/>}</Text>
                     <Box className="min-w-0 flex-1">
                       <Box className="truncate text-[13px] font-bold text-ink">{t.name}</Box>
                       <Box className="mt-[5px] h-1.5 overflow-hidden rounded-[5px] bg-wash">
-                        <Progress className="h-full rounded-[5px]" value={topMax ? (t.rev / topMax) * 100 : 0} tone="gold" label={t.name} />
+                        <Box className="h-full rounded-[5px] bg-gradient-to-r from-gold to-gold-d" style={{ width: `${(t.rev / topMax) * 100}%` }} />
                       </Box>
                     </Box>
                     <Box className="flex shrink-0 flex-col text-right font-display text-[13px] font-extrabold text-dark">
                       {inr(t.rev)}
-                      <Text as="span" className="text-[11px] font-semibold">{t.qty} sold</Text>
+                      <Text as="span" className="text-[10.5px] font-semibold text-muted">{t.qty} sold</Text>
                     </Box>
                   </Box>);
         function matchInventory(x: InvProduct) {
@@ -526,20 +524,20 @@ export default function DashboardScreen() {
         return go("orders");
     }
     function renderRecent(s: Sale) {
-        return (<TableRow key={s.id} onClick={goOnClick11} className={cn("!cursor-pointer")}>
-                    <TableCell className={cn("!font-mono", "!font-bold")}>
+        return (<TableRow key={s.id} onClick={goOnClick11} className="!cursor-pointer !border-0 transition-colors duration-100 hover:!bg-wash-2">
+                    <TableCell className="!font-mono !font-bold">
                       {s.id}
                     </TableCell>
                     <TableCell>
                       {s.customer.name}
-                      <Box className={cn("text-xs text-muted", "!text-[11.5px] !text-muted")}>
+                      <Box className="!text-[11.5px] !text-muted">
                         {timeAgo(s.createdAt, now)}
                       </Box>
                     </TableCell>
                     <TableCell>
                       <StatusPill status={s.status}/>
                     </TableCell>
-                    <TableCell className={cn("text-right tabular-nums font-semibold text-ink", "!font-extrabold")}>
+                    <TableCell className="num">
                       {inr(saleTotal(s))}
                     </TableCell>
                   </TableRow>);

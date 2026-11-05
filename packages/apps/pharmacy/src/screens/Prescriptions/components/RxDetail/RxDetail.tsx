@@ -2,6 +2,7 @@ import {
   fmtDateTime,
   inr,
   rxAvailability,
+  SCHEDULE_META,
   smsLink,
   waLink,
   type InvProduct,
@@ -12,7 +13,6 @@ import { IconAlert, IconArrowRight, IconBolt, IconBox, IconCheck, IconClock, Ico
 import { ChannelPill } from "@/components/molecules/ChannelPill";
 import { monogramOf } from "@/components/molecules/EntityMark";
 import { Modal } from "@/components/molecules/Modal";
-import { ScheduleTag } from "@/components/molecules/ScheduleTag";
 import { RxView } from "@/components/organisms";
 import { notifyMessage, prescriptionTimeline, rejectedMessage, rxStatusLabel, rxStatusTone } from "@/screens/Prescriptions/Prescriptions.utils";
 
@@ -38,7 +38,8 @@ export function RxDetail({
     <Modal
       title={`Prescription ${rx.id}`}
       size="lg"
-      className="max-w-5xl"
+      className="max-h-[90vh] max-w-[720px] overflow-y-auto"
+      overlayClassName="z-[100] bg-[#0d201580] p-6 backdrop-blur-[3px]"
       onClose={onClose}
       footer={
         <Stack direction="row" justify="end" wrap gap={2}>
@@ -61,22 +62,22 @@ export function RxDetail({
         </Stack>
       }
     >
-      <Box className="max-h-[60vh] overflow-y-auto">
+      <Box>
         <Stack direction="row" align="center" gap={2} className="mb-3">
           <Pill tone={rxStatusTone(rx.status)}>{rxStatusLabel(rx.status)}</Pill>
           {rx.urgent ? <Pill tone="rose"><IconBolt size={10} /> Urgent</Pill> : null}
         </Stack>
-        <Box className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+        <Box className="grid grid-cols-1 items-start gap-[18px] min-[768px]:grid-cols-2">
           <RxView rx={rx} />
           <Stack gap={3}>
-            <Box className="rounded-md border border-line p-3">
-              <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+            <Box className="rounded-md border border-line bg-paper px-[13px] py-3">
+              <Stack direction="row" align="center" className="mb-[9px] gap-1.5 text-[11px] font-extrabold tracking-[0.05em] text-muted uppercase">
                 <IconUser size={13} /> Patient
               </Stack>
               <KeyValue label="Name" value={rx.patient} />
               <KeyValue label="Phone" value={rx.phone || "—"} />
-              <Stack direction="row" justify="between" className="py-1 text-[13px]">
-                <Text as="span" variant="muted">Channel</Text>
+              <Stack direction="row" align="center" className="gap-2.5 py-0.5 text-[12.5px]">
+                <Text as="span" className="min-w-[66px] text-muted">Channel</Text>
                 <ChannelPill channel={rx.channel} />
               </Stack>
               <KeyValue label="Doctor" value={`${rx.doctor}${rx.regNo ? ` · ${rx.regNo}` : ""}`} />
@@ -89,38 +90,38 @@ export function RxDetail({
               ) : null}
             </Box>
 
-            <Box className="rounded-md border border-line p-3">
-              <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+            <Box className="rounded-md border border-line bg-paper px-[13px] py-3">
+              <Stack direction="row" align="center" className="mb-[9px] gap-1.5 text-[11px] font-extrabold tracking-[0.05em] text-muted uppercase">
                 <IconClock size={13} /> Timeline
               </Stack>
               <Timeline events={events} />
             </Box>
 
             {availability.total > 0 ? (
-              <Box className="rounded-md border border-line p-3">
-                <Stack direction="row" align="center" justify="between" className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
-                  <Text as="span" variant="label"><IconBox size={13} /> Verified medicines</Text>
-                  <Text variant="caption">{availability.inStock}/{availability.total} in stock</Text>
+              <Box className="rounded-md border border-line bg-paper px-[13px] py-3">
+                <Stack direction="row" align="center" justify="between" className="mb-[9px] gap-1.5 text-[11px] font-extrabold tracking-[0.05em] text-muted uppercase">
+                  <Text as="span"><IconBox size={13} /> Verified medicines</Text>
+                  <Text className="text-[11.5px] font-semibold tracking-normal text-muted normal-case">{availability.inStock}/{availability.total} in stock</Text>
                 </Stack>
                 <Table>
                   <TableBody>
                     <MedicineRows items={availability.items} />
-                    <TableRow>
-                      <TableCell colSpan={2}><Text as="span" className="font-bold">Estimated bill</Text></TableCell>
-                      <TableCell align="right" className="font-extrabold">{inr(availability.value)}</TableCell>
+                    <TableRow className="border-t border-line">
+                      <TableCell colSpan={2} className="border-t border-line px-1 py-1.5"><Text as="span" className="font-bold">Estimated bill</Text></TableCell>
+                      <TableCell align="right" className="border-t border-line px-1 py-1.5 font-extrabold">{inr(availability.value)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
                 {availability.outOfStock.length > 0 ? (
-                  <Text variant="caption" className="mt-2 flex items-center gap-1 font-bold text-rose">
+                  <Text className="mt-2 flex items-center gap-1.5 rounded-sm bg-rose-bg px-[9px] py-1.5 text-[11.5px] font-semibold text-rose">
                     <IconAlert size={12} /> {availability.outOfStock.map(productName).join(", ")} out of stock — suggest a substitute or reorder.
                   </Text>
                 ) : null}
               </Box>
             ) : null}
             {rx.note ? (
-              <Box className="rounded-md border border-line p-3">
-                <Stack direction="row" align="center" gap={1} className="mb-2 text-[12px] font-extrabold uppercase tracking-wide text-muted">
+              <Box className="rounded-md border border-line bg-paper px-[13px] py-3">
+                <Stack direction="row" align="center" className="mb-[9px] gap-1.5 text-[11px] font-extrabold tracking-[0.05em] text-muted uppercase">
                   <IconDoc size={13} /> Note
                 </Stack>
                 <Text className="text-[12.5px] text-ink-2">{rx.note}</Text>
@@ -135,9 +136,9 @@ export function RxDetail({
 
 function KeyValue({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" justify="between" gap={3} className="py-1 text-[13px]">
-      <Text as="span" variant="muted">{label}</Text>
-      <Text as="span" className="text-right font-bold">{value}</Text>
+    <Stack direction="row" className="gap-2.5 py-0.5 text-[12.5px]">
+      <Text as="span" className="min-w-[66px] text-muted">{label}</Text>
+      <Text as="span" className="font-semibold text-ink">{value}</Text>
     </Stack>
   );
 }
@@ -145,11 +146,11 @@ function KeyValue({ label, value }: { label: string; value: string }) {
 function Timeline({ events }: { events: { label: string; at: number; tone: "done" | "bad" }[] }) {
   function renderEvent(event: { label: string; at: number; tone: "done" | "bad" }, index: number) {
     return (
-      <Stack key={`${event.label}-${index}`} direction="row" align="center" gap={2} className="py-1 text-[12.5px]">
-        <Box className={`h-2 w-2 rounded-full ${event.tone === "bad" ? "bg-rose" : "bg-mid"}`} />
-        <Text as="span" className="flex-1">{event.label}</Text>
-        <Text as="span" variant="caption">{fmtDateTime(event.at)}</Text>
-      </Stack>
+      <Box key={`${event.label}-${index}`} className="grid grid-cols-[16px_1fr_auto] items-center gap-2 py-[3px] text-[12.5px]">
+        <Box className={`h-[9px] w-[9px] justify-self-center rounded-full ${event.tone === "bad" ? "bg-rose" : "bg-mid"}`} />
+        <Text as="span" className="font-semibold text-ink">{event.label}</Text>
+        <Text as="span" className="text-[11px] whitespace-nowrap text-muted">{fmtDateTime(event.at)}</Text>
+      </Box>
     );
   }
   return events.map(renderEvent);
@@ -159,15 +160,19 @@ function MedicineRows({ items }: { items: ReturnType<typeof rxAvailability>["ite
   function renderItem(item: ReturnType<typeof rxAvailability>["items"][number]) {
     return (
       <TableRow key={item.product.id}>
-        <TableCell>
-          <Text as="span" className="mr-1.5 inline-grid h-5 w-5 place-items-center rounded bg-wash text-[10px] font-bold text-mid">{monogramOf(item.product.name)}</Text>
+        <TableCell className="px-1 py-1.5 text-[12.5px] text-ink-2">
+          <Text as="span" className="mr-1.5 text-[15px]">{monogramOf(item.product.name)}</Text>
           {item.product.name}
-          {item.rx ? <ScheduleTag schedule={item.product.schedule} /> : null}
+          {item.rx ? (
+            <Text as="span" title={SCHEDULE_META[item.product.schedule].note} className="ml-[5px] rounded-[4px] bg-[#fdeccb] px-1 py-px text-[9px] font-extrabold tracking-[0.02em] text-[#8a4b00]">
+              {SCHEDULE_META[item.product.schedule].label}
+            </Text>
+          ) : null}
         </TableCell>
-        <TableCell align="right" className={item.stock > 0 ? "text-[12px]" : "text-[12px] text-rose"}>
+        <TableCell align="right" className={item.stock > 0 ? "px-1 py-1.5 text-[12px] text-ink-2" : "px-1 py-1.5 text-[12px] font-bold text-rose"}>
           {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
         </TableCell>
-        <TableCell align="right" className="font-bold">{inr(item.price)}</TableCell>
+        <TableCell align="right" className="px-1 py-1.5 font-bold">{inr(item.price)}</TableCell>
       </TableRow>
     );
   }

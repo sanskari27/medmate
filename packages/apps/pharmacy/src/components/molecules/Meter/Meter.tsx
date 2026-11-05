@@ -22,7 +22,7 @@ export function Meter({ className, label, valueLabel, value, tone, ...props }: M
           {valueLabel}
         </Text>
       </Stack>
-      <Progress value={value} tone={tone} label={label} />
+      <Progress className="h-2 rounded-[6px]" value={value} tone={tone} label={label} />
     </Stack>
   );
 }

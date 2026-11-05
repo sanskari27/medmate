@@ -18,7 +18,7 @@ function CategoryChip({
   return (
     <Chip
       selected={selected}
-      className={selected ? "border-dark bg-dark text-white hover:bg-dark" : ""}
+      className={`max-[767px]:min-h-10${selected ? " border-dark bg-dark text-white hover:bg-dark" : ""}`}
       onClick={selectCategory}
     >
       <CategoryIcon k={category.key} size={15} /> {category.label}
@@ -45,7 +45,7 @@ export function CategoryFilter({ categories, selectedCategory, onSelect }: Categ
     <Stack direction="row" wrap gap={2} className="mb-3.5">
       <Chip
         selected={allSelected}
-        className={allSelected ? "border-dark bg-dark text-white hover:bg-dark" : ""}
+        className={`max-[767px]:min-h-10${allSelected ? " border-dark bg-dark text-white hover:bg-dark" : ""}`}
         onClick={selectAll}
       >
         All

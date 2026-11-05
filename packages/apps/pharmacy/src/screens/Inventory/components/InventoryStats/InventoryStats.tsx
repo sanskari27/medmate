@@ -1,10 +1,17 @@
 import type { KeyboardEvent, ReactNode } from "react";
 import { Box } from "@/components/atoms/Box";
 import { Text } from "@/components/atoms/Text";
-import { IconArrowRight, IconCalendar, IconCash, IconClock, IconInventory, IconTag, IconTrendDown } from "@/components/atoms/Icon";
+import {
+  IconArrowRight,
+  IconCalendar,
+  IconCash,
+  IconClock,
+  IconInventory,
+  IconTag,
+  IconTrendDown,
+} from "@/components/atoms/Icon";
 import { inr } from "@/utils";
 import { cn } from "@/utils/className";
-import type { InventoryFilter } from "../../Inventory.utils";
 import type { InventoryStatsProps } from "./InventoryStats.types";
 
 export function InventoryStats({ snapshot, onFilter }: InventoryStatsProps) {
@@ -112,11 +119,12 @@ function StatCard({
       onKeyDown={onOpen ? onKey : undefined}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm",
-        onOpen && "cursor-pointer hover:-translate-y-0.5 hover:border-line-2 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mid",
+        onOpen &&
+          "cursor-pointer transition duration-[140ms] ease-out hover:-translate-y-0.5 hover:border-line-2 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mid",
       )}
     >
       {onOpen ? (
-        <Box className="absolute top-[15px] right-[15px] text-faint opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <Box className="absolute top-[15px] right-[15px] -translate-x-[3px] text-faint opacity-0 transition duration-[140ms] ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100">
           <IconArrowRight size={16} />
         </Box>
       ) : null}
@@ -124,7 +132,7 @@ function StatCard({
       <Text variant="label" className="mt-3 text-[11px] tracking-[0.05em] text-muted uppercase">
         {label}
       </Text>
-      <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-tight text-dark tabular-nums">
+      <Text className="mt-[3px] mb-2.5 font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark tabular-nums">
         {value}
       </Text>
       <Text className="mt-auto border-t border-line pt-[9px] text-[12px] [line-height:18px] text-muted">

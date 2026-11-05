@@ -67,9 +67,7 @@ export function Inner() {
 
   if (masterSessionPhone === undefined && !signedIn) {
     return (
-      <Stack align="center" justify="center" className="h-dvh bg-canvas">
-        <Text>Loading pharmacy…</Text>
-      </Stack>
+      <Text>Loading pharmacy…</Text>
     );
   }
   if (masterSessionPhone && (masterPortalOpen || !signedIn)) {
@@ -117,7 +115,7 @@ export function Inner() {
         />
         <Stack className="h-dvh min-w-0">
           <AppHeader onMenu={toggleSidebar} />
-          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-7 min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10 [&::-webkit-scrollbar]:w-[9px]">
+          <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-7 min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10">
             <Canvas />
           </Box>
         </Stack>
@@ -131,7 +129,7 @@ function MenuBackdrop({ onClose }: { onClose: () => void }) {
     <Button
       variant="ghost"
       aria-label="Close menu"
-      className="fixed inset-0 z-30 h-full w-full rounded-none border-0 bg-deep/45 p-0 min-[1100px]:hidden"
+      className="fixed inset-0 z-30 h-full w-full rounded-none border-0 bg-deep/45 p-0 shadow-none hover:border-0 hover:bg-deep/45 hover:text-transparent focus-visible:shadow-none active:translate-y-0 min-[1100px]:hidden"
       onClick={onClose}
     />
   );

@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const textareaVariants = cva(
-  "w-full min-h-16 resize-y rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] [line-height:normal] text-ink outline-none transition max-[767px]:text-[16px] focus:border-mid focus:shadow-focus disabled:bg-wash disabled:text-faint",
+  "w-full min-h-16 resize-y rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] leading-[1.5] text-ink outline-none transition-[border-color,box-shadow] duration-[140ms] placeholder:text-faint max-[767px]:text-[16px] hover:border-[#b9d0c2] focus:border-mid focus:shadow-focus",
   {
     variants: {
       resize: {

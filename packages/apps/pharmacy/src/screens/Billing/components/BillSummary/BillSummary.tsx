@@ -33,8 +33,13 @@ export function BillSummary({
     <>
       <Box className="bg-wash-2 px-4 pt-[11px] pb-[9px]">
         <SummaryRow label="Subtotal (incl. GST)" value={inr(gross)} />
-        <Stack direction="row" align="center" justify="between" className="py-[2.5px] text-[13px] text-ink-2">
-          <Text as="span">
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          className="py-[2.5px] text-[13px] text-ink-2"
+        >
+          <Text as="span" className="text-[13px] text-ink-2">
             Discount
             {discountMode === "percent" && discountAmount > 0 ? ` · −${inr(discountAmount)}` : ""}
           </Text>
@@ -52,8 +57,10 @@ export function BillSummary({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-auto border-0 px-[9px] py-1 shadow-none",
-                  discountMode === "flat" ? "bg-paper text-dark shadow-sm" : "bg-transparent text-muted",
+                  "h-auto border-0 px-[9px] py-1 text-[12.5px] shadow-none hover:bg-transparent",
+                  discountMode === "flat"
+                    ? "bg-paper text-dark shadow-sm hover:bg-paper hover:text-dark"
+                    : "bg-transparent text-muted",
                 )}
                 onClick={selectFlat}
               >
@@ -63,8 +70,10 @@ export function BillSummary({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-auto border-0 px-[9px] py-1 shadow-none",
-                  discountMode === "percent" ? "bg-paper text-dark shadow-sm" : "bg-transparent text-muted",
+                  "h-auto border-0 px-[9px] py-1 text-[12.5px] shadow-none hover:bg-transparent",
+                  discountMode === "percent"
+                    ? "bg-paper text-dark shadow-sm hover:bg-paper hover:text-dark"
+                    : "bg-transparent text-muted",
                 )}
                 onClick={selectPercent}
               >
@@ -85,7 +94,10 @@ export function BillSummary({
         <Text as="span" className="text-[13px] font-bold text-ink-2">
           To pay
         </Text>
-        <Text as="span" className="font-display text-[23px] font-extrabold tracking-tight text-dark">
+        <Text
+          as="span"
+          className="font-display text-[23px] font-extrabold tracking-[-0.02em] text-dark"
+        >
           {inr(payable)}
         </Text>
       </Stack>
@@ -95,9 +107,13 @@ export function BillSummary({
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" justify="between" className="py-[2.5px] text-[13px] text-ink-2">
-      <Text as="span">{label}</Text>
-      <Text as="span">{value}</Text>
+    <Stack direction="row" justify="between" className="py-[2.5px]">
+      <Text as="span" className="text-[13px] text-ink-2">
+        {label}
+      </Text>
+      <Text as="span" className="text-[13px] text-ink-2">
+        {value}
+      </Text>
     </Stack>
   );
 }

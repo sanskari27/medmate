@@ -20,7 +20,13 @@ import {
 import { cn } from "@/utils/className";
 import type { ProductCardProps } from "./ProductCard.types";
 
-export function ProductCard({ product, packCount, looseCount, onAddPack, onAddLoose }: ProductCardProps) {
+export function ProductCard({
+  product,
+  packCount,
+  looseCount,
+  onAddPack,
+  onAddLoose,
+}: ProductCardProps) {
   const outOfStock = totalUnits(product) <= 0;
   const canSellLoose = looseSellable(product) && !outOfStock;
   const stockTone = outOfStock ? "text-rose" : isLowStock(product) ? "text-amber" : "text-green";
@@ -50,7 +56,7 @@ export function ProductCard({ product, packCount, looseCount, onAddPack, onAddLo
       onClick={addPack}
       onKeyDown={onCardKey}
       className={cn(
-        "relative flex cursor-pointer flex-col items-stretch rounded-md border border-line bg-paper p-3 text-left shadow-sm transition hover:border-mint hover:shadow-sm",
+        "relative flex cursor-pointer flex-col items-stretch rounded-md border border-line bg-paper p-3 text-left transition-[border-color,box-shadow] duration-[120ms] hover:border-mint hover:shadow-sm",
         outOfStock && "pointer-events-none opacity-55",
       )}
     >
@@ -66,10 +72,10 @@ export function ProductCard({ product, packCount, looseCount, onAddPack, onAddLo
       <Box className="mb-[9px] grid h-10 w-10 place-items-center rounded-[10px] bg-wash text-[20px]">
         <Thumb p={product} />
       </Box>
-      <Text as="span" className="min-h-[33px] text-[13px] leading-tight font-bold text-ink">
+      <Text as="span" className="block min-h-[33px] text-[13px] leading-[1.25] font-bold text-ink">
         {product.name}
       </Text>
-      <Text as="span" className="mt-0.5 text-[11px] text-muted">
+      <Text as="span" className="mt-0.5 block text-[11px] text-muted">
         {product.pack}
         {hasLocation(product) ? (
           <Text
@@ -80,10 +86,13 @@ export function ProductCard({ product, packCount, looseCount, onAddPack, onAddLo
           </Text>
         ) : null}
       </Text>
-      <Text as="span" className="mt-2 font-display text-[14px] font-extrabold text-dark tabular-nums">
+      <Text
+        as="span"
+        className="mt-2 block font-display text-[14px] font-extrabold text-dark tabular-nums"
+      >
         {inr(billUnit(product).price)}
       </Text>
-      <Text as="span" className={cn("mt-[3px] text-[10.5px] font-bold", stockTone)}>
+      <Text as="span" className={cn("mt-[3px] block text-[10.5px] font-bold", stockTone)}>
         {stockCopy}
       </Text>
       <Box className="mt-[7px] flex h-6 items-center overflow-hidden">
@@ -91,13 +100,15 @@ export function ProductCard({ product, packCount, looseCount, onAddPack, onAddLo
           <Button
             variant="ghost"
             className={cn(
-              "h-auto max-w-full justify-start gap-1 overflow-hidden rounded-[7px] border-mint bg-wash px-[7px] py-1 text-[10px] leading-tight font-bold text-ellipsis whitespace-nowrap text-mid hover:bg-mint hover:text-deep",
-              looseCount > 0 && "border-mid bg-mid text-white hover:bg-mid hover:text-white",
+              "h-auto max-w-full justify-start gap-1 overflow-hidden rounded-[7px] border-mint bg-wash px-[7px] py-1 text-[10px] leading-[1.2] font-bold text-ellipsis whitespace-nowrap text-mid hover:bg-mint hover:text-deep",
+              looseCount > 0 &&
+                "border-mid bg-mid text-white hover:border-mid hover:bg-mid hover:text-white",
             )}
             title={`Sell loose ${unitNoun(product)}s @ ${inr2(billUnit(product, { loose: true }).price)} each`}
             onClick={addLoose}
           >
-            <IconHash size={13} /> Loose · {inr2(billUnit(product, { loose: true }).price)}/{unitNoun(product)}
+            <IconHash size={13} /> Loose · {inr2(billUnit(product, { loose: true }).price)}/
+            {unitNoun(product)}
             {looseCount > 0 ? ` · ${looseCount}` : ""}
           </Button>
         ) : null}

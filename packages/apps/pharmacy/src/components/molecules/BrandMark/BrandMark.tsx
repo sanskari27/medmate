@@ -10,7 +10,7 @@ export function BrandMark({ className, ...props }: BrandMarkProps) {
     <Box
       data-slot="brand-mark"
       className={cn(
-        "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-paper shadow-[0_4px_12px_rgba(0,0,0,0.25)]",
+        "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-paper shadow-[0_4px_12px_#00000040]",
         className,
       )}
       {...props}

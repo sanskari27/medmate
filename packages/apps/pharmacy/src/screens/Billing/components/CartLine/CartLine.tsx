@@ -1,6 +1,5 @@
 import type { ChangeEvent, MouseEvent } from "react";
 import { Box } from "@/components/atoms/Box";
-import { Select } from "@/components/atoms/Select";
 import { Stack } from "@/components/atoms/Stack";
 import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
@@ -9,7 +8,15 @@ import { IconPin } from "@/components/atoms/Icon";
 import { earliestBatch, hasLocation, inr, inr2, unitNoun, type Batch } from "@/utils";
 import type { CartLineProps } from "./CartLine.types";
 
-export function CartLine({ line, view, onDecrease, onIncrease, onQuantity, onRemove, onBatch }: CartLineProps) {
+export function CartLine({
+  line,
+  view,
+  onDecrease,
+  onIncrease,
+  onQuantity,
+  onRemove,
+  onBatch,
+}: CartLineProps) {
   const { product, loose, pinned, unit, maxQty } = view;
 
   function decrease() {
@@ -36,7 +43,11 @@ export function CartLine({ line, view, onDecrease, onIncrease, onQuantity, onRem
   });
 
   return (
-    <Stack direction="row" align="center" gap={2} className="border-b border-line py-2.5 last:border-0">
+    <Stack
+      direction="row"
+      align="center"
+      className="gap-2.5 border-b border-line py-2.5 last:border-0"
+    >
       <Box className="min-w-0 flex-1 overflow-hidden">
         <Text as="span" className="text-[13px] leading-tight font-bold text-ink">
           {product.name}{" "}
@@ -49,9 +60,9 @@ export function CartLine({ line, view, onDecrease, onIncrease, onQuantity, onRem
             </Text>
           ) : null}
           {loose ? <Tag className="ml-0.5">loose</Tag> : null}
-          {pinned ? <Tag className="ml-0.5 border-mint bg-wash text-mid">scanned</Tag> : null}
+          {pinned ? <Tag className="ml-0.5 bg-wash text-mid">scanned</Tag> : null}
         </Text>
-        <Text variant="caption" className="text-[11px]">
+        <Text variant="caption" className="text-[11px] leading-normal">
           {loose ? (
             <>
               {inr2(unit)}/{unitNoun(product)} · {product.gst}% GST ·{" "}
@@ -75,8 +86,18 @@ export function CartLine({ line, view, onDecrease, onIncrease, onQuantity, onRem
           />
         </Text>
       </Box>
-      <QuantityStepper qty={line.qty} max={maxQty} onDec={decrease} onInc={increase} onSet={setQuantity} onRemove={remove} />
-      <Text as="span" className="min-w-16 shrink-0 text-right font-display text-[13.5px] font-extrabold text-dark">
+      <QuantityStepper
+        qty={line.qty}
+        max={maxQty}
+        onDec={decrease}
+        onInc={increase}
+        onSet={setQuantity}
+        onRemove={remove}
+      />
+      <Text
+        as="span"
+        className="min-w-16 shrink-0 text-right font-display text-[13.5px] font-extrabold text-ink"
+      >
         {inr(unit * line.qty)}
       </Text>
     </Stack>
@@ -99,15 +120,28 @@ function BatchSelect({
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
 }) {
   function renderBatch(batch: Batch) {
-    return { value: String(batch.batchNo), label: "Batch " + String(batch.batchNo) + " \u00b7 exp " + String(batch.expiry) + " \u00b7 " + String(batch.qty) + " " + String(quantityLabel) };
+    return (
+      <option key={batch.batchNo} value={batch.batchNo}>
+        {"Batch " +
+          batch.batchNo +
+          " \u00b7 exp " +
+          batch.expiry +
+          " \u00b7 " +
+          batch.qty +
+          " " +
+          quantityLabel}
+      </option>
+    );
   }
   return (
-    <Select
-      controlSize="sm"
-      className="mt-[3px] h-auto w-auto max-w-full rounded-xs border-line-2 bg-wash-2 px-1 py-px font-mono text-[10.5px] text-mid"
+    <select
+      className="mt-[3px] inline-block max-w-full cursor-pointer rounded-xs border border-line-2 bg-wash-2 px-1 py-px align-middle font-mono text-[10.5px] text-mid"
       value={value}
       onClick={onClick}
       onChange={onChange}
-     options={[{ value: "", label: String(autoLabel) }, ...batches.map(renderBatch)]} />
+    >
+      <option value="">{autoLabel}</option>
+      {batches.map(renderBatch)}
+    </select>
   );
 }

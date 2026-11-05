@@ -12,14 +12,14 @@ export function Loyalty({ view }: LoyaltyProps) {
   const total = outstandingPoints(view.patients, view.redeemedBy);
   return (
     <Stack gap={3}>
-      <Stack direction="row" wrap gap={2}>
+      <Stack direction="row" wrap className="mb-1 gap-[10px]">
         <SummaryChip label="Points outstanding" value={total.toLocaleString("en-IN")} />
         <SummaryChip label="≈ Liability" value={inr(total)} />
         <TierChips patients={view.patients} />
       </Stack>
-      <Card>
+      <Card className="rounded-md shadow-sm">
         <Box className="overflow-x-auto">
-          <Table>
+          <Table className="border-separate border-spacing-0 [&_tbody_tr:hover]:bg-wash-2 [&_td]:border-b [&_td]:border-line [&_td]:px-3.5 [&_td]:py-[11px] [&_td]:align-middle [&_td]:text-ink-2 [&_td.text-right]:font-semibold [&_td.text-right]:text-ink [&_th]:sticky [&_th]:top-0 [&_th]:border-b [&_th]:border-line [&_th]:bg-wash-2 [&_th]:px-3.5 [&_th]:py-[11px] [&_th]:text-[10.5px] [&_th]:font-bold [&_th]:tracking-[0.07em] [&_th]:whitespace-nowrap [&_th]:text-muted [&_th]:uppercase">
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Patient</TableHeaderCell>

@@ -115,12 +115,12 @@ export default function SalesScreen() {
             Every sale from day one to date — counter & online
           </Text>
         </Box>
-        <Box className="min-w-4 flex-1" />
+        <Box className="flex-1" />
         {period.node as ReactNode}
-        <Button variant="ghost" onClick={exportCsv}>
+        <Button variant="ghost" className="!leading-[1.5] active:translate-y-px" onClick={exportCsv}>
           <IconDownload size={14} /> Excel
         </Button>
-        <Button variant="ghost" onClick={exportPdf}>
+        <Button variant="ghost" className="!leading-[1.5] active:translate-y-px" onClick={exportPdf}>
           <IconPrint size={15} /> PDF
         </Button>
       </Stack>

@@ -4,11 +4,12 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 const iconButtonVariants = cva(
-  "grid place-items-center rounded-xs transition focus-visible:outline-none focus-visible:shadow-focus disabled:pointer-events-none disabled:text-faint",
+  "grid place-items-center rounded-xs transition focus-visible:outline-none focus-visible:shadow-focus",
   {
     variants: {
       variant: {
-        default: "h-8 w-8 border border-line-2 bg-paper text-ink-2 hover:bg-wash-2 hover:text-mid",
+        default:
+          "h-8 w-8 border border-line-2 bg-paper text-ink-2 hover:bg-wash-2 hover:text-mid disabled:cursor-not-allowed disabled:opacity-[0.35]",
         close: "h-8 w-8 border-0 bg-transparent text-muted hover:text-ink",
         ghost: "h-8 w-8 border-0 bg-transparent text-ink-2 hover:bg-wash",
       },

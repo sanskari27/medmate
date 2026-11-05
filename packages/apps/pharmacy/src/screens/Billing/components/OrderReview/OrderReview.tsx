@@ -2,7 +2,14 @@ import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
 import { Stack } from "@/components/atoms/Stack";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/atoms";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/atoms";
 import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
 import { IconArrowRight } from "@/components/atoms/Icon";
@@ -13,8 +20,12 @@ import type { OrderReviewProps } from "./OrderReview.types";
 
 type ReviewEntry = { line: PosLine; view: BillingLineView };
 
-const headCell = "sticky top-0 bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
-const bodyCell = "px-3.5 py-[11px] text-[13px] text-ink-2";
+const headCell =
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const numHead =
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-semibold tracking-[0.07em] whitespace-nowrap text-ink uppercase";
+const bodyCell =
+  "border-b border-line px-3.5 py-[11px] text-[13px] text-ink-2 [[data-slot=table-body]_tr:last-child_&]:border-b-0";
 
 export function OrderReview(props: OrderReviewProps) {
   const rows = props.lines.flatMap(function withView(line) {
@@ -28,7 +39,13 @@ export function OrderReview(props: OrderReviewProps) {
 
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
-      <Stack direction="row" align="center" justify="between" wrap gap={2} className="border-b border-line px-[18px] py-[15px]">
+      <Stack
+        direction="row"
+        align="center"
+        justify="between"
+        wrap
+        className="gap-2.5 border-b border-line px-[18px] py-[15px]"
+      >
         <Heading level={3} className="text-[15px] font-bold">
           Order summary{" "}
           {props.count > 0 ? (
@@ -44,7 +61,7 @@ export function OrderReview(props: OrderReviewProps) {
           Edit
         </Button>
       </Stack>
-      <Box className="px-[18px] pb-[18px]">
+      <Box className="p-[18px]">
         <Box className="mb-1.5 grid gap-2 border-b border-line pb-3">
           <Fact label="Customer" value={customerFact(props)} />
           {props.hasPrescriptionItem ? (
@@ -53,18 +70,18 @@ export function OrderReview(props: OrderReviewProps) {
           {props.isHospital ? <Fact label="Sale source" value={sourceFact(props)} /> : null}
         </Box>
         <Box className="overflow-x-auto">
-          <Table>
+          <Table className="mt-1 border-separate border-spacing-0">
             <TableHead>
-              <TableRow>
+              <TableRow className="border-0">
                 <TableHeaderCell className={headCell}>Item</TableHeaderCell>
                 <TableHeaderCell className={headCell}>Batch</TableHeaderCell>
-                <TableHeaderCell align="right" className={headCell}>
+                <TableHeaderCell align="right" className={numHead}>
                   Qty
                 </TableHeaderCell>
-                <TableHeaderCell align="right" className={headCell}>
+                <TableHeaderCell align="right" className={numHead}>
                   Rate
                 </TableHeaderCell>
-                <TableHeaderCell align="right" className={headCell}>
+                <TableHeaderCell align="right" className={numHead}>
                   Amount
                 </TableHeaderCell>
               </TableRow>
@@ -80,12 +97,14 @@ export function OrderReview(props: OrderReviewProps) {
 function ReviewRow({ line, view }: { line: PosLine; view: BillingLineView }) {
   const { product, loose, batch, unit } = view;
   return (
-    <TableRow>
-      <TableCell className={`${bodyCell} font-semibold text-ink`}>
+    <TableRow className="border-0 transition-colors duration-100 hover:bg-wash-2">
+      <TableCell className={`${bodyCell} font-semibold`}>
         {product.name}
         {loose ? <Tag className="ml-1">loose</Tag> : null}
       </TableCell>
-      <TableCell className={`${bodyCell} font-mono text-[11.5px]`}>{batch?.batchNo ?? "—"}</TableCell>
+      <TableCell className={`${bodyCell} font-mono text-[11.5px]`}>
+        {batch?.batchNo ?? "—"}
+      </TableCell>
       <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
         {line.qty}
         {loose ? ` ${unitNoun(product)}` : ""}
@@ -102,11 +121,11 @@ function ReviewRow({ line, view }: { line: PosLine; view: BillingLineView }) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" justify="between" gap={3} className="text-[12.5px]">
-      <Text as="span" className="font-semibold text-muted">
+    <Stack direction="row" justify="between" className="gap-3.5 text-[12.5px]">
+      <Text as="span" className="text-[12.5px] font-semibold text-muted">
         {label}
       </Text>
-      <Text as="span" className="text-right font-bold text-ink">
+      <Text as="span" className="text-right text-[12.5px] font-bold text-ink">
         {value}
       </Text>
     </Stack>

@@ -1,21 +1,44 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type MouseEvent } from "react";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
+import { Heading } from "@/components/atoms/Heading";
+import { IconButton } from "@/components/atoms/IconButton";
 import { Image } from "@/components/atoms/Image";
 import { Input } from "@/components/atoms/Input";
 import { Select } from "@/components/atoms/Select";
 import { Stack } from "@/components/atoms/Stack";
 import { Switch } from "@/components/atoms/Switch";
 import { Text } from "@/components/atoms/Text";
-import { IconUpload } from "@/components/atoms/Icon";
+import { IconUpload, IconX } from "@/components/atoms/Icon";
 import { Field } from "@/components/molecules/Field";
-import { Modal } from "@/components/molecules/Modal";
 import { monogramOf } from "@/components/molecules/EntityMark";
-import { CATEGORIES, SCHEDULE_META, type DosageForm, type InvProduct, type Schedule } from "@/utils";
+import {
+  CATEGORIES,
+  SCHEDULE_META,
+  type DosageForm,
+  type InvProduct,
+  type Schedule,
+} from "@/utils";
 import { productDraftReady } from "../../Inventory.utils";
 import type { ProductModalProps } from "./ProductModal.types";
 
-const FORMS: DosageForm[] = ["Tablet", "Capsule", "Syrup", "Drops", "Injection", "Cream", "Device", "Other"];
+const modalMotion = `
+@keyframes inventoryFade { from { opacity: 0 } }
+@keyframes inventoryPop { from { transform: translateY(14px) scale(.98); opacity: .6 } }
+.inventory-fade { animation: inventoryFade .16s ease }
+.inventory-pop { animation: inventoryPop .2s cubic-bezier(.2,.9,.3,1.2) }
+`;
+
+const FORMS: DosageForm[] = [
+  "Tablet",
+  "Capsule",
+  "Syrup",
+  "Drops",
+  "Injection",
+  "Cream",
+  "Device",
+  "Other",
+];
 const SCHEDS: Schedule[] = ["OTC", "H", "H1", "X"];
 const GSTS = [0, 5, 12, 18];
 
@@ -83,6 +106,13 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   function toggleLoose() {
     patch({ looseAllowed: !(draft.looseAllowed ?? true) });
   }
+  function toggleLooseFromSwitch(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    toggleLoose();
+  }
+  function keepOpen(event: MouseEvent<HTMLDivElement>) {
+    event.stopPropagation();
+  }
   function save() {
     onSave(draft);
   }
@@ -93,7 +123,13 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
     return { value: String(form), label: String(form) };
   }
   function renderSchedule(schedule: Schedule) {
-    return { value: String(schedule), label: String(SCHEDULE_META[schedule].label) + " \u2014 " + String(SCHEDULE_META[schedule].rx ? "Rx" : "OTC") };
+    return {
+      value: String(schedule),
+      label:
+        String(SCHEDULE_META[schedule].label) +
+        " \u2014 " +
+        String(SCHEDULE_META[schedule].rx ? "Rx" : "OTC"),
+    };
   }
   function renderGst(rate: number) {
     return { value: String(rate), label: String(rate) + "%" };
@@ -101,100 +137,193 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   const looseEligible = draft.form === "Tablet" || draft.form === "Capsule";
 
   return (
-    <Modal
-      title={`Edit ${draft.name}`}
-      size="lg"
-      className="max-w-[720px]"
-      onClose={onClose}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" disabled={!ready} onClick={save}>
-            Save changes
-          </Button>
-        </>
-      }
+    <Box
+      className="inventory-fade fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
+      onClick={onClose}
     >
-      <Box className="grid grid-cols-2 gap-3.5">
-        <Field label="Medicine name" className="col-span-2">
-          <Input value={draft.name} onChange={changeName} placeholder="e.g. Dolo 650" />
-        </Field>
-        <Field label="Composition / salt" className="col-span-2">
-          <Input value={draft.composition} onChange={changeComposition} placeholder="e.g. Paracetamol 650mg" />
-        </Field>
-        <Field label="Manufacturer">
-          <Input value={draft.manufacturer} onChange={changeManufacturer} />
-        </Field>
-        <Field label="Pack">
-          <Input value={draft.pack} onChange={changePack} placeholder="Strip of 15" />
-        </Field>
-        <Field label="Category">
-          <Select value={draft.category} onChange={changeCategory} options={[...(CATEGORIES.map(renderCategory))]} />
-        </Field>
-        <Field label="Form">
-          <Select value={draft.form} onChange={changeForm} options={[...(FORMS.map(renderForm))]} />
-        </Field>
-        <Field label="Drug schedule">
-          <Select value={draft.schedule} onChange={changeSchedule} options={[...(SCHEDS.map(renderSchedule))]} />
-        </Field>
-        <Field label="HSN code">
-          <Input value={draft.hsn} onChange={changeHsn} />
-        </Field>
-        <Field label="GST %">
-          <Select value={draft.gst} onChange={changeGst} options={[...(GSTS.map(renderGst))]} />
-        </Field>
-        <Field label="Rack location · Rack-Shelf-Bin">
-          <Input className="font-mono" value={draft.rack} onChange={changeRack} placeholder="A3-12" />
-        </Field>
-        <Field label="2nd slot · overflow (optional)">
-          <Input className="font-mono" value={draft.rackAlt ?? ""} onChange={changeRackAlt} placeholder="—" />
-        </Field>
-        <Field label="Reorder level (units)">
-          <Input type="number" value={draft.reorderLevel} onChange={changeReorder} />
-        </Field>
-        <Field label="Product photo" className="col-span-2">
-          <Stack direction="row" align="center" gap={3}>
-            <Box className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-md bg-wash text-[30px]">
-              {draft.image ? (
-                <Image src={draft.image} alt="" fit="cover" className="h-16 w-16" />
-              ) : (
-                monogramOf(draft.name)
-              )}
-            </Box>
-            <Input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} />
-            <Stack direction="row" gap={1}>
-              <Button variant="ghost" size="sm" onClick={openPhoto}>
-                <IconUpload size={14} /> {draft.image ? "Change photo" : "Upload photo"}
-              </Button>
-              {draft.image ? (
-                <Button variant="link" className="text-rose" onClick={removePhoto}>
-                  Remove
-                </Button>
-              ) : null}
-            </Stack>
-          </Stack>
-        </Field>
-      </Box>
-      {looseEligible ? (
+      <style>{modalMotion}</style>
+      <Box
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Edit ${draft.name}`}
+        className="inventory-pop flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        onClick={keepOpen}
+      >
         <Stack
           direction="row"
           align="center"
           justify="between"
-          className="mt-2 cursor-pointer border-y border-line py-3"
+          className="border-b border-line px-5 py-4"
         >
-          <Box>
-            <Text as="span" className="text-[13.5px] font-bold">
-              Allow loose / per-tablet selling
-            </Text>
-            <Text variant="caption" className="text-[12px]">
-              Let staff sell individual {draft.form.toLowerCase()}s at the counter (auto-priced per unit)
-            </Text>
-          </Box>
-          <Switch checked={draft.looseAllowed ?? true} label="Allow loose selling" onClick={toggleLoose} />
+          <Heading level={3} className="text-[17px]">
+            Edit {draft.name}
+          </Heading>
+          <IconButton
+            label="Close"
+            className="h-8 w-8 rounded-sm border-0 bg-wash-2 text-ink-2 hover:bg-wash hover:text-ink-2"
+            onClick={onClose}
+          >
+            <IconX size={18} />
+          </IconButton>
         </Stack>
-      ) : null}
-    </Modal>
+        <Box className="overflow-y-auto px-5 py-5">
+          <Box className="grid grid-cols-2 gap-3.5">
+            <Field label="Medicine name" className="col-span-2">
+              <Input value={draft.name} onChange={changeName} placeholder="e.g. Dolo 650" />
+            </Field>
+            <Field label="Composition / salt" className="col-span-2">
+              <Input
+                value={draft.composition}
+                onChange={changeComposition}
+                placeholder="e.g. Paracetamol 650mg"
+              />
+            </Field>
+            <Field label="Manufacturer">
+              <Input value={draft.manufacturer} onChange={changeManufacturer} />
+            </Field>
+            <Field label="Pack">
+              <Input value={draft.pack} onChange={changePack} placeholder="Strip of 15" />
+            </Field>
+            <Field label="Category">
+              <Select
+                value={draft.category}
+                onChange={changeCategory}
+                options={[...CATEGORIES.map(renderCategory)]}
+              />
+            </Field>
+            <Field label="Form">
+              <Select
+                value={draft.form}
+                onChange={changeForm}
+                options={[...FORMS.map(renderForm)]}
+              />
+            </Field>
+            <Field label="Drug schedule">
+              <Select
+                value={draft.schedule}
+                onChange={changeSchedule}
+                options={[...SCHEDS.map(renderSchedule)]}
+              />
+            </Field>
+            <Field label="HSN code">
+              <Input value={draft.hsn} onChange={changeHsn} />
+            </Field>
+            <Field label="GST %">
+              <Select value={draft.gst} onChange={changeGst} options={[...GSTS.map(renderGst)]} />
+            </Field>
+            <Field
+              label={
+                <>
+                  Rack location <span className="font-normal text-muted">· Rack-Shelf-Bin</span>
+                </>
+              }
+            >
+              <Input
+                className="font-mono"
+                value={draft.rack}
+                onChange={changeRack}
+                placeholder="A3-12"
+              />
+            </Field>
+            <Field
+              label={
+                <>
+                  2nd slot <span className="font-normal text-muted">· overflow (optional)</span>
+                </>
+              }
+            >
+              <Input
+                className="font-mono"
+                value={draft.rackAlt ?? ""}
+                onChange={changeRackAlt}
+                placeholder="—"
+              />
+            </Field>
+            <Field label="Reorder level (units)">
+              <Input type="number" value={draft.reorderLevel} onChange={changeReorder} />
+            </Field>
+          </Box>
+          <Field label="Product photo" className="mt-[14px]">
+            <Stack direction="row" align="center" className="gap-[14px]">
+              <Box className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-md bg-wash font-display text-[30px] leading-none font-[750] tracking-[-0.02em] text-mid">
+                {draft.image ? (
+                  <Image src={draft.image} alt="" fit="cover" className="h-16 w-16" />
+                ) : (
+                  monogramOf(draft.name)
+                )}
+              </Box>
+              <Input
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onPhoto}
+              />
+              <Stack direction="row" className="gap-[6px]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="active:translate-y-px"
+                  onClick={openPhoto}
+                >
+                  <IconUpload size={14} /> {draft.image ? "Change photo" : "Upload photo"}
+                </Button>
+                {draft.image ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="border-transparent bg-transparent text-rose shadow-none hover:border-transparent hover:bg-transparent hover:text-rose active:translate-y-px"
+                    onClick={removePhoto}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
+              </Stack>
+            </Stack>
+          </Field>
+          {looseEligible ? (
+            <Stack
+              direction="row"
+              align="center"
+              justify="between"
+              className="mt-2 cursor-pointer border-y border-line py-3"
+              onClick={toggleLoose}
+            >
+              <Box>
+                <Text as="span" className="text-[13.5px] font-bold">
+                  Allow loose / per-tablet selling
+                </Text>
+                <Text variant="caption" className="text-[12px]">
+                  Let staff sell individual {draft.form.toLowerCase()}s at the counter (auto-priced
+                  per unit)
+                </Text>
+              </Box>
+              <Switch
+                checked={draft.looseAllowed ?? true}
+                label="Allow loose selling"
+                onClick={toggleLooseFromSwitch}
+              />
+            </Stack>
+          ) : null}
+        </Box>
+        <Stack
+          direction="row"
+          justify="end"
+          className="gap-[10px] border-t border-line px-5 py-3.5"
+        >
+          <Button variant="ghost" className="active:translate-y-px" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            className="active:translate-y-px"
+            disabled={!ready}
+            onClick={save}
+          >
+            Save changes
+          </Button>
+        </Stack>
+      </Box>
+    </Box>
   );
 }

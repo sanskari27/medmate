@@ -1,10 +1,9 @@
 import { useState, type ChangeEvent } from "react";
 import { fmtDateTime, inr } from "@/utils";
 import { attributedSales, SEGMENTS, segLabel, type Campaign, type Segment } from "@/utils/calculations/crm";
-import { Box, Button, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
+import { Box, Button, Heading, Input, Select, Stack, Text, Textarea } from "@/components/atoms";
 import { IconDot, IconMail, IconWhatsApp } from "@/components/atoms";
-import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
-import { EmptyState } from "@/components/molecules/EmptyState";
+import { Card, CardBody } from "@/components/molecules/Card";
 import { Field } from "@/components/molecules/Field";
 import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import type { CrmViewProps } from "@/screens/Crm/Crm.types";
@@ -53,18 +52,21 @@ export function Campaigns({ view }: CampaignsProps) {
   }
 
   return (
-    <Box className="grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader title="New campaign" subtitle={`${recipients.length} recipients`} />
-        <CardBody>
+    <Box className="grid grid-cols-1 gap-4 min-[768px]:grid-cols-[1.5fr_1fr]">
+      <Card className="rounded-md shadow-sm">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+          <Heading level={3} className="text-[15px] font-bold tracking-normal">New campaign</Heading>
+          <Text className="text-[12.5px] text-muted">{recipients.length} recipients</Text>
+        </Stack>
+        <CardBody className="px-[18px] pb-[18px]">
           <Stack gap={3}>
             <Field label="Target segment" htmlFor="campaign-segment">
               <Select id="campaign-segment" value={segment} onChange={handleSegment} options={[{ value: "all", label: "Everyone with phone" }, ...SegmentOptions()]} />
             </Field>
             <Field label="Channel">
-              <SegmentedControl label="Campaign channel">
-                <Button size="sm" variant="ghost" className={channel === "whatsapp" ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={chooseWhatsApp}>WhatsApp</Button>
-                <Button size="sm" variant="ghost" className={channel === "sms" ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={chooseSms}>SMS</Button>
+              <SegmentedControl label="Campaign channel" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
+                <Button size="sm" variant="ghost" className={channel === "whatsapp" ? "rounded-[6px] border-0 bg-paper px-[13px] py-1.5 text-[12.5px] text-dark shadow-sm hover:bg-paper" : "rounded-[6px] border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] text-muted shadow-none hover:bg-transparent"} onClick={chooseWhatsApp}>WhatsApp</Button>
+                <Button size="sm" variant="ghost" className={channel === "sms" ? "rounded-[6px] border-0 bg-paper px-[13px] py-1.5 text-[12.5px] text-dark shadow-sm hover:bg-paper" : "rounded-[6px] border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] text-muted shadow-none hover:bg-transparent"} onClick={chooseSms}>SMS</Button>
               </SegmentedControl>
             </Field>
             <Field label="Offer (optional)" htmlFor="campaign-offer">
@@ -80,10 +82,13 @@ export function Campaigns({ view }: CampaignsProps) {
           </Stack>
         </CardBody>
       </Card>
-      <Card>
-        <CardHeader title="Campaign history" subtitle={`${view.crm.campaigns.length} sent`} />
-        <CardBody>
-          {view.crm.campaigns.length === 0 ? <EmptyState title="No campaigns yet." className="py-4" /> : <CampaignRows campaigns={view.crm.campaigns} view={view} />}
+      <Card className="rounded-md shadow-sm">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+          <Heading level={3} className="text-[15px] font-bold tracking-normal">Campaign history</Heading>
+          <Text className="text-[12.5px] text-muted">{view.crm.campaigns.length} sent</Text>
+        </Stack>
+        <CardBody className="px-[18px] pb-[18px]">
+          {view.crm.campaigns.length === 0 ? <Text className="px-4 py-4 text-center text-[13px] text-muted">No campaigns yet.</Text> : <CampaignRows campaigns={view.crm.campaigns} view={view} />}
         </CardBody>
       </Card>
     </Box>

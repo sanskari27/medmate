@@ -20,17 +20,21 @@ import {
 import { ChannelPill } from "@/components/molecules/ChannelPill";
 import { StatusPill } from "@/components/molecules/StatusPill";
 import { inr, PAY_LABEL, timeAgo, type PayMode, type Sale } from "@/utils";
+import { cn } from "@/utils/className";
 import type { OrderTab } from "../../Orders.types";
 import { orderPayable } from "../../Orders.utils";
 import type { OrderTableProps } from "./OrderTable.types";
 
 const headCell =
-  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
-const bodyCell = "px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const smBtn = "h-auto !leading-[1.5] active:translate-y-px";
+const goldBtn = "border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100";
+const roseBtn = "border-[#dc26262e] hover:bg-[#fbdada] hover:brightness-100";
 
 export function OrderTable(props: OrderTableProps) {
-  function renderSale(sale: Sale) {
-    return <OrderRow key={sale.id} sale={sale} {...props} />;
+  function renderSale(sale: Sale, index: number) {
+    return <OrderRow key={sale.id} sale={sale} last={index === props.sales.length - 1} {...props} />;
   }
   return (
     <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
@@ -54,12 +58,14 @@ export function OrderTable(props: OrderTableProps) {
             {props.sales.map(renderSale)}
             {props.sales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className={bodyCell}>
+                <TableCell colSpan={8} className={`${bodyCell} border-b-0`}>
                   <Stack align="center" className="px-5 py-9 text-center">
-                    <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-mid">
+                    <Box className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-wash text-[21px] leading-none text-mid">
                       <IconInbox size={28} />
                     </Box>
-                    <Text variant="muted">No orders in this view.</Text>
+                    <Text variant="muted" className="mx-auto max-w-[340px]">
+                      No orders in this view.
+                    </Text>
                   </Stack>
                 </TableCell>
               </TableRow>
@@ -73,6 +79,7 @@ export function OrderTable(props: OrderTableProps) {
 
 function OrderRow({
   sale,
+  last,
   now,
   onOpen,
   onMarkPaid,
@@ -80,7 +87,7 @@ function OrderRow({
   onCancel,
   onPack,
   onShare,
-}: { sale: Sale } & Omit<OrderTableProps, "sales">) {
+}: { sale: Sale; last: boolean } & Omit<OrderTableProps, "sales">) {
   const units = sale.items.reduce(function add(sum, item) {
     return sum + item.qty;
   }, 0);
@@ -114,18 +121,19 @@ function OrderRow({
   function stop(event: MouseEvent) {
     event.stopPropagation();
   }
+  const cell = cn(bodyCell, last && "border-b-0");
   return (
-    <TableRow className="cursor-pointer hover:bg-wash-2" onClick={open}>
-      <TableCell className={`${bodyCell} font-mono font-bold text-ink`}>
+    <TableRow className="cursor-pointer transition-colors duration-100 hover:bg-wash-2" onClick={open}>
+      <TableCell className={cn(cell, "font-mono font-bold")}>
         {sale.id}
         {sale.rx ? (
-          <Tag tone="rx" className="ml-1.5">
+          <Tag tone="rx" className="ml-1.5 border-[#f3c7c7]">
             <IconRx size={11} /> Rx
           </Tag>
         ) : null}
       </TableCell>
-      <TableCell className={bodyCell}>
-        <Text as="span" className="block text-[13px] leading-[1.5] font-semibold text-ink">
+      <TableCell className={cell}>
+        <Text as="span" className="block text-[13px] leading-[1.5] font-semibold text-ink-2">
           {sale.customer.name}
         </Text>
         <Text variant="caption" className="block leading-[1.5]">
@@ -133,31 +141,31 @@ function OrderRow({
           {sale.customer.phone ? ` · ${sale.customer.phone}` : ""}
         </Text>
       </TableCell>
-      <TableCell className={bodyCell}>
+      <TableCell className={cell}>
         {units} units
         <Text variant="caption" className="block max-w-[200px] truncate leading-[1.5]">
           {names}
         </Text>
       </TableCell>
-      <TableCell className={bodyCell}>
+      <TableCell className={cell}>
         <ChannelPill channel={sale.channel} />
       </TableCell>
-      <TableCell className={bodyCell}>
+      <TableCell className={cell}>
         {sale.paid === false ? (
-          <Pill tone="rose" dot>
+          <Pill tone="rose" dot className="gap-[5px]">
             Unpaid
           </Pill>
         ) : (
           PAY_LABEL[sale.payMode]
         )}
       </TableCell>
-      <TableCell className={bodyCell}>
-        <StatusPill status={sale.status} />
+      <TableCell className={cell}>
+        <StatusPill status={sale.status} className="gap-[5px]" />
       </TableCell>
-      <TableCell align="right" className={`${bodyCell} font-extrabold text-ink`}>
+      <TableCell align="right" className={cn(cell, "font-extrabold text-ink")}>
         {inr(orderPayable(sale))}
       </TableCell>
-      <TableCell className={bodyCell} onClick={stop}>
+      <TableCell className={cell} onClick={stop}>
         <OrderActions
           sale={sale}
           onPaid={paid}
@@ -194,38 +202,38 @@ function OrderActions({
 }) {
   const online = sale.channel === "online";
   return (
-    <Stack direction="row" justify="end" wrap gap={1}>
+    <Stack direction="row" align="center" justify="end" className="gap-1.5">
       {sale.paid === false ? (
-        <Button variant="gold" size="sm" className="h-[29px]" onClick={onPaid}>
+        <Button variant="gold" size="sm" className={cn(smBtn, goldBtn)} onClick={onPaid}>
           <IconCash size={14} /> Mark paid
         </Button>
       ) : null}
       {online && sale.status === "new" ? (
         <>
-          <Button variant="primary" size="sm" className="h-[29px]" onClick={onAdvance}>
+          <Button variant="primary" size="sm" className={smBtn} onClick={onAdvance}>
             Accept
           </Button>
-          <Button variant="rose" size="sm" className="h-[29px]" onClick={onCancel}>
+          <Button variant="rose" size="sm" className={cn(smBtn, roseBtn)} onClick={onCancel}>
             Reject
           </Button>
         </>
       ) : null}
       {online && sale.status === "accepted" ? (
-        <Button variant="primary" size="sm" className="h-[29px]" onClick={onPack}>
+        <Button variant="primary" size="sm" className={smBtn} onClick={onPack}>
           <IconBox size={14} /> Pack order
         </Button>
       ) : null}
       {online && sale.status === "packed" ? (
-        <Button variant="primary" size="sm" className="h-[29px]" onClick={onPack}>
+        <Button variant="primary" size="sm" className={smBtn} onClick={onPack}>
           <IconTruck size={14} /> Hand to delivery
         </Button>
       ) : null}
       {online && sale.status === "out" ? (
-        <Button variant="gold" size="sm" className="h-[29px]" onClick={onAdvance}>
+        <Button variant="gold" size="sm" className={cn(smBtn, goldBtn)} onClick={onAdvance}>
           Mark delivered
         </Button>
       ) : null}
-      <Button variant="ghost" size="sm" className="h-[29px]" title="View order history" onClick={onHistory}>
+      <Button variant="ghost" size="sm" className={smBtn} title="View order history" onClick={onHistory}>
         <IconClock size={14} /> History
       </Button>
       <IconButton label="Share bill" title="Share bill" onClick={onShare}>

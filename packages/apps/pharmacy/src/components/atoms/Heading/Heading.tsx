@@ -6,10 +6,10 @@ import { cn } from "@/utils/className";
 const headingVariants = cva("m-0 font-display font-extrabold [line-height:1.18] tracking-[-0.02em] text-dark", {
   variants: {
     level: {
-      1: "text-[28px]",
-      2: "text-[22px]",
-      3: "text-[16px]",
-      4: "text-[14.5px]",
+      1: "text-[2em]",
+      2: "text-[1.5em]",
+      3: "text-[1.17em]",
+      4: "text-[1em]",
     },
   },
   defaultVariants: {

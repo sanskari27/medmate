@@ -1,9 +1,8 @@
 import { timeAgo } from "@/utils";
 import { crmMsg, refillsDue, type Patient, type ReminderLog } from "@/utils/calculations/crm";
-import { Box, Button, MonoText, Pill, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { Box, Button, Heading, MonoText, Pill, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
 import { IconClock, IconHeart, IconMessage, IconStethoscope, IconUser, IconWhatsApp } from "@/components/atoms";
-import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
-import { EmptyState } from "@/components/molecules/EmptyState";
+import { Card, CardBody } from "@/components/molecules/Card";
 import type { CrmViewProps } from "@/screens/Crm/Crm.types";
 import { chronicPatientCount, openSms, openWhatsApp } from "@/screens/Crm/Crm.utils";
 
@@ -12,14 +11,14 @@ export function Reminders({ view }: RemindersProps) {
   const due = refillsDue(view.patients, 14);
   return (
     <Stack gap={3}>
-      <Stack direction="row" wrap gap={2}>
+      <Stack direction="row" wrap className="gap-[10px]">
         <SummaryChip label="Refills due (14d)" value={String(due.length)} />
         <SummaryChip label="Chronic patients" value={String(chronicPatientCount(view.patients))} />
         <SummaryChip label="Reminders sent" value={String(view.crm.reminders.length)} />
       </Stack>
-      <Card>
+      <Card className="rounded-md shadow-sm">
         <Box className="overflow-x-auto">
-          <Table>
+          <Table className="border-separate border-spacing-0 [&_tbody_tr:hover]:bg-wash-2 [&_td]:border-b [&_td]:border-line [&_td]:px-3.5 [&_td]:py-[11px] [&_td]:align-middle [&_td]:text-ink-2 [&_td.text-right]:font-semibold [&_td.text-right]:text-ink [&_th]:sticky [&_th]:top-0 [&_th]:border-b [&_th]:border-line [&_th]:bg-wash-2 [&_th]:px-3.5 [&_th]:py-[11px] [&_th]:text-[10.5px] [&_th]:font-bold [&_th]:tracking-[0.07em] [&_th]:whitespace-nowrap [&_th]:text-muted [&_th]:uppercase">
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Patient</TableHeaderCell>
@@ -32,7 +31,7 @@ export function Reminders({ view }: RemindersProps) {
             <TableBody>
               {due.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5}><EmptyState title="No refills due in the next 14 days." /></TableCell>
+                  <TableCell colSpan={5}><Text className="px-5 py-9 text-center text-[13px] text-muted">No refills due in the next 14 days.</Text></TableCell>
                 </TableRow>
               ) : (
                 <DueRows patients={due} view={view} />
@@ -42,9 +41,11 @@ export function Reminders({ view }: RemindersProps) {
         </Box>
       </Card>
       {view.crm.reminders.length > 0 ? (
-        <Card>
-          <CardHeader title="Recent reminders sent" />
-          <CardBody>
+        <Card className="rounded-md shadow-sm">
+          <Stack direction="row" align="center" className="border-b border-line px-[18px] py-[15px]">
+            <Heading level={3} className="text-[15px] font-bold tracking-normal">Recent reminders sent</Heading>
+          </Stack>
+          <CardBody className="px-[18px] pb-[18px]">
             <ReminderRows reminders={view.crm.reminders.slice(0, 8)} now={view.now} />
           </CardBody>
         </Card>

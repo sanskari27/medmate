@@ -11,7 +11,7 @@ import { cn } from "@/utils/className";
 import { RANGE_PRESETS, resolveRange, type RangePreset, type ResolvedRange } from "@/utils/date";
 
 const triggerVariants = cva(
-  "inline-flex h-[38px] min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] font-normal text-ink shadow-none hover:bg-paper",
+  "inline-flex h-auto min-w-[180px] justify-start gap-2 rounded-[10px] border-line bg-paper px-[13px] py-[9px] text-[13.5px] leading-[1.5] font-normal text-ink shadow-none hover:bg-paper active:translate-y-0",
 );
 
 const menuVariants = cva(
@@ -19,7 +19,7 @@ const menuVariants = cva(
 );
 
 const presetOptionVariants = cva(
-  "h-auto w-full justify-between gap-4 rounded-sm border-0 bg-transparent px-[11px] py-[9px] text-left text-[13.5px] font-normal text-ink shadow-none hover:bg-wash-2",
+  "h-auto w-full justify-between gap-4 rounded-sm border-0 bg-transparent px-[11px] py-[9px] text-left text-[13.5px] font-normal text-ink shadow-none hover:bg-wash-2 active:translate-y-0",
   {
     variants: {
       selected: {
@@ -80,7 +80,7 @@ function PresetOption({
     <Button type="button" variant="ghost" onClick={pick} className={presetOptionVariants({ selected })}>
       <Text as="span">{label}</Text>
       {sub ? (
-        <Text as="span" variant="caption" className="whitespace-nowrap">
+        <Text as="span" variant="caption" className="text-[12px] whitespace-nowrap">
           {sub}
         </Text>
       ) : null}
@@ -193,12 +193,26 @@ export function DateRangeField({
               <Label htmlFor={fromId} className="sr-only">
                 From
               </Label>
-              <Input id={fromId} type="date" value={from} max={to} onChange={changeFrom} className="min-w-0 flex-1" />
+              <Input
+                id={fromId}
+                type="date"
+                value={from}
+                max={to}
+                onChange={changeFrom}
+                className="min-w-0 flex-1 rounded-sm border-line px-[9px] py-[7px] text-[13px] hover:border-line"
+              />
               <Text as="span">→</Text>
               <Label htmlFor={toId} className="sr-only">
                 To
               </Label>
-              <Input id={toId} type="date" value={to} min={from} onChange={changeTo} className="min-w-0 flex-1" />
+              <Input
+                id={toId}
+                type="date"
+                value={to}
+                min={from}
+                onChange={changeTo}
+                className="min-w-0 flex-1 rounded-sm border-line px-[9px] py-[7px] text-[13px] hover:border-line"
+              />
             </Stack>
           ) : null}
         </Stack>

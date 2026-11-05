@@ -78,7 +78,7 @@ export default function CrmScreen() {
   return (
     <Box className="mx-auto max-w-[1680px]">
       <Box className="mb-4">
-        <SegmentedControl label="CRM sections" className="flex-wrap">
+        <SegmentedControl label="CRM sections" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
           <CrmTabs tab={tab} onSelect={setTab} />
         </SegmentedControl>
       </Box>
@@ -113,7 +113,7 @@ function CrmTabButton({
     onSelect(item.key);
   }
   return (
-    <Button size="sm" variant="ghost" className={selected ? "border-transparent bg-paper text-dark shadow-sm" : "border-transparent bg-transparent text-muted shadow-none"} onClick={handleSelect}>
+    <Button size="sm" variant="ghost" className={selected ? "rounded-[6px] border-0 bg-paper px-[13px] py-1.5 text-[12.5px] font-bold text-dark shadow-sm hover:bg-paper" : "rounded-[6px] border-0 bg-transparent px-[13px] py-1.5 text-[12.5px] font-bold text-muted shadow-none hover:bg-transparent"} onClick={handleSelect}>
       {item.label}
     </Button>
   );

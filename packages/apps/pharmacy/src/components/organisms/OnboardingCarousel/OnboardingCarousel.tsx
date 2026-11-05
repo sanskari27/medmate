@@ -69,7 +69,7 @@ function BrandLockup() {
   const gradientId = useId().replace(/:/g, "");
   return (
     <Stack direction="row" align="center" gap={3} className="relative z-[1]">
-      <Box className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white shadow-[0_8px_22px_rgba(0,0,0,0.3)]">
+      <Box className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white shadow-[0_8px_22px_#0000004d]">
         <svg width={30} height={30} viewBox="0 0 40 40" fill="none" aria-hidden>
           <defs>
             <linearGradient id={gradientId} x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
@@ -103,11 +103,11 @@ function BrandLockup() {
 
 function TrustRow({ icon: Icon, label }: { icon: Glyph; label: string }) {
   return (
-    <Stack direction="row" align="center" className="gap-2.5 text-[13.5px] font-semibold text-white/92">
-      <Box className="grid h-7 w-7 place-items-center rounded-sm bg-white/12 text-mint">
+    <Stack direction="row" align="center" className="gap-2.5 text-[13.5px] font-semibold text-[#ffffffeb]">
+      <Box className="grid h-7 w-7 place-items-center rounded-sm bg-[#ffffff1f] text-mint">
         <Icon size={16} />
       </Box>
-      <Text as="span" className="text-[13.5px] font-semibold text-white/92">
+      <Text as="span" className="text-[13.5px] font-semibold text-[#ffffffeb]">
         {label}
       </Text>
     </Stack>
@@ -138,7 +138,7 @@ function Aside({ type }: { type: BusinessType }) {
         <TrustRow icon={IconRx} label="Rx-aware billing" />
         <TrustRow icon={IconReports} label="GST returns & CA-ready" />
       </Stack>
-      <Text className="relative z-[1] text-[11px] leading-normal text-white/45">
+      <Text className="relative z-[1] mt-7 text-[11px] leading-normal text-[#ffffff73]">
         © 2026 Medmate India Technology Private Limited · All rights reserved.
       </Text>
     </Stack>
@@ -246,13 +246,13 @@ function TypeCard({
       variant="ghost"
       onClick={onClick}
       className={cn(
-        "relative h-auto w-full flex-col items-stretch gap-0 rounded-md border-[1.5px] px-[18px] py-4 text-left whitespace-normal hover:border-light hover:bg-paper",
+        "relative h-auto w-full flex-col items-stretch gap-0 rounded-md border-[1.5px] px-[18px] py-4 text-left whitespace-normal hover:border-light hover:bg-paper active:translate-y-0",
         selected
-          ? "border-mid bg-wash-2 shadow-[0_0_0_3px_rgba(47,125,82,0.12)]"
+          ? "border-mid bg-wash-2 shadow-[0_0_0_3px_#2f7d521f]"
           : "border-line-2 bg-paper",
       )}
     >
-      <Box className="text-mid">
+      <Box className="inline-grid place-items-center overflow-hidden bg-wash text-mid">
         <GlyphView glyph={item.icon} size={30} />
       </Box>
       <Stack className="mt-1.5">
@@ -295,7 +295,7 @@ function TypePhase({
       <Heading level={2} className="text-[24px]">
         Choose your business
       </Heading>
-      <Text className="text-[13.5px] text-muted">This choice stays with this mobile number.</Text>
+      <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">This choice stays with this mobile number.</Text>
       <Stack className="gap-3">{TYPES.map(renderType)}</Stack>
       <Stack direction="row" justify="between" className="mt-[22px] gap-2.5">
         <Button variant="ghost" onClick={onBack}>
@@ -461,7 +461,7 @@ function LoginPhase({
       <Heading level={2} className="text-[24px]">
         {heading}
       </Heading>
-      <Text className="text-[13.5px] text-muted">{subtitle}</Text>
+      <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">{subtitle}</Text>
       {!otpSent && !pinMode ? (
         <Stack className="gap-3">
           {staff ? null : (
@@ -665,7 +665,7 @@ export function PinSetup() {
         <Heading level={2} className="text-[24px]">
           Create your login PIN
         </Heading>
-        <Text className="text-[13.5px] text-muted">
+        <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">
           Use this 4-digit PIN next time. A code is only sent for signup or if you forget the PIN.
         </Text>
         <Field label="4-digit PIN" data-field="pin">

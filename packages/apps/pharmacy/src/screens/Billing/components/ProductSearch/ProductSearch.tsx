@@ -26,12 +26,12 @@ export function ProductSearch({
   }
 
   return (
-    <Stack direction="row" align="center" wrap gap={2} className="mb-4">
+    <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
       <Stack
         direction="row"
         align="center"
         gap={2}
-        className="min-w-[280px] flex-1 rounded-sm border-[1.5px] border-mid bg-wash-2 py-1 pr-1.5 pl-[11px]"
+        className="flex-[1_1_280px] rounded-sm border-[1.5px] border-mid bg-wash-2 py-1 pr-1.5 pl-[11px]"
       >
         <Box className="text-ink">
           <IconCamera size={17} />
@@ -53,7 +53,7 @@ export function ProductSearch({
         direction="row"
         align="center"
         gap={2}
-        className="max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2"
+        className="max-w-[360px] min-w-[240px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2 max-[767px]:min-w-0 max-[767px]:max-w-none max-[767px]:flex-[1_1_100%]"
       >
         <Box className="text-green">
           <IconSearch size={17} />

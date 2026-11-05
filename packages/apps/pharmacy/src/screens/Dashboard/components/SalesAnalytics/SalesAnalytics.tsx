@@ -7,10 +7,8 @@ import { inr, catLabel, Sale, PayMode, PAY_LABEL, SaleSource, saleSourceOf } fro
 import { IconDonut, IconBars, IconTrendUp } from "@/components/atoms";
 import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
 import { inrK } from "@/screens/Dashboard/utils/inrK";
-import { TrendChart } from "@/components/organisms";
-import { DonutChart, Swatch } from "@/components/organisms";
-import { SegmentBar } from "@/components/molecules/BarChart";
 import { HBar } from "@/screens/Dashboard/components/HBar";
+import { AnalyticsDonut, AnalyticsTrend } from "./AnalyticsCharts";
 type Range = "7D" | "30D" | "12M";
 type Metric = "revenue" | "orders";
 const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -145,7 +143,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  return n;});
  return (<Box>
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className={cn("!flex !flex-wrap !items-center !justify-between !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:![line-height:18px]","!flex-wrap")}>
+ <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Box>
  <Heading level={3}>
  Sales analytics{""}
@@ -169,7 +167,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
 
  {/* chart-type picker */}
  <Box className={cn("!flex-1 !p-[18px]","!pb-0")}>
- <Box className={cn("!flex !items-center","!justify-between !flex-wrap")}>
+ <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5">
  <Box className="!inline-flex !max-w-full !flex-wrap !gap-0.5 !rounded-sm !border !border-line !bg-wash-2 !p-0.5">
  {CHART_OPTS.map(renderCHARTOPTS)}
  </Box>
@@ -181,56 +179,58 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  </Box>
 
  <Box className="!flex-1 !p-[18px]">
- {chart ==="donut" ? (<DonutChart rows={donutRows.map(matchDonutRow)} fmt={fmt}/>) : (<TrendChart labels={labels} series={visible} type={chart} valOf={val} fmtAxis={fmtAxis} fmt={fmt}/>)}
+ {chart ==="donut" ? (<AnalyticsDonut rows={donutRows.map(matchDonutRow)} fmt={fmt}/>) : (<AnalyticsTrend labels={labels} series={visible} type={chart} valOf={val} fmtAxis={fmtAxis} fmt={fmt}/>)}
  </Box>
  </Box>
 
  {/* real breakdowns */}
  <Box className={cn("!grid !grid-cols-3 !gap-4 max-[767px]:!grid-cols-1","!mt-4")}>
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>{isHospital ?"Sales by source" :"Channel split"}</Heading>
- <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
+ <Text className="!text-[12.5px] !text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>
  <Box className="!flex-1 !p-[18px]">
- <SegmentBar className="mb-3.5 h-3.5 overflow-hidden rounded-sm bg-wash" segments={srcSegments()} />
+ <Box className="mb-3.5 flex h-3.5 overflow-hidden rounded-sm bg-wash">
+ {srcRows.map(renderSourceShare)}
+ </Box>
  {srcRows.map(renderSrcRow2)}
  </Box>
  </Box>
 
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>Payment modes</Heading>
- <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
+ <Text className="!text-[12.5px] !text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>
  <Box className="!flex-1 !p-[18px]">
- {payRows.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink","!py-4.5 !px-2")}>
- <Text>No sales in this window.</Text>
+ {payRows.length === 0 ? (<Box className="!px-2 !py-[18px] !text-center !text-muted">
+ <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No sales in this window.</Text>
  </Box>) : (payRows.map(renderPayRow))}
  </Box>
  </Box>
 
  <Box className="!flex !flex-col !rounded-md !border !border-line !bg-paper !shadow-sm">
- <Box className="!flex !flex-col !items-start !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
+ <Box className="!flex !flex-wrap !items-center !justify-between !gap-2.5 !border-b !border-line !px-[18px] !py-[15px] [&_h3]:!text-[15px] [&_h3]:!font-bold">
  <Heading level={3}>Top categories</Heading>
- <Text className="text-[12.5px] text-muted" as="span">actual · {rangeLabel}</Text>
+ <Text className="!text-[12.5px] !text-muted" as="span">actual · {rangeLabel}</Text>
  </Box>
  <Box className="!flex-1 !p-[18px]">
- {catRows.length === 0 ? (<Box className={cn("!px-5 !py-9 !text-center !text-muted [&_h3]:!mb-[5px] [&_h3]:!text-[15px] [&_h3]:!font-bold [&_h3]:!text-ink","!py-4.5 !px-2")}>
- <Text>No sales in this window.</Text>
+ {catRows.length === 0 ? (<Box className="!px-2 !py-[18px] !text-center !text-muted">
+ <Text className="mx-auto max-w-[340px] text-[13px] text-muted">No sales in this window.</Text>
  </Box>) : (catRows.map(renderCatRow))}
  </Box>
  </Box>
  </Box>
  </Box>);
  function renderM(m: Metric) {
- return (<Button key={m} onClick={setMetricOnClick} className={cn(metric === m ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold","!capitalize")}>
+ return (<Button key={m} onClick={setMetricOnClick} className={cn(segClass(metric === m), "!capitalize")}>
  {m}
  </Button>);
  function setMetricOnClick() {
  return setMetric(m);}}
  function renderR(r: Range) {
- return (<Button key={r} className={range === r ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"} onClick={setRangeOnClick}>
+ return (<Button key={r} className={segClass(range === r)} onClick={setRangeOnClick}>
  {r}
  </Button>);
  function setRangeOnClick() {
@@ -240,7 +240,7 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  label: string;
  Icon: (p: {
  size?: number;}) => React.ReactNode;}) {
- return (<Button key={c.k} className={chart === c.k ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold" : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"} onClick={setChartOnClick} title={c.label}>
+ return (<Button key={c.k} className={segClass(chart === c.k)} onClick={setChartOnClick} title={c.label}>
  <Text className={cn("!mr-[5px] !inline-flex !align-[-2px]")} as="span">
  {c.Icon({ size: 13})}
  </Text>
@@ -249,8 +249,8 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  function setChartOnClick() {
  return setChart(c.k);}}
  function renderSery(s: Series) {
- return (<Button key={s.key} className={`inline-flex items-center gap-1.5 rounded-full border border-line bg-wash-2 px-2.5 py-1 text-[11.5px] font-bold text-ink hover:border-line-2 ${hidden.has(s.key) ?" opacity-40 line-through" :""}`} onClick={toggleOnClick} title={hidden.has(s.key) ?"Show" :"Hide"}>
- <Swatch color={s.color} />
+ return (<Button key={s.key} className={`!inline-flex !h-auto !items-center !gap-1.5 !rounded-full !border !border-line !bg-wash-2 !px-2.5 !py-1 !text-[11.5px] !font-bold !text-ink !shadow-none hover:!border-line-2 hover:!bg-wash-2 ${hidden.has(s.key) ?" !opacity-40 !line-through" :""}`} onClick={toggleOnClick} title={hidden.has(s.key) ?"Show" :"Hide"}>
+ <i className="inline-block h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: s.color }} />
  {s.label}
  </Button>);
  function toggleOnClick() {
@@ -262,12 +262,10 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  amt: number;
  amtOrd: number;}) {
  return ({ ...r, amt: metric ==="revenue" ? r.amt : r.amtOrd});}
- function srcSegments() {
- return srcRows.filter(function hasAmount(row: { amt: number }) {
- return row.amt > 0;
- }).map(function toSegment(row: { key: SaleSource; label: string; amt: number }) {
- return { key: row.key, value: row.amt, color: SRC_COLOR[row.key], label: `${row.label} · ${inr(row.amt)}` };
- });}
+ function renderSourceShare(row: { key: SaleSource; label: string; amt: number }) {
+ if (row.amt <= 0) return null;
+ return (<Box key={row.key} title={`${row.label} · ${inr(row.amt)}`} className="h-full" style={{ width: `${(row.amt / srcRealShownTotal) * 100}%`, background: SRC_COLOR[row.key] }} />);
+ }
  function renderSrcRow2(r: {
  key: SaleSource;
  label: string;
@@ -278,10 +276,16 @@ export function SalesAnalytics({ sales, inventory, now, onlineRev, offlineRev, i
  label: string;
  amt: number;
  pct: number;}) {
- return (<HBar key={r.key} label={r.label} right={`${inr(r.amt)} · ${Math.round(r.pct)}%`} pct={r.pct} color="var(--green)"/>);}
+ return (<HBar key={r.key} label={r.label} right={`${inr(r.amt)} · ${Math.round(r.pct)}%`} pct={r.pct} color="var(--color-green)"/>);}
  function renderCatRow(r: {
  key: string;
  label: string;
  amt: number;
  pct: number;}) {
- return (<HBar key={r.key} label={r.label} right={inr(r.amt)} pct={r.pct} color="var(--teal)"/>);}}
+ return (<HBar key={r.key} label={r.label} right={inr(r.amt)} pct={r.pct} color="var(--color-teal)"/>);}
+ function segClass(on: boolean) {
+ const base = "!h-auto !gap-0 !rounded-[6px] !border-0 !px-[13px] !py-1.5 !text-[12.5px] !font-bold ![line-height:1.5]";
+ return on
+ ? `${base} !bg-paper !text-dark !shadow-sm hover:!bg-paper`
+ : `${base} !bg-transparent !text-muted !shadow-none hover:!bg-transparent`;
+ }}

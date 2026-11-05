@@ -1,10 +1,9 @@
 import { useState, type ChangeEvent } from "react";
 import { BLOOD_GROUPS, catLabel, fmtDateTime, inr, PAY_LABEL, timeAgo, type Sale } from "@/utils";
 import { crmMsg, segLabel, type Patient, type PatientMed, type Redemption, type Segment } from "@/utils/calculations/crm";
-import { Box, Button, Checkbox, Input, Pill, Progress, Select, Stack, Text } from "@/components/atoms";
+import { Box, Button, Checkbox, Heading, Input, Pill, Progress, Select, Stack, Text } from "@/components/atoms";
 import { IconCheck, IconClock, IconGift, IconHeart, IconMail, IconMessage, IconPhone, IconPill, IconReceipt, IconStar, IconUser, IconWhatsApp } from "@/components/atoms";
-import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
-import { EmptyState } from "@/components/molecules/EmptyState";
+import { Card, CardBody } from "@/components/molecules/Card";
 import { Field } from "@/components/molecules/Field";
 import { Modal } from "@/components/molecules/Modal";
 import type { CrmViewProps, PatientProfileForm } from "@/screens/Crm/Crm.types";
@@ -79,7 +78,8 @@ export function PatientModal({ patient, onClose, view }: PatientModalProps) {
     <Modal
       title={patient.name}
       size="lg"
-      className="max-w-5xl"
+      className="max-h-[90vh] max-w-[720px] overflow-y-auto"
+      overlayClassName="z-[100] bg-[#0d201580] p-6 backdrop-blur-[3px]"
       onClose={onClose}
       footer={
         <Stack direction="row" justify="end" gap={2}>
@@ -135,8 +135,8 @@ export function PatientModal({ patient, onClose, view }: PatientModalProps) {
         </Box>
 
         {series.length >= 2 ? (
-          <Card className="mb-3.5">
-            <CardBody className="pt-4">
+          <Card className="mb-3.5 rounded-md shadow-sm">
+            <CardBody className="px-[18px] pt-[18px] pb-[18px]">
               <Stack direction="row" justify="between" className="mb-1">
                 <Text className="text-[12.5px] font-bold">Spend per visit</Text>
                 <Text variant="caption">{series.length} visits · online {patient.onlineOrders}/{patient.orders}</Text>
@@ -149,8 +149,8 @@ export function PatientModal({ patient, onClose, view }: PatientModalProps) {
         <Box className="grid gap-4 lg:grid-cols-2">
           <Stack gap={2}>
             <Text className="font-extrabold">Medicines bought <Text as="span" variant="caption">· {patient.medicines.length}</Text></Text>
-            <Card>
-              {patient.medicines.length === 0 ? <EmptyState title="—" className="py-4" /> : <MedicineRows medicines={patient.medicines.slice(0, 8)} now={view.now} />}
+            <Card className="rounded-md shadow-sm">
+              {patient.medicines.length === 0 ? <Text className="px-4 py-4 text-center text-[13px] text-muted">—</Text> : <MedicineRows medicines={patient.medicines.slice(0, 8)} now={view.now} />}
             </Card>
             {patient.categories.length > 0 ? (
               <Stack direction="row" wrap gap={1}>
@@ -160,20 +160,20 @@ export function PatientModal({ patient, onClose, view }: PatientModalProps) {
           </Stack>
           <Stack gap={2}>
             <Text className="font-extrabold">Purchase history <Text as="span" variant="caption">· {purchases.length}</Text></Text>
-            <Card className="max-h-[260px] overflow-y-auto">
-              {purchases.length === 0 ? <EmptyState title="No purchases." className="py-4" /> : <PurchaseRows sales={purchases.slice(0, 20)} />}
+            <Card className="max-h-[260px] overflow-y-auto rounded-md shadow-sm">
+              {purchases.length === 0 ? <Text className="px-4 py-4 text-center text-[13px] text-muted">No purchases.</Text> : <PurchaseRows sales={purchases.slice(0, 20)} />}
             </Card>
           </Stack>
         </Box>
 
         <Text className="mt-4 mb-2 font-extrabold">Loyalty & tier</Text>
-        <Card className="mb-3">
-          <CardBody className="pt-4">
+        <Card className="mb-3 rounded-md shadow-sm">
+          <CardBody className="px-[18px] pt-[18px] pb-[18px]">
             <Stack direction="row" justify="between" className="mb-1.5 text-[12.5px]">
               <Text as="span"><Pill tone="gold">{patient.tier}</Pill> · {patient.points} pts earned · {redeemed} redeemed</Text>
               <Text variant="caption">{tier.next ? `${tier.next.min - patient.points} pts to ${tier.next.tier}` : "Top tier reached"}</Text>
             </Stack>
-            <Progress value={tier.progress} label="Tier progress" />
+            <Progress className="h-[7px] rounded-[5px]" value={tier.progress} label="Tier progress" />
             {redemptions.length > 0 ? <Text variant="caption" className="mt-2">Recent: {redemptionSummary(redemptions.slice(0, 3))}</Text> : null}
           </CardBody>
         </Card>
@@ -200,15 +200,21 @@ export function PatientModal({ patient, onClose, view }: PatientModalProps) {
           <Stack gap={2} className="mt-4">
             <Text className="font-extrabold">Engagement history</Text>
             <Box className="grid gap-4 lg:grid-cols-2">
-              <Card>
-                <CardHeader title="Reminders sent" subtitle={String(reminders.length)} />
-                <CardBody>
+              <Card className="rounded-md shadow-sm">
+                <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+                  <Heading level={3} className="text-[15px] font-bold tracking-normal">Reminders sent</Heading>
+                  <Text className="text-[12.5px] text-muted">{reminders.length}</Text>
+                </Stack>
+                <CardBody className="px-[18px] pb-[18px]">
                   {reminders.length === 0 ? <Text variant="muted">None yet.</Text> : <EngagementReminders reminders={reminders.slice(0, 5)} now={view.now} />}
                 </CardBody>
               </Card>
-              <Card>
-                <CardHeader title="Feedback" subtitle={String(feedback.length)} />
-                <CardBody>
+              <Card className="rounded-md shadow-sm">
+                <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+                  <Heading level={3} className="text-[15px] font-bold tracking-normal">Feedback</Heading>
+                  <Text className="text-[12.5px] text-muted">{feedback.length}</Text>
+                </Stack>
+                <CardBody className="px-[18px] pb-[18px]">
                   {feedback.length === 0 ? <Text variant="muted">None yet.</Text> : <EngagementFeedback feedbacks={feedback.slice(0, 5)} now={view.now} />}
                 </CardBody>
               </Card>

@@ -6,7 +6,7 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
-import { IconBell, IconChevronLeft, IconSearch } from "@/components/atoms/Icon";
+import { IconBell, IconChevronLeft, IconMenu, IconSearch } from "@/components/atoms/Icon";
 import { UpgradeChip } from "@/components/molecules/UpgradeChip";
 import { usePharma } from "@/hooks";
 import type { Route } from "@/types";
@@ -53,16 +53,6 @@ const PAGE_META: Record<Route, { title: string; sub: string }> = {
   menu: { title: "Menu", sub: "All sections" },
 };
 
-function MenuGlyph() {
-  return (
-    <Stack gap={1} className="w-4" aria-hidden>
-      <Box className="h-0.5 w-full rounded-full bg-current" />
-      <Box className="h-0.5 w-full rounded-full bg-current" />
-      <Box className="h-0.5 w-full rounded-full bg-current" />
-    </Stack>
-  );
-}
-
 export function AppHeader({ onMenu, className }: AppHeaderProps) {
   const { route, go, back, canGoBack, prescriptions, subscription, me } = usePharma();
   const meta = PAGE_META[route];
@@ -104,24 +94,24 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
     >
       <IconButton
         label="Menu"
-        variant="ghost"
-        className="hidden h-9 w-9 print:hidden max-[1099px]:grid max-[767px]:h-11"
+        variant="default"
+        className="hidden h-9 w-9 rounded-sm border-line text-ink-2 print:hidden hover:border-line-2 hover:bg-wash-2 max-[1099px]:grid max-[767px]:h-11 [&_svg]:[stroke-width:2]"
         onClick={onMenu}
       >
-        <MenuGlyph />
+        <IconMenu size={18} />
       </IconButton>
       {canGoBack ? (
         <IconButton
           label="Go back"
           variant="default"
-          className="-ml-1.5 h-[34px] w-[34px] rounded-sm border-line print:hidden"
+          className="-ml-1.5 h-[34px] w-[34px] rounded-sm border-line print:hidden hover:border-line-2 hover:bg-wash-2 hover:text-mid"
           onClick={onBack}
         >
           <IconChevronLeft size={19} />
         </IconButton>
       ) : null}
       <Stack gap={0} className="min-w-0 max-[767px]:flex-1">
-        <Heading level={1} className="truncate text-[19px] font-bold">
+        <Heading level={1} className="truncate text-[19px] font-bold max-[767px]:text-[17px]">
           {meta.title}
         </Heading>
         <Text as="span" variant="caption" className="truncate text-[12.5px] font-medium">
@@ -145,7 +135,7 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
             onFocus={onSearchFocus}
             onChange={onSearchChange}
             aria-label="Search medicines, orders, invoices"
-            className="px-[2px] py-px max-[767px]:text-[13.5px]"
+            className="px-[2px] py-px text-[13.5px] placeholder:text-faint"
           />
         </Stack>
       ) : (
@@ -161,10 +151,16 @@ export function AppHeader({ onMenu, className }: AppHeaderProps) {
       ) : null}
       {allow("prescriptions") ? (
         <Box className="relative print:hidden">
-          <IconButton label="Notifications" className="h-9 w-9 rounded-sm border-line max-[767px]:h-11" onClick={openPrescriptions}>
+          <IconButton
+            label="Notifications"
+            className="h-9 w-9 rounded-sm border-line text-ink-2 hover:border-line-2 hover:bg-wash-2 max-[767px]:h-11"
+            onClick={openPrescriptions}
+          >
             <IconBell size={19} />
           </IconButton>
-          {pendingRx > 0 ? <Box className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose" /> : null}
+          {pendingRx > 0 ? (
+            <Box className="pointer-events-none absolute top-[7px] right-2 h-[7px] w-[7px] rounded-full border-[1.5px] border-white bg-gold" />
+          ) : null}
         </Box>
       ) : null}
     </Stack>

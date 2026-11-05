@@ -24,8 +24,8 @@ function PayTile({
       className={cn(
         "h-auto flex-col gap-[3px] rounded-[9px] px-1 py-[9px] text-[11.5px] font-bold",
         selected
-          ? "border-mid bg-wash text-mid shadow-[inset_0_0_0_2px_rgba(47,125,82,0.15)]"
-          : "border-line-2 bg-paper text-ink-2",
+          ? "border-mid bg-wash text-mid shadow-[inset_0_0_0_2px_#2f7d5226] hover:border-mid hover:bg-wash hover:text-mid"
+          : "border-line-2 bg-paper text-ink-2 hover:border-line-2 hover:bg-paper hover:text-ink-2",
       )}
     >
       <Box className="text-[16px]">
@@ -38,7 +38,14 @@ function PayTile({
 
 export function PayModePicker({ options, selected, onSelect }: PayModePickerProps) {
   function renderOption(option: PayOption) {
-    return <PayTile key={option.m} option={option} selected={selected === option.m} onSelect={onSelect} />;
+    return (
+      <PayTile
+        key={option.m}
+        option={option}
+        selected={selected === option.m}
+        onSelect={onSelect}
+      />
+    );
   }
   return <Box className="mb-[11px] grid grid-cols-4 gap-[7px]">{options.map(renderOption)}</Box>;
 }

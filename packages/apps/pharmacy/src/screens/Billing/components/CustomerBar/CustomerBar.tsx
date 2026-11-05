@@ -26,11 +26,19 @@ export function CustomerBar({
 
   return (
     <Box className="border-b border-line px-4 py-[11px]">
-      <Text as="span" className="mb-2 flex items-center gap-[5px] text-[10px] font-extrabold tracking-[0.07em] text-faint uppercase">
+      <Text
+        as="span"
+        className="mb-2 flex items-center gap-[5px] text-[10px] font-extrabold tracking-[0.07em] text-faint uppercase"
+      >
         <IconUser size={12} /> Customer
       </Text>
       <Box className="grid grid-cols-2 gap-[9px]">
-        <Input data-field="name" placeholder="Name (walk-in)" value={customer.name} onChange={changeName} />
+        <Input
+          data-field="name"
+          placeholder="Name (walk-in)"
+          value={customer.name}
+          onChange={changeName}
+        />
         <Input
           data-field="phone"
           placeholder="Phone"
@@ -43,7 +51,7 @@ export function CustomerBar({
         <>
           <Input
             data-field="doctor"
-            className={cn("mt-2", !prescriptionReady && "border-rose shadow-[0_0_0_2px_rgba(220,38,38,0.1)]")}
+            className={cn("mt-2", !prescriptionReady && "border-rose shadow-[0_0_0_2px_#dc26261a]")}
             placeholder="Prescribing doctor (required for Rx items)"
             value={customer.doctor}
             onChange={changeDoctor}

@@ -17,7 +17,7 @@ export function StoreChip({ className, name, open, ...props }: StoreChipProps) {
       align="center"
       gap={2}
       className={cn(
-        "mx-3.5 mb-2.5 rounded-[10px] border border-white/10 bg-white/[0.06] px-[11px] py-[9px] text-white",
+        "mx-3.5 mb-2.5 rounded-[10px] border border-white/10 bg-[#ffffff0f] px-[11px] py-[9px] text-white",
         className,
       )}
       {...props}

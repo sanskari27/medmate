@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/atoms/Avatar";
 import { Button } from "@/components/atoms/Button";
-import { IconButton } from "@/components/atoms/IconButton";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import {
-  IconArrowRight,
   IconCash,
   IconCrown,
   IconCustomers,
@@ -13,6 +11,7 @@ import {
   IconGift,
   IconHelp,
   IconInventory,
+  IconLogout,
   IconKiosk,
   IconOffer,
   IconOrders,
@@ -211,26 +210,41 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
     >
       <SidebarBrand />
       <StoreChip name={profile.name} open={profile.storeOpen} />
-      <Stack gap={0} className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5 [&::-webkit-scrollbar]:w-[9px]">
+      <Stack gap={0} className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5">
         <SidebarNav entries={entries} route={route} badgeFor={badgeFor} isLocked={isLocked} onChoose={choose} />
       </Stack>
-      <Stack gap={0} className="border-t border-white/10 px-3.5 pt-3.5 pb-4">
-        <Stack direction="row" align="center" gap={2}>
-          <Avatar name={profile.pharmacist || "Pharmacist"} size="md" className="h-[34px] w-[34px] rounded-[10px] bg-mint text-deep" />
+      <Stack gap={0} className="border-t border-white/[0.09] px-3.5 pt-3.5 pb-4">
+        <Stack direction="row" align="center" className="gap-2.5">
+          <Avatar
+            name={profile.pharmacist || "Pharmacist"}
+            initials={(profile.pharmacist || "P").slice(0, 1)}
+            size="md"
+            className="h-[34px] w-[34px] rounded-[10px] bg-mint font-display text-[14px] font-extrabold text-deep"
+          />
           <Stack gap={0} className="min-w-0 flex-1">
-            <Text as="span" className="truncate text-[12.5px] font-bold text-white">
+            <Text as="span" className="truncate text-[12.5px] leading-[1.3] font-bold text-white">
               {profile.pharmacist.split(",")[0]}
             </Text>
-            <Text as="span" className="text-[10.5px] text-white/45">
+            <Text as="span" className="block text-[10.5px] leading-[1.3] font-medium text-[#ffffff73]">
               Registered Pharmacist
             </Text>
           </Stack>
-          <IconButton label="Log out" variant="ghost" className="text-white hover:bg-white/10" onClick={onSignOut}>
-            <IconArrowRight size={17} />
-          </IconButton>
+          <button
+            type="button"
+            title="Log out"
+            aria-label="Log out"
+            onClick={onSignOut}
+            className="ml-auto grid h-[30px] w-[30px] shrink-0 place-items-center rounded-sm border border-white/[0.14] bg-[#ffffff0d] text-[#ffffffb3] hover:border-[#dc262680] hover:bg-[#dc262640] hover:text-white"
+          >
+            <IconLogout size={17} />
+          </button>
         </Stack>
         {onMaster ? (
-          <Button variant="link" className="text-mint" onClick={onMasterClick}>
+          <Button
+            variant="link"
+            className="mx-3 my-2 block w-full px-1.5 py-1.5 text-center text-[13px] font-bold text-mid"
+            onClick={onMasterClick}
+          >
             Master portal
           </Button>
         ) : null}

@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -34,8 +34,21 @@ import type { OrderDetailProps } from "./OrderDetail.types";
 
 const PAY_CHOICES: PayMode[] = ["cash", "upi", "card"];
 const headCell =
-  "bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase";
-const bodyCell = "px-3.5 py-[11px] text-[13px] text-ink-2";
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const footCell =
+  "border-t-2 border-b-0 border-line-2 bg-wash-2 px-3.5 py-[11px] text-[13px] font-extrabold text-ink-2";
+const modalWrap =
+  "fixed inset-0 z-[100] flex animate-[pdFade_.16s_ease] items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px] max-md:items-end max-md:p-0";
+const modalCard =
+  "flex max-h-[90vh] w-full max-w-[720px] animate-[pdPop_.2s_cubic-bezier(.2,.9,.3,1.2)] flex-col overflow-hidden rounded-lg bg-paper shadow-pop max-md:max-h-[92dvh] max-md:max-w-none max-md:rounded-t-lg max-md:rounded-b-none";
+const closeBtn = "h-8 w-8 rounded-sm border-0 bg-wash-2 text-ink-2 hover:bg-wash hover:text-ink-2";
+const segBtn = "h-auto items-baseline gap-0 border-0 px-[13px] py-1.5 text-[12.5px] !leading-[1.5] shadow-none";
+const footBtn = "h-auto !leading-[1.5] active:translate-y-px max-md:flex-1";
+const goldBtn = "border-[#10301d14] hover:bg-[#c99a3d] hover:brightness-100";
+const roseBtn = "border-[#dc26262e] hover:bg-[#fbdada] hover:brightness-100";
+const factGrid =
+  "mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line md:grid-cols-3";
 
 export function OrderDetail({
   sale,
@@ -90,18 +103,16 @@ export function OrderDetail({
   }
 
   return (
-    <Box
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
-      onClick={onClose}
-    >
+    <Box className={modalWrap} onClick={onClose}>
+      <ModalMotion />
       <Box
         role="dialog"
         aria-modal="true"
         aria-label={sale.id}
-        className="flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
+        className={modalCard}
         onClick={keepOpen}
       >
-        <Stack direction="row" align="start" justify="between" className="border-b border-line px-5 py-4 print:hidden">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-5 py-4 print:hidden">
           <Box>
             <Heading level={3} className="text-[17px]">
               {sale.id}{" "}
@@ -109,22 +120,22 @@ export function OrderDetail({
                 · {sale.channel === "online" ? "Online order" : "Counter sale"}
               </Text>
             </Heading>
-            <Stack direction="row" align="center" gap={1} className="mt-[5px]">
-              <StatusPill status={sale.status} />
+            <Stack direction="row" align="center" className="mt-[5px] gap-1.5">
+              <StatusPill status={sale.status} className="gap-[5px]" />
               <ChannelPill channel={sale.channel} />
               {sale.rx ? (
-                <Tag tone="rx">
+                <Tag tone="rx" className="border-[#f3c7c7]">
                   <IconRx size={11} /> Prescription
                 </Tag>
               ) : null}
             </Stack>
           </Box>
-          <IconButton label="Close" className="border-0 bg-wash-2" onClick={onClose}>
+          <IconButton label="Close" className={closeBtn} onClick={onClose}>
             <IconX size={18} />
           </IconButton>
         </Stack>
         <Box className="px-5 pt-3 print:hidden">
-          <Box className="inline-flex gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
+          <Box className="inline-flex max-w-full flex-wrap gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
             <TabButton label="Details & history" selected={tab === "history"} onClick={showHistory} />
             <TabButton label="Invoice" selected={tab === "invoice"} onClick={showInvoice} />
           </Box>
@@ -132,7 +143,7 @@ export function OrderDetail({
         <Box className="overflow-y-auto px-5 py-5">
           {tab === "history" ? (
             <>
-              <Box className="mb-4 grid grid-cols-1 overflow-hidden rounded-md border border-line bg-line sm:grid-cols-3">
+              <Box className={factGrid}>
                 <Fact label="Order date & time" value={fmtDateTime(sale.createdAt)} small />
                 <Fact label="Amount" value={inr(view.totals.payable)} />
                 <Fact
@@ -155,38 +166,36 @@ export function OrderDetail({
                 </Text>
               ) : null}
               {sale.paid === false ? (
-                <Box className="mb-4 rounded-md border border-[#f3d3d3] bg-rose-bg p-[18px]">
-                  <Text className="text-[14px] font-extrabold text-rose">Payment pending · {inr(view.totals.payable)}</Text>
-                  <Text variant="caption" className="mb-2.5 text-[12px]">
-                    Sent to reception from billing. Collect & mark paid.
-                  </Text>
-                  <Stack direction="row" wrap gap={1} className="mb-2.5">
+                <Box className="mb-4 rounded-md border border-[#f3d3d3] bg-rose-bg p-[18px] shadow-sm">
+                  <Box className="mb-2.5">
+                    <Text className="text-[14px] font-extrabold text-rose">
+                      Payment pending · {inr(view.totals.payable)}
+                    </Text>
+                    <Text className="text-[12px] text-muted">Sent to reception from billing. Collect & mark paid.</Text>
+                  </Box>
+                  <Stack direction="row" wrap className="mb-2.5 gap-1.5">
                     {PAY_CHOICES.map(renderPay)}
                   </Stack>
-                  <Button variant="gold" block onClick={collect}>
+                  <Button variant="gold" block className={cn(footBtn, goldBtn)} onClick={collect}>
                     <IconCash size={15} /> Mark as paid · {PAY_LABEL[payMode]}
                   </Button>
                 </Box>
               ) : null}
               {sale.channel === "online" && sale.status !== "cancelled" ? <OrderTimeline status={sale.status} /> : null}
-              <Text variant="label" className="text-[11px] tracking-[0.08em] text-faint uppercase">
-                Status history
-              </Text>
+              <SectionLabel>Status history</SectionLabel>
               <Box className="relative my-1 pl-[22px]">
                 {events.map(renderEvent)}
               </Box>
               {sale.rx ? (
                 <>
-                  <Stack direction="row" align="center" justify="between" className="mt-4">
-                    <Text variant="label" className="text-[11px] tracking-[0.08em] text-faint uppercase">
-                      Prescription
-                    </Text>
+                  <Stack direction="row" align="center" justify="between" className="mt-4 mb-0.5 gap-2.5">
+                    <SectionLabel className="mb-0">Prescription</SectionLabel>
                     {rx ? (
-                      <Stack direction="row" align="center" gap={1}>
-                        <Pill tone={rxStatusTone(rx.status)} dot>
+                      <Stack direction="row" align="center" className="gap-1.5">
+                        <Pill tone={rxStatusTone(rx.status)} dot className="gap-[5px]">
                           {rx.status}
                         </Pill>
-                        <Button variant="ghost" size="sm" onClick={onOpenRx}>
+                        <Button variant="ghost" size="sm" className="h-auto !leading-[1.5]" onClick={onOpenRx}>
                           Open <IconArrowRight size={13} />
                         </Button>
                       </Stack>
@@ -194,8 +203,8 @@ export function OrderDetail({
                   </Stack>
                   {rx ? (
                     <>
-                      <Stack direction="row" align="center" gap={1} className="mb-2">
-                        <MonoText size="sm" className="font-bold">
+                      <Stack direction="row" align="center" className="mb-2 gap-1.5">
+                        <MonoText size="sm" className="text-[12.5px] font-bold">
                           {rx.id}
                         </MonoText>
                         <Pill tone={rx.kind === "digital" ? "teal" : "gray"}>
@@ -211,10 +220,8 @@ export function OrderDetail({
                   )}
                 </>
               ) : null}
-              <Text variant="label" className="mt-4 text-[11px] tracking-[0.08em] text-faint uppercase">
-                Items
-              </Text>
-              <Table>
+              <SectionLabel className="mt-4">Items</SectionLabel>
+              <Table className="border-separate border-spacing-0">
                 <TableHead>
                   <TableRow>
                     <TableHeaderCell className={headCell}>Item</TableHeaderCell>
@@ -230,42 +237,42 @@ export function OrderDetail({
                     </TableHeaderCell>
                   </TableRow>
                 </TableHead>
-                <TableBody>
-                  {sale.items.map(renderItem)}
+                <TableBody>{sale.items.map(renderItem)}</TableBody>
+                <tfoot>
                   <TableRow>
-                    <TableCell colSpan={4} className={`${bodyCell} border-t-2 border-line-2 bg-wash-2 font-extrabold`}>
+                    <TableCell colSpan={4} className={footCell}>
                       Total payable
                     </TableCell>
-                    <TableCell align="right" className={`${bodyCell} border-t-2 border-line-2 bg-wash-2 font-extrabold text-ink`}>
+                    <TableCell align="right" className={`${footCell} text-ink`}>
                       {inr(view.totals.payable)}
                     </TableCell>
                   </TableRow>
-                </TableBody>
+                </tfoot>
               </Table>
             </>
           ) : (
             <Invoice sale={sale} profile={profile} className="print-area" />
           )}
         </Box>
-        <Stack direction="row" justify="end" wrap gap={2} className="border-t border-line px-5 py-3.5 print:hidden">
+        <Stack direction="row" justify="end" wrap className="gap-2.5 border-t border-line px-5 py-3.5 print:hidden max-md:flex-wrap">
           {sale.channel === "online" && sale.status === "new" ? (
-            <Button variant="rose" onClick={onCancel}>
+            <Button variant="rose" className={cn(footBtn, roseBtn)} onClick={onCancel}>
               Reject order
             </Button>
           ) : null}
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" className={footBtn} onClick={onClose}>
             Close
           </Button>
-          <Button variant="ghost" onClick={onShare}>
+          <Button variant="ghost" className={footBtn} onClick={onShare}>
             <IconShare size={15} /> Share
           </Button>
           {sale.channel === "online" && sale.status === "new" ? (
-            <Button variant="gold" onClick={onAdvance}>
+            <Button variant="gold" className={cn(footBtn, goldBtn)} onClick={onAdvance}>
               Accept order
             </Button>
           ) : null}
           {sale.channel === "online" && (sale.status === "accepted" || sale.status === "packed") && onPack ? (
-            <Button variant="gold" onClick={onPack}>
+            <Button variant="gold" className={cn(footBtn, goldBtn)} onClick={onPack}>
               {sale.status === "accepted" ? (
                 <>
                   <IconBox size={15} /> Pack & dispatch
@@ -278,16 +285,39 @@ export function OrderDetail({
             </Button>
           ) : null}
           {sale.channel === "online" && sale.status === "out" ? (
-            <Button variant="gold" onClick={onAdvance}>
+            <Button variant="gold" className={cn(footBtn, goldBtn)} onClick={onAdvance}>
               Mark delivered
             </Button>
           ) : null}
-          <Button variant="primary" onClick={doPrint}>
+          <Button variant="primary" className={footBtn} onClick={doPrint}>
             <IconPrint size={16} /> Print / PDF
           </Button>
         </Stack>
       </Box>
     </Box>
+  );
+}
+
+function SectionLabel({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <Text
+      as="span"
+      variant="label"
+      className={cn(
+        "mb-0.5 block text-[11px] font-extrabold tracking-[0.08em] text-faint uppercase",
+        className,
+      )}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function ModalMotion() {
+  return (
+    <style>
+      {"@keyframes pdFade{from{opacity:0}}@keyframes pdPop{from{transform:translateY(14px) scale(.98);opacity:.6}}"}
+    </style>
   );
 }
 
@@ -298,8 +328,10 @@ function TabButton({ label, selected, onClick }: { label: string; selected: bool
       size="sm"
       onClick={onClick}
       className={cn(
-        "h-auto border-0 px-[13px] py-1.5 text-[12.5px] shadow-none",
-        selected ? "bg-paper text-dark shadow-sm" : "bg-transparent text-muted",
+        segBtn,
+        selected
+          ? "bg-paper text-dark shadow-sm hover:bg-paper hover:text-dark"
+          : "bg-transparent text-muted hover:bg-transparent hover:text-muted",
       )}
     >
       {label}
@@ -320,7 +352,7 @@ function PayChoice({
     onSelect(mode);
   }
   return (
-    <Chip selected={selected} className={cn(selected && "border-dark bg-dark text-white hover:bg-dark")} onClick={select}>
+    <Chip selected={selected} className="min-h-10" onClick={select}>
       {PAY_LABEL[mode]}
     </Chip>
   );
@@ -352,11 +384,11 @@ function HistoryEvent({ entry, now, last }: { entry: HistoryEntry; now: number; 
           !future && !cancelled && "bg-mid",
         )}
       />
-      {last ? null : <Box className="absolute top-3 bottom-0 -left-px w-0.5 bg-line" />}
+      {last ? null : <Box className="absolute top-3 -bottom-0.5 left-[1.5px] w-0.5 bg-line" />}
       <Text as="span" className={cn("text-[13px] font-bold text-ink", future && "font-semibold text-muted")}>
         {STATUS_LABEL[entry.status]}
       </Text>
-      <Text variant="caption">
+      <Text variant="caption" className="mt-px">
         {future ? "Pending" : `${fmtDateTime(entry.at)} · ${timeAgo(entry.at, now)}`}
       </Text>
     </Box>
@@ -366,7 +398,7 @@ function HistoryEvent({ entry, now, last }: { entry: HistoryEntry; now: number; 
 function ItemRow({ item }: { item: SaleItem }) {
   return (
     <TableRow>
-      <TableCell className={`${bodyCell} font-semibold text-ink`}>{item.name}</TableCell>
+      <TableCell className={`${bodyCell} font-semibold`}>{item.name}</TableCell>
       <TableCell className={`${bodyCell} font-mono`}>{item.batchNo}</TableCell>
       <TableCell align="right" className={`${bodyCell} font-semibold text-ink`}>
         {item.qty}

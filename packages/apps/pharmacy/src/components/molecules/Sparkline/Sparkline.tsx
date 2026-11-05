@@ -7,7 +7,7 @@ export type SparklineProps = Omit<ComponentProps<"svg">, "children"> & {
   color?: string;
 };
 
-export function Sparkline({ data, color = "var(--mid)", className, ...props }: SparklineProps) {
+export function Sparkline({ data, color = "var(--color-mid)", className, ...props }: SparklineProps) {
   const points = sparkPoints(data);
   const line = sparkLinePath(points);
   const area = sparkAreaPath(points);

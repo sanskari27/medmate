@@ -6,7 +6,7 @@ import { Text } from "@/components/atoms/Text";
 import { cn } from "@/utils/className";
 
 const upgradeChipVariants = cva(
-  "h-auto gap-1.5 rounded-[10px] border-gold bg-gradient-to-r from-amber-bg to-paper px-3 py-2 text-[12.5px] font-extrabold whitespace-nowrap text-gold-d shadow-none hover:border-gold hover:from-amber-bg hover:to-amber-bg hover:text-gold-d",
+  "h-auto gap-1.5 rounded-[10px] border-gold bg-[linear-gradient(100deg,var(--color-amber-bg),#fff)] px-3 py-2 text-[12.5px] font-extrabold whitespace-nowrap text-gold-d shadow-none hover:border-gold hover:bg-amber-bg hover:bg-none hover:text-gold-d active:translate-y-0",
 );
 
 export type UpgradeChipProps = ComponentProps<typeof Button>;

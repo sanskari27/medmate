@@ -2,9 +2,9 @@ import { useState, type ChangeEvent, type MouseEvent, type ReactNode } from "rea
 import { usePharma } from "@/hooks";
 import { EMPLOYEE_POSITIONS, employeeTenure, inr, monthlyPayroll, type Employee } from "@/utils";
 import { formatDayText, toYmd } from "@/utils/date";
-import { Avatar, Box, Button, Input, Pill, Progress, Select, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
+import { Avatar, Box, Button, Heading, Input, Pill, Progress, Select, Stack, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text } from "@/components/atoms";
 import { IconBriefcase, IconCash, IconDoc, IconIdCard, IconPlus, IconPrint, IconRupee, IconSearch, IconUser, IconUsers } from "@/components/atoms";
-import { Card, CardBody, CardHeader } from "@/components/molecules/Card";
+import { Card, CardBody } from "@/components/molecules/Card";
 import { EmployeeForm } from "./components/EmployeeForm";
 import { EmployeeIdCard } from "./components/EmployeeIdCard";
 import { activeEmployeeCount, barPercent, countByPosition, countEmployment, documentTotals, downloadBlob, employeesCsv, filterEmployees } from "./Employees.utils";
@@ -98,9 +98,12 @@ export default function EmployeesScreen() {
         <StatCard tone="gold" icon={<IconUser size={18} />} label="Positions" value={String(byPosition.length)} hint="roles across team" />
       </Box>
 
-      <Card className="mb-4">
-        <CardHeader title="Team composition" subtitle="by role" />
-        <CardBody>
+      <Card className="mb-4 rounded-md shadow-sm">
+        <Stack direction="row" align="center" justify="between" className="border-b border-line px-[18px] py-[15px]">
+          <Heading level={3} className="text-[15px] font-bold tracking-normal">Team composition</Heading>
+          <Text className="text-[12.5px] text-muted">by role</Text>
+        </Stack>
+        <CardBody className="px-[18px] pb-[18px]">
           <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <PositionBars rows={byPosition} max={positionMax} />
           </Box>
@@ -109,7 +112,7 @@ export default function EmployeesScreen() {
 
       <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
         <Box className="overflow-x-auto">
-          <Table className="border-separate border-spacing-0 text-[13px]">
+          <Table className="border-separate border-spacing-0 text-[13px] [&_tbody_tr:hover]:bg-wash-2 [&_td]:px-3.5 [&_td]:py-[11px] [&_td]:align-middle [&_td]:text-ink-2 [&_td.text-right]:font-semibold [&_td.text-right]:text-ink">
             <TableHead>
               <TableRow className="border-0">
                 <HeaderCell>Code</HeaderCell>
@@ -180,7 +183,7 @@ function PositionBar({ role, count, max }: { role: string; count: number; max: n
         <Text as="span" className="text-[12.5px]">{role}</Text>
         <Text as="span" className="text-[12.5px] font-bold">{count}</Text>
       </Stack>
-      <Progress value={barPercent(count, max)} label={role} />
+      <Progress className="h-[7px] rounded-[5px]" value={barPercent(count, max)} label={role} />
     </Stack>
   );
 }
@@ -201,7 +204,7 @@ function EmployeeRow({ employee, now, onEdit, onCard }: { employee: Employee; no
     onCard(employee);
   }
   return (
-    <TableRow className="cursor-pointer" onClick={handleEdit}>
+    <TableRow className="cursor-pointer hover:bg-wash-2" onClick={handleEdit}>
       <TableCell className="px-3.5 py-[11px] font-mono font-bold">{employee.id}</TableCell>
       <TableCell className="px-3.5 py-[11px]">
         <Stack direction="row" align="center" gap={2}>

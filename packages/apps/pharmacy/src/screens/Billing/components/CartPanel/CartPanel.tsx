@@ -46,8 +46,13 @@ export function CartPanel({
 
   return (
     <Stack className="sticky top-0 max-h-[calc(100vh-124px)] overflow-hidden rounded-lg border border-line bg-paper shadow-card max-[1180px]:static max-[1180px]:max-h-none">
-      <Stack direction="row" align="center" justify="between" className="border-b border-line px-4 py-[15px]">
-        <Heading level={3} className="flex items-center text-[15px] font-bold">
+      <Stack
+        direction="row"
+        align="center"
+        justify="between"
+        className="border-b border-line px-4 py-[15px]"
+      >
+        <Heading level={3} className="flex items-center text-[15px]">
           Current bill
           {count > 0 ? (
             <Text
@@ -86,17 +91,31 @@ export function CartPanel({
             <Text as="span" className="text-[13px] font-bold text-ink-2">
               Items total (incl. GST)
             </Text>
-            <Text as="span" className="font-display text-[23px] font-extrabold tracking-tight text-dark">
+            <Text
+              as="span"
+              className="font-display text-[23px] font-extrabold tracking-[-0.02em] text-dark"
+            >
               {inr(payable)}
             </Text>
           </Stack>
-          <Button variant="primary" size="lg" block disabled={itemCount === 0 || !canProceed} onClick={onProceed}>
+          <Button
+            variant="primary"
+            size="lg"
+            block
+            disabled={itemCount === 0 || !canProceed}
+            onClick={onProceed}
+          >
             Proceed to bill <IconArrowRight size={16} />
           </Button>
           {itemCount > 0 && !canProceed ? (
-            <Text as="span" className="mt-2 flex items-center justify-center gap-[5px] text-[11px] font-semibold text-rose">
+            <Text
+              as="span"
+              className="mt-2 flex items-center justify-center gap-[5px] text-[11px] font-semibold text-rose"
+            >
               <IconAlert size={12} />{" "}
-              {prescriptionReady ? "Select the ward to continue" : "Enter the prescribing doctor to continue"}
+              {prescriptionReady
+                ? "Select the ward to continue"
+                : "Enter the prescribing doctor to continue"}
             </Text>
           ) : null}
         </Box>

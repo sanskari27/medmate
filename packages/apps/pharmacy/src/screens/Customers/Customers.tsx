@@ -101,11 +101,11 @@ export default function CustomersScreen() {
       </Box>
 
       <Stack direction="row" align="center" wrap className="mb-4 gap-2.5">
-        <Stack direction="row" align="center" gap={2} className="h-10 min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
+        <Stack direction="row" align="center" gap={2} className="min-w-[240px] max-w-[360px] flex-1 rounded-sm border border-line-2 bg-paper px-3 py-2">
           <Box className="text-green">
             <IconSearch size={17} />
           </Box>
-          <Input variant="plain" aria-label="Search customers" placeholder="Search customer name or phone…" value={query} onChange={handleQueryChange} className="placeholder:text-faint" />
+          <Input variant="plain" aria-label="Search customers" placeholder="Search customer name or phone…" value={query} onChange={handleQueryChange} className="py-0 placeholder:text-faint" />
         </Stack>
         <Box className="flex-1" />
         <Stack direction="row" className="gap-0.5 rounded-sm border border-line bg-wash-2 p-0.5">
@@ -226,7 +226,7 @@ function CustomerRow({
   }
 
   return (
-    <TableRow className="cursor-pointer" onClick={handleOpen}>
+    <TableRow className="cursor-pointer hover:bg-wash-2" onClick={handleOpen}>
       <TableCell className="px-3.5 py-[11px]">
         <Stack direction="row" align="center" gap={2}>
           <Box className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-wash text-mid">
@@ -242,18 +242,18 @@ function CustomerRow({
       <TableCell className="px-3.5 py-[11px] font-mono">{customer.phone}</TableCell>
       <TableCell align="right" className="px-3.5 py-[11px] font-bold">{customer.orders.length}</TableCell>
       <TableCell className="px-3.5 py-[11px]">
-        <Stack direction="row" align="center" gap={3} className="text-[12px] text-ink-2 tabular-nums" title={`${customer.online} online · ${customer.offline} counter`}>
-          <Stack direction="row" align="center" gap={1}>
+        <Stack direction="row" align="center" className="gap-[14px] text-[12px] text-ink-2 tabular-nums" title={`${customer.online} online · ${customer.offline} counter`}>
+          <Stack direction="row" align="center" className="gap-[5px]">
             <Box className="text-faint"><IconGlobe size={13} /></Box>
             {customer.online}
           </Stack>
-          <Stack direction="row" align="center" gap={1}>
+          <Stack direction="row" align="center" className="gap-[5px]">
             <Box className="text-faint"><IconStore size={13} /></Box>
             {customer.offline}
           </Stack>
         </Stack>
       </TableCell>
-      <TableCell align="right" className="px-3.5 py-[11px]">{customer.units}</TableCell>
+      <TableCell align="right" className="px-3.5 py-[11px] font-semibold text-ink">{customer.units}</TableCell>
       <TableCell className="px-3.5 py-[11px]">{timeAgo(customer.last, now)}</TableCell>
       <TableCell align="right" className="px-3.5 py-[11px]">
         <Pill tone="gold">{loyaltyPoints(customer.spent)} pts</Pill>

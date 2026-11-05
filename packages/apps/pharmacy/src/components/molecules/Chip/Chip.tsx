@@ -4,7 +4,7 @@ import { Button } from "@/components/atoms/Button";
 import { cn } from "@/utils/className";
 
 const chipVariants = cva(
-  "inline-flex h-auto items-center gap-[7px] rounded-full border px-3.5 py-[7px] text-[12.5px] font-bold shadow-none transition",
+  "inline-flex h-auto items-center gap-[7px] rounded-full border px-3.5 py-[7px] text-[12.5px] font-bold shadow-none transition active:translate-y-0 max-[767px]:min-h-10",
   {
     variants: {
       selected: {

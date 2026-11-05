@@ -66,6 +66,8 @@ export function CustomerModal({ customer, onClose, onNewSale, sales, creditPayme
   return (
     <Modal
       title={customer.name}
+      overlayClassName="z-[100] bg-[#0d201580] p-6 backdrop-blur-[3px]"
+      className="max-h-[90vh] max-w-[540px] overflow-y-auto"
       onClose={onClose}
       footer={
         <>
@@ -75,7 +77,7 @@ export function CustomerModal({ customer, onClose, onNewSale, sales, creditPayme
       }
     >
       <Box className="max-h-[60vh] overflow-y-auto">
-        <Stack direction="row" wrap gap={2} className="mb-3.5">
+        <Stack direction="row" wrap className="mb-3.5 gap-[10px]">
           <SummaryChip label="Phone" value={customer.phone} />
           <SummaryChip label="Lifetime" value={inr(customer.spent)} />
           <SummaryChip label="Orders" value={String(customer.orders.length)} />

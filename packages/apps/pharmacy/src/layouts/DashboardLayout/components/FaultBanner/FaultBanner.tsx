@@ -20,14 +20,14 @@ export function FaultBanner() {
     <Alert
       role="alert"
       tone="rose"
-      className="fixed top-4 left-1/2 z-[300] flex w-[min(480px,calc(100%-2rem))] -translate-x-1/2 items-start gap-2.5 rounded-md px-3.5 py-3 text-[13.5px] shadow-pop"
+      className="fixed top-4 left-1/2 z-[300] flex w-[min(480px,calc(100%-2rem))] -translate-x-1/2 items-start gap-2.5 rounded-md px-3.5 py-3 text-[13.5px] font-bold shadow-pop"
     >
       <Text className="text-[13.5px] font-bold text-rose">{formFault.message}</Text>
       <IconButton
         label="Dismiss error"
         variant="close"
         onClick={clearFault}
-        className="ml-auto h-auto w-auto p-0 text-[18px] leading-none text-rose hover:text-rose"
+        className="ml-auto h-auto w-auto px-0.5 py-0 text-[18px] leading-none text-rose hover:text-rose"
       >
         ×
       </IconButton>
