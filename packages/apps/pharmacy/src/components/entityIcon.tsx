@@ -1,9 +1,34 @@
 import * as React from "react";
 import {
-  IconAlert, IconBandage, IconBed, IconBolt, IconBowl, IconBox, IconBaby, IconCart, IconClipboard,
-  IconDoc, IconDroplet, IconGlobe, IconReceipt, IconHeart, IconLeaf, IconPill, IconRefresh, IconSparkle, IconStar,
-  IconStore, IconSun, IconThermometer, IconToothbrush, IconTrendUp, IconTruck, IconUser, IconWallet,
-  IconWatch, IconWind,
+  IconAlert,
+  IconBandage,
+  IconBed,
+  IconBolt,
+  IconBowl,
+  IconBox,
+  IconBaby,
+  IconCart,
+  IconClipboard,
+  IconDoc,
+  IconDroplet,
+  IconGlobe,
+  IconReceipt,
+  IconHeart,
+  IconLeaf,
+  IconPill,
+  IconRefresh,
+  IconSparkle,
+  IconStar,
+  IconStore,
+  IconSun,
+  IconThermometer,
+  IconToothbrush,
+  IconTrendUp,
+  IconTruck,
+  IconUser,
+  IconWallet,
+  IconWatch,
+  IconWind,
 } from "@/components/Icon";
 
 export type IconC = (p: { size?: number }) => React.JSX.Element;
@@ -116,9 +141,22 @@ export function SaleSourceIcon({ k, size = 16 }: { k: string; size?: number }) {
 }
 
 /** Person avatar: uploaded photo, else initials. */
-export function Avatar({ name, photo, size = 34, className = "" }: { name: string; photo?: string; size?: number; className?: string }) {
+export function Avatar({
+  name,
+  photo,
+  size = 34,
+  className = "",
+}: {
+  name: string;
+  photo?: string;
+  size?: number;
+  className?: string;
+}) {
   return (
-    <span className={`pd-avatar ${className}`} style={{ width: size, height: size, fontSize: Math.round(size / 2.6) }}>
+    <span
+      className={`pd-avatar ${className}`}
+      style={{ width: size, height: size, fontSize: Math.round(size / 2.6) }}
+    >
       {photo ? <img src={photo} alt={name} /> : initialsOf(name)}
     </span>
   );

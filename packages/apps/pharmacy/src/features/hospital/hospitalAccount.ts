@@ -18,15 +18,15 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export type CreditTerms = "On demand" | "NET 15" | "NET 30" | "NET 45";
 export const CREDIT_TERMS: CreditTerms[] = ["On demand", "NET 15", "NET 30", "NET 45"];
 export type HospitalAccount = {
-  name: string;          // institutional customer (the hospital central stores)
+  name: string; // institutional customer (the hospital central stores)
   gstin: string;
   contact: string;
-  phone?: string;        // billing contact number (for statement / reminder)
-  email?: string;        // billing email (for statement / reminder)
+  phone?: string; // billing contact number (for statement / reminder)
+  email?: string; // billing email (for statement / reminder)
   creditTerms: CreditTerms;
-  creditLimit: number;   // approved credit ceiling (0 = no limit set)
-  discountPct: number;   // default institutional discount off MRP → credit price
-  flagRefills: boolean;  // surface patient ref on the statement (recoverable lines)
+  creditLimit: number; // approved credit ceiling (0 = no limit set)
+  discountPct: number; // default institutional discount off MRP → credit price
+  flagRefills: boolean; // surface patient ref on the statement (recoverable lines)
 };
 export const DEFAULT_HOSPITAL_ACCOUNT: HospitalAccount = {
   name: "",
@@ -47,17 +47,28 @@ export const ADMIN_PRICING_OTP = "123456"; // demo admin OTP to authorise pricin
 
 // hospital credit price for a product: per-product rule if set, else the uniform institutional discount
 /** Hospital credit price: a product rule if one is saved, otherwise the account's discount off MRP. */
-export const creditPriceOf = (product: InvProduct, account: HospitalAccount, rules: Record<string, PriceRule>): number => {
+export const creditPriceOf = (
+  product: InvProduct,
+  account: HospitalAccount,
+  rules: Record<string, PriceRule>,
+): number => {
   const mrp = mrpOf(product);
   const rule = rules[product.id];
   const price = rule
-    ? (rule.mode === "percent" ? mrp * (1 - rule.value / 100) : mrp - rule.value)
+    ? rule.mode === "percent"
+      ? mrp * (1 - rule.value / 100)
+      : mrp - rule.value
     : mrp * (1 - account.discountPct / 100);
   return Math.max(0, round2(price));
 };
 // effective discount % a product ends up with (uniform or its rule)
-export const effectiveDiscountPct = (p: InvProduct, account: HospitalAccount, rules: Record<string, PriceRule>): number => {
-  const mrp = mrpOf(p); if (mrp <= 0) return 0;
+export const effectiveDiscountPct = (
+  p: InvProduct,
+  account: HospitalAccount,
+  rules: Record<string, PriceRule>,
+): number => {
+  const mrp = mrpOf(p);
+  if (mrp <= 0) return 0;
   return Math.round((1 - creditPriceOf(p, account, rules) / mrp) * 100);
 };
 
@@ -70,25 +81,44 @@ export const SUPPLY_REASONS: { key: WardSupplyReason; label: string; tag: string
 ];
 export const reasonMeta = (r: WardSupplyReason) => SUPPLY_REASONS.find((x) => x.key === r)!;
 
-export type WardSupplyItem = { productId: string; name: string; batchNo: string; expiry: string; hsn: string; gst: number; qty: number; price: number; amount: number; mrp?: number };
+export type WardSupplyItem = {
+  productId: string;
+  name: string;
+  batchNo: string;
+  expiry: string;
+  hsn: string;
+  gst: number;
+  qty: number;
+  price: number;
+  amount: number;
+  mrp?: number;
+};
 // retail MRP for an item — stored at issue time, else recovered from the credit price + institutional discount
-export const itemMrp = (it: WardSupplyItem, discountPct: number) => it.mrp != null ? it.mrp : Math.round((it.price / (1 - discountPct / 100)) * 100) / 100;
+export const itemMrp = (it: WardSupplyItem, discountPct: number) =>
+  it.mrp != null ? it.mrp : Math.round((it.price / (1 - discountPct / 100)) * 100) / 100;
 export type WardSupply = {
-  id: string;            // WS-#### (issue) or WR-#### (return)
+  id: string; // WS-#### (issue) or WR-#### (return)
   kind: "issue" | "return";
   wardId: string;
   wardName: string;
   reason: WardSupplyReason;
-  patientId?: string;    // hospital MRN — ONLY on refill lines, for traceability
+  patientId?: string; // hospital MRN — ONLY on refill lines, for traceability
   patientName?: string;
   items: WardSupplyItem[];
-  total: number;         // sum of line amounts (always positive; `kind` carries the sign)
-  refDoc?: string;       // indent / requisition reference
-  indentId?: string;     // linked ward indent (so the indent reflects the billing)
+  total: number; // sum of line amounts (always positive; `kind` carries the sign)
+  refDoc?: string; // indent / requisition reference
+  indentId?: string; // linked ward indent (so the indent reflects the billing)
   at: number;
 };
 
-export type HospitalPayment = { id: string; amount: number; mode: PayMode; ref?: string; note?: string; at: number };
+export type HospitalPayment = {
+  id: string;
+  amount: number;
+  mode: PayMode;
+  ref?: string;
+  note?: string;
+  at: number;
+};
 
 // signed ledger effect: issues add to the receivable, returns reduce it
 const signed = (s: WardSupply) => (s.kind === "return" ? -s.total : s.total);
@@ -97,20 +127,43 @@ const signed = (s: WardSupply) => (s.kind === "return" ? -s.total : s.total);
 export const hospitalOutstanding = (supplies: WardSupply[], payments: HospitalPayment[]): number =>
   round2(supplies.reduce((a, s) => a + signed(s), 0) - payments.reduce((a, p) => a + p.amount, 0));
 
-export const suppliedTotal = (supplies: WardSupply[]) => round2(supplies.filter((s) => s.kind === "issue").reduce((a, s) => a + s.total, 0));
-export const returnedTotal = (supplies: WardSupply[]) => round2(supplies.filter((s) => s.kind === "return").reduce((a, s) => a + s.total, 0));
-export const paidTotal = (payments: HospitalPayment[]) => round2(payments.reduce((a, p) => a + p.amount, 0));
+export const suppliedTotal = (supplies: WardSupply[]) =>
+  round2(supplies.filter((s) => s.kind === "issue").reduce((a, s) => a + s.total, 0));
+export const returnedTotal = (supplies: WardSupply[]) =>
+  round2(supplies.filter((s) => s.kind === "return").reduce((a, s) => a + s.total, 0));
+export const paidTotal = (payments: HospitalPayment[]) =>
+  round2(payments.reduce((a, p) => a + p.amount, 0));
 
 // ── ward stock on hand (qty issued − returned, per ward per product) ──
-export type WardStockRow = { wardId: string; wardName: string; productId: string; name: string; qty: number; price: number; value: number };
-export function wardOnHand(supplies: WardSupply[], creditPrice: (productId: string) => number, wardId?: string): WardStockRow[] {
+export type WardStockRow = {
+  wardId: string;
+  wardName: string;
+  productId: string;
+  name: string;
+  qty: number;
+  price: number;
+  value: number;
+};
+export function wardOnHand(
+  supplies: WardSupply[],
+  creditPrice: (productId: string) => number,
+  wardId?: string,
+): WardStockRow[] {
   const map = new Map<string, WardStockRow>();
   for (const s of supplies) {
     if (wardId && s.wardId !== wardId) continue;
     const sign = s.kind === "return" ? -1 : 1;
     for (const it of s.items) {
       const key = s.wardId + "|" + it.productId;
-      const cur = map.get(key) ?? { wardId: s.wardId, wardName: s.wardName, productId: it.productId, name: it.name, qty: 0, price: 0, value: 0 };
+      const cur = map.get(key) ?? {
+        wardId: s.wardId,
+        wardName: s.wardName,
+        productId: it.productId,
+        name: it.name,
+        qty: 0,
+        price: 0,
+        value: 0,
+      };
       cur.qty += sign * it.qty;
       cur.wardName = s.wardName;
       map.set(key, cur);
@@ -118,72 +171,173 @@ export function wardOnHand(supplies: WardSupply[], creditPrice: (productId: stri
   }
   return Array.from(map.values())
     .filter((r) => r.qty !== 0)
-    .map((r) => { const price = creditPrice(r.productId); return { ...r, price, value: round2(price * r.qty) }; })
+    .map((r) => {
+      const price = creditPrice(r.productId);
+      return { ...r, price, value: round2(price * r.qty) };
+    })
     .sort((a, b) => a.wardName.localeCompare(b.wardName) || a.name.localeCompare(b.name));
 }
 
 // ── hospital credit statement (running balance) ─────────────────
 export type StatementLine = {
-  at: number; ref: string; type: "issue" | "return" | "payment";
-  label: string; reason?: WardSupplyReason; patientId?: string; patientName?: string; wardName?: string;
-  debit: number; credit: number; balance: number;
+  at: number;
+  ref: string;
+  type: "issue" | "return" | "payment";
+  label: string;
+  reason?: WardSupplyReason;
+  patientId?: string;
+  patientName?: string;
+  wardName?: string;
+  debit: number;
+  credit: number;
+  balance: number;
 };
-export function buildStatement(supplies: WardSupply[], payments: HospitalPayment[]): StatementLine[] {
+export function buildStatement(
+  supplies: WardSupply[],
+  payments: HospitalPayment[],
+): StatementLine[] {
   type Ev = Omit<StatementLine, "balance">;
   const evs: Ev[] = [];
   for (const s of supplies) {
-    if (s.kind === "issue") evs.push({ at: s.at, ref: s.id, type: "issue", label: `${reasonMeta(s.reason).label} · ${s.wardName}`, reason: s.reason, patientId: s.patientId, patientName: s.patientName, wardName: s.wardName, debit: s.total, credit: 0 });
-    else evs.push({ at: s.at, ref: s.id, type: "return", label: `Return · ${s.wardName}`, wardName: s.wardName, debit: 0, credit: s.total });
+    if (s.kind === "issue")
+      evs.push({
+        at: s.at,
+        ref: s.id,
+        type: "issue",
+        label: `${reasonMeta(s.reason).label} · ${s.wardName}`,
+        reason: s.reason,
+        patientId: s.patientId,
+        patientName: s.patientName,
+        wardName: s.wardName,
+        debit: s.total,
+        credit: 0,
+      });
+    else
+      evs.push({
+        at: s.at,
+        ref: s.id,
+        type: "return",
+        label: `Return · ${s.wardName}`,
+        wardName: s.wardName,
+        debit: 0,
+        credit: s.total,
+      });
   }
-  for (const p of payments) evs.push({ at: p.at, ref: p.id, type: "payment", label: `Payment received${p.ref ? " · " + p.ref : ""}`, debit: 0, credit: p.amount });
+  for (const p of payments)
+    evs.push({
+      at: p.at,
+      ref: p.id,
+      type: "payment",
+      label: `Payment received${p.ref ? " · " + p.ref : ""}`,
+      debit: 0,
+      credit: p.amount,
+    });
   evs.sort((a, b) => a.at - b.at);
   let bal = 0;
-  return evs.map((e) => { bal = round2(bal + e.debit - e.credit); return { ...e, balance: bal }; });
+  return evs.map((e) => {
+    bal = round2(bal + e.debit - e.credit);
+    return { ...e, balance: bal };
+  });
 }
 
 // next statement / due date from credit terms
-export const termDays = (t: CreditTerms) => (t === "NET 15" ? 15 : t === "NET 30" ? 30 : t === "NET 45" ? 45 : 0);
+export const termDays = (t: CreditTerms) =>
+  t === "NET 15" ? 15 : t === "NET 30" ? 30 : t === "NET 45" ? 45 : 0;
 
 // ── credit aging (FIFO: credits clear the oldest issues first) ───
 export type AgingBucket = { key: string; label: string; amount: number };
 export type HospitalAging = {
-  buckets: AgingBucket[];       // 0-30 / 31-60 / 61-90 / 90+
-  current: number;              // within credit terms
-  overdue: number;              // unpaid issues past their due date
+  buckets: AgingBucket[]; // 0-30 / 31-60 / 61-90 / 90+
+  current: number; // within credit terms
+  overdue: number; // unpaid issues past their due date
   oldestUnpaidAt: number | null;
-  dueDate: number | null;       // due date of the oldest unpaid issue
-  overdueDays: number;          // how overdue the oldest issue is (0 if none)
+  dueDate: number | null; // due date of the oldest unpaid issue
+  overdueDays: number; // how overdue the oldest issue is (0 if none)
 };
 const DAY = 86400000;
-export function hospitalAging(supplies: WardSupply[], payments: HospitalPayment[], now: number, terms: CreditTerms): HospitalAging {
+export function hospitalAging(
+  supplies: WardSupply[],
+  payments: HospitalPayment[],
+  now: number,
+  terms: CreditTerms,
+): HospitalAging {
   const days = termDays(terms);
-  const issues = supplies.filter((s) => s.kind === "issue").sort((a, b) => a.at - b.at).map((s) => ({ at: s.at, remaining: s.total }));
-  let credit = returnedTotal(supplies) + paidTotal(payments);   // returns + payments reduce the oldest issues first
-  for (const iss of issues) { if (credit <= 0) break; const take = Math.min(iss.remaining, credit); iss.remaining -= take; credit -= take; }
+  const issues = supplies
+    .filter((s) => s.kind === "issue")
+    .sort((a, b) => a.at - b.at)
+    .map((s) => ({ at: s.at, remaining: s.total }));
+  let credit = returnedTotal(supplies) + paidTotal(payments); // returns + payments reduce the oldest issues first
+  for (const iss of issues) {
+    if (credit <= 0) break;
+    const take = Math.min(iss.remaining, credit);
+    iss.remaining -= take;
+    credit -= take;
+  }
   const unpaid = issues.filter((i) => i.remaining > 0.005);
   const age = (at: number) => (now - at) / DAY;
-  const sumIn = (lo: number, hi: number) => round2(unpaid.filter((i) => { const a = age(i.at); return a >= lo && a < hi; }).reduce((s, i) => s + i.remaining, 0));
+  const sumIn = (lo: number, hi: number) =>
+    round2(
+      unpaid
+        .filter((i) => {
+          const a = age(i.at);
+          return a >= lo && a < hi;
+        })
+        .reduce((s, i) => s + i.remaining, 0),
+    );
   const buckets: AgingBucket[] = [
     { key: "0-30", label: "0–30 days", amount: sumIn(0, 31) },
     { key: "31-60", label: "31–60 days", amount: sumIn(31, 61) },
     { key: "61-90", label: "61–90 days", amount: sumIn(61, 91) },
-    { key: "90+", label: "90+ days", amount: round2(unpaid.filter((i) => age(i.at) >= 91).reduce((s, i) => s + i.remaining, 0)) },
+    {
+      key: "90+",
+      label: "90+ days",
+      amount: round2(unpaid.filter((i) => age(i.at) >= 91).reduce((s, i) => s + i.remaining, 0)),
+    },
   ];
   const dueAt = (at: number) => at + days * DAY;
-  const overdue = days > 0 ? round2(unpaid.filter((i) => now > dueAt(i.at)).reduce((s, i) => s + i.remaining, 0)) : 0;
+  const overdue =
+    days > 0
+      ? round2(unpaid.filter((i) => now > dueAt(i.at)).reduce((s, i) => s + i.remaining, 0))
+      : 0;
   const total = round2(unpaid.reduce((s, i) => s + i.remaining, 0));
   const oldest = unpaid[0] ?? null;
-  return { buckets, current: round2(total - overdue), overdue, oldestUnpaidAt: oldest?.at ?? null, dueDate: oldest ? dueAt(oldest.at) : null, overdueDays: oldest && days > 0 && now > dueAt(oldest.at) ? Math.floor((now - dueAt(oldest.at)) / DAY) : 0 };
+  return {
+    buckets,
+    current: round2(total - overdue),
+    overdue,
+    oldestUnpaidAt: oldest?.at ?? null,
+    dueDate: oldest ? dueAt(oldest.at) : null,
+    overdueDays:
+      oldest && days > 0 && now > dueAt(oldest.at) ? Math.floor((now - dueAt(oldest.at)) / DAY) : 0,
+  };
 }
 
 // ── ward consumption leaderboard (net billed value per ward) ─────
-export type WardConsumption = { wardId: string; wardName: string; supplied: number; returned: number; net: number; issues: number };
+export type WardConsumption = {
+  wardId: string;
+  wardName: string;
+  supplied: number;
+  returned: number;
+  net: number;
+  issues: number;
+};
 export function wardConsumption(supplies: WardSupply[]): WardConsumption[] {
   const map = new Map<string, WardConsumption>();
   for (const s of supplies) {
-    const cur = map.get(s.wardId) ?? { wardId: s.wardId, wardName: s.wardName, supplied: 0, returned: 0, net: 0, issues: 0 };
-    if (s.kind === "issue") { cur.supplied += s.total; cur.issues += 1; } else cur.returned += s.total;
-    cur.net = round2(cur.supplied - cur.returned); cur.wardName = s.wardName;
+    const cur = map.get(s.wardId) ?? {
+      wardId: s.wardId,
+      wardName: s.wardName,
+      supplied: 0,
+      returned: 0,
+      net: 0,
+      issues: 0,
+    };
+    if (s.kind === "issue") {
+      cur.supplied += s.total;
+      cur.issues += 1;
+    } else cur.returned += s.total;
+    cur.net = round2(cur.supplied - cur.returned);
+    cur.wardName = s.wardName;
     map.set(s.wardId, cur);
   }
   return Array.from(map.values()).sort((a, b) => b.net - a.net);
@@ -198,25 +352,42 @@ export function topSuppliedItems(supplies: WardSupply[], limit = 6): SuppliedIte
     for (const it of s.items) {
       const key = it.productId || it.name;
       const cur = map.get(key) ?? { productId: it.productId, name: it.name, qty: 0, amount: 0 };
-      cur.qty += sign * it.qty; cur.amount = round2(cur.amount + sign * it.amount);
+      cur.qty += sign * it.qty;
+      cur.amount = round2(cur.amount + sign * it.amount);
       map.set(key, cur);
     }
   }
-  return Array.from(map.values()).filter((x) => x.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, limit);
+  return Array.from(map.values())
+    .filter((x) => x.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, limit);
 }
 
 // ── monthly supplied vs received (last N months, oldest→newest) ──
 export type MonthFlow = { label: string; supplied: number; received: number };
-export function monthlyHospitalFlow(supplies: WardSupply[], payments: HospitalPayment[], now: number, months = 6): MonthFlow[] {
+export function monthlyHospitalFlow(
+  supplies: WardSupply[],
+  payments: HospitalPayment[],
+  now: number,
+  months = 6,
+): MonthFlow[] {
   const out: MonthFlow[] = [];
   const base = new Date(now);
   for (let k = months - 1; k >= 0; k--) {
     const d = new Date(base.getFullYear(), base.getMonth() - k, 1);
     const start = d.getTime();
     const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
-    const supplied = round2(supplies.filter((s) => s.kind === "issue" && s.at >= start && s.at < end).reduce((a, s) => a + s.total, 0)
-      - supplies.filter((s) => s.kind === "return" && s.at >= start && s.at < end).reduce((a, s) => a + s.total, 0));
-    const received = round2(payments.filter((p) => p.at >= start && p.at < end).reduce((a, p) => a + p.amount, 0));
+    const supplied = round2(
+      supplies
+        .filter((s) => s.kind === "issue" && s.at >= start && s.at < end)
+        .reduce((a, s) => a + s.total, 0) -
+        supplies
+          .filter((s) => s.kind === "return" && s.at >= start && s.at < end)
+          .reduce((a, s) => a + s.total, 0),
+    );
+    const received = round2(
+      payments.filter((p) => p.at >= start && p.at < end).reduce((a, p) => a + p.amount, 0),
+    );
     out.push({ label: d.toLocaleDateString("en-IN", { month: "short" }), supplied, received });
   }
   return out;

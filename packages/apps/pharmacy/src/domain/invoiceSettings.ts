@@ -6,8 +6,23 @@ export const INVOICE_TEMPLATES: { key: InvoiceTemplate; name: string; desc: stri
   { key: "minimal", name: "Minimal", desc: "Clean, airy, thin lines" },
   { key: "thermal", name: "Thermal", desc: "80mm receipt / counter roll" },
 ];
-export const INVOICE_ACCENTS = ["#1B3D29", "#2F7D52", "#1f7d8c", "#2f5fd0", "#6d4fc4", "#b9842f", "#c0392b"];
-export const INVOICE_TITLES = ["TAX INVOICE", "INVOICE", "RETAIL INVOICE", "BILL OF SUPPLY", "CASH MEMO", "CREDIT NOTE"];
+export const INVOICE_ACCENTS = [
+  "#1B3D29",
+  "#2F7D52",
+  "#1f7d8c",
+  "#2f5fd0",
+  "#6d4fc4",
+  "#b9842f",
+  "#c0392b",
+];
+export const INVOICE_TITLES = [
+  "TAX INVOICE",
+  "INVOICE",
+  "RETAIL INVOICE",
+  "BILL OF SUPPLY",
+  "CASH MEMO",
+  "CREDIT NOTE",
+];
 export type InvoiceSettings = {
   prefix: string;
   terms: string;
@@ -19,12 +34,12 @@ export type InvoiceSettings = {
   signatory: string;
   // ── customisation ──
   template: InvoiceTemplate;
-  accent: string;          // brand accent colour (header band / totals / title)
-  title: string;           // document title text
-  showLogo: boolean;       // render the pharmacy brand logo (profile.logo)
-  showStamp: boolean;      // render the signature / seal stamp
-  stamp?: string;          // data URL of an uploaded rubber-stamp / seal image
-  showHsn: boolean;        // include the HSN column
+  accent: string; // brand accent colour (header band / totals / title)
+  title: string; // document title text
+  showLogo: boolean; // render the pharmacy brand logo (profile.logo)
+  showStamp: boolean; // render the signature / seal stamp
+  stamp?: string; // data URL of an uploaded rubber-stamp / seal image
+  showHsn: boolean; // include the HSN column
 };
 export const DEFAULT_INVOICE_SETTINGS: InvoiceSettings = {
   prefix: "INV-",

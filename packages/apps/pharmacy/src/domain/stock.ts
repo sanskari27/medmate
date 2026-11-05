@@ -4,50 +4,61 @@
 export type Schedule = "OTC" | "H" | "H1" | "X";
 export const SCHEDULE_META: Record<Schedule, { label: string; rx: boolean; note: string }> = {
   OTC: { label: "OTC", rx: false, note: "Over the counter — no prescription needed" },
-  H:   { label: "Sch. H", rx: true, note: "Prescription required" },
-  H1:  { label: "Sch. H1", rx: true, note: "Prescription + H1 register entry" },
-  X:   { label: "Sch. X", rx: true, note: "Highly regulated — duplicate Rx & register" },
+  H: { label: "Sch. H", rx: true, note: "Prescription required" },
+  H1: { label: "Sch. H1", rx: true, note: "Prescription + H1 register entry" },
+  X: { label: "Sch. X", rx: true, note: "Highly regulated — duplicate Rx & register" },
 };
 
-export type DosageForm = "Tablet" | "Capsule" | "Syrup" | "Drops" | "Injection" | "Cream" | "Device" | "Other";
+export type DosageForm =
+  "Tablet" | "Capsule" | "Syrup" | "Drops" | "Injection" | "Cream" | "Device" | "Other";
 
 // A purchased lot of a product. Stock & expiry are tracked per batch.
 export type Batch = {
   batchNo: string;
-  expiry: string;      // "YYYY-MM"
-  qty: number;         // units in this batch
-  mrp: number;         // printed MRP (GST-inclusive)
-  ptr: number;         // price-to-retailer (cost)
+  expiry: string; // "YYYY-MM"
+  qty: number; // units in this batch
+  mrp: number; // printed MRP (GST-inclusive)
+  ptr: number; // price-to-retailer (cost)
 };
 
 export type InvProduct = {
   id: string;
   name: string;
-  composition: string;     // salt / molecule
+  composition: string; // salt / molecule
   manufacturer: string;
   form: DosageForm;
-  pack: string;            // "Strip of 15 tablets"
-  category: string;        // category key (see CATEGORIES)
-  hsn: string;             // HSN code for GST
-  gst: number;             // GST % (0 / 5 / 12 / 18)
+  pack: string; // "Strip of 15 tablets"
+  category: string; // category key (see CATEGORIES)
+  hsn: string; // HSN code for GST
+  gst: number; // GST % (0 / 5 / 12 / 18)
   schedule: Schedule;
-  rack: string;            // primary rack/bin location code (e.g. "A3-12") — matches the physical label
-  rackAlt?: string;        // optional 2nd slot for overflow / bulk stock
-  reorderLevel: number;    // low-stock threshold (units)
-  online: boolean;         // visible on the customer app/site
-  onlinePrice?: number;    // optional online selling price override (else MRP)
-  offerId?: string;        // applied offer (online)
-  supplierId?: string;     // allotted distributor for reordering
-  looseAllowed?: boolean;  // owner's choice: allow per-tablet/loose selling (default on for eligible)
-  looseUnits?: number;     // opened loose tablets/capsules currently in stock (from a broken strip)
-  emoji?: string;          // legacy field — the UI renders a monogram tile, not an emoji
-  image?: string;          // product photo (data URL) — falls back to the monogram tile
+  rack: string; // primary rack/bin location code (e.g. "A3-12") — matches the physical label
+  rackAlt?: string; // optional 2nd slot for overflow / bulk stock
+  reorderLevel: number; // low-stock threshold (units)
+  online: boolean; // visible on the customer app/site
+  onlinePrice?: number; // optional online selling price override (else MRP)
+  offerId?: string; // applied offer (online)
+  supplierId?: string; // allotted distributor for reordering
+  looseAllowed?: boolean; // owner's choice: allow per-tablet/loose selling (default on for eligible)
+  looseUnits?: number; // opened loose tablets/capsules currently in stock (from a broken strip)
+  emoji?: string; // legacy field — the UI renders a monogram tile, not an emoji
+  image?: string; // product photo (data URL) — falls back to the monogram tile
   batches: Batch[];
 };
 
 export type CategoryKey =
-  | "fever" | "cold" | "diabetes" | "heart" | "stomach" | "vitamins"
-  | "skin" | "baby" | "devices" | "personal" | "ayush" | "firstaid";
+  | "fever"
+  | "cold"
+  | "diabetes"
+  | "heart"
+  | "stomach"
+  | "vitamins"
+  | "skin"
+  | "baby"
+  | "devices"
+  | "personal"
+  | "ayush"
+  | "firstaid";
 
 export const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: "fever", label: "Fever & Pain" },
@@ -95,8 +106,9 @@ export const composeRack = (rack: string, shelf: string, bin: string) => {
 export const normalizeRack = (code: string) => (code || "").trim().toUpperCase();
 // location codes already written on medicines
 export const distinctRacks = (inv: InvProduct[]): string[] =>
-  [...new Set(inv.map((p) => normalizeRack(p.rack)).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  [...new Set(inv.map((p) => normalizeRack(p.rack)).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+  );
 export type RackGroup = { code: string; zone: string; items: InvProduct[] };
 // group inventory by primary location code, sorted naturally (A1 < A2 < A10 < B1).
 // `registry` codes are always included even when no medicine sits there yet (manually-created empty racks).
@@ -115,7 +127,9 @@ export const groupByLocation = (inventory: InvProduct[], registry: string[] = []
   }
   return [...medicinesByCode.entries()]
     .map(([code, items]) => ({ code, zone: rackZone(code), items }))
-    .sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true, sensitivity: "base" }));
+    .sort((left, right) =>
+      left.code.localeCompare(right.code, undefined, { numeric: true, sensitivity: "base" }),
+    );
 };
 // does a search term match this product's location code(s)? (rack → medicine lookups)
 export const matchesLocation = (p: InvProduct, term: string) => {
@@ -144,7 +158,9 @@ export const findScan = (inventory: InvProduct[], raw: string): ScanHit | null =
   if (!typed) return null;
   const folded = lettersAndDigits(typed);
 
-  const byProductLabel = inventory.find((product) => lettersAndDigits(productBarcode(product)) === folded);
+  const byProductLabel = inventory.find(
+    (product) => lettersAndDigits(productBarcode(product)) === folded,
+  );
   if (byProductLabel) return { product: byProductLabel };
 
   for (const product of inventory) {
@@ -158,14 +174,19 @@ export const findScan = (inventory: InvProduct[], raw: string): ScanHit | null =
     }
   }
 
-  const byIdOrExactName = inventory.find((product) =>
-    lettersAndDigits(product.id) === folded || lettersAndDigits(product.name) === folded);
-  const byNamePart = byIdOrExactName ?? inventory.find((product) =>
-    folded.length >= 3 && lettersAndDigits(product.name).includes(folded));
+  const byIdOrExactName = inventory.find(
+    (product) =>
+      lettersAndDigits(product.id) === folded || lettersAndDigits(product.name) === folded,
+  );
+  const byNamePart =
+    byIdOrExactName ??
+    inventory.find(
+      (product) => folded.length >= 3 && lettersAndDigits(product.name).includes(folded),
+    );
   return byNamePart ? { product: byNamePart } : null;
 };
 
-export const sellPrice = (p: InvProduct) => p.onlinePrice ?? (p.batches[0]?.mrp ?? 0);
+export const sellPrice = (p: InvProduct) => p.onlinePrice ?? p.batches[0]?.mrp ?? 0;
 export const mrpOf = (p: InvProduct) => p.batches[0]?.mrp ?? 0;
 
 // ── loose / per-tablet selling (offline counter) ────────────────
@@ -177,7 +198,8 @@ export const unitsPerPack = (p: InvProduct): number => {
   return m ? Math.max(1, parseInt(m[1], 10)) : 1;
 };
 /** Physically splittable into individual tablets/capsules (form + multi-unit pack). */
-export const isLooseEligible = (p: InvProduct) => (p.form === "Tablet" || p.form === "Capsule") && unitsPerPack(p) > 1;
+export const isLooseEligible = (p: InvProduct) =>
+  (p.form === "Tablet" || p.form === "Capsule") && unitsPerPack(p) > 1;
 /** Sold loose = eligible AND the owner has enabled it (defaults on for eligible items). */
 export const looseSellable = (p: InvProduct) => isLooseEligible(p) && (p.looseAllowed ?? true);
 export const unitNoun = (p: InvProduct) => (p.form === "Capsule" ? "capsule" : "tablet");
@@ -195,23 +217,32 @@ export const packNoun = (p: InvProduct): string => {
   if (/\bstrip\b/.test(pk)) return "strip";
   switch (p.form) {
     case "Tablet":
-    case "Capsule": return "strip";
-    case "Syrup": return "bottle";
-    case "Drops": return "bottle";
-    case "Cream": return "tube";
-    case "Injection": return "vial";
-    case "Device": return "unit";
-    default: return "pack";
+    case "Capsule":
+      return "strip";
+    case "Syrup":
+      return "bottle";
+    case "Drops":
+      return "bottle";
+    case "Cream":
+      return "tube";
+    case "Injection":
+      return "vial";
+    case "Device":
+      return "unit";
+    default:
+      return "pack";
   }
 };
 /** Pluralise a pack/unit noun (box → boxes, strip → strips). */
-export const plural = (noun: string, n: number) => (n === 1 ? noun : noun.endsWith("x") ? noun + "es" : noun + "s");
+export const plural = (noun: string, n: number) =>
+  n === 1 ? noun : noun.endsWith("x") ? noun + "es" : noun + "s";
 export const looseUnitsOf = (p: InvProduct) => p.looseUnits ?? 0;
 /** Total sellable tablets = full strips × units + opened loose units. */
 export const totalUnits = (p: InvProduct) => stockOf(p) * unitsPerPack(p) + looseUnitsOf(p);
 /** Human stock label: "155 strips + 11 tablets", "9 bottles", "40 tubes". */
 export const stockLabel = (p: InvProduct) => {
-  const packs = stockOf(p), loose = looseUnitsOf(p);
+  const packs = stockOf(p),
+    loose = looseUnitsOf(p);
   if (looseSellable(p) || loose > 0) {
     const base = `${packs} ${plural(packNoun(p), packs)}`;
     return loose > 0 ? `${base} + ${loose} ${plural(unitNoun(p), loose)}` : base;
@@ -229,7 +260,10 @@ export const earliestBatch = (p: InvProduct): Batch | null => {
 };
 
 /** Pack or loose price for the batch that will actually be sold. */
-export function billUnit(product: InvProduct, opts?: { loose?: boolean; batchNo?: string }): { price: number; mrp: number } {
+export function billUnit(
+  product: InvProduct,
+  opts?: { loose?: boolean; batchNo?: string },
+): { price: number; mrp: number } {
   const namedBatch = opts?.batchNo
     ? product.batches.find((batch) => batch.batchNo === opts.batchNo)
     : undefined;

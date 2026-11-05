@@ -1,0 +1,84 @@
+name: Quality
+
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      apps:
+        description: Optional JSON list that narrows the applications whose files changed.
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      gates: ${{ steps.plan.outputs.gates }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: List quality gates
+        id: plan
+        env:
+          APPS: ${{ inputs.apps }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python3 scripts/list_quality_gates.py
+
+  check:
+    needs: plan
+    runs-on: ubuntu-latest
+    name: ${{ matrix.gate == 'none' && 'no quality gates' || format('{0} {1}', matrix.app, matrix.gate) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.gates) }}
+    steps:
+      - name: Check out repository
+        if: matrix.gate != 'none'
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        if: matrix.gate != 'none' && matrix.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.nodeVersion }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.directory }}/package-lock.json
+      - name: Install dependencies
+        if: matrix.gate != 'none' && matrix.runtime == 'node'
+        working-directory: ${{ matrix.directory }}
+        run: ${{ matrix.install }}
+      - name: Set up Java
+        if: matrix.gate != 'none' && matrix.runtime == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.javaVersion }}
+          cache: maven
+          cache-dependency-path: ${{ matrix.directory }}/pom.xml
+      - name: Run ${{ matrix.gate }}
+        id: gate
+        if: matrix.gate != 'none'
+        working-directory: ${{ matrix.directory }}
+        run: ${{ matrix.command }}
+      - name: Record quality status
+        if: always() && matrix.gate != 'none'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.gate.outcome }}" = "success" ]; then
+            state=success
+          else
+            state=failure
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context="quality/${{ matrix.app }}/${{ matrix.gate }}" \
+            -f description="quality ${{ matrix.app }} ${{ matrix.gate }}"

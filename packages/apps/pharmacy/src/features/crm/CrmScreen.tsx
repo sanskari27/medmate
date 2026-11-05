@@ -8,45 +8,82 @@ import { Analytics } from "./Analytics";
 import { PatientModal } from "./PatientModal";
 import { useState, useMemo } from "react";
 import { usePharma } from "@/app/session/pharmacy-provider";
-import {
-  inr, fmtDateTime, timeAgo, custKeyOf, waLink, smsLink, catLabel, computeInvoice, PAY_LABEL, BLOOD_GROUPS, Sale,
-} from "@/domain";
-import {
-  buildPatients, Patient, PatientMed, Segment, SEGMENTS, segLabel, TIERS, tierOf, refillsDue, atRisk,
-  attributedSales, crmMsg, Campaign,
-} from "@/features/crm/crm";
-import { IconSearch, IconX, IconWhatsApp, IconMessage, IconCheck, IconUser, IconRupee, IconReports, IconAlert, IconClock, IconGift, IconStar, IconSparkle, IconStethoscope, IconHeart, IconDot, IconMail, IconRefresh, IconTrendDown, IconMega, IconPhone, IconReceipt, IconPin, IconCalendar, IconBox, IconPill } from "@/components/Icon"
-import { SegmentIcon } from "@/components/entityIcon";;
+import { custKeyOf } from "@/domain";
+import { buildPatients } from "@/features/crm/crm";
 
-type Tab = "overview" | "patients" | "reminders" | "loyalty" | "campaigns" | "feedback" | "analytics";
+type Tab =
+  "overview" | "patients" | "reminders" | "loyalty" | "campaigns" | "feedback" | "analytics";
 const TABS: { k: Tab; label: string }[] = [
-  { k: "overview", label: "Overview" }, { k: "patients", label: "Patients & Segments" },
-  { k: "reminders", label: "Reminders" }, { k: "loyalty", label: "Loyalty" },
-  { k: "campaigns", label: "Campaigns" }, { k: "feedback", label: "Feedback" }, { k: "analytics", label: "Analytics" },
+  { k: "overview", label: "Overview" },
+  { k: "patients", label: "Patients & Segments" },
+  { k: "reminders", label: "Reminders" },
+  { k: "loyalty", label: "Loyalty" },
+  { k: "campaigns", label: "Campaigns" },
+  { k: "feedback", label: "Feedback" },
+  { k: "analytics", label: "Analytics" },
 ];
 
 export default function CrmScreen() {
-  const { sales, inventory, creditPayments, crm, profile, now, setPatientMeta, addCampaign, addFeedback, logReminder, redeemPoints, go } = usePharma();
+  const {
+    sales,
+    inventory,
+    creditPayments,
+    crm,
+    profile,
+    now,
+    setPatientMeta,
+    addCampaign,
+    addFeedback,
+    logReminder,
+    redeemPoints,
+    go,
+  } = usePharma();
   const [tab, setTab] = useState<Tab>("overview");
   const [sel, setSel] = useState<string | null>(null);
 
   const creditKeys = useMemo(() => {
     const k = new Set<string>();
-    for (const s of sales) if (s.status !== "cancelled" && s.payMode === "credit") k.add(custKeyOf(s.customer));
+    for (const s of sales)
+      if (s.status !== "cancelled" && s.payMode === "credit") k.add(custKeyOf(s.customer));
     for (const p of creditPayments) k.add(p.custKey);
     return k;
   }, [sales, creditPayments]);
-  const patients = useMemo(() => buildPatients(sales, inventory, creditKeys, now, crm.meta), [sales, inventory, creditKeys, now, crm.meta]);
-  const redeemedBy = useMemo(() => { const m = new Map<string, number>(); for (const r of crm.redemptions) m.set(r.custKey, (m.get(r.custKey) ?? 0) + r.points); return m; }, [crm.redemptions]);
+  const patients = useMemo(
+    () => buildPatients(sales, inventory, creditKeys, now, crm.meta),
+    [sales, inventory, creditKeys, now, crm.meta],
+  );
+  const redeemedBy = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of crm.redemptions) m.set(r.custKey, (m.get(r.custKey) ?? 0) + r.points);
+    return m;
+  }, [crm.redemptions]);
   const current = patients.find((p) => p.key === sel) ?? null;
 
-  const shared = { patients, profile, now, sales, crm, redeemedBy, setPatientMeta, addCampaign, addFeedback, logReminder, redeemPoints, openPatient: setSel, go };
+  const shared = {
+    patients,
+    profile,
+    now,
+    sales,
+    crm,
+    redeemedBy,
+    setPatientMeta,
+    addCampaign,
+    addFeedback,
+    logReminder,
+    redeemPoints,
+    openPatient: setSel,
+    go,
+  };
 
   return (
     <div className="pd-canvas-wide">
       <div className="pd-toolbar">
         <div className="pd-seg" style={{ flexWrap: "wrap" }}>
-          {TABS.map((t) => <button key={t.k} className={tab === t.k ? "on" : ""} onClick={() => setTab(t.k)}>{t.label}</button>)}
+          {TABS.map((t) => (
+            <button key={t.k} className={tab === t.k ? "on" : ""} onClick={() => setTab(t.k)}>
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -79,7 +116,4 @@ export default function CrmScreen() {
 
 // small inline spend sparkline for the patient profile
 
-const GENDERS = ["Male", "Female", "Other"];
-
 // ════════════════════ PATIENT 360° PROFILE ════════════════════
-

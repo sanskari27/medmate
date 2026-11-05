@@ -10,6 +10,7 @@ permissions:
   id-token: write
   contents: read
   actions: read
+  statuses: write
 
 jobs:
   validate:
@@ -41,6 +42,16 @@ jobs:
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
+  quality:
+    needs: [validate, changed]
+    if: needs.validate.result == 'success' && needs.changed.result == 'success' && needs.changed.outputs.apps != '[]'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/quality.yml
+    with:
+      apps: ${{ needs.changed.outputs.apps }}
+
   wait-infra:
     needs: changed
     if: needs.changed.result == 'success' && needs.changed.outputs.apps != '[]'
@@ -58,11 +69,13 @@ jobs:
         run: python3 scripts/wait_for_infra.py
 
   deploy:
-    needs: [validate, changed, wait-infra]
+    needs: [validate, changed, wait-infra, quality]
     if: >-
+      !cancelled() &&
       needs.validate.result == 'success' &&
       needs.changed.result == 'success' &&
       needs.wait-infra.result == 'success' &&
+      (needs.quality.result == 'success' || needs.quality.result == 'failure') &&
       needs.changed.outputs.apps != '[]'
     runs-on: ubuntu-latest
     strategy:
@@ -72,6 +85,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Wait for quality gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.before }}
+        run: python3 scripts/wait_for_quality.py "${{ matrix.app }}"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

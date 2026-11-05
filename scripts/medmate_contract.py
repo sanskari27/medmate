@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -10,6 +11,14 @@ import yaml
 ZONES = {"nammamedmate.com", "medmatepharmacy.com"}
 KINDS = {"react", "next", "java"}
 PACKAGE_MANAGERS = {"npm", "pnpm", "yarn"}
+JAVA_VERSION = "21"
+# Gate name to the npm script package.json must define.
+NODE_SCRIPTS = {
+    "typecheck": "typecheck",
+    "lint": "lint",
+    "format": "format:check",
+    "test": "test",
+}
 NAME_RE = re.compile(r"^[a-z][a-z0-9-]{0,39}$")
 HOST_RE = re.compile(
     r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$"
@@ -22,6 +31,24 @@ ENV_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 RELATIVE_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 FORBIDDEN_NAMES = {"cdk.json", "pulumi.yaml", "serverless.yml", "serverless.yaml"}
 SKIP_DIRS = {"node_modules", "dist", "target", ".git"}
+
+
+def quality_commands(kind: str) -> dict[str, str]:
+    """Shell commands for the quality gates a kind is allowed to request."""
+    if kind == "java":
+        return {
+            "compile": "mvn -B -DskipTests compile",
+            "test": "mvn -B test",
+            "verify": "mvn -B verify",
+        }
+    if kind in {"react", "next"}:
+        return {
+            "typecheck": "npm run typecheck",
+            "lint": "npm run lint",
+            "format": "npm run format:check",
+            "test": "npm test",
+        }
+    return {}
 
 
 def repo_root() -> Path:
@@ -174,6 +201,8 @@ def normalize(raw: dict, directory_name: str) -> dict:
         errors.append(f"{directory_name}: runtime.command must be a list of strings")
         command_override = []
 
+    quality = _quality(raw.get("quality"), kind if isinstance(kind, str) else "", directory_name, errors)
+
     project = {
         "name": name if isinstance(name, str) else directory_name,
         "kind": kind if isinstance(kind, str) else "",
@@ -202,9 +231,30 @@ def normalize(raw: dict, directory_name: str) -> dict:
             "database": {"enabled": database_enabled, "name": database_name if isinstance(database_name, str) else ""},
             "uploads": {"enabled": uploads_enabled, "prefix": extra_prefix, "uploadsPrefix": uploads_prefix},
         },
+        "quality": quality,
         "errors": errors,
     }
     return project
+
+
+def _quality(value, kind: str, directory_name: str, errors: list[str]) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, dict):
+        errors.append(f"{directory_name}: quality must be a mapping of gate names")
+        return []
+    commands = quality_commands(kind)
+    enabled: list[str] = []
+    for key, flag in value.items():
+        if key not in commands:
+            allowed = ", ".join(commands) or "none"
+            errors.append(f"{directory_name}: quality.{key} is not a {kind} gate ({allowed})")
+            continue
+        if flag is not True:
+            errors.append(f"{directory_name}: quality.{key} must be true")
+            continue
+        enabled.append(key)
+    return [gate for gate in commands if gate in enabled]
 
 
 def _forbidden_infra(app_dir: Path) -> list[str]:
@@ -246,6 +296,7 @@ def load_projects(root: Path | None = None) -> list[dict]:
                 project_errors.append(f"{app_dir.name}: Dockerfile must exist inside the build context")
         if project["kind"] == "react" and not (app_dir / "package.json").is_file():
             project_errors.append(f"{app_dir.name}: package.json is required")
+        project_errors.extend(_quality_tools(project, app_dir))
         project["errors"].extend(project_errors)
         projects.append(project)
     return projects
@@ -265,6 +316,30 @@ def validate_projects(projects: list[dict] | None = None) -> list[str]:
                 else:
                     seen[host] = project["name"]
     return errors
+
+
+def _quality_tools(project: dict, app_dir: Path) -> list[str]:
+    gates = project.get("quality") or []
+    if not gates:
+        return []
+    kind = project.get("kind")
+    if kind in {"react", "next"}:
+        package_path = app_dir / "package.json"
+        try:
+            package = json.loads(package_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return [f"{app_dir.name}: quality gates require a readable package.json"]
+        scripts = package.get("scripts") if isinstance(package, dict) else None
+        if not isinstance(scripts, dict):
+            return [f"{app_dir.name}: package.json scripts must be a mapping"]
+        missing = [NODE_SCRIPTS[gate] for gate in gates if NODE_SCRIPTS[gate] not in scripts]
+        if missing:
+            joined = ", ".join(missing)
+            return [f"{app_dir.name}: quality gates require npm scripts: {joined}"]
+        return []
+    if kind == "java" and not (app_dir / "pom.xml").is_file():
+        return [f"{app_dir.name}: quality gates require pom.xml"]
+    return []
 
 
 def hosts_of(project: dict) -> list[str]:
