@@ -31,7 +31,7 @@ import {
   IconWallet,
   IconWatch,
   IconWind,
-} from "@/components/Icon";
+} from "@/components/atoms";
 
 export type IconC = (p: { size?: number }) => React.JSX.Element;
 

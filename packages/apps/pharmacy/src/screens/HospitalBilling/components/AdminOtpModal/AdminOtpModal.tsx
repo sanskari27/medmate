@@ -4,7 +4,7 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
-import { IconX, IconLock } from "@/components/Icon";
+import { IconX, IconLock } from "@/components/atoms";
 export function AdminOtpModal({ onClose }: AdminOtpModalProps) {
     const { unlockPricing } = usePharma();
     const [otp, setOtp] = useState("");

@@ -8,7 +8,7 @@ import { AdmissionModal } from "@/screens/Wards/components/AdmissionModal";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { WardType, wardBedNos, occupiedBedsOf, admissionAtBed, hospitalOccupancy, activeAdmissions, } from "@/utils/calculations/hospital";
-import { IconPlus, IconSettings } from "@/components/Icon";
+import { IconPlus, IconSettings } from "@/components/atoms";
 const TYPE_TONE: Record<WardType, string> = {
     ICU: "!bg-rose-bg !text-rose",
     General: "!bg-gray-pill !text-muted",

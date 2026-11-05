@@ -6,9 +6,9 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { kioskProducts, nextPayModes } from "./Kiosk.utils";
 import { CATEGORIES, inr, inr2, billUnit, totalUnits, looseSellable, unitNoun, PayMode, PAY_LABEL, InvProduct, } from "@/utils";
-import { IconKiosk, IconX, IconCheck, IconHash, IconCart } from "@/components/Icon";
-import { CategoryIcon } from "@/components/EntityIcon";
-import { Thumb } from "@/components/Thumb";
+import { IconKiosk, IconX, IconCheck, IconHash, IconCart } from "@/components/atoms";
+import { CategoryIcon } from "@/components/molecules";
+import { Thumb } from "@/components/molecules";
 import { ColorFill } from "@/components/molecules/BarChart";
 const ACCENTS: Record<string, string> = {
     green: "linear-gradient(135deg,#1B3D29,#3D8B60)",

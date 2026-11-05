@@ -1,7 +1,7 @@
 import type { MasterProps } from "./Master.types";
 import { Box, Button, Heading, Text } from "@/components/atoms";
 import { BrandMark } from "@/components/molecules/BrandMark";
-import { IconLogout, IconMenu } from "@/components/Icon";
+import { IconLogout, IconMenu } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import { plusDays } from "@/utils/date";
 import { subOf } from "@/screens/Master/utils/subOf";
@@ -21,7 +21,7 @@ import { CouponDesk } from "@/screens/Master/components/CouponDesk";
 import { useEffect, useState } from "react";
 import { api } from "@/services/api/apiClient";
 import { BillingCycle, Plan, subscriptionLapsed, todayISO } from "@/utils";
-import { IconChevronLeft, IconCrown, IconDashboard, IconGift, IconHelp, IconOffer, IconReports, IconRx, IconSend, IconStore, IconUser, } from "@/components/Icon";
+import { IconChevronLeft, IconCrown, IconDashboard, IconGift, IconHelp, IconOffer, IconReports, IconRx, IconSend, IconStore, IconUser, } from "@/components/atoms";
 import { SignOutDialog } from "@/layouts/AuthLayout/components/SignOutDialog";
 type Desk = "dashboard" | "pharmacies" | "kyc" | "subscriptions" | "coupons" | "requests" | "support" | "consultations" | "referrals" | "activity";
 type Booking = {

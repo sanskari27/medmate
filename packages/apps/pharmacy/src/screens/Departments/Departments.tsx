@@ -5,7 +5,7 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Department } from "@/utils/calculations/hospital";
-import { IconPlus, IconEdit, IconX } from "@/components/Icon";
+import { IconPlus, IconEdit, IconX } from "@/components/atoms";
 import { doctorsInDepartment } from "./Departments.utils";
 const TYPES: Department["type"][] = ["OPD", "IPD", "Diagnostic", "Support"];
 const TYPE_TONE: Record<string, string> = {

@@ -5,7 +5,7 @@ import type { ChangeEvent } from "react";
 import { useState, useRef } from "react";
 import { usePharma } from "@/hooks";
 import { PharmacyProfile, BizDetail, INDIAN_STATES, PHARMACY_BUSINESS_TYPES, REGISTRATION_TYPES, INDUSTRY_TYPES, isValidGstin, } from "@/utils";
-import { IconCheck, IconPlus, IconUpload, IconDot, IconSettings } from "@/components/Icon";
+import { IconCheck, IconPlus, IconUpload, IconDot, IconSettings } from "@/components/atoms";
 import { nextBusinessTypes } from "./Settings.utils";
 export default function SettingsScreen() {
     const { profile, updateProfile, invoiceSettings, updateInvoiceSettings, toggleStoreOpen, startSetup, suppliers, go, toast, showFault, } = usePharma();

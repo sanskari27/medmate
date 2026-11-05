@@ -9,7 +9,7 @@ import { LabelSheet } from "@/screens/RackMap/components/LabelSheet";
 import { useState, useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { hasLocation, groupByLocation, normalizeRack } from "@/utils";
-import { IconSearch, IconInventory, IconPrint, IconReports, IconMap, IconPin, IconHelp, } from "@/components/Icon";
+import { IconSearch, IconInventory, IconPrint, IconReports, IconMap, IconPin, IconHelp, } from "@/components/atoms";
 import { unassignedProducts } from "./RackMap.utils";
 import { exportRackAuditCsv } from "@/utils/calculations/stockExport";
 type Tab = "map" | "assign";

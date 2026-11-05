@@ -4,7 +4,7 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvProduct, stockOf, hasLocation, locationCodes } from "@/utils";
-import { Thumb } from "@/components/Thumb";
+import { Thumb } from "@/components/molecules";
 export function AssignRow({ p, checked, onToggle, onSave, fillCode, }: AssignRowProps) {
     const [val, setVal] = useState(p.rack || "");
     const dirty = val.trim() !== (p.rack || "").trim();

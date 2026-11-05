@@ -6,7 +6,7 @@ export { matchRx, OrderDetail };
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Box } from "@/components/atoms/Box";
-import ShareSheet from "@/components/ShareSheet";
+import { ShareSheet } from "@/components/organisms";
 import type { PayMode, Prescription, Sale } from "@/utils";
 import type { OrderFilter, OrderTab } from "./Orders.types";
 import { filterOrders, orderCounts } from "./Orders.utils";

@@ -5,9 +5,9 @@ import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { usePharma } from "@/hooks";
 import { isLowStock, stockOf, suggestedSupplierId, bestSupplyFor, effectiveSupplyPrice, schemeLabel, suggestedReorderQty, POItem, timeAgo, inr2, } from "@/utils";
-import { IconSend, IconTruck, IconCheck, IconTrendDown, IconCash, IconBulb, IconDownload, IconUpload, } from "@/components/Icon";
+import { IconSend, IconTruck, IconCheck, IconTrendDown, IconCash, IconBulb, IconDownload, IconUpload, } from "@/components/atoms";
 import { downloadPoTemplate, parsePoCsv } from "@/utils/purchases";
-import { Thumb } from "@/components/Thumb";
+import { Thumb } from "@/components/molecules";
 import { lowStockProducts } from "./Reorder.utils";
 export default function ReorderScreen() {
     const { inventory, suppliers, supplyList, purchaseOrders, sendPurchaseOrder, importPurchaseOrders, markPOReceived, setProductSupplier, now, go, showFault, toast, } = usePharma();

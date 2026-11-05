@@ -13,7 +13,7 @@ import { ChannelPill } from "@/components/molecules/ChannelPill";
 import { monogramOf } from "@/components/molecules/EntityMark";
 import { Modal } from "@/components/molecules/Modal";
 import { ScheduleTag } from "@/components/molecules/ScheduleTag";
-import RxView from "@/components/RxView";
+import { RxView } from "@/components/organisms";
 import { notifyMessage, prescriptionTimeline, rejectedMessage, rxStatusLabel, rxStatusTone } from "@/screens/Prescriptions/Prescriptions.utils";
 
 import type { RxDetailProps } from "./RxDetail.types";

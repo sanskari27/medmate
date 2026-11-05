@@ -5,8 +5,8 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { SupplyEntry, inr2, bestSupplyFor, effectiveSupplyPrice, schemeLabel, isDevice, mrpOf, catLabel, } from "@/utils";
-import { IconPlus, IconEdit, IconReceipt, IconRefresh, IconStar } from "@/components/Icon";
-import { Thumb } from "@/components/Thumb";
+import { IconPlus, IconEdit, IconReceipt, IconRefresh, IconStar } from "@/components/atoms";
+import { Thumb } from "@/components/molecules";
 import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 import { SupplyModal } from "@/screens/Purchases/components/SupplyModal";
 export function SupplyList() {

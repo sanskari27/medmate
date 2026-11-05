@@ -6,7 +6,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { SupplyEntry, InvProduct, inr2, effectiveSupplyPrice, schemeLabel, isDevice, mrpOf, } from "@/utils";
-import { IconX, IconCheck } from "@/components/Icon";
+import { IconX, IconCheck } from "@/components/atoms";
 export function SupplyModal({ init, onClose, onSave, }: SupplyModalProps) {
     const { inventory, suppliers, supplyList } = usePharma();
     const [f, setF] = useState<Omit<SupplyEntry, "id">>(init

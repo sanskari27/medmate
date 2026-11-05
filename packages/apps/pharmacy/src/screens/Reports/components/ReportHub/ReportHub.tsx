@@ -3,7 +3,7 @@ import { Box, Button, Input, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState, ReactNode } from "react";
-import { IconSearch, IconSparkle, IconReceipt, IconDoc, IconBox, IconUsers, IconStar, } from "@/components/Icon";
+import { IconSearch, IconSparkle, IconReceipt, IconDoc, IconBox, IconUsers, IconStar, } from "@/components/atoms";
 import { REPORT_CATALOG, CAT_LABEL, ReportCat, ReportMeta, } from "@/utils/calculations/reportCatalog";
 const CAT_ICON: Record<ReportCat, ReactNode> = {
     favourite: <IconSparkle size={15}/>,

@@ -4,7 +4,7 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { isValidIfsc } from "@/utils";
-import { IconCheck, IconBank } from "@/components/Icon";
+import { IconCheck, IconBank } from "@/components/atoms";
 import { bankForm } from "@/screens/Account/utils/bankForm";
 const blankBank = {
     holderName: "",

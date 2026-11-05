@@ -16,7 +16,7 @@ import { Text } from "@/components/atoms/Text";
 import { IconAlert, IconBox, IconEdit, IconPin, IconTruck } from "@/components/atoms/Icon";
 import { ScheduleTag } from "@/components/molecules/ScheduleTag";
 import { StockPill } from "@/components/molecules/StockPill";
-import { Thumb } from "@/components/Thumb";
+import { Thumb } from "@/components/molecules";
 import { Switch } from "@/components/atoms/Switch";
 import {
   catLabel,

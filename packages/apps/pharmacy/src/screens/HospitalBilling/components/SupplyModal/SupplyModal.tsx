@@ -7,10 +7,10 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, mrpOf, stockOf, earliestBatch, findScan, hasLocation } from "@/utils";
 import { SUPPLY_REASONS, WardSupplyReason, WardSupplyItem, } from "@/utils/calculations/hospitalAccount";
-import { IconSearch, IconPlus, IconX, IconTag, IconCamera } from "@/components/Icon";
-import { SupplyReasonIcon } from "@/components/EntityIcon";
+import { IconSearch, IconPlus, IconX, IconTag, IconCamera } from "@/components/atoms";
+import { SupplyReasonIcon } from "@/components/molecules";
 import WardSupplyInvoice from "@/screens/HospitalBilling/components/WardSupplyInvoice";
-import QtyBox from "@/components/QtyBox";
+import { QuantityStepper as QtyBox } from "@/components/molecules";
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 import { indentToRows } from "@/screens/HospitalBilling/utils/indentToRows";
 export function SupplyModal({ mode, onClose, prefillIndentId, }: SupplyModalProps) {

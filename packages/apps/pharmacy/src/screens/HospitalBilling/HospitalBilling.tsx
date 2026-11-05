@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import { hospitalOutstanding, suppliedTotal, returnedTotal, paidTotal, hospitalAging, } from "@/utils/calculations/hospitalAccount";
-import { IconPlus, IconRupee, IconHospital } from "@/components/Icon";
+import { IconPlus, IconRupee, IconHospital } from "@/components/atoms";
 type Tab = "overview" | "issue" | "stock" | "account" | "prices";
 // shared hospital-credit-price accessor
 // admin OTP gate — unlock pricing changes

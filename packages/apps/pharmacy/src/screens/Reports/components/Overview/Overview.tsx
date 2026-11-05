@@ -3,7 +3,7 @@ import { Box, Heading, Progress, Text } from "@/components/atoms";
 import { SegmentBar } from "@/components/molecules/BarChart";
 import { cn } from "@/utils/className";
 import { inr, PAY_LABEL, PayMode } from "@/utils";
-import { IconRupee, IconReceipt, IconBox, IconTrendUp } from "@/components/Icon";
+import { IconRupee, IconReceipt, IconBox, IconTrendUp } from "@/components/atoms";
 export function Overview(p: OverviewProps) {
     const { revenue, grossProfit, margin, outputGst, netGst, units, avg, enriched, onlineRev, offlineRev, onlinePct, payMap, online, offline, } = p;
     // top items by GST-exclusive value

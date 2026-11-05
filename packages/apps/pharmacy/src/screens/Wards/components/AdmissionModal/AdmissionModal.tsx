@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr, fmtDateTime, PayMode, PAY_LABEL } from "@/utils";
 import { Admission } from "@/utils/calculations/hospital";
-import { IconX, IconRupee, IconPos, IconCheck } from "@/components/Icon";
+import { IconX, IconRupee, IconPos, IconCheck } from "@/components/atoms";
 import { billTotal } from "@/screens/Wards/utils/billTotal";
 import { daysIn } from "@/screens/Wards/utils/daysIn";
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];

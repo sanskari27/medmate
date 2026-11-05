@@ -1,2 +1,2 @@
-import { IconCalendar } from "@/components/Icon";
+import { IconCalendar } from "@/components/atoms";
 export const IconClockLite = () => <IconCalendar size={15}/>;

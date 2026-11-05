@@ -20,8 +20,8 @@ import {
   IconX,
 } from "@/components/atoms/Icon";
 import { Field } from "@/components/molecules/Field";
-import { Thumb } from "@/components/Thumb";
-import Invoice from "@/components/Invoice";
+import { Thumb } from "@/components/molecules";
+import { Invoice } from "@/components/organisms";
 import {
   computeInvoice,
   fmtDateTime,

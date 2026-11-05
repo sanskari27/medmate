@@ -5,7 +5,7 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { inr, timeAgo, Sale } from "@/utils";
 import { Admission } from "@/utils/calculations/hospital";
-import { IconSearch, IconArrowRight } from "@/components/Icon";
+import { IconSearch, IconArrowRight } from "@/components/atoms";
 import { billTotal } from "@/screens/Wards/utils/billTotal";
 import { daysIn } from "@/screens/Wards/utils/daysIn";
 export function AdmissionsTable({ admissions, sales, now, onOpen, }: AdmissionsTableProps) {

@@ -5,7 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Ward, WardType, WARD_TYPES } from "@/utils/calculations/hospital";
-import { IconPlus, IconX } from "@/components/Icon";
+import { IconPlus, IconX } from "@/components/atoms";
 export function WardSetupModal({ onClose }: WardSetupModalProps) {
     const { wards, addWard, updateWard } = usePharma();
     const [draft, setDraft] = useState<Omit<Ward, "id">>({

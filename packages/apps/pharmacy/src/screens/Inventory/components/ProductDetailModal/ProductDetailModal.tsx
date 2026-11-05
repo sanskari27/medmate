@@ -20,7 +20,7 @@ import {
   IconX,
 } from "@/components/atoms/Icon";
 import { ScheduleTag } from "@/components/molecules/ScheduleTag";
-import { Thumb } from "@/components/Thumb";
+import { Thumb } from "@/components/molecules";
 import {
   catLabel,
   fmtDateTime,

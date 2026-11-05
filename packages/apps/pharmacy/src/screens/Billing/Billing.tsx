@@ -23,8 +23,8 @@ import {
   IconTruck,
   IconX,
 } from "@/components/atoms/Icon";
-import Invoice from "@/components/Invoice";
-import ShareSheet from "@/components/ShareSheet";
+import { Invoice } from "@/components/organisms";
+import { ShareSheet } from "@/components/organisms";
 import type { PosLine } from "@/store/slices/billing/billingSlice";
 import { cn } from "@/utils/className";
 import { billingCheckoutGates, billingInvoiceTitle, billingLineView, filterBillingProducts } from "./Billing.utils";

@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr, timeAgo } from "@/utils";
 import { hospitalAging, wardConsumption, topSuppliedItems, monthlyHospitalFlow, } from "@/utils/calculations/hospitalAccount";
-import { IconRupee, IconHospital, IconReceipt, IconArrowRight, IconAlert, IconChart, IconSend, IconWallet, IconBox, IconCalendar, IconCheck, IconStore, } from "@/components/Icon";
+import { IconRupee, IconHospital, IconReceipt, IconArrowRight, IconAlert, IconChart, IconSend, IconWallet, IconBox, IconCalendar, IconCheck, IconStore, } from "@/components/atoms";
 import { fmtDay } from "@/utils/date";
 import { IconClockLite } from "@/screens/HospitalBilling/components/IconClockLite";
 type Tab = "overview" | "issue" | "stock" | "account" | "prices";

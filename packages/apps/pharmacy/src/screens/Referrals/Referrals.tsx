@@ -6,7 +6,7 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
 import { ReferralStatus } from "@/utils/calculations/referrals";
-import { IconGift, IconCheck, IconSend, IconInbox, IconStore, IconCash } from "@/components/Icon";
+import { IconGift, IconCheck, IconSend, IconInbox, IconStore, IconCash } from "@/components/atoms";
 import { earnedReferralTotal } from "./Referrals.utils";
 export default function ReferScreen() {
     const { profile, toast, referrals, addReferral, updateReferral } = usePharma();

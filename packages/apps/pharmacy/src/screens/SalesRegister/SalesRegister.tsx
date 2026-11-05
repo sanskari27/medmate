@@ -5,7 +5,7 @@ import { Button } from "@/components/atoms/Button";
 import { Stack } from "@/components/atoms/Stack";
 import { IconPrint, IconReports } from "@/components/atoms/Icon";
 import { Chip } from "@/components/molecules/Chip";
-import { useDateRange } from "@/components/DateRangeField";
+import { useDateRange } from "@/components/molecules";
 import { inr, SALE_SOURCES, type PayMode, type PharmacyProfile, type SaleSource } from "@/utils";
 import { cn } from "@/utils/className";
 import type { RegisterPaid } from "./SalesRegister.types";

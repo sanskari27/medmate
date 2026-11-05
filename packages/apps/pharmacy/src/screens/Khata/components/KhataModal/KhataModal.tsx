@@ -5,7 +5,7 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { inr, fmtDateTime, timeAgo, Sale, PayMode, PAY_LABEL, CreditPayment, CreditCustomer, customerLedger, SETTLED_MODES, waLink, smsLink, collectMsg, creditAging, CreditAging, } from "@/utils";
-import { IconX, IconCheck, IconWhatsApp, IconMessage, IconRupee, IconReceipt, IconClock, IconPhone, } from "@/components/Icon";
+import { IconX, IconCheck, IconWhatsApp, IconMessage, IconRupee, IconReceipt, IconClock, IconPhone, } from "@/components/atoms";
 export function KhataModal({ c, onClose, sales, creditPayments, recordCreditPayment, profile, now, go, }: KhataModalProps) {
     const ledger = customerLedger(c.key, sales, creditPayments);
     const aging: CreditAging = creditAging(c.key, sales, creditPayments, now);

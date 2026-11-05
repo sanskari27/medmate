@@ -4,8 +4,8 @@ import type { ChangeEvent } from "react";
 import { useMemo, useRef } from "react";
 import { usePharma } from "@/hooks";
 import { Sale, mrpOf, sellPrice, INVOICE_TEMPLATES, INVOICE_ACCENTS, INVOICE_TITLES, InvoiceTemplate, } from "@/utils";
-import { IconImage, IconPrint, IconCheck, IconStore } from "@/components/Icon";
-import Invoice from "@/components/Invoice";
+import { IconImage, IconPrint, IconCheck, IconStore } from "@/components/atoms";
+import { Invoice } from "@/components/organisms";
 import { ColorFill } from "@/components/molecules/BarChart";
 import { thermalPreviewClass } from "./InvoiceSettings.utils";
 export default function InvoiceSettingsScreen() {

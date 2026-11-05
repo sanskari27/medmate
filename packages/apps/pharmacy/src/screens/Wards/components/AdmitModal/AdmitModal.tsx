@@ -5,7 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Admission, PayerType, wardBedNos, occupiedBedsOf, INSURERS, } from "@/utils/calculations/hospital";
-import { IconX, IconCheck, IconCash, IconShield } from "@/components/Icon";
+import { IconX, IconCheck, IconCash, IconShield } from "@/components/atoms";
 export function AdmitModal({ preset, onClose, onAdmitted, }: AdmitModalProps) {
     const { wards, admissions, doctors, admitPatient } = usePharma();
     const suggestUhid = `UHID-${100400 + admissions.length + 1}`;

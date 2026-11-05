@@ -3,7 +3,7 @@ import { Box, Button, Heading, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { MouseEvent } from "react";
 import { InvProduct } from "@/utils";
-import { IconPrint, IconX } from "@/components/Icon";
+import { IconPrint, IconX } from "@/components/atoms";
 export function LabelSheet({ groups, onClose, }: LabelSheetProps) {
     return (<Box className="!fixed !inset-0 !z-[100] !flex !items-center !justify-center !bg-[rgba(13,32,21,0.5)] !p-6 !backdrop-blur-[3px]" onClick={onClose}>
       <Box className="!flex !max-h-[90vh] !w-full !max-w-[720px] !flex-col !overflow-hidden !rounded-lg !bg-paper !shadow-pop" onClick={stopPropagationOnClick}>

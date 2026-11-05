@@ -4,7 +4,7 @@ import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import { usePharma } from "@/hooks";
 import { Supplier, inr, allottedSupplierId } from "@/utils";
-import { IconPlus, IconEdit, IconTruck, IconMail, IconBox, IconCard, IconUsers, IconPhone, } from "@/components/Icon";
+import { IconPlus, IconEdit, IconTruck, IconMail, IconBox, IconCard, IconUsers, IconPhone, } from "@/components/atoms";
 import { DistributorModal } from "@/screens/Purchases/components/DistributorModal";
 export function Directory() {
     const { suppliers, inventory, addSupplier, updateSupplier } = usePharma();

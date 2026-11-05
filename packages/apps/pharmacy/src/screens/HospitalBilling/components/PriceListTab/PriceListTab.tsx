@@ -6,8 +6,8 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, mrpOf } from "@/utils";
 import { PriceMode } from "@/utils/calculations/hospitalAccount";
-import { IconSearch, IconX, IconLock, IconUnlock, IconKey } from "@/components/Icon";
-import { monogramOf } from "@/components/EntityIcon";
+import { IconSearch, IconX, IconLock, IconUnlock, IconKey } from "@/components/atoms";
+import { monogramOf } from "@/components/molecules";
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 import { AdminOtpModal } from "@/screens/HospitalBilling/components/AdminOtpModal";
 export function PriceListTab() {

@@ -7,8 +7,8 @@ import { usePharma } from "@/hooks";
 import { inr, fmtDateTime, Sale, PayMode, PAY_LABEL, SALE_SOURCES, saleSourceOf, } from "@/utils";
 import { billTotal } from "./PatientBills.utils";
 import { buildPatientLedger, PatientGroup } from "@/utils/calculations/hospital";
-import { IconSearch, IconX, IconRupee, IconCheck } from "@/components/Icon";
-import { SaleSourceIcon } from "@/components/EntityIcon";
+import { IconSearch, IconX, IconRupee, IconCheck } from "@/components/atoms";
+import { SaleSourceIcon } from "@/components/molecules";
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];
 export default function PatientBillsScreen() {
     const { sales, settleBills, profile, now } = usePharma();

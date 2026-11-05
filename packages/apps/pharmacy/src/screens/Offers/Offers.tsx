@@ -5,7 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { CATEGORIES, catLabel, Offer, OfferType, OfferScope, inr } from "@/utils";
-import { IconPlus, IconX, IconOffer, IconTag, IconGlobe } from "@/components/Icon";
+import { IconPlus, IconX, IconOffer, IconTag, IconGlobe } from "@/components/atoms";
 import { productsInOffer } from "./Offers.utils";
 export default function OffersScreen() {
     const { offers, inventory, addOffer, toggleOffer } = usePharma();

@@ -4,7 +4,7 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvProduct, hasLocation, composeRack, matchesLocation } from "@/utils";
-import { IconCheck } from "@/components/Icon";
+import { IconCheck } from "@/components/atoms";
 import { AssignRow } from "@/screens/RackMap/components/AssignRow";
 export function AssignLocations({ inventory, q, setProductLocation, bulkAssignLocation, toast, }: AssignLocationsProps) {
     const [onlyUnset, setOnlyUnset] = useState(true);

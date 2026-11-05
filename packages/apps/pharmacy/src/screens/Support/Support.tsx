@@ -4,7 +4,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { timeAgo } from "@/utils";
-import { IconSend, IconX, IconTicket } from "@/components/Icon";
+import { IconSend, IconX, IconTicket } from "@/components/atoms";
 import { matchingFaqs } from "./Support.utils";
 const FAQS = [
     {

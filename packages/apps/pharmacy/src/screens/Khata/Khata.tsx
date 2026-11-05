@@ -7,7 +7,7 @@ import { KhataModal } from "@/screens/Khata/components/KhataModal";
 import { useState, useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr, fmtDateTime, PAY_LABEL, CreditCustomer, creditCustomers, totalCreditOutstanding, waLink, collectMsg, creditAging, creditAgingBuckets, } from "@/utils";
-import { IconSearch, IconCheck, IconWhatsApp, IconRupee, IconReceipt, IconUsers, IconAlert, IconArrowRight, } from "@/components/Icon";
+import { IconSearch, IconCheck, IconWhatsApp, IconRupee, IconReceipt, IconUsers, IconAlert, IconArrowRight, } from "@/components/atoms";
 import { SegmentBar } from "@/components/molecules/BarChart";
 import { Swatch } from "@/components/organisms/DonutChart";
 import { accountsWithBalance } from "./Khata.utils";

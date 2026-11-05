@@ -6,7 +6,7 @@ import { Ring } from "@/screens/Account/components/Ring";
 import { usePharma } from "@/hooks";
 import { PLANS, planPrice, cycleNoun, inr, computeInvoice, routeLocked, PREMIUM_ROUTES, HOSPITAL_ROUTES, includedSeats, seatCeiling, UserRole, } from "@/utils";
 import type { Route } from "@/types";
-import { IconUsers, IconReceipt, IconCrown, IconGift, IconShare, IconHelp, IconSettings, IconCheck, IconArrowRight, IconRupee, IconShield, IconWallet, IconAlert, IconDownload, IconLock, IconSparkle, } from "@/components/Icon";
+import { IconUsers, IconReceipt, IconCrown, IconGift, IconShare, IconHelp, IconSettings, IconCheck, IconArrowRight, IconRupee, IconShield, IconWallet, IconAlert, IconDownload, IconLock, IconSparkle, } from "@/components/atoms";
 const ROLE_PILL: Record<string, string> = {
     Owner: "!bg-amber-bg !text-gold-d",
     Manager: "!bg-blue-bg !text-blue",

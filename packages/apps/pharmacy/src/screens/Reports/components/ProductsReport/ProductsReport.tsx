@@ -5,8 +5,8 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { inr, catLabel, CATEGORIES, stockOf } from "@/utils";
-import { IconSearch, IconBox } from "@/components/Icon";
-import { monogramOf } from "@/components/EntityIcon";
+import { IconSearch, IconBox } from "@/components/atoms";
+import { monogramOf } from "@/components/molecules";
 type PSort = "units" | "revenue" | "profit" | "margin" | "stock";
 export function ProductsReport({ enriched, inventory, costOf, }: ProductsReportProps) {
     const [cat, setCat] = useState("all");

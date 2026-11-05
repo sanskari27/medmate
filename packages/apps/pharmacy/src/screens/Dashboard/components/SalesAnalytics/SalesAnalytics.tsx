@@ -4,7 +4,7 @@ import { cn } from "@/utils/className";
 import { useMemo, useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, catLabel, Sale, PayMode, PAY_LABEL, SaleSource, saleSourceOf } from "@/utils";
-import { IconDonut, IconBars, IconTrendUp } from "@/components/Icon";
+import { IconDonut, IconBars, IconTrendUp } from "@/components/atoms";
 import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
 import { inrK } from "@/screens/Dashboard/utils/inrK";
 import { TrendChart } from "@/components/organisms";

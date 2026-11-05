@@ -6,7 +6,7 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, waLink, smsLink } from "@/utils";
 import { hospitalAging } from "@/utils/calculations/hospitalAccount";
-import { IconX, IconAlert, IconWhatsApp, IconMail, IconCheck, IconCopy } from "@/components/Icon";
+import { IconX, IconAlert, IconWhatsApp, IconMail, IconCheck, IconCopy } from "@/components/atoms";
 import { fmtDay } from "@/utils/date";
 export function ReminderModal({ onClose, outstanding, aging, }: ReminderModalProps) {
     const { hospitalAccount: a, profile } = usePharma();

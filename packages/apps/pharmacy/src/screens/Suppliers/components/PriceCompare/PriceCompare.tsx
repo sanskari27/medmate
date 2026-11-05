@@ -5,8 +5,8 @@ import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import { usePharma } from "@/hooks";
 import { SupplyEntry, inr2, effectiveSupplyPrice, schemeLabel, isDevice } from "@/utils";
-import { IconStar, IconScale, IconCash, IconTag, IconCheck } from "@/components/Icon";
-import { Thumb } from "@/components/Thumb";
+import { IconStar, IconScale, IconCash, IconTag, IconCheck } from "@/components/atoms";
+import { Thumb } from "@/components/molecules";
 import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 export function PriceCompare() {
     const { supplyList, suppliers, inventory } = usePharma();

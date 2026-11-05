@@ -6,7 +6,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState, useRef } from "react";
 import { usePharma } from "@/hooks";
 import { CATEGORIES, inr, inr2, fmtDateTime, purchaseTotals, blankPurchaseItem, PurchaseItem, Purchase, Schedule, DosageForm, SCHEDULE_META, } from "@/utils";
-import { IconPlus, IconX, IconTruck, IconCheck, IconTrash, IconRupee, IconPrint, IconReceipt, IconBulb, IconDoc, IconAlert, } from "@/components/Icon";
+import { IconPlus, IconX, IconTruck, IconCheck, IconTrash, IconRupee, IconPrint, IconReceipt, IconBulb, IconDoc, IconAlert, } from "@/components/atoms";
 import { parsePurchaseCsv, downloadPurchaseTemplate, CsvParseResult } from "@/utils/purchases";
 const FORMS: DosageForm[] = [
     "Tablet",

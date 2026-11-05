@@ -23,8 +23,8 @@ import {
 import { Chip } from "@/components/molecules/Chip";
 import { ChannelPill } from "@/components/molecules/ChannelPill";
 import { StatusPill } from "@/components/molecules/StatusPill";
-import Invoice from "@/components/Invoice";
-import RxView from "@/components/RxView";
+import { Invoice } from "@/components/organisms";
+import { RxView } from "@/components/organisms";
 import { fmtDateTime, inr, PAY_LABEL, STATUS_LABEL, timeAgo, type PayMode, type SaleItem } from "@/utils";
 import { cn } from "@/utils/className";
 import type { OrderTab } from "../../Orders.types";

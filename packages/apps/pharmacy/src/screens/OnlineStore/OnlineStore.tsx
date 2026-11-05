@@ -5,9 +5,9 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { CATEGORIES, catLabel, inr, mrpOf, sellPrice, stockOf, InvProduct, Offer, OfferType, directOfferId, directOfferOf, onlineOfferPrice, } from "@/utils";
-import { IconSearch, IconStore, IconX, IconGlobe, IconTag, IconBulb, IconCart, } from "@/components/Icon";
-import { CategoryIcon, monogramOf } from "@/components/EntityIcon";
-import { Thumb } from "@/components/Thumb";
+import { IconSearch, IconStore, IconX, IconGlobe, IconTag, IconBulb, IconCart, } from "@/components/atoms";
+import { CategoryIcon, monogramOf } from "@/components/molecules";
+import { Thumb } from "@/components/molecules";
 import { catalogProducts } from "./OnlineStore.utils";
 export default function OnlineStoreScreen() {
     const { inventory, offers, profile, toggleOnline, setOnlinePrice, setProductOffer, setDirectOffer, toggleStoreOpen, } = usePharma();

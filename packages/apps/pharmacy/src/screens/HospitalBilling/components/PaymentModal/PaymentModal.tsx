@@ -5,7 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, PayMode, PAY_LABEL } from "@/utils";
-import { IconX } from "@/components/Icon";
+import { IconX } from "@/components/atoms";
 export function PaymentModal({ onClose, outstanding, }: PaymentModalProps) {
     const { recordHospitalPayment } = usePharma();
     const [amount, setAmount] = useState(outstanding > 0 ? String(Math.round(outstanding)) : "");

@@ -6,8 +6,8 @@ import { cn } from "@/utils/className";
 import { useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr } from "@/utils";
-import { IconPrint, IconDownload, IconChart } from "@/components/Icon";
-import { usePeriod } from "@/components/PeriodFilter";
+import { IconPrint, IconDownload, IconChart } from "@/components/atoms";
+import { usePeriod } from "@/components/organisms";
 import { runReport, ReportResult, reportById } from "@/utils/calculations/reportCatalog";
 import { exportCatalogCsv, exportCatalogPdf } from "@/utils/calculations/reportExport";
 export function ReportDetail({ id, onBack }: ReportDetailProps) {

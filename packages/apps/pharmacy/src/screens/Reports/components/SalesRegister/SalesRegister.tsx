@@ -5,7 +5,7 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { inr, PAY_LABEL, PayMode, Channel, OrderStatus, STATUS_LABEL, fmtDateTime } from "@/utils";
-import { IconSearch } from "@/components/Icon";
+import { IconSearch } from "@/components/atoms";
 type SSort = "date" | "total" | "items" | "customer";
 export function SalesRegister({ enriched }: SalesRegisterProps) {
     const [q, setQ] = useState("");

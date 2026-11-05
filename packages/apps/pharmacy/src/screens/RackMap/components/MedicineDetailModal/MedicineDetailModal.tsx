@@ -5,9 +5,9 @@ import { TableFooter } from "@/components/molecules/DataTable";
 import { cn } from "@/utils/className";
 import type { MouseEvent } from "react";
 import { InvProduct, stockOf, hasLocation, locationCodes, inr, inr2, stockValue, looseUnitsOf, monthsToExpiry, isExpired, catLabel, unitNoun, stockLabel, } from "@/utils";
-import { Thumb } from "@/components/Thumb";
-import { ScheduleTag } from "@/components/ScheduleTag";
-import { IconX, IconPin, IconBox, IconUnlock, IconReceipt, IconTag } from "@/components/Icon";
+import { Thumb } from "@/components/molecules";
+import { ScheduleTag } from "@/components/molecules";
+import { IconX, IconPin, IconBox, IconUnlock, IconReceipt, IconTag } from "@/components/atoms";
 export function MedicineDetailModal({ p, now, onClose, }: MedicineDetailModalProps) {
     const mrpValue = p.batches.reduce((a, b) => a + b.qty * b.mrp, 0);
     const buyValue = stockValue(p);

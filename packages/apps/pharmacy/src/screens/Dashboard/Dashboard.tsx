@@ -9,10 +9,10 @@ import { SalesAnalytics } from "@/screens/Dashboard/components/SalesAnalytics";
 import { useMemo } from "react";
 import { usePharma } from "@/hooks";
 import { inr, isLowStock, isExpiringSoon, earliestBatch, monthsToExpiry, stockOf, timeAgo, catLabel, Sale, } from "@/utils";
-import { StatusPill } from "@/components/StatusPill";
-import { Thumb } from "@/components/Thumb";
-import { IconRupee, IconOrders, IconRx, IconAlert, IconArrowRight, IconCheck, IconGlobe, IconBox, IconCalendar, IconTrendUp, IconTrendDown, IconPos, IconTruck, IconSend, IconStore, IconStar, } from "@/components/Icon";
-import { monogramOf } from "@/components/EntityIcon";
+import { StatusPill } from "@/components/molecules";
+import { Thumb } from "@/components/molecules";
+import { IconRupee, IconOrders, IconRx, IconAlert, IconArrowRight, IconCheck, IconGlobe, IconBox, IconCalendar, IconTrendUp, IconTrendDown, IconPos, IconTruck, IconSend, IconStore, IconStar, } from "@/components/atoms";
+import { monogramOf } from "@/components/molecules";
 const DAY_MS = 86400000;
 export default function DashboardScreen() {
     const { sales, inventory, prescriptions, now, go, setInvFilter, isHospital, profile } = usePharma();

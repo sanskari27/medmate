@@ -6,7 +6,7 @@ import { usePharma } from "@/hooks";
 import { fmtDateTime, inr } from "@/utils";
 import { IndentStatus } from "@/utils/calculations/hospital";
 import { reasonMeta } from "@/utils/calculations/hospitalAccount";
-import { IconReceipt } from "@/components/Icon";
+import { IconReceipt } from "@/components/atoms";
 import { visibleIndents } from "./Indents.utils";
 const TONE: Record<IndentStatus, string> = {
     pending: "!bg-amber-bg !text-gold-d",

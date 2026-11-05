@@ -4,7 +4,7 @@ import { Button } from "@/components/atoms/Button";
 import { Text } from "@/components/atoms/Text";
 import { IconHash, IconPin } from "@/components/atoms/Icon";
 import { ScheduleTag } from "@/components/molecules/ScheduleTag";
-import { Thumb } from "@/components/Thumb";
+import { Thumb } from "@/components/molecules";
 import {
   billUnit,
   hasLocation,

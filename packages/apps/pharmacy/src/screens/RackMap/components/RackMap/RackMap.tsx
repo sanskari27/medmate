@@ -4,8 +4,8 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useState } from "react";
 import { InvProduct, stockOf, matchesLocation } from "@/utils";
-import { Thumb } from "@/components/Thumb";
-import { IconPlus, IconMap, IconHelp, IconFolder } from "@/components/Icon";
+import { Thumb } from "@/components/molecules";
+import { IconPlus, IconMap, IconHelp, IconFolder } from "@/components/atoms";
 export function RackMap({ groups, q, unassigned, onGoAssign, createRack, onOpen, onMed, }: RackMapProps) {
     const t = q.trim().toLowerCase();
     const [nr, setNr] = useState("");

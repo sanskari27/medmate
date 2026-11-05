@@ -4,7 +4,7 @@ import { cn } from "@/utils/className";
 import type { MouseEvent } from "react";
 import { inr, fmtDateTime, PharmacyProfile } from "@/utils";
 import { WardSupplyItem, WardSupplyReason, reasonMeta, HospitalAccount, itemMrp, } from "@/utils/calculations/hospitalAccount";
-import { IconPrint, IconCheck } from "@/components/Icon";
+import { IconPrint, IconCheck } from "@/components/atoms";
 // Ward-supply credit invoice — shown before sending to the hospital, and re-viewable after.
 // Lists every medicine with batch no., MRP and the discounted hospital (credit) price, so the
 // hospital can see what to bill the patient. Self-contained styles + print (Save as PDF).

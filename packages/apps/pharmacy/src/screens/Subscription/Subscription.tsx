@@ -6,7 +6,7 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { PLANS, Plan, BillingCycle, inr, planPrice, annualSavings, annualPerMonth, annualOff, cycleNoun, GST_RATE, subscriptionLapsed, } from "@/utils";
 import { ApiError, api } from "@/services/api/apiClient";
-import { IconCheck, IconCrown, IconStar } from "@/components/Icon";
+import { IconCheck, IconCrown, IconStar } from "@/components/atoms";
 import { subscriptionStatusLabel } from "./Subscription.utils";
 type CouponOffer = {
     code: string;

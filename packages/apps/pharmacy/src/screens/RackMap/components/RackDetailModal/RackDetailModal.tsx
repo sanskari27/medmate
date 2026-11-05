@@ -4,8 +4,8 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { InvProduct, stockOf, hasLocation, locationCodes } from "@/utils";
-import { Thumb } from "@/components/Thumb";
-import { IconSearch, IconX, IconFolder, IconBox } from "@/components/Icon";
+import { Thumb } from "@/components/molecules";
+import { IconSearch, IconX, IconFolder, IconBox } from "@/components/atoms";
 export function RackDetailModal({ code, items, inventory, onClose, onAdd, onMed, }: RackDetailModalProps) {
     const [pq, setPq] = useState("");
     const t = pq.trim().toLowerCase();

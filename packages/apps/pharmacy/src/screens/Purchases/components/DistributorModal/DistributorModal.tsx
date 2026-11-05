@@ -5,7 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { Supplier, isValidGstin } from "@/utils";
-import { IconX } from "@/components/Icon";
+import { IconX } from "@/components/atoms";
 const BLANK_SUP: Omit<Supplier, "id"> = {
     name: "",
     gstin: "",

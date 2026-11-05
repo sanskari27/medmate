@@ -6,7 +6,7 @@ import { useState } from "react";
 import { usePharma } from "@/hooks";
 import { inr, fmtDateTime } from "@/utils";
 import { WardSupplyReason, reasonMeta, WardSupply } from "@/utils/calculations/hospitalAccount";
-import { IconSearch, IconHospital, IconReceipt } from "@/components/Icon";
+import { IconSearch, IconHospital, IconReceipt } from "@/components/atoms";
 import WardSupplyInvoice from "@/screens/HospitalBilling/components/WardSupplyInvoice";
 import { supplyToInvoice } from "@/screens/HospitalBilling/utils/supplyToInvoice";
 const REASON_TONE: Record<WardSupplyReason, string> = {
