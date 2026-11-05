@@ -52,4 +52,4 @@ gh variable set AWS_DEPLOY_ROLE_ARN --body "<deploy_role_arn>"
 gh variable set AWS_INFRA_ROLE_ARN --body "<infra_role_arn>"
 ```
 
-`.github/workflows/infra.yml` plans on pull requests and applies on `main`. `.github/workflows/deploy.yml` publishes changed applications.
+`.github/workflows/infra.yml` plans on pull requests and applies on `main`. `.github/workflows/deploy.yml` publishes changed applications after that Infra run has finished. An app-only push deploys immediately unless an Infra run is still applying.

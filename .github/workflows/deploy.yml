@@ -9,6 +9,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   validate:
@@ -40,9 +41,29 @@ jobs:
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
-  deploy:
-    needs: [validate, changed]
+  wait-infra:
+    needs: changed
     if: needs.changed.result == 'success' && needs.changed.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Wait for infra workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: python3 scripts/wait_for_infra.py
+
+  deploy:
+    needs: [validate, changed, wait-infra]
+    if: >-
+      needs.validate.result == 'success' &&
+      needs.changed.result == 'success' &&
+      needs.wait-infra.result == 'success' &&
+      needs.changed.outputs.apps != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
