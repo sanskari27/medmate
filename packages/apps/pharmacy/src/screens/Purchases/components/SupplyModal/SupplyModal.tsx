@@ -16,7 +16,7 @@ import {
 } from "@/screens/Purchases/purchaseChrome";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import {
   SupplyEntry,
   InvProduct,
@@ -28,8 +28,10 @@ import {
 } from "@/utils";
 import { IconX, IconCheck } from "@/components/atoms";
 export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
-  const { inventory, suppliers, supplyList } = usePharma();
-  const [f, setF] = useState<Omit<SupplyEntry, "id">>(
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const supplyList = useAppSelector((state) => state.purchases.supplyList);
+  const [draft, setDraft] = useState<Omit<SupplyEntry, "id">>(
     init
       ? { ...init }
       : {
@@ -43,9 +45,9 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
           note: "",
         },
   );
-  const set = (p: Partial<typeof f>) => setF((s) => ({ ...s, ...p }));
-  const prod: InvProduct | undefined = inventory.find((p) => p.id === f.productId);
-  const others = supplyList.filter((e) => e.productId === f.productId && e.id !== init?.id);
+  const set = (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }));
+  const prod: InvProduct | undefined = inventory.find((p) => p.id === draft.productId);
+  const others = supplyList.filter((e) => e.productId === draft.productId && e.id !== init?.id);
   const rankedOthers = others.slice().sort(function byLanded(left, right) {
     return effectiveSupplyPrice(left) - effectiveSupplyPrice(right);
   });
@@ -57,13 +59,13 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
       )
     : null;
   const landedGap =
-    f.purchasePrice > 0 && bestOther !== null
-      ? bestOther - effectiveSupplyPrice(f as SupplyEntry)
+    draft.purchasePrice > 0 && bestOther !== null
+      ? bestOther - effectiveSupplyPrice(draft as SupplyEntry)
       : null;
   // when picking a product, default MRP to its printed MRP for convenience
   const onPickProduct = (id: string) => {
     const p = inventory.find((x) => x.id === id);
-    set({ productId: id, mrp: f.mrp ?? (p ? mrpOf(p) : undefined) });
+    set({ productId: id, mrp: draft.mrp ?? (p ? mrpOf(p) : undefined) });
   };
   return (
     <Box className={modalOverlayClass} onClick={onClose}>
@@ -79,7 +81,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
             <Box className={cn(fieldClass, span2Class)}>
               <Label>Medicine / device *</Label>
               <ChevronSelect
-                value={f.productId}
+                value={draft.productId}
                 onChange={onPickProductOnChange}
                 options={[...inventory.map(renderInventory)]}
               />
@@ -87,7 +89,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
             <Box className={cn(fieldClass, span2Class)}>
               <Label>Distributor *</Label>
               <ChevronSelect
-                value={f.supplierId}
+                value={draft.supplierId}
                 onChange={setOnChange}
                 options={[...suppliers.map(renderSupplier)]}
               />
@@ -98,7 +100,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
                 className=""
                 type="number"
                 step="0.01"
-                value={f.purchasePrice || ""}
+                value={draft.purchasePrice || ""}
                 onChange={setOnChange2}
               />
             </Box>
@@ -108,7 +110,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
                 className=""
                 type="number"
                 step="0.01"
-                value={f.mrp ?? ""}
+                value={draft.mrp ?? ""}
                 onChange={setOnChange3}
               />
             </Box>
@@ -117,7 +119,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
               <Input
                 className=""
                 type="number"
-                value={f.bonusBuy ?? ""}
+                value={draft.bonusBuy ?? ""}
                 onChange={setOnChange4}
                 placeholder="e.g. 10"
               />
@@ -127,7 +129,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
               <Input
                 className=""
                 type="number"
-                value={f.bonusFree ?? ""}
+                value={draft.bonusFree ?? ""}
                 onChange={setOnChange5}
                 placeholder="e.g. 1"
               />
@@ -136,16 +138,16 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
               <Label>Note (credit / shipping)</Label>
               <Input
                 className=""
-                value={f.note || ""}
+                value={draft.note || ""}
                 onChange={setOnChange6}
                 placeholder="e.g. free shipping above ₹5000"
               />
             </Box>
           </Box>
-          {f.purchasePrice > 0 && schemeLabel(f as SupplyEntry) && (
+          {draft.purchasePrice > 0 && schemeLabel(draft as SupplyEntry) && (
             <Box className="!mt-2 !text-[12px] !font-bold !text-[#1f7a46]">
-              Landed cost after {schemeLabel(f as SupplyEntry)} scheme:{" "}
-              {inr2(effectiveSupplyPrice(f as SupplyEntry))} / pack
+              Landed cost after {schemeLabel(draft as SupplyEntry)} scheme:{" "}
+              {inr2(effectiveSupplyPrice(draft as SupplyEntry))} / pack
             </Box>
           )}
 
@@ -173,7 +175,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
 
           <Box className={cn("!flex !items-center !gap-2.5", "!mt-4 !gap-2.5 !items-center")}>
             <Switch
-              checked={!!f.preferred}
+              checked={!!draft.preferred}
               label="Toggle preferred"
               onClick={setOnClick}
               className="!transition-[background-color] !duration-[160ms] after:!bg-white after:!shadow-[0_1px_3px_rgba(0,0,0,0.22)] after:!transition-transform after:!duration-[160ms] after:!ease-[cubic-bezier(0.3,0.7,0.4,1)]"
@@ -188,7 +190,7 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
             Cancel
           </Button>
           <Button
-            disabled={!f.productId || !f.supplierId || f.purchasePrice <= 0}
+            disabled={!draft.productId || !draft.supplierId || draft.purchasePrice <= 0}
             onClick={onSaveOnClick}
           >
             {init ? "Save changes" : "Add supply item"}
@@ -247,9 +249,9 @@ export function SupplyModal({ init, onClose, onSave }: SupplyModalProps) {
     }
   }
   function setOnClick() {
-    return set({ preferred: !f.preferred });
+    return set({ preferred: !draft.preferred });
   }
   function onSaveOnClick() {
-    return onSave(f);
+    return onSave(draft);
   }
 }

@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { setInventoryField } from "@/store/slices/inventory";
-import { selectInventory } from "@/store/selectors";
+import { loadSession } from "@/store/thunks/auth.thunk";
+import type { SessionSnapshot } from "@/store/session";
 import { store } from "./store";
 
 describe("store", () => {
-  it("dispatches a slice update", () => {
-    store.dispatch(setInventoryField({ key: "racks", value: ["A1"] }));
+  it("hydrates inventory from the session snapshot", () => {
+    store.dispatch(
+      loadSession.fulfilled(
+        { inventory: [], racks: ["A1"] } as unknown as SessionSnapshot,
+        "session-test",
+        undefined,
+      ),
+    );
     expect(store.getState().inventory.racks).toEqual(["A1"]);
-    expect(selectInventory(store.getState())).toEqual([]);
+    expect(store.getState().inventory.inventory).toEqual([]);
+    expect(store.getState().auth.signedIn).toBe(true);
   });
 });

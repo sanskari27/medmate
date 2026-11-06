@@ -1,5 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { recordCreditPayment } from "@/store/thunks/customers.thunk";
 import { inr, timeAgo, totalCreditOutstanding, customerCredit } from "@/utils";
 import {
   Box,
@@ -43,7 +44,16 @@ import type { CustomerAccount, CustomerSort } from "./Customers.types";
 import { CustomerModal } from "./components/CustomerModal";
 
 export default function CustomersScreen() {
-  const { sales, creditPayments, recordCreditPayment, now, go, profile } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const creditPayments = useAppSelector((state) => state.customers.creditPayments);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  async function saveCreditPayment(payment: Parameters<typeof recordCreditPayment>[0]) {
+    const result = await confirm(recordCreditPayment(payment));
+    return "fault" in result ? result.fault : null;
+  }
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<CustomerSort>("spent");
   const [open, setOpen] = useState<CustomerAccount | null>(null);
@@ -235,7 +245,7 @@ export default function CustomersScreen() {
           onNewSale={handleNewSale}
           sales={sales}
           creditPayments={creditPayments}
-          recordCreditPayment={recordCreditPayment}
+          recordCreditPayment={saveCreditPayment}
           profile={profile}
         />
       ) : null}

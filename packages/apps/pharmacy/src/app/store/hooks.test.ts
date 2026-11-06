@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { resolveSetState } from "./hooks";
+import { faultMessage } from "@/store/faultMessage";
 
-describe("resolveSetState", () => {
-  it("applies a value or a function update", () => {
-    expect(resolveSetState(1, 2)).toBe(2);
-    expect(resolveSetState(1, (value) => value + 3)).toBe(4);
+describe("faultMessage", () => {
+  it("uses an error message or the fallback", () => {
+    expect(faultMessage(new Error("Missing GSTIN"), "Save failed")).toBe("Missing GSTIN");
+    expect(faultMessage("Save cancelled", "Save failed")).toBe("Save cancelled");
+    expect(faultMessage(null, "Save failed")).toBe("Save failed");
   });
 });

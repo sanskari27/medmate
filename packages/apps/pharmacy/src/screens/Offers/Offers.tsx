@@ -3,12 +3,15 @@ import { Box, Button, Heading, Input, Label, Select, Text } from "@/components/a
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { addOffer, toggleOffer } from "@/store/thunks/sales.thunk";
 import { CATEGORIES, catLabel, Offer, OfferType, OfferScope, inr } from "@/utils";
 import { IconPlus, IconX, IconOffer, IconTag, IconGlobe } from "@/components/atoms";
 import { productsInOffer } from "./Offers.utils";
 export default function OffersScreen() {
-  const { offers, inventory, addOffer, toggleOffer } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const offers = useAppSelector((state) => state.sales.offers);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
   const [open, setOpen] = useState(false);
   const productsIn = (o: Offer) => productsInOffer(inventory, o);
   return (
@@ -142,20 +145,20 @@ export default function OffersScreen() {
       </Box>
     );
     function toggleOfferOnClick() {
-      return toggleOffer(o.id);
+      void confirm(toggleOffer(o.id));
     }
   }
   function setOpenOnClose() {
     return setOpen(false);
   }
-  async function addOfferOnSave(o: Offer) {
-    const err = await addOffer(o);
-    if (!err) setOpen(false);
+  async function addOfferOnSave(offer: Offer) {
+    const result = await confirm(addOffer(offer));
+    if ("data" in result) setOpen(false);
   }
 }
-function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offer) => void }) {
-  const { inventory } = usePharma();
-  const [f, setF] = useState<Offer>({
+function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (offer: Offer) => void }) {
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const [draft, setDraft] = useState<Offer>({
     id: "of" + Math.floor(Date.now() % 100000),
     title: "",
     code: "",
@@ -166,8 +169,8 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
     online: true,
     active: true,
   });
-  const set = (patch: Partial<Offer>) => setF((p) => ({ ...p, ...patch }));
-  const valid = f.title.trim() && f.code.trim() && f.value > 0;
+  const set = (patch: Partial<Offer>) => setDraft((current) => ({ ...current, ...patch }));
+  const valid = draft.title.trim() && draft.code.trim() && draft.value > 0;
   return (
     <Box
       className="!fixed !inset-0 !z-[100] !flex !items-center !justify-center !bg-[rgba(13,32,21,0.5)] !p-6 !backdrop-blur-[3px] max-[767px]:!items-end max-[767px]:!p-0"
@@ -195,7 +198,7 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
               <Label>Offer title</Label>
               <Input
                 className=""
-                value={f.title}
+                value={draft.title}
                 onChange={setOnChange}
                 placeholder="Monsoon Health Sale"
               />
@@ -204,7 +207,7 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
               <Label>Coupon code</Label>
               <Input
                 className="!font-mono"
-                value={f.code}
+                value={draft.code}
                 onChange={setOnChange2}
                 placeholder="NAMMA25"
               />
@@ -213,7 +216,7 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
               <Label>Discount type</Label>
               <Select
                 className=""
-                value={f.type}
+                value={draft.type}
                 onChange={setOnChange3}
                 options={[
                   { value: "pct", label: "Percentage %" },
@@ -222,14 +225,14 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
               />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
-              <Label>{f.type === "pct" ? "Percent off" : "Amount off (₹)"}</Label>
-              <Input className="" type="number" value={f.value} onChange={setOnChange4} />
+              <Label>{draft.type === "pct" ? "Percent off" : "Amount off (₹)"}</Label>
+              <Input className="" type="number" value={draft.value} onChange={setOnChange4} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>Applies to</Label>
               <Select
                 className=""
-                value={f.scope}
+                value={draft.scope}
                 onChange={setOnChange5}
                 options={[
                   { value: "all", label: "All products" },
@@ -238,12 +241,12 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
                 ]}
               />
             </Box>
-            {f.scope === "category" && (
+            {draft.scope === "category" && (
               <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
                 <Label>Category</Label>
                 <Select
                   className=""
-                  value={f.target ?? ""}
+                  value={draft.target ?? ""}
                   onChange={setOnChange6}
                   options={[
                     { value: "", label: "Select\u2026" },
@@ -252,12 +255,12 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
                 />
               </Box>
             )}
-            {f.scope === "product" && (
+            {draft.scope === "product" && (
               <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
                 <Label>Product</Label>
                 <Select
                   className=""
-                  value={f.target ?? ""}
+                  value={draft.target ?? ""}
                   onChange={setOnChange7}
                   options={[
                     { value: "", label: "Select\u2026" },
@@ -272,7 +275,7 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
               type="button"
               className={cn(
                 "!relative !h-[22px] !w-[38px] !shrink-0 !rounded-full !border-0 !p-0 !shadow-none active:!translate-y-0 after:!absolute after:!top-0.5 after:!left-0.5 after:!h-[18px] after:!w-[18px] after:!rounded-full after:!bg-white after:!shadow-[0_1px_3px_rgba(0,0,0,0.22)] after:!transition after:!content-['']",
-                f.online
+                draft.online
                   ? "!bg-mid hover:!bg-mid after:!translate-x-4"
                   : "!bg-[#cddcd3] hover:!bg-[#cddcd3]",
               )}
@@ -332,9 +335,9 @@ function OfferModal({ onClose, onSave }: { onClose: () => void; onSave: (o: Offe
     return { value: String(p.id), label: String(p.name) };
   }
   function setOnClick() {
-    return set({ online: !f.online });
+    return set({ online: !draft.online });
   }
   function onSaveOnClick() {
-    return onSave(f);
+    return onSave(draft);
   }
 }

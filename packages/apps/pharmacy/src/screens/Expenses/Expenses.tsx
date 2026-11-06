@@ -16,7 +16,8 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useMemo, useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { addExpense } from "@/store/thunks/purchases.thunk";
 import { inr, Expense, PayMode, PAY_LABEL, fmtDateTime, expenseTax } from "@/utils";
 import {
   IconPlus,
@@ -32,9 +33,18 @@ import { exportCatalogCsv, exportCatalogPdf } from "@/utils/calculations/reportE
 import { runReport } from "@/utils/calculations/reportCatalog";
 import { expenseDate } from "./Expenses.utils";
 export default function ExpensesScreen() {
-  const { expenses, expenseCategories, addExpense, profile, now, openReport } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const { openReport } = usePharmacyNav();
+  const expenses = useAppSelector((state) => state.purchases.expenses);
+  const expenseCategories = useAppSelector((state) => state.purchases.expenseCategories);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  async function saveExpense(expense: Parameters<typeof addExpense>[0]) {
+    const result = await confirm(addExpense(expense));
+    return "fault" in result ? result.fault : null;
+  }
   const period = useDateRange(now, "last-365");
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [cat, setCat] = useState("all");
   const [showRep, setShowRep] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -44,17 +54,17 @@ export default function ExpensesScreen() {
         .filter((e) => period.inWindow(e.date))
         .filter((e) => cat === "all" || e.category === cat)
         .filter(
-          (e) =>
-            !q.trim() ||
-            `${e.number} ${e.party} ${e.category} ${e.note ?? ""}`
+          (expense) =>
+            !searchQuery.trim() ||
+            `${expense.number} ${expense.party} ${expense.category} ${expense.note ?? ""}`
               .toLowerCase()
-              .includes(q.toLowerCase()),
+              .includes(searchQuery.toLowerCase()),
         )
-        .sort((a, b) => b.date - a.date),
-    [expenses, period, cat, q],
+        .sort((left, right) => right.date - left.date),
+    [expenses, period, cat, searchQuery],
   );
-  const total = rows.reduce((a, e) => a + e.amount, 0);
-  const gstTotal = rows.reduce((a, e) => a + expenseTax(e), 0);
+  const total = rows.reduce((sum, expense) => sum + expense.amount, 0);
+  const gstTotal = rows.reduce((sum, expense) => sum + expenseTax(expense), 0);
   return (
     <Box className="!mx-auto !max-w-[1680px]">
       <Box className="!mb-4 !flex !flex-wrap !items-center !gap-2.5">
@@ -72,7 +82,11 @@ export default function ExpensesScreen() {
           <Text className="!text-green" as="span">
             <IconSearch size={17} />
           </Text>
-          <Input placeholder="Search expense, party…" value={q} onChange={setQOnChange} />
+          <Input
+            placeholder="Search expense, party…"
+            value={searchQuery}
+            onChange={setSearchQueryOnChange}
+          />
         </Box>
         <Box className="!flex-1" />
         <Box className={cn("!relative")}>
@@ -221,7 +235,7 @@ export default function ExpensesScreen() {
         <CreateExpense
           onClose={setCreatingOnClose}
           categories={expenseCategories}
-          addExpense={addExpense}
+          addExpense={saveExpense}
           now={now}
         />
       )}
@@ -233,8 +247,8 @@ export default function ExpensesScreen() {
   function renderExpenseCategory(c: string) {
     return { value: String(c), label: String(c) };
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function setShowRepOnClick() {
     return setShowRep((v) => !v);
@@ -293,7 +307,7 @@ function downloadRegister(
   kind: "csv" | "pdf",
 ) {
   const range = { from: period.from, to: period.to, label: period.label };
-  const res = runReport("expense-transaction", {
+  const report = runReport("expense-transaction", {
     sales: [],
     purchases: [],
     inventory: [],
@@ -302,8 +316,8 @@ function downloadRegister(
     now,
     range,
   });
-  if (kind === "csv") exportCatalogCsv("Expense Transactions", res, range, now);
-  else exportCatalogPdf("Expense Transactions", res, profile, range, now);
+  if (kind === "csv") exportCatalogCsv("Expense Transactions", report, range, now);
+  else exportCatalogPdf("Expense Transactions", report, profile, range, now);
 }
 function CreateExpense({
   onClose,

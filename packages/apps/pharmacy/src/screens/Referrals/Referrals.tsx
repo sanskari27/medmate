@@ -16,13 +16,28 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { showToast } from "@/store/actions/feedback.actions";
+import { addReferral, updateReferral } from "@/store/thunks/customers.thunk";
 import { inr } from "@/utils";
 import { ReferralStatus } from "@/utils/calculations/referrals";
 import { IconGift, IconCheck, IconSend, IconInbox, IconStore, IconCash } from "@/components/atoms";
 import { earnedReferralTotal } from "./Referrals.utils";
 export default function ReferScreen() {
-  const { profile, toast, referrals, addReferral, updateReferral } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const profile = useAppSelector((state) => state.auth.profile);
+  const referrals = useAppSelector((state) => state.customers.referrals);
+  function toast(message: string) {
+    dispatch(showToast(message));
+  }
+  async function saveReferral(referral: Parameters<typeof addReferral>[0]) {
+    const result = await confirm(addReferral(referral));
+    return "fault" in result ? result.fault : null;
+  }
+  function changeReferral(id: string, patch: Parameters<typeof updateReferral>[0]["patch"]) {
+    void confirm(updateReferral({ id, patch }), { kind: "edit" });
+  }
   const code =
     profile.name
       .replace(/[^A-Za-z]/g, "")
@@ -268,7 +283,7 @@ export default function ReferScreen() {
   function trimOnClick() {
     const n = name.trim();
     if (!n) return;
-    void addReferral({ name: n, area: area.trim() }).then((fault) => {
+    void saveReferral({ name: n, area: area.trim() }).then((fault) => {
       if (!fault) {
         setName("");
         setArea("");
@@ -315,13 +330,13 @@ export default function ReferScreen() {
       </TableRow>
     );
     function updateReferralOnChange(e: ChangeEvent<HTMLSelectElement>) {
-      return updateReferral(r.id, { status: e.target.value as ReferralStatus });
+      return changeReferral(r.id, { status: e.target.value as ReferralStatus });
     }
     function render(s: ReferralStatus) {
       return { value: String(s), label: String(s) };
     }
     function updateReferralOnChange2(e: ChangeEvent<HTMLInputElement>) {
-      return updateReferral(r.id, {
+      return changeReferral(r.id, {
         reward: Math.max(0, Number(e.target.value) || 0),
       });
     }

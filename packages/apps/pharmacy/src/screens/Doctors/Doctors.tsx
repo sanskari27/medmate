@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from "react";
-import { usePharma } from "@/hooks";
+import { addDoctor, updateDoctor } from "@/store/thunks/hospital.thunk";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { Box, Button, Input, Select, Stack, Text } from "@/components/atoms";
 import { IconPlus, IconSearch } from "@/components/atoms";
 import { countDoctors, filterDoctors } from "./Doctors.utils";
@@ -9,7 +10,9 @@ import { DoctorCard } from "./components/DoctorCard";
 import { DoctorModal } from "./components/DoctorModal";
 
 export default function DoctorsScreen() {
-  const { doctors, departments, addDoctor, updateDoctor } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const doctors = useAppSelector((state) => state.hospital.doctors);
+  const departments = useAppSelector((state) => state.hospital.departments);
   const [query, setQuery] = useState("");
   const [department, setDepartment] = useState("all");
   const [status, setStatus] = useState<DoctorStatusFilter>("all");
@@ -47,13 +50,13 @@ export default function DoctorsScreen() {
 
   async function handleSave(draft: DoctorDraft) {
     if (editing === "new") {
-      const error = await addDoctor(draft);
-      if (!error) setEditing(null);
+      const result = await confirm(addDoctor(draft));
+      if ("data" in result) setEditing(null);
       return;
     }
     if (!editing) return;
-    const error = await updateDoctor(editing.id, draft);
-    if (!error) setEditing(null);
+    const result = await confirm(updateDoctor({ id: editing.id, patch: draft }), { kind: "edit" });
+    if ("data" in result) setEditing(null);
   }
 
   return (

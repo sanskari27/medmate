@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosLine } from "@/store/slices/billing.slice";
 import type { BillingLineView } from "../../Billing.utils";
 
 export type CartPanelProps = {

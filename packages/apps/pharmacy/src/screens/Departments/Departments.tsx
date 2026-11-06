@@ -3,7 +3,8 @@ import { Box, Button, Heading, Input, Label, Select, Text } from "@/components/a
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { addDepartment, updateDepartment } from "@/store/thunks/hospital.thunk";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { Department } from "@/utils/calculations/hospital";
 import { IconPlus, IconEdit, IconX } from "@/components/atoms";
 import { doctorsInDepartment } from "./Departments.utils";
@@ -16,15 +17,19 @@ const TYPE_TONE: Record<string, string> = {
 };
 const blank = { name: "", head: "", type: "OPD" as Department["type"] };
 export default function DepartmentsScreen() {
-  const { departments, doctors, addDepartment, updateDepartment } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const departments = useAppSelector((state) => state.hospital.departments);
+  const doctors = useAppSelector((state) => state.hospital.doctors);
   const [form, setForm] = useState<typeof blank | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const inDept = (name: string) => doctorsInDepartment(doctors, name);
   const save = async () => {
     if (!form?.name.trim()) return;
     const body = { name: form.name.trim(), head: form.head.trim(), type: form.type };
-    const fault = editing ? await updateDepartment(editing, body) : await addDepartment(body);
-    if (fault) return;
+    const result = editing
+      ? await confirm(updateDepartment({ id: editing, patch: body }), { kind: "edit" })
+      : await confirm(addDepartment(body));
+    if (!("data" in result)) return;
     setForm(null);
     setEditing(null);
   };

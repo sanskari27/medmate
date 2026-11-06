@@ -15,8 +15,10 @@ import {
 } from "@/screens/Purchases/purchaseChrome";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch } from "@/hooks";
+import { setFormFault } from "@/store/actions/feedback.actions";
 import { Supplier, isValidGstin } from "@/utils";
+import { faultOf } from "@/utils/validation";
 import { IconX } from "@/components/atoms";
 const BLANK_SUP: Omit<Supplier, "id"> = {
   name: "",
@@ -33,9 +35,16 @@ const BLANK_SUP: Omit<Supplier, "id"> = {
   active: true,
 };
 export function DistributorModal({ init, onClose, onSave }: DistributorModalProps) {
-  const { showFault } = usePharma();
-  const [f, setF] = useState<Omit<Supplier, "id">>(init ? { ...init } : { ...BLANK_SUP });
-  const set = (p: Partial<typeof f>) => setF((s) => ({ ...s, ...p }));
+  const dispatch = useAppDispatch();
+  const [draft, setDraft] = useState<Omit<Supplier, "id">>(init ? { ...init } : { ...BLANK_SUP });
+  const set = (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }));
+  function showFault(error: unknown, fallback = "Save failed") {
+    dispatch(
+      setFormFault(
+        typeof error === "string" ? faultOf(new Error(error), fallback) : faultOf(error, fallback),
+      ),
+    );
+  }
   return (
     <Box className={modalOverlayClass} onClick={onClose}>
       <Box onClick={stopPropagationOnClick} className={cn(modalPanelClass, "!max-w-[640px]")}>
@@ -51,28 +60,28 @@ export function DistributorModal({ init, onClose, onSave }: DistributorModalProp
               <Label>Distributor / firm name *</Label>
               <Input
                 className=""
-                value={f.name}
+                value={draft.name}
                 onChange={setOnChange}
                 placeholder="e.g. Bengaluru Pharma Distributors"
               />
             </Box>
             <Box className={fieldClass}>
               <Label>Contact person</Label>
-              <Input className="" value={f.contactPerson || ""} onChange={setOnChange2} />
+              <Input className="" value={draft.contactPerson || ""} onChange={setOnChange2} />
             </Box>
             <Box className={fieldClass} data-field="phone">
               <Label>Phone *</Label>
-              <Input className="" value={f.phone} onChange={setOnChange3} placeholder="+91 …" />
+              <Input className="" value={draft.phone} onChange={setOnChange3} placeholder="+91 …" />
             </Box>
             <Box className={fieldClass} data-field="email">
               <Label>Email</Label>
-              <Input className="" value={f.email || ""} onChange={setOnChange4} />
+              <Input className="" value={draft.email || ""} onChange={setOnChange4} />
             </Box>
             <Box className={fieldClass} data-field="gstin">
               <Label>GSTIN</Label>
               <Input
                 className="!font-mono"
-                value={f.gstin}
+                value={draft.gstin}
                 onChange={setOnChange5}
                 placeholder="29ABCDE1234F1Z5"
               />
@@ -81,27 +90,27 @@ export function DistributorModal({ init, onClose, onSave }: DistributorModalProp
               <Label>Drug licence no.</Label>
               <Input
                 className="!font-mono"
-                value={f.dlNo || ""}
+                value={draft.dlNo || ""}
                 onChange={setOnChange6}
                 placeholder="KA-W-…"
               />
             </Box>
             <Box className={cn(fieldClass, span2Class)}>
               <Label>Address</Label>
-              <Input className="" value={f.address || ""} onChange={setOnChange7} />
+              <Input className="" value={draft.address || ""} onChange={setOnChange7} />
             </Box>
             <Box className={fieldClass}>
               <Label>City</Label>
-              <Input className="" value={f.city || ""} onChange={setOnChange8} />
+              <Input className="" value={draft.city || ""} onChange={setOnChange8} />
             </Box>
             <Box className={fieldClass}>
               <Label>State</Label>
-              <Input className="" value={f.state || ""} onChange={setOnChange9} />
+              <Input className="" value={draft.state || ""} onChange={setOnChange9} />
             </Box>
             <Box className={fieldClass}>
               <Label>Payment terms</Label>
               <ChevronSelect
-                value={f.paymentTerms || ""}
+                value={draft.paymentTerms || ""}
                 onChange={setOnChange10}
                 options={[
                   { value: "Advance", label: "Advance" },
@@ -118,14 +127,14 @@ export function DistributorModal({ init, onClose, onSave }: DistributorModalProp
               <Input
                 className=""
                 type="number"
-                value={f.outstanding ?? 0}
+                value={draft.outstanding ?? 0}
                 onChange={setOnChange11}
               />
             </Box>
           </Box>
           <Box className={cn("!flex !items-center !gap-2.5", "!mt-4 !gap-2.5 !items-center")}>
             <Switch
-              checked={f.active !== false}
+              checked={draft.active !== false}
               label="Toggle active"
               onClick={setOnClick}
               className="!transition-[background-color] !duration-[160ms] after:!bg-white after:!shadow-[0_1px_3px_rgba(0,0,0,0.22)] after:!transition-transform after:!duration-[160ms] after:!ease-[cubic-bezier(0.3,0.7,0.4,1)]"
@@ -139,7 +148,7 @@ export function DistributorModal({ init, onClose, onSave }: DistributorModalProp
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={!f.name.trim() || !f.phone.trim()} onClick={trimOnClick}>
+          <Button disabled={!draft.name.trim() || !draft.phone.trim()} onClick={trimOnClick}>
             {init ? "Save changes" : "Add distributor"}
           </Button>
         </Box>
@@ -183,13 +192,13 @@ export function DistributorModal({ init, onClose, onSave }: DistributorModalProp
     return set({ outstanding: Number(e.target.value) || 0 });
   }
   function setOnClick() {
-    return set({ active: !(f.active !== false) });
+    return set({ active: !(draft.active !== false) });
   }
   function trimOnClick() {
-    if (f.gstin.trim() && !isValidGstin(f.gstin)) {
+    if (draft.gstin.trim() && !isValidGstin(draft.gstin)) {
       showFault("Enter a valid GSTIN");
       return;
     }
-    onSave(f);
+    onSave(draft);
   }
 }

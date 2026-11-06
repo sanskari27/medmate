@@ -14,7 +14,9 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { setPricingUnlocked, showToast } from "@/store/actions/feedback.actions";
+import { setHospitalPriceRule, setUniformDiscount } from "@/store/thunks/hospital.thunk";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { inr, mrpOf } from "@/utils";
 import { PriceMode } from "@/utils/calculations/hospitalAccount";
 import { IconSearch, IconX, IconLock, IconUnlock, IconKey } from "@/components/atoms";
@@ -22,15 +24,12 @@ import { monogramOf } from "@/components/molecules";
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 import { AdminOtpModal } from "@/screens/HospitalBilling/components/AdminOtpModal";
 export function PriceListTab() {
-  const {
-    inventory,
-    hospitalPriceRules,
-    hospitalAccount,
-    setUniformDiscount,
-    setHospitalPriceRule,
-    pricingUnlocked,
-    lockPricing,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const hospitalPriceRules = useAppSelector((state) => state.hospital.hospitalPriceRules);
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const pricingUnlocked = useAppSelector((state) => state.ui.pricingUnlocked);
   const cp = useCreditPrice();
   const [q, setQ] = useState("");
   const [otp, setOtp] = useState(false);
@@ -163,8 +162,12 @@ export function PriceListTab() {
   function setOtpOnClick() {
     return setOtp(true);
   }
+  function lockPricing() {
+    dispatch(setPricingUnlocked(false));
+    dispatch(showToast("Pricing locked"));
+  }
   function setUniformDiscountOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setUniformDiscount(Number(e.target.value) || 0);
+    void confirm(setUniformDiscount(Number(e.target.value) || 0), { kind: "edit" });
   }
   function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
     return setQ(e.target.value);
@@ -175,11 +178,17 @@ export function PriceListTab() {
     const rule = hospitalPriceRules[p.id];
     const mode: PriceMode = rule?.mode ?? "percent";
     const off = mrp > 0 ? Math.round((1 - price / mrp) * 100) : 0;
-    const setMode = (m: PriceMode) =>
-      setHospitalPriceRule(p.id, {
-        mode: m,
-        value: rule?.value ?? (m === "percent" ? hospitalAccount.discountPct : 0),
-      });
+    const setMode = (mode: PriceMode) =>
+      void confirm(
+        setHospitalPriceRule({
+          productId: p.id,
+          rule: {
+            mode,
+            value: rule?.value ?? (mode === "percent" ? hospitalAccount.discountPct : 0),
+          },
+        }),
+        { kind: "edit" },
+      );
     return (
       <TableRow key={p.id}>
         <TableCell>
@@ -287,13 +296,16 @@ export function PriceListTab() {
       return setMode("flat");
     }
     function setHospitalPriceRuleOnChange(e: ChangeEvent<HTMLInputElement>) {
-      return setHospitalPriceRule(
-        p.id,
-        e.target.value === "" ? null : { mode, value: Number(e.target.value) },
+      void confirm(
+        setHospitalPriceRule({
+          productId: p.id,
+          rule: e.target.value === "" ? null : { mode, value: Number(e.target.value) },
+        }),
+        { kind: "edit" },
       );
     }
     function setHospitalPriceRuleOnClick() {
-      return setHospitalPriceRule(p.id, null);
+      void confirm(setHospitalPriceRule({ productId: p.id, rule: null }), { kind: "edit" });
     }
   }
   function setOtpOnClose() {

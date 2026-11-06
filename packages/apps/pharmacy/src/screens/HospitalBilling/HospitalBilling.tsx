@@ -9,7 +9,8 @@ import { PriceListTab } from "@/screens/HospitalBilling/components/PriceListTab"
 import { SupplyModal } from "@/screens/HospitalBilling/components/SupplyModal";
 import { PaymentModal } from "@/screens/HospitalBilling/components/PaymentModal";
 import { useState, useEffect } from "react";
-import { usePharma } from "@/hooks";
+import { setBillIndentTarget } from "@/store/actions/feedback.actions";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { inr } from "@/utils";
 import {
   hospitalOutstanding,
@@ -24,14 +25,12 @@ type Tab = "overview" | "issue" | "stock" | "account" | "prices";
 // admin OTP gate — unlock pricing changes
 // match a ward-indent's free-text item names to catalogue products → editable bill rows
 export default function HospitalBillingScreen() {
-  const {
-    hospitalAccount,
-    wardSupplies,
-    hospitalPayments,
-    billIndentTarget,
-    clearBillIndentTarget,
-    now,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
+  const hospitalPayments = useAppSelector((state) => state.hospital.hospitalPayments);
+  const billIndentTarget = useAppSelector((state) => state.ui.billIndentTarget);
+  const now = useAppSelector((state) => state.ui.now);
   const [tab, setTab] = useState<Tab>("overview");
   const [modal, setModal] = useState<"issue" | "return" | "payment" | "reminder" | null>(null);
   // arriving from Ward Indents ("Bill & issue to hospital") opens the issue modal pre-loaded
@@ -218,7 +217,7 @@ export default function HospitalBillingScreen() {
   }
   function setModalOnClose() {
     setModal(null);
-    clearBillIndentTarget();
+    dispatch(setBillIndentTarget(null));
   }
   function setModalOnClose2() {
     return setModal(null);

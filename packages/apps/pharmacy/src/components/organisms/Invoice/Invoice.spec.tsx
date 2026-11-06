@@ -1,28 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { Provider } from "react-redux";
+import { describe, expect, it } from "vitest";
 import type { PharmacyProfile, Sale } from "@/utils";
+import { store } from "@/store";
 import Invoice from "./Invoice";
-
-vi.mock("@/hooks", () => ({
-  usePharma: () => ({
-    invoiceSettings: {
-      prefix: "INV-",
-      terms: "Goods once sold are not returnable.",
-      footerNote: "Thank you",
-      showSavings: true,
-      includeDoctor: true,
-      showBank: false,
-      bankLine: "",
-      signatory: "Authorised signatory",
-      template: "classic",
-      accent: "#1B3D29",
-      title: "TAX INVOICE",
-      showLogo: false,
-      showStamp: false,
-      showHsn: true,
-    },
-  }),
-}));
 
 const profile = {
   name: "Sri Sai Medicals",
@@ -76,7 +57,11 @@ const sale = {
 
 describe("Invoice", () => {
   it("renders the tax invoice title and pharmacy name", () => {
-    render(<Invoice sale={sale} profile={profile} />);
+    render(
+      <Provider store={store}>
+        <Invoice sale={sale} profile={profile} />
+      </Provider>,
+    );
     expect(screen.getByText("TAX INVOICE")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Sri Sai Medicals" })).toBeTruthy();
     expect(screen.getByText("Paracetamol")).toBeTruthy();

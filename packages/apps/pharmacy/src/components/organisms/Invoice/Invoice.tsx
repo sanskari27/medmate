@@ -12,7 +12,7 @@ import { TableHeaderCell } from "@/components/atoms/TableHeaderCell";
 import { TableRow } from "@/components/atoms/TableRow";
 import { Text } from "@/components/atoms/Text";
 import { IconAlert } from "@/components/atoms/Icon";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import {
   PAY_LABEL,
   channelLabel,
@@ -439,7 +439,7 @@ function PageInvoice({
 }
 
 export default function Invoice({ sale, profile, className }: InvoiceProps) {
-  const { invoiceSettings } = usePharma();
+  const invoiceSettings = useAppSelector((state) => state.auth.invoiceSettings);
   if (invoiceSettings.template === "thermal") {
     return (
       <ThermalInvoice

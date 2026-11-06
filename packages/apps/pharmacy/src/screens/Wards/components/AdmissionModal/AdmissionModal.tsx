@@ -15,14 +15,21 @@ import {
 import { cn } from "@/utils/className";
 import type { MouseEvent } from "react";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { pushRoute, showToast } from "@/store/actions/feedback.actions";
+import { beginWardBilling } from "@/store/slices/billing.slice";
+import { settleBills } from "@/store/thunks/sales.thunk";
+import { dischargePatient } from "@/store/thunks/hospital.thunk";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { inr, fmtDateTime, PayMode, PAY_LABEL } from "@/utils";
 import { IconX, IconRupee, IconPos, IconCheck } from "@/components/atoms";
 import { billTotal } from "@/screens/Wards/utils/billTotal";
 import { daysIn } from "@/screens/Wards/utils/daysIn";
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];
 export function AdmissionModal({ adm, onClose }: AdmissionModalProps) {
-  const { sales, now, settleBills, dischargePatient, startWardBilling } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const now = useAppSelector((state) => state.ui.now);
   const bills = useMemo(
     () =>
       sales
@@ -35,16 +42,19 @@ export function AdmissionModal({ adm, onClose }: AdmissionModalProps) {
   const outstanding = unpaid.reduce((a, s) => a + billTotal(s), 0);
   const [mode, setMode] = useState<PayMode>(adm.payerType === "insurance" ? "insurance" : "cash");
   const settleDischarge = () => {
-    if (unpaid.length)
-      settleBills(
-        unpaid.map((s) => s.id),
-        mode,
+    if (unpaid.length) {
+      void confirm(
+        settleBills({
+          ids: unpaid.map((sale) => sale.id),
+          payMode: mode,
+        }),
       );
-    dischargePatient(adm.id);
+    }
+    void confirm(dischargePatient(adm.id), { kind: "edit" });
     onClose();
   };
   const dischargeOnly = () => {
-    dischargePatient(adm.id);
+    void confirm(dischargePatient(adm.id), { kind: "edit" });
     onClose();
   };
   return (
@@ -245,7 +255,9 @@ export function AdmissionModal({ adm, onClose }: AdmissionModalProps) {
     return e.stopPropagation();
   }
   function startWardBillingOnClick() {
-    startWardBilling(adm);
+    dispatch(beginWardBilling(adm));
+    dispatch(pushRoute("pos"));
+    dispatch(showToast(`Billing ${adm.name} · ${adm.bed}`));
     onClose();
   }
   function renderBill(s: Sale) {

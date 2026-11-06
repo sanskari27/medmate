@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent, type MouseEvent, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { faultFrom } from "@/hooks/useConfirmedDispatch";
+import { addEmployee, updateEmployee } from "@/store/thunks/auth.thunk";
 import { EMPLOYEE_POSITIONS, employeeTenure, inr, monthlyPayroll, type Employee } from "@/utils";
 import { formatDayText, toYmd } from "@/utils/date";
 import {
@@ -49,7 +51,10 @@ import {
 import type { EmployeeDraft, EmployeeStatusFilter } from "./Employees.types";
 
 export default function EmployeesScreen() {
-  const { employees, addEmployee, updateEmployee, now, profile } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const employees = useAppSelector((state) => state.auth.employees);
+  const now = useAppSelector((state) => state.ui.now);
+  const profile = useAppSelector((state) => state.auth.profile);
   const [query, setQuery] = useState("");
   const [position, setPosition] = useState("all");
   const [status, setStatus] = useState<EmployeeStatusFilter>("all");
@@ -103,12 +108,14 @@ export default function EmployeesScreen() {
 
   async function handleSave(draft: EmployeeDraft) {
     if (editing === "new") {
-      const error = await addEmployee(draft);
+      const error = faultFrom(await confirm(addEmployee(draft)));
       if (!error) setEditing(null);
       return;
     }
     if (!editing) return;
-    const error = await updateEmployee(editing.id, draft);
+    const error = faultFrom(
+      await confirm(updateEmployee({ id: editing.id, patch: draft }), { kind: "edit" }),
+    );
     if (!error) setEditing(null);
   }
 

@@ -3,7 +3,9 @@ import { Box, Button, Heading, Input, Label, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { queueKiosk } from "@/store/thunks/auth.thunk";
+import { placeKioskOrder } from "@/store/thunks/sales.thunk";
 import { kioskProducts, nextPayModes } from "./Kiosk.utils";
 import {
   CATEGORIES,
@@ -27,7 +29,11 @@ const ACCENTS: Record<string, string> = {
   gold: "linear-gradient(135deg,#8a5a12,#D9A648)",
 };
 export default function KioskScreen() {
-  const { kiosk, updateKiosk } = usePharma();
+  const dispatch = useAppDispatch();
+  const kiosk = useAppSelector((state) => state.auth.kiosk);
+  function updateKiosk(patch: Parameters<typeof queueKiosk>[0]) {
+    dispatch(queueKiosk(patch));
+  }
   const [preview, setPreview] = useState(false);
   const togglePay = (m: PayMode) => {
     updateKiosk({ payModes: nextPayModes(kiosk.payModes, m) });
@@ -113,7 +119,7 @@ export default function KioskScreen() {
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
               <Label>Accent theme</Label>
               <Box className="!flex !items-center !gap-1.5">
-                {(["green", "dark", "gold"] as const).map(renderA)}
+                {(["green", "dark", "gold"] as const).map(renderAccent)}
               </Box>
             </Box>
           </Box>
@@ -173,21 +179,21 @@ export default function KioskScreen() {
   function updateKioskOnChange4(e: ChangeEvent<HTMLInputElement>) {
     return updateKiosk({ idleResetSec: Number(e.target.value) || 0 });
   }
-  function renderA(a: "gold" | "green" | "dark") {
+  function renderAccent(accent: "gold" | "green" | "dark") {
     return (
       <Button
-        key={a}
+        key={accent}
         onClick={updateKioskOnClick2}
         className={cn(
-          `!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${kiosk.accent === a ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`,
+          `!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${kiosk.accent === accent ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`,
           "!capitalize",
         )}
       >
-        {a}
+        {accent}
       </Button>
     );
     function updateKioskOnClick2() {
-      return updateKiosk({ accent: a });
+      return updateKiosk({ accent });
     }
   }
   function updateKioskOnClick3() {
@@ -237,7 +243,9 @@ function ToggleRow({ label, on, onClick }: { label: string; on: boolean; onClick
 }
 // ── functional kiosk preview (Mc-model self order) ──────────────
 function KioskPreview({ onClose }: { onClose: () => void }) {
-  const { inventory, kiosk, placeKioskOrder } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const kiosk = useAppSelector((state) => state.auth.kiosk);
   const [cat, setCat] = useState("all");
   const [cart, setCart] = useState<
     {
@@ -278,14 +286,14 @@ function KioskPreview({ onClose }: { onClose: () => void }) {
     qty: number;
     loose: boolean;
   }[];
-  const total = items.reduce((a, x) => a + unitPrice(x.p, x.loose) * x.qty, 0);
-  const count = items.reduce((a, x) => a + x.qty, 0);
+  const total = items.reduce((sum, item) => sum + unitPrice(item.p, item.loose) * item.qty, 0);
+  const count = items.reduce((sum, item) => sum + item.qty, 0);
   const packQty = (id: string) => cart.find((x) => x.productId === id && !x.loose)?.qty ?? 0;
   const looseQty = (id: string) => cart.find((x) => x.productId === id && x.loose)?.qty ?? 0;
   const place = async () => {
-    const s = await placeKioskOrder(cart, pay);
-    if (s) {
-      setDone(s.id);
+    const result = await confirm(placeKioskOrder({ lines: cart, payMode: pay }));
+    if ("data" in result) {
+      setDone(result.data.sale.id);
       setCart([]);
     }
   };

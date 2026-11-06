@@ -3,7 +3,7 @@ import { Directory } from "@/screens/Suppliers/components/Directory";
 import { SupplyList } from "@/screens/Suppliers/components/SupplyList";
 import { PriceCompare } from "@/screens/Suppliers/components/PriceCompare";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { preferredSupplyCount } from "./Suppliers.utils";
 type Tab = "directory" | "supply" | "compare";
 function segClass(selected: boolean) {
@@ -13,7 +13,8 @@ function segClass(selected: boolean) {
 }
 export default function DistributorsScreen() {
   const [tab, setTab] = useState<Tab>("directory");
-  const { suppliers, supplyList } = usePharma();
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const supplyList = useAppSelector((state) => state.purchases.supplyList);
   const preferred = preferredSupplyCount(supplyList);
   return (
     <Box className="!mx-auto !max-w-[1680px]">

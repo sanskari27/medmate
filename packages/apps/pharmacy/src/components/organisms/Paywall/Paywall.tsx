@@ -10,7 +10,7 @@ import {
   IconLock,
   IconSparkle,
 } from "@/components/atoms/Icon";
-import { usePharma } from "@/hooks";
+import { useAppSelector, usePharmacyNav } from "@/hooks";
 import type { Route } from "@/types";
 import { inr, planPrice, PLANS } from "@/utils";
 import { cn } from "@/utils/className";
@@ -75,7 +75,8 @@ function PaywallFeatures({ features }: { features: string[] }) {
 }
 
 export function Paywall({ route, className }: PaywallProps) {
-  const { go, subscription } = usePharma();
+  const { go } = usePharmacyNav();
+  const subscription = useAppSelector((state) => state.auth.subscription);
   const meta = PAGE_META[route];
   const care = PLANS.find(function findCare(plan) {
     return plan.key === "Care";

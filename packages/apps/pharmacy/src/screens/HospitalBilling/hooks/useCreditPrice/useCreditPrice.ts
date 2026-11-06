@@ -1,13 +1,15 @@
 import { useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { creditPriceOf } from "@/utils/calculations/hospitalAccount";
 
 export function useCreditPrice() {
-  const { inventory, hospitalAccount, hospitalPriceRules } = usePharma();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const hospitalPriceRules = useAppSelector((state) => state.hospital.hospitalPriceRules);
   return useMemo(
-    () => (id: string) => {
-      const p = inventory.find((x) => x.id === id);
-      return p ? creditPriceOf(p, hospitalAccount, hospitalPriceRules) : 0;
+    () => (productId: string) => {
+      const product = inventory.find((item) => item.id === productId);
+      return product ? creditPriceOf(product, hospitalAccount, hospitalPriceRules) : 0;
     },
     [inventory, hospitalAccount, hospitalPriceRules],
   );

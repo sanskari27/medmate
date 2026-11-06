@@ -12,7 +12,8 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useMemo, useRef } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { queueInvoiceSettings, updateProfile } from "@/store/thunks/auth.thunk";
 import {
   Sale,
   mrpOf,
@@ -27,13 +28,17 @@ import { Invoice } from "@/components/organisms";
 import { ColorFill } from "@/components/molecules/BarChart";
 import { thermalPreviewClass } from "./InvoiceSettings.utils";
 export default function InvoiceSettingsScreen() {
-  const {
-    invoiceSettings: cfg,
-    updateInvoiceSettings,
-    updateProfile,
-    inventory,
-    profile,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const cfg = useAppSelector((state) => state.auth.invoiceSettings);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const profile = useAppSelector((state) => state.auth.profile);
+  function updateInvoiceSettings(patch: Parameters<typeof queueInvoiceSettings>[0]) {
+    dispatch(queueInvoiceSettings(patch));
+  }
+  function saveProfile(patch: Parameters<typeof updateProfile>[0]) {
+    void confirm(updateProfile(patch), { kind: "edit" });
+  }
   const logoRef = useRef<HTMLInputElement>(null);
   const stampRef = useRef<HTMLInputElement>(null);
   const readFile = (file: File | undefined, cb: (dataUrl: string) => void) => {
@@ -345,7 +350,7 @@ export default function InvoiceSettingsScreen() {
     return updateInvoiceSettings({ accent: e.target.value });
   }
   function readFileOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return readFile(e.target.files?.[0], (d) => updateProfile({ logo: d }));
+    return readFile(e.target.files?.[0], (dataUrl) => saveProfile({ logo: dataUrl }));
   }
   function clickOnClick() {
     return logoRef.current?.click();

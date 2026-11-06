@@ -2,7 +2,8 @@ import { Box, Button, Heading, Input, Label, Select, Text, Textarea } from "@/co
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { raiseTicket } from "@/store/thunks/auth.thunk";
 import { timeAgo } from "@/utils";
 import { IconSend, IconX, IconTicket } from "@/components/atoms";
 import { matchingFaqs } from "./Support.utils";
@@ -33,12 +34,14 @@ const FAQS = [
   },
 ];
 export default function SupportScreen() {
-  const { now, tickets, raiseTicket } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const now = useAppSelector((state) => state.ui.now);
+  const tickets = useAppSelector((state) => state.ui.tickets);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [show, setShow] = useState(false);
   const raise = async (subject: string, category: string) => {
-    const err = await raiseTicket(subject, category);
-    if (!err) setShow(false);
+    const result = await confirm(raiseTicket({ subject, category }));
+    if ("data" in result) setShow(false);
   };
   return (
     <Box className={cn("!mx-auto !max-w-[1680px]", "!max-w-[1000px]")}>

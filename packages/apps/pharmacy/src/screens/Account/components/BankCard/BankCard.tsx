@@ -2,7 +2,9 @@ import { Box, Button, Heading, Input, Label, Select, Text } from "@/components/a
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { refuseDelete } from "@/store/actions/feedback.actions";
+import { saveBankAccount, verifyBankAccount } from "@/store/thunks/auth.thunk";
 import { isValidIfsc } from "@/utils";
 import { IconCheck, IconBank } from "@/components/atoms";
 import { bankForm } from "@/screens/Account/utils/bankForm";
@@ -16,23 +18,30 @@ const blankBank = {
   upiVpa: "",
 };
 export function BankCard() {
-  const { bankAccount, saveBankAccount, verifyBankAccount, removeBankAccount } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const bankAccount = useAppSelector((state) => state.auth.bankAccount);
   const [f, setF] = useState(() => bankForm(bankAccount));
   const set = (patch: Partial<typeof f>) => setF((p) => ({ ...p, ...patch }));
   const ifscOk = isValidIfsc(f.ifsc);
   const canSave =
     !!f.holderName.trim() && !!f.accountNumber.trim() && !!f.bankName.trim() && ifscOk;
   const save = async () => {
-    await saveBankAccount({
-      holderName: f.holderName.trim(),
-      accountNumber: f.accountNumber.replace(/\s/g, ""),
-      ifsc: f.ifsc.trim().toUpperCase(),
-      bankName: f.bankName.trim(),
-      branch: f.branch.trim() || undefined,
-      accountType: f.accountType,
-      upiVpa: f.upiVpa.trim() || undefined,
-    });
+    await confirm(
+      saveBankAccount({
+        holderName: f.holderName.trim(),
+        accountNumber: f.accountNumber.replace(/\s/g, ""),
+        ifsc: f.ifsc.trim().toUpperCase(),
+        bankName: f.bankName.trim(),
+        branch: f.branch.trim() || undefined,
+        accountType: f.accountType,
+        upiVpa: f.upiVpa.trim() || undefined,
+      }),
+    );
   };
+  function verifyAccount() {
+    void confirm(verifyBankAccount());
+  }
   return (
     <Box
       id="pd-bank"
@@ -126,7 +135,7 @@ export function BankCard() {
           {bankAccount && !bankAccount.verified ? (
             <Button
               className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2"
-              onClick={verifyBankAccount}
+              onClick={verifyAccount}
             >
               Mark verified
             </Button>
@@ -171,7 +180,7 @@ export function BankCard() {
     return set({ upiVpa: e.target.value });
   }
   function removeBankAccountOnClick() {
-    removeBankAccount();
+    dispatch(refuseDelete());
     setF(blankBank);
   }
 }

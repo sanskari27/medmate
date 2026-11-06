@@ -3,15 +3,16 @@ import { Box, Button, Heading, Input, Label, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { unlockPricing } from "@/store/thunks/hospital.thunk";
+import { useAppDispatch } from "@/hooks";
 import { IconX, IconLock } from "@/components/atoms";
 export function AdminOtpModal({ onClose }: AdminOtpModalProps) {
-  const { unlockPricing } = usePharma();
+  const dispatch = useAppDispatch();
   const [otp, setOtp] = useState("");
   const demoCode = !import.meta.env.PROD ? "123456" : "";
   const submit = () => {
-    void unlockPricing(otp).then((ok) => {
-      if (ok) onClose();
+    void dispatch(unlockPricing(otp)).then((result) => {
+      if (unlockPricing.fulfilled.match(result)) onClose();
     });
   };
   return (

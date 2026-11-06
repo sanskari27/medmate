@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Stack } from "@/components/atoms/Stack";
@@ -26,7 +26,9 @@ import { RegisterTable } from "./components/RegisterTable";
 import { SourceCards } from "./components/SourceCards";
 
 export default function SalesRegisterScreen() {
-  const { sales, profile, now } = usePharma();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
   const period = useDateRange(now, "last-365");
   const [source, setSource] = useState<"all" | SaleSource>("all");
   const [payMode, setPayMode] = useState<"all" | PayMode>("all");

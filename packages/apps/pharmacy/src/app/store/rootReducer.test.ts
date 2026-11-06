@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { setAuthField } from "@/store/slices/auth";
+import { loadSession } from "@/store/thunks/auth.thunk";
+import type { SessionSnapshot } from "@/store/session";
 import { rootReducer } from "./rootReducer";
 
 describe("rootReducer", () => {
-  it("stores a session field on the auth slice", () => {
-    const next = rootReducer(undefined, setAuthField({ key: "signedIn", value: true }));
+  it("stores the signed-in session on the auth slice", () => {
+    const next = rootReducer(
+      undefined,
+      loadSession.fulfilled(
+        { businessType: "pharmacy", setupComplete: true, needsPin: false } as SessionSnapshot,
+        "session-test",
+        undefined,
+      ),
+    );
     expect(next.auth.signedIn).toBe(true);
+    expect(next.auth.setupComplete).toBe(true);
     expect(next.inventory.inventory).toEqual([]);
   });
 });

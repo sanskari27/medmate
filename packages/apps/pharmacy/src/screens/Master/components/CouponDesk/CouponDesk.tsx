@@ -12,42 +12,36 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
-import { api } from "@/services/api/apiClient";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { issueCoupon, loadCoupons } from "@/store/thunks/master.thunk";
 import { Plan } from "@/utils";
 import { plusDays } from "@/utils/date";
 import { Table } from "@/screens/Master/components/Table";
 import { makeCode } from "@/screens/Master/utils/makeCode";
-type CouponRow = {
-  code: string;
-  plan: string;
-  expiresOn: string;
-  validDays: number;
-  redeemed: number;
-};
 export function CouponDesk() {
-  const [rows, setRows] = useState<CouponRow[]>([]);
+  const dispatch = useAppDispatch();
+  const rows = useAppSelector((state) => state.master.coupons);
   const [code, setCode] = useState("");
   const [plan, setPlan] = useState<Plan>("Growth");
   const [expiresOn, setExpiresOn] = useState(plusDays(30));
   const [validDays, setValidDays] = useState(30);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = () =>
-    api<CouponRow[]>("/master/coupons")
-      .then(setRows)
-      .catch((err: Error) => setError(err.message));
   useEffect(() => {
-    void load();
-  }, []);
+    void dispatch(loadCoupons())
+      .unwrap()
+      .catch((err: unknown) => {
+        setError(typeof err === "string" ? err : "Could not load coupons");
+      });
+  }, [dispatch]);
   const issue = async () => {
     setError("");
     setBusy(true);
     try {
-      await api("/master/coupons", { method: "POST", body: { code, plan, expiresOn, validDays } });
+      await dispatch(issueCoupon({ code, plan, expiresOn, validDays })).unwrap();
       setCode("");
-      await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not issue the coupon");
+      setError(typeof err === "string" ? err : "Could not issue the coupon");
     } finally {
       setBusy(false);
     }
@@ -160,7 +154,7 @@ export function CouponDesk() {
   function issueOnClick() {
     return void issue();
   }
-  function renderRow(row: CouponRow) {
+  function renderRow(row: (typeof rows)[number]) {
     return (
       <TableRow key={row.code}>
         <TableCell>{row.code}</TableCell>

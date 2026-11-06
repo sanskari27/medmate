@@ -2,7 +2,7 @@ import type { AnalyticsDashboardProps } from "./AnalyticsDashboard.types";
 import { Box, Button, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { computeInvoice, PayMode, purchaseTotals, earliestBatch } from "@/utils";
 import { IconPrint } from "@/components/atoms";
 import { usePeriod } from "@/components/organisms";
@@ -12,7 +12,11 @@ import { ProductsReport } from "@/screens/Reports/components/ProductsReport";
 import { Accounts } from "@/screens/Reports/components/Accounts";
 type Tab = "overview" | "sales" | "products" | "accounts";
 export function AnalyticsDashboard({ initialTab, onBack }: AnalyticsDashboardProps) {
-  const { sales, purchases, inventory, now, profile } = usePharma();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const purchases = useAppSelector((state) => state.purchases.purchases);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const now = useAppSelector((state) => state.ui.now);
+  const profile = useAppSelector((state) => state.auth.profile);
   const [tab, setTab] = useState<Tab>(initialTab);
   // ── shared date period (Day / Month / Year / FY / Custom / All) ──
   const period = usePeriod(now, "month");

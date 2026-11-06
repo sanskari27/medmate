@@ -12,7 +12,7 @@ import {
 } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import { useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { inr, timeAgo } from "@/utils";
 import {
   wardConsumption,
@@ -45,7 +45,11 @@ export function OverviewTab({
   onRecordPayment,
   onRemind,
 }: OverviewTabProps) {
-  const { wardSupplies, hospitalPayments, hospitalAccount: a, wards, now } = usePharma();
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
+  const hospitalPayments = useAppSelector((state) => state.hospital.hospitalPayments);
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const now = useAppSelector((state) => state.ui.now);
   function kpiKey(fn: () => void) {
     return function onKpiKey(event: React.KeyboardEvent) {
       if (event.key === "Enter" || event.key === " ") {
@@ -69,7 +73,7 @@ export function OverviewTab({
   );
   const flowMax = Math.max(1, ...flow.map((month) => Math.max(month.supplied, month.received)));
   const avgIssue = issues.length ? supplied / issues.length : 0;
-  const limit = a.creditLimit || 0;
+  const limit = hospitalAccount.creditLimit || 0;
   const util = limit > 0 ? Math.min(100, Math.round((outstanding / limit) * 100)) : 0;
   const available = Math.max(0, limit - outstanding);
   const near = limit > 0 && util >= 85;
@@ -224,7 +228,7 @@ export function OverviewTab({
           ) : (
             <Box className="!mb-3 !flex !items-center !gap-[7px] !rounded-[9px] !bg-wash !px-[11px] !py-2 !text-[12.5px] !font-semibold !text-mid">
               <IconCheck size={14} /> Nothing overdue — all within{" "}
-              {a.creditTerms === "On demand" ? "terms" : a.creditTerms}
+              {hospitalAccount.creditTerms === "On demand" ? "terms" : hospitalAccount.creditTerms}
             </Box>
           )}
           <Box className="!flex !flex-col !gap-[9px]">{aging.buckets.map(renderBucket)}</Box>
@@ -375,7 +379,7 @@ export function OverviewTab({
           {wardCons.length === 0 ? (
             <Text className="!text-[12.5px] !text-muted">No ward issues yet.</Text>
           ) : (
-            wardCons.slice(0, 5).map(renderW)
+            wardCons.slice(0, 5).map(renderWardConsumption)
           )}
         </Box>
         <Box className="!rounded-md !border !border-line !bg-paper !p-[18px] !shadow-sm">
@@ -459,10 +463,10 @@ export function OverviewTab({
   function goTabOnClick3() {
     return goTab("stock");
   }
-  function renderW(w: WardConsumption) {
+  function renderWardConsumption(wardConsumption: WardConsumption) {
     const max = wardCons[0].net || 1;
     return (
-      <Box key={w.wardId} className={cn("!mb-2.5")}>
+      <Box key={wardConsumption.wardId} className={cn("!mb-2.5")}>
         <Box
           className={cn(
             "!flex !items-center !gap-2.5",
@@ -470,20 +474,20 @@ export function OverviewTab({
           )}
         >
           <Text as="span">
-            {w.wardName}
+            {wardConsumption.wardName}
             <Text className="!text-muted" as="span">
               {" "}
-              · {w.issues} issue{w.issues !== 1 ? "s" : ""}
+              · {wardConsumption.issues} issue{wardConsumption.issues !== 1 ? "s" : ""}
             </Text>
           </Text>
           <Text as="span" className="font-bold">
-            {inr(w.net)}
+            {inr(wardConsumption.net)}
           </Text>
         </Box>
         <Progress
           className="!h-[7px] !rounded-[5px]"
-          value={(w.net / max) * 100}
-          label={w.wardName}
+          value={(wardConsumption.net / max) * 100}
+          label={wardConsumption.wardName}
         />
       </Box>
     );

@@ -32,7 +32,10 @@ import { BrandMark } from "@/components/molecules/BrandMark";
 import { NavItem } from "@/components/molecules/NavItem";
 import { NavSectionLabel } from "@/components/molecules/NavSectionLabel";
 import { StoreChip } from "@/components/molecules/StoreChip";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
+import { setLeaveOpen } from "@/store/actions/feedback.actions";
+import { selectFeatureLocked, selectIsHospital } from "@/store/selectors/auth.selector";
+import type { RootState } from "@/store";
 import type { Route } from "@/types";
 import { canSeeRoute } from "@/utils";
 import { cn } from "@/utils/className";
@@ -164,18 +167,21 @@ function SidebarNav({
 }
 
 export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebarProps) {
-  const {
-    route,
-    go,
-    profile,
-    prescriptions,
-    sales,
-    isHospital,
-    wardIndents,
-    signOut,
-    featureLocked,
-    me,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const { route, go } = usePharmacyNav();
+  const auth = useAppSelector((state) => state.auth);
+  const profile = auth.profile;
+  const me = auth.me;
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const sales = useAppSelector((state) => state.sales.sales);
+  const isHospital = useAppSelector(selectIsHospital);
+  const wardIndents = useAppSelector((state) => state.hospital.wardIndents);
+  function signOut() {
+    dispatch(setLeaveOpen(true));
+  }
+  function featureLocked(key: Route) {
+    return selectFeatureLocked({ auth } as RootState, key);
+  }
   const newOrders = sales.filter(function onlineNew(sale) {
     return sale.channel === "online" && sale.status === "new";
   }).length;

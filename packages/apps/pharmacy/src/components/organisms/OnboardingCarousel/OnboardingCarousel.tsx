@@ -25,11 +25,29 @@ import {
   IconStore,
 } from "@/components/atoms/Icon";
 import { Field } from "@/components/molecules/Field";
-import { usePharma } from "@/hooks";
-import { api } from "@/services/api/apiClient";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { setFormFault, setLeaveOpen, showToast } from "@/store/actions/feedback.actions";
+import { setPinFlags } from "@/store/actions/auth.actions";
+import type { AppDispatch } from "@/store";
+import {
+  beginLogin,
+  pinSignIn,
+  saveLoginPin,
+  sendOtp as sendOtpRequest,
+  verifyOtp,
+} from "@/store/thunks/auth.thunk";
 import type { BusinessType } from "@/types";
 import { cn } from "@/utils/className";
+import { faultOf } from "@/utils/validation";
 import type { OnboardingCarouselProps } from "./OnboardingCarousel.types";
+
+function showFault(dispatch: AppDispatch, error: unknown, fallback = "Save failed") {
+  dispatch(
+    setFormFault(
+      typeof error === "string" ? faultOf(new Error(error), fallback) : faultOf(error, fallback),
+    ),
+  );
+}
 
 type Phase = "intro" | "type" | "login";
 type Glyph = (props: { size?: number }) => ReactNode;
@@ -378,7 +396,9 @@ function LoginPhase({
   onBack: () => void;
   onMaster: () => void;
 }) {
-  const { signIn, signInWithPin, showFault, formFault } = usePharma();
+  const dispatch = useAppDispatch();
+  const { reset } = usePharmacyNav();
+  const formFault = useAppSelector((state) => state.ui.formFault);
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [pinMode, setPinMode] = useState(false);
@@ -404,16 +424,15 @@ function LoginPhase({
   async function sendOtp(purpose?: "reset") {
     if (!phoneOk) return;
     try {
-      const res = await api<{ delivery?: string }>("/auth/otp/send", {
-        method: "POST",
-        body: { phone, purpose, portal: staff ? "master" : undefined },
-      });
+      const res = await dispatch(
+        sendOtpRequest({ phone, purpose, portal: staff ? "master" : undefined }),
+      ).unwrap();
       setOtpSent(true);
       setPinMode(false);
       setResetPin(purpose === "reset");
       setDevOtp(res.delivery === "dev");
     } catch (err) {
-      showFault(err, "Could not send OTP");
+      showFault(dispatch, err, "Could not send OTP");
     }
   }
   async function continuePhone() {
@@ -423,10 +442,7 @@ function LoginPhase({
       return;
     }
     try {
-      const res = await api<{ mode: "pin" | "otp" }>("/auth/login", {
-        method: "POST",
-        body: { phone },
-      });
+      const res = await dispatch(beginLogin(phone)).unwrap();
       if (res.mode === "pin") {
         setPinMode(true);
         setOtpSent(false);
@@ -435,32 +451,35 @@ function LoginPhase({
       }
       await sendOtp();
     } catch (err) {
-      showFault(err, "Could not continue");
+      showFault(dispatch, err, "Could not continue");
     }
   }
   async function verify() {
     if (pinMode && !otpSent) {
       if (pin.length !== 4) return;
       try {
-        await signInWithPin(phone, pin);
+        await dispatch(pinSignIn({ phone, pin })).unwrap();
+        dispatch(setPinFlags({ pinReset: false }));
+        reset("dashboard");
+        dispatch(showToast("Welcome back"));
       } catch (err) {
-        showFault(err, "Could not sign in");
+        showFault(dispatch, err, "Could not sign in");
       }
       return;
     }
     if (otp.replace(/\D/g, "").length !== 6) return;
     try {
       if (staff) {
-        await api("/auth/otp/verify", {
-          method: "POST",
-          body: { phone, code: otp, portal: "master" },
-        });
+        await dispatch(verifyOtp({ phone, code: otp, portal: "master" })).unwrap();
         onMaster();
         return;
       }
-      await signIn(type, name, phone, otp, resetPin ? "reset" : undefined);
+      const purpose = resetPin ? "reset" : undefined;
+      await dispatch(verifyOtp({ phone, code: otp, businessType: type, name, purpose })).unwrap();
+      reset("dashboard");
+      if (purpose !== "reset") dispatch(showToast("Welcome back"));
     } catch (err) {
-      showFault(err, "Could not sign in");
+      showFault(dispatch, err, "Could not sign in");
     }
   }
   function onName(event: ChangeEvent<HTMLInputElement>) {
@@ -766,7 +785,9 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
 }
 
 export function PinSetup() {
-  const { setLoginPin, signOut, showFault, formFault } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const formFault = useAppSelector((state) => state.ui.formFault);
   const [pin, setPin] = useState("");
   const [again, setAgain] = useState("");
   function onPin(event: ChangeEvent<HTMLInputElement>) {
@@ -781,14 +802,16 @@ export function PinSetup() {
   async function save() {
     if (pin.length !== 4) return;
     if (pin !== again) {
-      showFault("PINs do not match");
+      showFault(dispatch, "PINs do not match");
       return;
     }
-    try {
-      await setLoginPin(pin, again);
-    } catch (err) {
-      showFault(err, "Could not save PIN");
-    }
+    const result = await confirm(saveLoginPin({ pin, confirm: again }));
+    if ("fault" in result) return;
+    dispatch(setPinFlags({ pinReset: false, needsPin: false }));
+    dispatch(showToast("PIN saved"));
+  }
+  function signOut() {
+    dispatch(setLeaveOpen(true));
   }
   return (
     <Stack

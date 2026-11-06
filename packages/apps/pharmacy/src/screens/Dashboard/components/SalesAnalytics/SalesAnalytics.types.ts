@@ -1,9 +1,8 @@
-import type { Sale } from "@/utils";
-import type { usePharma } from "@/hooks";
+import type { InvProduct, Sale } from "@/utils";
 
 export type SalesAnalyticsProps = {
   sales: Sale[];
-  inventory: ReturnType<typeof usePharma>["inventory"];
+  inventory: InvProduct[];
   now: number;
   onlineRev: number;
   offlineRev: number;

@@ -1,5 +1,10 @@
 import { useMemo, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import {
+  approvePrescription,
+  dispensePrescription,
+  rejectPrescription,
+} from "@/store/thunks/prescriptions.thunk";
 import { Box, Button, Heading, Input, Progress, Stack, Text } from "@/components/atoms";
 import {
   IconAlert,
@@ -47,7 +52,19 @@ const KIND_TABS: { key: RxKindFilter; label: string }[] = [
 ];
 
 export default function PrescriptionsScreen() {
-  const { prescriptions, inventory, now, approveRx, rejectRx, dispenseRx } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const now = useAppSelector((state) => state.ui.now);
+  function approveRx(id: string) {
+    void confirm(approvePrescription(id));
+  }
+  function rejectRx(id: string, reason?: string) {
+    void confirm(rejectPrescription({ id, reason }));
+  }
+  function dispenseRx(id: string) {
+    void confirm(dispensePrescription(id));
+  }
   const [tab, setTab] = useState<RxStatusFilter>("pending");
   const [kind, setKind] = useState<RxKindFilter>("all");
   const [query, setQuery] = useState("");

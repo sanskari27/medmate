@@ -26,7 +26,8 @@ import {
 } from "@/screens/Purchases/purchaseChrome";
 import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { addSupplier, updateSupplier } from "@/store/thunks/purchases.thunk";
 import { Supplier, inr, allottedSupplierId } from "@/utils";
 import {
   IconPlus,
@@ -40,10 +41,12 @@ import {
 } from "@/components/atoms";
 import { DistributorModal } from "@/screens/Purchases/components/DistributorModal";
 export function Directory() {
-  const { suppliers, inventory, addSupplier, updateSupplier } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
   const [edit, setEdit] = useState<Supplier | null>(null);
   const [adding, setAdding] = useState(false);
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const prodCount = useMemo(() => {
     const m: Record<string, number> = {};
     inventory.forEach((p) => {
@@ -55,8 +58,8 @@ export function Directory() {
   const totalOutstanding = suppliers.reduce((s, x) => s + (x.outstanding || 0), 0);
   const activeCount = suppliers.filter((s) => s.active !== false).length;
   const filtered = suppliers.filter((s) => {
-    if (!q.trim()) return true;
-    const t = q.toLowerCase();
+    if (!searchQuery.trim()) return true;
+    const t = searchQuery.toLowerCase();
     return [s.name, s.gstin, s.phone, s.contactPerson, s.city, s.email]
       .filter(Boolean)
       .some((v) => v!.toLowerCase().includes(t));
@@ -105,8 +108,8 @@ export function Directory() {
         <Box className="!flex-1" />
         <Input
           placeholder="Search name, GSTIN, contact…"
-          value={q}
-          onChange={setQOnChange}
+          value={searchQuery}
+          onChange={setSearchQueryOnChange}
           className={cn(toolbarControlClass, "!max-w-[260px]")}
         />
         <Button onClick={setAddingOnClick}>
@@ -139,7 +142,9 @@ export function Directory() {
                         <IconTruck size={30} />
                       </Box>
                       <Text className="!text-[13px] !text-muted">
-                        {q ? "No distributors match your search." : "No distributors added yet."}
+                        {searchQuery
+                          ? "No distributors match your search."
+                          : "No distributors added yet."}
                       </Text>
                     </Box>
                   </TableCell>
@@ -162,8 +167,8 @@ export function Directory() {
   function matchSupplier(s: Supplier) {
     return (s.paymentTerms || "").toLowerCase().includes("credit");
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function setAddingOnClick() {
     return setAdding(true);
@@ -257,8 +262,10 @@ export function Directory() {
     setEdit(null);
   }
   async function updateSupplierOnSave(data: Omit<Supplier, "id">) {
-    const err = edit ? await updateSupplier(edit.id, data) : await addSupplier(data);
-    if (!err) {
+    const result = edit
+      ? await confirm(updateSupplier({ id: edit.id, patch: data }), { kind: "edit" })
+      : await confirm(addSupplier(data));
+    if ("data" in result) {
       setAdding(false);
       setEdit(null);
     }

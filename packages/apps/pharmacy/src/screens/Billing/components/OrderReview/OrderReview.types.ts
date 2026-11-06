@@ -1,5 +1,5 @@
 import type { InvProduct, SaleSource } from "@/utils";
-import type { PosCustomer, PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosCustomer, PosLine } from "@/store/slices/billing.slice";
 
 export type OrderReviewProps = {
   count: number;

@@ -14,14 +14,19 @@ import {
 } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import { useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { inr } from "@/utils";
 import { IconPrint, IconDownload, IconChart } from "@/components/atoms";
 import { usePeriod } from "@/components/organisms";
 import { runReport, ReportResult, reportById } from "@/utils/calculations/reportCatalog";
 import { exportCatalogCsv, exportCatalogPdf } from "@/utils/calculations/reportExport";
 export function ReportDetail({ id, onBack }: ReportDetailProps) {
-  const { sales, purchases, inventory, expenses, now, profile } = usePharma();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const purchases = useAppSelector((state) => state.purchases.purchases);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const expenses = useAppSelector((state) => state.purchases.expenses);
+  const now = useAppSelector((state) => state.ui.now);
+  const profile = useAppSelector((state) => state.auth.profile);
   const meta = reportById(id);
   const period = usePeriod(now, "month");
   const res: ReportResult = useMemo(

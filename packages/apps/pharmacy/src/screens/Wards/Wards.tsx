@@ -6,7 +6,7 @@ import { WardSetupModal } from "@/screens/Wards/components/WardSetupModal";
 import { AdmitModal } from "@/screens/Wards/components/AdmitModal";
 import { AdmissionModal } from "@/screens/Wards/components/AdmissionModal";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import {
   WardType,
   wardBedNos,
@@ -25,7 +25,10 @@ const TYPE_TONE: Record<WardType, string> = {
   Private: "!bg-wash !text-mid",
 };
 export default function WardsScreen() {
-  const { wards, admissions, sales, now } = usePharma();
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const admissions = useAppSelector((state) => state.hospital.admissions);
+  const sales = useAppSelector((state) => state.sales.sales);
+  const now = useAppSelector((state) => state.ui.now);
   const [tab, setTab] = useState<"beds" | "admissions">("beds");
   const [setup, setSetup] = useState(false);
   const [admit, setAdmit] = useState<

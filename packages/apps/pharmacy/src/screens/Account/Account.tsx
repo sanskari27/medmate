@@ -3,7 +3,9 @@ import { cn } from "@/utils/className";
 import { download } from "@/screens/Account/utils/download";
 import { BankCard } from "@/screens/Account/components/BankCard";
 import { Ring } from "@/screens/Account/components/Ring";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
+import { setLeaveOpen } from "@/store/actions/feedback.actions";
+import { setHoldSetup } from "@/store/actions/auth.actions";
 import {
   PLANS,
   planPrice,
@@ -43,20 +45,24 @@ const ROLE_PILL: Record<string, string> = {
   Cashier: "!bg-teal-bg !text-teal",
 };
 export default function AccountScreen() {
-  const {
-    profile,
-    subscription,
-    grants,
-    extraSeats,
-    businessType,
-    users,
-    sales,
-    inventory,
-    bankAccount,
-    go,
-    startSetup,
-    signOut,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const { go } = usePharmacyNav();
+  const profile = useAppSelector((state) => state.auth.profile);
+  const subscription = useAppSelector((state) => state.auth.subscription);
+  const grants = useAppSelector((state) => state.auth.grants);
+  const extraSeats = useAppSelector((state) => state.auth.extraSeats);
+  const businessType = useAppSelector((state) => state.auth.businessType);
+  const users = useAppSelector((state) => state.auth.users);
+  const sales = useAppSelector((state) => state.sales.sales);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const bankAccount = useAppSelector((state) => state.auth.bankAccount);
+  function startSetup() {
+    dispatch(setHoldSetup(true));
+    go("dashboard");
+  }
+  function signOut() {
+    dispatch(setLeaveOpen(true));
+  }
   const openBank = () =>
     document.getElementById("pd-bank")?.scrollIntoView({ behavior: "smooth", block: "center" });
   const plan = PLANS.find((p) => p.key === subscription.plan)!;

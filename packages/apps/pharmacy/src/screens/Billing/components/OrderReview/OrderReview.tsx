@@ -14,7 +14,7 @@ import { Tag } from "@/components/atoms/Tag";
 import { Text } from "@/components/atoms/Text";
 import { IconArrowRight } from "@/components/atoms/Icon";
 import { inr, unitNoun } from "@/utils";
-import type { PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosLine } from "@/store/slices/billing.slice";
 import { billingLineKey, billingLineView, type BillingLineView } from "../../Billing.utils";
 import type { OrderReviewProps } from "./OrderReview.types";
 

@@ -19,7 +19,17 @@ import { AuditTable } from "@/screens/Master/components/AuditTable";
 import { PharmacyFile } from "@/screens/Master/components/PharmacyFile";
 import { CouponDesk } from "@/screens/Master/components/CouponDesk";
 import { useEffect, useState } from "react";
-import { api } from "@/services/api/apiClient";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { clearMasterProfile } from "@/store/slices/master.slice";
+import {
+  impersonatePharmacy,
+  loadMasterAudit,
+  loadMasterDesk,
+  markConsultationHandled,
+  masterSignOut,
+  openMasterPharmacy,
+  saveMasterChange,
+} from "@/store/thunks/master.thunk";
 import { BillingCycle, Plan, subscriptionLapsed, todayISO } from "@/utils";
 import {
   IconChevronLeft,
@@ -46,15 +56,6 @@ type Desk =
   | "consultations"
   | "referrals"
   | "activity";
-type Booking = {
-  id: number;
-  name: string;
-  phone: string;
-  area: string;
-  note: string;
-  status: string;
-  at: string;
-};
 type Seats = {
   included: number | null;
   extra: number;
@@ -119,29 +120,6 @@ type Referral = {
   pharmacyId?: string;
   pharmacyName?: string;
 };
-type Profile = Row & {
-  tickets: Ticket[];
-  referrals: Referral[];
-  grants: Grant[];
-  requests: {
-    id: string;
-    plan: string;
-    cycle: string;
-    kind: string;
-    createdAt: number;
-    status: string;
-  }[];
-};
-type AuditRow = {
-  phone: string;
-  pharmacyId: string;
-  pharmacyName: string;
-  action: string;
-  before: unknown;
-  after: unknown;
-  reason: string;
-  at: string;
-};
 const NAV: {
   key: Desk;
   label: string;
@@ -183,16 +161,17 @@ export default function MasterPortal({
   pharmacyLabel,
   onSignedOut,
 }: MasterProps) {
+  const dispatch = useAppDispatch();
+  const rows = useAppSelector((state) => state.master.pharmacies);
+  const requests = useAppSelector((state) => state.master.requests);
+  const tickets = useAppSelector((state) => state.master.tickets);
+  const referrals = useAppSelector((state) => state.master.referrals);
+  const bookings = useAppSelector((state) => state.master.bookings);
+  const audit = useAppSelector((state) => state.master.audit);
+  const profile = useAppSelector((state) => state.master.profile);
   const [desk, setDesk] = useState<Desk>("dashboard");
   const [menu, setMenu] = useState(false);
-  const [rows, setRows] = useState<Row[]>([]);
-  const [requests, setRequests] = useState<RequestRow[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [audit, setAudit] = useState<AuditRow[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [plan, setPlan] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [window, setWindow] = useState("");
@@ -204,34 +183,24 @@ export default function MasterPortal({
   const [grants, setGrants] = useState<Grant[]>([]);
   const [error, setError] = useState("");
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const load = async () => {
-    const [list, inbox, work, booked] = await Promise.all([
-      api<Row[]>("/master/pharmacies"),
-      api<RequestRow[]>("/master/requests"),
-      api<{
-        tickets: Ticket[];
-        referrals: Referral[];
-      }>("/master/work"),
-      api<Booking[]>("/master/consultations"),
-    ]);
-    setRows(list);
-    setRequests(inbox);
-    setTickets(work.tickets);
-    setReferrals(work.referrals);
-    setBookings(booked);
-  };
   useEffect(() => {
-    void load().catch((err) => setError(err.message));
-  }, []);
+    void dispatch(loadMasterDesk())
+      .unwrap()
+      .catch((err: unknown) => {
+        setError(typeof err === "string" ? err : "Could not load the master desk");
+      });
+  }, [dispatch]);
   useEffect(() => {
     if (desk !== "activity") return;
-    void api<AuditRow[]>("/master/audit")
-      .then(setAudit)
-      .catch((err) => setError(err.message));
-  }, [desk]);
+    void dispatch(loadMasterAudit())
+      .unwrap()
+      .catch((err: unknown) => {
+        setError(typeof err === "string" ? err : "Could not load activity");
+      });
+  }, [desk, dispatch]);
   const choose = (key: Desk) => {
     setDesk(key);
-    setProfile(null);
+    dispatch(clearMasterProfile());
     setMenu(false);
   };
   const open = async (
@@ -241,34 +210,44 @@ export default function MasterPortal({
       cycle?: BillingCycle;
     },
   ) => {
-    const next = await api<Profile>("/master/pharmacies/" + id);
-    setProfile(next);
-    setNextPlan(patch?.plan || (next.plan as Plan));
-    setCycle(patch?.cycle || (next.cycle === "annual" ? "annual" : "monthly"));
-    setRenewsOn(/^\d{4}-\d{2}-\d{2}$/.test(next.renewsOn) ? next.renewsOn : plusDays(30));
-    setExtra(next.seats.extra);
-    setGrants(next.grants || []);
-    setError("");
-    setMenu(false);
+    try {
+      const next = await dispatch(openMasterPharmacy(id)).unwrap();
+      setNextPlan(patch?.plan || (next.plan as Plan));
+      setCycle(patch?.cycle || (next.cycle === "annual" ? "annual" : "monthly"));
+      setRenewsOn(/^\d{4}-\d{2}-\d{2}$/.test(next.renewsOn) ? next.renewsOn : plusDays(30));
+      setExtra(next.seats.extra);
+      setGrants(next.grants || []);
+      setError("");
+      setMenu(false);
+    } catch (err) {
+      setError(typeof err === "string" ? err : "Could not open the pharmacy");
+    }
   };
   const save = async (path: string, method: string, body: unknown, reopen = true) => {
     try {
-      await api(path, { method, body: { ...(body as object), reason } });
-      await load();
-      if (reopen && profile) await open(profile.id);
-      if (desk === "activity") setAudit(await api<AuditRow[]>("/master/audit"));
+      await dispatch(
+        saveMasterChange({
+          path,
+          method,
+          body,
+          reason,
+          pharmacyId: reopen && profile ? profile.id : undefined,
+          refreshAudit: desk === "activity",
+        }),
+      ).unwrap();
+      setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(typeof err === "string" ? err : "Save failed");
     }
   };
   const signOut = () => setLeaveOpen(true);
   const finishSignOut = async () => {
     setLeaveOpen(false);
-    await api("/master/sign-out", { method: "POST" }).catch(() => undefined);
+    await dispatch(masterSignOut());
     onSignedOut();
   };
   const filtered = rows.filter((row) => {
-    const query = q.trim().toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
     const digits = query.replace(/\D/g, "");
     if (
       query &&
@@ -306,18 +285,18 @@ export default function MasterPortal({
               : 0;
   const markBooking = async (id: number) => {
     try {
-      await api(`/master/consultations/${id}`, { method: "PATCH", body: { status: "handled" } });
-      await load();
+      await dispatch(markConsultationHandled(id)).unwrap();
+      setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(typeof err === "string" ? err : "Save failed");
     }
   };
   const impersonate = async (id: string) => {
     try {
-      await api(`/master/pharmacies/${id}/impersonate`, { method: "POST", body: {} });
+      await dispatch(impersonatePharmacy(id)).unwrap();
       globalThis.location.assign("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not open the pharmacy");
+      setError(typeof err === "string" ? err : "Could not open the pharmacy");
     }
   };
   return (
@@ -479,8 +458,8 @@ export default function MasterPortal({
                 {desk === "pharmacies" && (
                   <PharmacyList
                     rows={filtered}
-                    q={q}
-                    setQ={setQ}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
                     plan={plan}
                     setPlan={setPlan}
                     businessType={businessType}
@@ -580,7 +559,7 @@ export default function MasterPortal({
     return setMenu((open) => !open);
   }
   function setProfileOnClick() {
-    return setProfile(null);
+    dispatch(clearMasterProfile());
   }
   function impersonateOnImpersonate() {
     if (profile) return void impersonate(profile.id);

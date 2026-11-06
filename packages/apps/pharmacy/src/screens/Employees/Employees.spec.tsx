@@ -1,21 +1,23 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("@/hooks", () => ({
-  usePharma: () => ({
-    employees: [],
-    addEmployee: vi.fn(),
-    updateEmployee: vi.fn(),
-    now: 0,
-    profile: { name: "Green Cross", phone: "", address: "", city: "", state: "" },
-  }),
-}));
-
+import { Provider } from "react-redux";
+import { describe, expect, it } from "vitest";
+import { SaveConfirmContext } from "@/app/providers/PharmaProvider/saveConfirm";
+import { store } from "@/store";
 import EmployeesScreen from "./Employees";
+
+function renderEmployees() {
+  return render(
+    <Provider store={store}>
+      <SaveConfirmContext.Provider value={{ ask: () => Promise.resolve(true) }}>
+        <EmployeesScreen />
+      </SaveConfirmContext.Provider>
+    </Provider>,
+  );
+}
 
 describe("Employees", () => {
   it("renders the team directory", () => {
-    render(<EmployeesScreen />);
+    renderEmployees();
     expect(screen.getByRole("button", { name: "Add Employee" })).toBeTruthy();
     expect(
       screen.getByText("No employees match this filter. Add your first team member."),

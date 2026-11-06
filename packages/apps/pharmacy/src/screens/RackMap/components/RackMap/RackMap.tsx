@@ -16,7 +16,7 @@ export function RackMap({
   onMed,
 }: RackMapProps) {
   const t = q.trim().toLowerCase();
-  const [nr, setNr] = useState("");
+  const [nextRack, setNextRack] = useState("");
   const matchProd = (p: InvProduct) =>
     !t ||
     `${p.name} ${p.composition} ${p.manufacturer}`.toLowerCase().includes(t) ||
@@ -25,7 +25,7 @@ export function RackMap({
     .map((g) => ({ ...g, items: g.items.filter(matchProd) }))
     .filter((g) => (!t ? true : g.items.length > 0 || g.code.toLowerCase().includes(t)));
   const submitNew = async () => {
-    if (nr.trim() && (await createRack(nr))) setNr("");
+    if (nextRack.trim() && (await createRack(nextRack))) setNextRack("");
   };
   return (
     <>
@@ -36,15 +36,15 @@ export function RackMap({
         </Text>
         <Input
           data-field="rack"
-          value={nr}
-          onChange={setNrOnChange}
+          value={nextRack}
+          onChange={setNextRackOnChange}
           onKeyDown={submitNewOnKeyDown}
           placeholder="e.g. A3-12"
           className="!w-[130px] !shrink-0 !font-mono"
         />
         <Button
           className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green !h-auto !rounded-xs !px-[11px] !py-1.5 !text-xs"
-          disabled={!nr.trim()}
+          disabled={!nextRack.trim()}
           onClick={submitNew}
         >
           <IconPlus size={14} /> Add rack
@@ -99,8 +99,8 @@ export function RackMap({
       )}
     </>
   );
-  function setNrOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setNr(e.target.value.toUpperCase());
+  function setNextRackOnChange(event: ChangeEvent<HTMLInputElement>) {
+    return setNextRack(event.target.value.toUpperCase());
   }
   function submitNewOnKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") void submitNew();

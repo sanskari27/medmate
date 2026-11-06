@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { advanceOrder, cancelOrder, markPaid } from "@/store/thunks/sales.thunk";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -33,8 +34,12 @@ import { SalesSummary } from "./components/SalesSummary";
 import { SalesTable } from "./components/SalesTable";
 
 export default function SalesScreen() {
-  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } =
-    usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
   const period = useDateRange(now, "last-365");
   const [searchQuery, setSearchQuery] = useState("");
   const [channel, setChannel] = useState<"all" | Channel>("all");
@@ -80,17 +85,26 @@ export default function SalesScreen() {
   function shareCurrent() {
     if (view) setShareSale(view);
   }
+  function advanceSale(id: string) {
+    void confirm(advanceOrder(id));
+  }
+  function cancelSale(id: string) {
+    void confirm(cancelOrder(id));
+  }
+  function markOrderPaid(id: string, payMode: PayMode) {
+    void confirm(markPaid({ id, payMode }));
+  }
   function advanceCurrent() {
-    if (view) advanceOrder(view.id);
+    if (view) advanceSale(view.id);
   }
   function cancelCurrent() {
-    if (view) cancelOrder(view.id);
+    if (view) cancelSale(view.id);
   }
   function markCurrentPaid(mode: PayMode) {
-    if (view) markPaid(view.id, mode);
+    if (view) markOrderPaid(view.id, mode);
   }
   function markRowPaid(id: string, mode: PayMode) {
-    markPaid(id, mode);
+    markOrderPaid(id, mode);
   }
   function openPrescriptions() {
     setView(null);

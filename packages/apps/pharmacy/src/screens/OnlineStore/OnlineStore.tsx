@@ -18,7 +18,14 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { toggleStoreOpen } from "@/store/thunks/auth.thunk";
+import {
+  setDirectOffer,
+  setOnlinePrice,
+  setProductOffer,
+  toggleOnline,
+} from "@/store/thunks/inventory.thunk";
 import {
   CATEGORIES,
   catLabel,
@@ -46,22 +53,16 @@ import { CategoryIcon, monogramOf } from "@/components/molecules";
 import { Thumb } from "@/components/molecules";
 import { catalogProducts } from "./OnlineStore.utils";
 export default function OnlineStoreScreen() {
-  const {
-    inventory,
-    offers,
-    profile,
-    toggleOnline,
-    setOnlinePrice,
-    setProductOffer,
-    setDirectOffer,
-    toggleStoreOpen,
-  } = usePharma();
-  const [q, setQ] = useState("");
+  const confirm = useConfirmedDispatch();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const offers = useAppSelector((state) => state.sales.offers);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const [searchQuery, setSearchQuery] = useState("");
   const [cat, setCat] = useState("all");
   const [editPrice, setEditPrice] = useState<InvProduct | null>(null);
   const [directFor, setDirectFor] = useState<InvProduct | null>(null);
   const [tab, setTab] = useState<"manage" | "preview">("manage");
-  const list = catalogProducts(inventory, cat, q);
+  const list = catalogProducts(inventory, cat, searchQuery);
   const onlineList = inventory.filter((p) => p.online && stockOf(p) > 0);
   const liveCount = inventory.filter((p) => p.online).length;
   const hiddenCount = inventory.length - liveCount;
@@ -99,7 +100,7 @@ export default function OnlineStoreScreen() {
           </Text>
         </Box>
         <Button
-          onClick={toggleStoreOpen}
+          onClick={toggleStore}
           aria-label="Toggle store"
           className={cn(
             cn(
@@ -184,7 +185,11 @@ export default function OnlineStoreScreen() {
           <Text className="!text-green" as="span">
             <IconSearch size={17} />
           </Text>
-          <Input placeholder="Search products…" value={q} onChange={setQOnChange} />
+          <Input
+            placeholder="Search products…"
+            value={searchQuery}
+            onChange={setSearchQueryOnChange}
+          />
         </Box>
       </Box>
 
@@ -279,8 +284,11 @@ export default function OnlineStoreScreen() {
   function setTabOnClick2() {
     return setTab("preview");
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function toggleStore() {
+    void confirm(toggleStoreOpen());
+  }
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function setCatOnClick() {
     return setCat("all");
@@ -406,10 +414,11 @@ export default function OnlineStoreScreen() {
       return setEditPrice(p);
     }
     function setProductOfferOnChange(e: ChangeEvent<HTMLSelectElement>) {
-      const id = e.target.value;
-      if (id) setProductOffer(p.id, id);
-      else if (direct) setDirectOffer(p.id, direct.type, direct.value);
-      else setProductOffer(p.id, undefined);
+      const offerId = e.target.value;
+      if (offerId) void confirm(setProductOffer({ id: p.id, offerId }), { kind: "edit" });
+      else if (direct)
+        void confirm(setDirectOffer({ productId: p.id, type: direct.type, value: direct.value }));
+      else void confirm(setProductOffer({ id: p.id, offerId: undefined }), { kind: "edit" });
     }
     function renderStoreOffer(o: Offer) {
       return { value: String(o.id), label: String(o.title) };
@@ -418,7 +427,7 @@ export default function OnlineStoreScreen() {
       return setDirectFor(p);
     }
     function toggleOnlineOnClick() {
-      return toggleOnline(p.id);
+      void confirm(toggleOnline(p.id));
     }
   }
   function renderOnlineList(p: InvProduct) {
@@ -486,15 +495,15 @@ export default function OnlineStoreScreen() {
   }
   async function setOnlinePriceOnSave(price: number | undefined) {
     if (!editPrice) return;
-    const err = await setOnlinePrice(editPrice.id, price);
-    if (!err) setEditPrice(null);
+    const result = await confirm(setOnlinePrice({ id: editPrice.id, price }), { kind: "edit" });
+    if ("data" in result) setEditPrice(null);
   }
   function setDirectForOnClose() {
     return setDirectFor(null);
   }
   function setDirectOfferOnSave(type: OfferType, value: number) {
     if (!directFor) return;
-    setDirectOffer(directFor.id, type, value);
+    void confirm(setDirectOffer({ productId: directFor.id, type, value }));
     setDirectFor(null);
   }
 }

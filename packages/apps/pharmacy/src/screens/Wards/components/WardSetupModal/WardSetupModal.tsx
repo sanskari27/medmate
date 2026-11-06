@@ -17,11 +17,13 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { addWard, updateWard } from "@/store/thunks/hospital.thunk";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { Ward, WardType, WARD_TYPES } from "@/utils/calculations/hospital";
 import { IconPlus, IconX } from "@/components/atoms";
 export function WardSetupModal({ onClose }: WardSetupModalProps) {
-  const { wards, addWard, updateWard } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const wards = useAppSelector((state) => state.hospital.wards);
   const [draft, setDraft] = useState<Omit<Ward, "id">>({
     name: "",
     code: "",
@@ -34,8 +36,8 @@ export function WardSetupModal({ onClose }: WardSetupModalProps) {
   const setD = (p: Partial<Ward>) => setDraft((s) => ({ ...s, ...p }));
   const add = async () => {
     if (!draft.name.trim() || !draft.code.trim()) return;
-    const err = await addWard(draft);
-    if (!err)
+    const result = await confirm(addWard(draft));
+    if ("data" in result)
       setDraft({
         name: "",
         code: "",
@@ -213,25 +215,32 @@ export function WardSetupModal({ onClose }: WardSetupModalProps) {
       </TableRow>
     );
     function updateWardOnChange(e: ChangeEvent<HTMLInputElement>) {
-      return updateWard(w.id, { name: e.target.value });
+      void confirm(updateWard({ id: w.id, patch: { name: e.target.value } }), { kind: "edit" });
     }
     function updateWardOnChange2(e: ChangeEvent<HTMLInputElement>) {
-      return updateWard(w.id, { code: e.target.value.toUpperCase() });
+      void confirm(updateWard({ id: w.id, patch: { code: e.target.value.toUpperCase() } }), {
+        kind: "edit",
+      });
     }
     function updateWardOnChange3(e: ChangeEvent<HTMLInputElement>) {
-      return updateWard(w.id, { floor: e.target.value });
+      void confirm(updateWard({ id: w.id, patch: { floor: e.target.value } }), { kind: "edit" });
     }
     function updateWardOnChange4(e: ChangeEvent<HTMLSelectElement>) {
-      return updateWard(w.id, { type: e.target.value as WardType });
+      void confirm(updateWard({ id: w.id, patch: { type: e.target.value as WardType } }), {
+        kind: "edit",
+      });
     }
     function renderWARDTYPES(t: WardType) {
       return { value: String(t), label: String(t) };
     }
     function updateWardOnChange5(e: ChangeEvent<HTMLInputElement>) {
-      return updateWard(w.id, { beds: Math.max(0, Number(e.target.value) || 0) });
+      void confirm(
+        updateWard({ id: w.id, patch: { beds: Math.max(0, Number(e.target.value) || 0) } }),
+        { kind: "edit" },
+      );
     }
     function updateWardOnChange6(e: ChangeEvent<HTMLInputElement>) {
-      return updateWard(w.id, { sister: e.target.value });
+      void confirm(updateWard({ id: w.id, patch: { sister: e.target.value } }), { kind: "edit" });
     }
   }
   function setDOnChange(e: ChangeEvent<HTMLInputElement>) {

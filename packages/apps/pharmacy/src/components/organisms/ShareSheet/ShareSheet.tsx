@@ -17,7 +17,8 @@ import {
 } from "@/components/atoms/Icon";
 import { Field } from "@/components/molecules/Field";
 import { Modal } from "@/components/molecules/Modal";
-import { usePharma } from "@/hooks";
+import { useAppDispatch } from "@/hooks";
+import { showToast } from "@/store/actions/feedback.actions";
 import { computeInvoice, inr } from "@/utils";
 import { buildInvoicePdf } from "@/utils/pdf";
 import type { ChangeEvent } from "react";
@@ -82,7 +83,10 @@ function CopyLabel({ copied }: { copied: boolean }) {
 }
 
 export default function ShareSheet({ sale, profile, onClose, className }: ShareSheetProps) {
-  const { toast } = usePharma();
+  const dispatch = useAppDispatch();
+  function toast(message: string) {
+    dispatch(showToast(message));
+  }
   const [phone, setPhone] = useState(sale.customer.phone ?? "");
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);

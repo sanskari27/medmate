@@ -4,7 +4,8 @@ import type { DoctorProfile, Ward } from "@/utils";
 import { Box, Button, Heading, Input, Label, Select } from "@/components/atoms";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { admitPatient } from "@/store/thunks/hospital.thunk";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
 import {
   Admission,
   PayerType,
@@ -14,7 +15,10 @@ import {
 } from "@/utils/calculations/hospital";
 import { IconX, IconCheck, IconCash, IconShield } from "@/components/atoms";
 export function AdmitModal({ preset, onClose, onAdmitted }: AdmitModalProps) {
-  const { wards, admissions, doctors, admitPatient } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const admissions = useAppSelector((state) => state.hospital.admissions);
+  const doctors = useAppSelector((state) => state.hospital.doctors);
   const suggestUhid = `UHID-${100400 + admissions.length + 1}`;
   const [wardId, setWardId] = useState(preset?.wardId ?? wards[0]?.id ?? "");
   const ward = wards.find((w) => w.id === wardId);
@@ -45,23 +49,25 @@ export function AdmitModal({ preset, onClose, onAdmitted }: AdmitModalProps) {
     f.name.trim() && f.patientId.trim() && ward && bed && (f.payerType === "self" || f.insurer);
   const save = async () => {
     if (!valid || !ward) return;
-    const adm = await admitPatient({
-      patientId: f.patientId.trim(),
-      name: f.name.trim(),
-      age: f.age ? Number(f.age) : undefined,
-      gender: f.gender,
-      phone: f.phone.trim(),
-      wardId: ward.id,
-      wardName: ward.name,
-      bed,
-      doctor: f.doctor,
-      diagnosis: f.diagnosis,
-      payerType: f.payerType,
-      insurer: f.payerType === "insurance" ? f.insurer : undefined,
-      policyNo: f.payerType === "insurance" ? f.policyNo : undefined,
-    });
-    if (!adm) return;
-    onAdmitted(adm.id);
+    const result = await confirm(
+      admitPatient({
+        patientId: f.patientId.trim(),
+        name: f.name.trim(),
+        age: f.age ? Number(f.age) : undefined,
+        gender: f.gender,
+        phone: f.phone.trim(),
+        wardId: ward.id,
+        wardName: ward.name,
+        bed,
+        doctor: f.doctor,
+        diagnosis: f.diagnosis,
+        payerType: f.payerType,
+        insurer: f.payerType === "insurance" ? f.insurer : undefined,
+        policyNo: f.payerType === "insurance" ? f.policyNo : undefined,
+      }),
+    );
+    if (!("data" in result)) return;
+    onAdmitted(result.data.id);
   };
   return (
     <Box

@@ -27,14 +27,16 @@ import {
 } from "@/screens/Purchases/purchaseChrome";
 import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { SupplyEntry, inr2, effectiveSupplyPrice, schemeLabel, isDevice } from "@/utils";
 import { IconStar, IconScale, IconCash, IconTag, IconCheck } from "@/components/atoms";
 import { Thumb } from "@/components/molecules";
 import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 export function PriceCompare() {
-  const { supplyList, suppliers, inventory } = usePharma();
-  const [q, setQ] = useState("");
+  const supplyList = useAppSelector((state) => state.purchases.supplyList);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const [searchQuery, setSearchQuery] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(true);
   const prodOf = (id: string) => inventory.find((p) => p.id === id);
   const supOf = (id: string) => suppliers.find((s) => s.id === id);
@@ -47,18 +49,20 @@ export function PriceCompare() {
     return Object.entries(m)
       .map(([pid, rows]) => ({
         p: prodOf(pid),
-        rows: rows.slice().sort((a, b) => effectiveSupplyPrice(a) - effectiveSupplyPrice(b)),
+        rows: rows
+          .slice()
+          .sort((left, right) => effectiveSupplyPrice(left) - effectiveSupplyPrice(right)),
       }))
       .filter((g) => g.p)
       .filter((g) => !onlyMulti || g.rows.length > 1)
       .filter(
         (g) =>
-          !q.trim() ||
-          g.p!.name.toLowerCase().includes(q.toLowerCase()) ||
-          g.p!.composition.toLowerCase().includes(q.toLowerCase()),
+          !searchQuery.trim() ||
+          g.p!.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          g.p!.composition.toLowerCase().includes(searchQuery.toLowerCase()),
       )
-      .sort((a, b) => a.p!.name.localeCompare(b.p!.name));
-  }, [supplyList, inventory, onlyMulti, q]);
+      .sort((left, right) => left.p!.name.localeCompare(right.p!.name));
+  }, [supplyList, inventory, onlyMulti, searchQuery]);
   const totalSaving = groups.reduce((sum, g) => {
     if (g.rows.length < 2) return sum;
     return (
@@ -115,8 +119,8 @@ export function PriceCompare() {
         </Label>
         <Input
           placeholder="Search medicine…"
-          value={q}
-          onChange={setQOnChange}
+          value={searchQuery}
+          onChange={setSearchQueryOnChange}
           className={cn(toolbarControlClass, "!max-w-[220px]")}
         />
       </Box>
@@ -159,8 +163,8 @@ export function PriceCompare() {
   function setOnlyMultiOnClick() {
     return setOnlyMulti((v) => !v);
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function renderGroup(g: { p: InvProduct | undefined; rows: SupplyEntry[] }) {
     const p = g.p!;

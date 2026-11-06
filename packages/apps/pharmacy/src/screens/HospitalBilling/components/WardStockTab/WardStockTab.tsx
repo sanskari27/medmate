@@ -14,23 +14,24 @@ import { TableFooter } from "@/components/molecules/DataTable";
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { inr } from "@/utils";
 import { wardOnHand } from "@/utils/calculations/hospitalAccount";
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 export function WardStockTab() {
-  const { wardSupplies, wards } = usePharma();
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
+  const wards = useAppSelector((state) => state.hospital.wards);
   const cp = useCreditPrice();
-  const [w, setW] = useState("all");
-  const rows = wardOnHand(wardSupplies, cp, w === "all" ? undefined : w);
+  const [selectedWard, setSelectedWard] = useState("all");
+  const rows = wardOnHand(wardSupplies, cp, selectedWard === "all" ? undefined : selectedWard);
   const totalVal = rows.reduce((a, r) => a + r.value, 0);
   return (
     <>
       <Box className={cn("!mb-4 !flex !flex-wrap !items-center !gap-2.5", "!mb-3.5")}>
         <Select
           className=""
-          value={w}
-          onChange={setWOnChange}
+          value={selectedWard}
+          onChange={changeSelectedWard}
           options={[{ value: "all", label: "All wards" }, ...wards.map(renderWard)]}
         />
         <Box className="!flex-1" />
@@ -79,8 +80,8 @@ export function WardStockTab() {
       </Box>
     </>
   );
-  function setWOnChange(e: ChangeEvent<HTMLSelectElement>) {
-    return setW(e.target.value);
+  function changeSelectedWard(event: ChangeEvent<HTMLSelectElement>) {
+    return setSelectedWard(event.target.value);
   }
   function renderWard(x: Ward) {
     return { value: String(x.id), label: String(x.name) };

@@ -1,22 +1,23 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("@/hooks", () => ({
-  usePharma: () => ({
-    prescriptions: [],
-    inventory: [],
-    now: 0,
-    approveRx: vi.fn(),
-    rejectRx: vi.fn(),
-    dispenseRx: vi.fn(),
-  }),
-}));
-
+import { Provider } from "react-redux";
+import { describe, expect, it } from "vitest";
+import { SaveConfirmContext } from "@/app/providers/PharmaProvider/saveConfirm";
+import { store } from "@/store";
 import PrescriptionsScreen from "./Prescriptions";
+
+function renderPrescriptions() {
+  return render(
+    <Provider store={store}>
+      <SaveConfirmContext.Provider value={{ ask: () => Promise.resolve(true) }}>
+        <PrescriptionsScreen />
+      </SaveConfirmContext.Provider>
+    </Provider>,
+  );
+}
 
 describe("Prescriptions", () => {
   it("renders the empty queue", () => {
-    render(<PrescriptionsScreen />);
+    renderPrescriptions();
     expect(screen.getByText("Nothing here")).toBeTruthy();
     expect(screen.getByText("No prescriptions match this view.")).toBeTruthy();
   });

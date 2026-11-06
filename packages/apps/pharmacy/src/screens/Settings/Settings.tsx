@@ -21,7 +21,12 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState, useRef } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { faultFrom } from "@/hooks/useConfirmedDispatch";
+import { setFormFault, showToast } from "@/store/actions/feedback.actions";
+import { setHoldSetup } from "@/store/actions/auth.actions";
+import { queueInvoiceSettings, toggleStoreOpen, updateProfile } from "@/store/thunks/auth.thunk";
+import { faultOf } from "@/utils/validation";
 import {
   PharmacyProfile,
   BizDetail,
@@ -34,39 +39,44 @@ import {
 import { IconCheck, IconPlus, IconUpload, IconDot, IconSettings } from "@/components/atoms";
 import { nextBusinessTypes } from "./Settings.utils";
 export default function SettingsScreen() {
-  const {
-    profile,
-    updateProfile,
-    invoiceSettings,
-    updateInvoiceSettings,
-    toggleStoreOpen,
-    startSetup,
-    suppliers,
-    go,
-    toast,
-    showFault,
-  } = usePharma();
-  const [f, setF] = useState<PharmacyProfile>(profile);
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const profile = useAppSelector((state) => state.auth.profile);
+  const invoiceSettings = useAppSelector((state) => state.auth.invoiceSettings);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const [form, setForm] = useState<PharmacyProfile>(profile);
   const [terms, setTerms] = useState(invoiceSettings.terms);
-  const [nd, setNd] = useState<BizDetail>({ label: "", value: "" });
+  const [newDetail, setNewDetail] = useState<BizDetail>({ label: "", value: "" });
   const logoRef = useRef<HTMLInputElement>(null);
   const signRef = useRef<HTMLInputElement>(null);
-  const set = (patch: Partial<PharmacyProfile>) => setF((p) => ({ ...p, ...patch }));
-  const dirty = JSON.stringify(f) !== JSON.stringify(profile) || terms !== invoiceSettings.terms;
+  const set = (patch: Partial<PharmacyProfile>) => setForm((current) => ({ ...current, ...patch }));
+  const dirty = JSON.stringify(form) !== JSON.stringify(profile) || terms !== invoiceSettings.terms;
   const save = async () => {
-    if (f.gstin.trim() && !isValidGstin(f.gstin)) {
-      showFault("Enter a valid GSTIN");
+    if (form.gstin.trim() && !isValidGstin(form.gstin)) {
+      dispatch(setFormFault(faultOf(new Error("Enter a valid GSTIN"))));
       return;
     }
-    const err = await updateProfile({ ...f, gstRegistered: true, phone: profile.phone });
-    if (err) return;
-    updateInvoiceSettings({ terms });
-    toast("Business settings saved");
+    const error = faultFrom(
+      await confirm(updateProfile({ ...form, gstRegistered: true, phone: profile.phone }), {
+        kind: "edit",
+      }),
+    );
+    if (error) return;
+    dispatch(queueInvoiceSettings({ terms }));
+    dispatch(showToast("Business settings saved"));
   };
   const discard = () => {
-    setF(profile);
+    setForm(profile);
     setTerms(invoiceSettings.terms);
   };
+  function startSetup() {
+    dispatch(setHoldSetup(true));
+    go("dashboard");
+  }
+  function toggleOpen() {
+    void confirm(toggleStoreOpen());
+  }
   const onFile = (e: React.ChangeEvent<HTMLInputElement>, key: "logo" | "signature") => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -76,12 +86,12 @@ export default function SettingsScreen() {
   };
   const toggleType = (t: string) =>
     set({
-      businessTypes: nextBusinessTypes(f.businessTypes, t),
+      businessTypes: nextBusinessTypes(form.businessTypes, t),
     });
   const addDetail = () => {
-    if (!nd.label.trim() || !nd.value.trim()) return;
-    set({ extraDetails: [...f.extraDetails, nd] });
-    setNd({ label: "", value: "" });
+    if (!newDetail.label.trim() || !newDetail.value.trim()) return;
+    set({ extraDetails: [...form.extraDetails, newDetail] });
+    setNewDetail({ label: "", value: "" });
   };
   return (
     <Box className="!mx-auto !max-w-[1680px]">
@@ -127,7 +137,7 @@ export default function SettingsScreen() {
         <Switch
           checked={profile.storeOpen}
           label="Online store"
-          onClick={toggleStoreOpen}
+          onClick={toggleOpen}
           className="origin-center scale-[1.2]"
         />
       </Box>
@@ -143,12 +153,12 @@ export default function SettingsScreen() {
                 onClick={clickOnClick}
                 className={cn(
                   "!grid !h-[92px] !w-[92px] !place-items-center !overflow-hidden !rounded-[14px] !border !border-dashed !border-line-2 !p-0 !shadow-none hover:!bg-transparent",
-                  f.logo ? "!bg-black hover:!bg-black" : "!bg-wash-2",
+                  form.logo ? "!bg-black hover:!bg-black" : "!bg-wash-2",
                 )}
               >
-                {f.logo ? (
+                {form.logo ? (
                   <Image
-                    src={f.logo}
+                    src={form.logo}
                     alt="logo"
                     className={cn("!w-full !h-full !object-contain")}
                   />
@@ -159,7 +169,7 @@ export default function SettingsScreen() {
                   </Stack>
                 )}
               </Button>
-              {f.logo && (
+              {form.logo && (
                 <Button
                   onClick={setOnClick}
                   className={cn(
@@ -174,7 +184,7 @@ export default function SettingsScreen() {
             <Box className={cn("!flex-1 !min-w-0")}>
               <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
                 <Label>Business Name *</Label>
-                <Input className="" value={f.name} onChange={setOnChange} />
+                <Input className="" value={form.name} onChange={setOnChange} />
               </Box>
               <Box
                 className={cn(
@@ -183,7 +193,7 @@ export default function SettingsScreen() {
                 )}
               >
                 <Label>Tagline</Label>
-                <Input className="" value={f.tagline} onChange={setOnChange2} />
+                <Input className="" value={form.tagline} onChange={setOnChange2} />
               </Box>
             </Box>
           </Box>
@@ -206,28 +216,32 @@ export default function SettingsScreen() {
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>Company E-Mail</Label>
-              <Input className="" value={f.email} onChange={setOnChange3} />
+              <Input className="" value={form.email} onChange={setOnChange3} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
               <Label>Billing Address</Label>
-              <Textarea className="!min-h-16 !resize-y" value={f.address} onChange={setOnChange4} />
+              <Textarea
+                className="!min-h-16 !resize-y"
+                value={form.address}
+                onChange={setOnChange4}
+              />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>State</Label>
               <Select
                 className=""
-                value={f.state}
+                value={form.state}
                 onChange={setOnChange5}
                 options={[...INDIAN_STATES.map(renderINDIANSTATES)]}
               />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>Pincode</Label>
-              <Input className="" value={f.pincode} onChange={setOnChange6} />
+              <Input className="" value={form.pincode} onChange={setOnChange6} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
               <Label>City</Label>
-              <Input className="" value={f.city} onChange={setOnChange7} />
+              <Input className="" value={form.city} onChange={setOnChange7} />
             </Box>
           </Box>
         </Box>
@@ -242,37 +256,37 @@ export default function SettingsScreen() {
             data-field="gstin"
           >
             <Label>GSTIN *</Label>
-            <Input className="!font-mono" value={f.gstin} onChange={setOnChange8} />
+            <Input className="!font-mono" value={form.gstin} onChange={setOnChange8} />
           </Box>
 
           <ToggleRow
             label="Enable e-Invoicing"
             badge="New"
-            on={f.eInvoicing}
+            on={form.eInvoicing}
             onClick={setOnClick2}
           />
 
           <Box className={cn("!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1", "!mt-3")}>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>PAN Number</Label>
-              <Input className="!font-mono" value={f.pan} onChange={setOnChange9} />
+              <Input className="!font-mono" value={form.pan} onChange={setOnChange9} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>Drug Licence No. (D.L.)</Label>
-              <Input className="!font-mono" value={f.dlNo} onChange={setOnChange10} />
+              <Input className="!font-mono" value={form.dlNo} onChange={setOnChange10} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>FSSAI Licence No.</Label>
-              <Input className="!font-mono" value={f.fssai} onChange={setOnChange11} />
+              <Input className="!font-mono" value={form.fssai} onChange={setOnChange11} />
             </Box>
             <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
               <Label>Trade Licence No.</Label>
-              <Input className="!font-mono" value={f.tradeNo || ""} onChange={setOnChange12} />
+              <Input className="!font-mono" value={form.tradeNo || ""} onChange={setOnChange12} />
             </Box>
           </Box>
 
-          <ToggleRow label="Enable TDS" on={f.enableTDS} onClick={setOnClick3} />
-          <ToggleRow label="Enable TCS" on={f.enableTCS} onClick={setOnClick4} />
+          <ToggleRow label="Enable TDS" on={form.enableTDS} onClick={setOnClick3} />
+          <ToggleRow label="Enable TCS" on={form.enableTCS} onClick={setOnClick4} />
 
           <Box
             className={cn(
@@ -281,7 +295,7 @@ export default function SettingsScreen() {
             )}
           >
             <Label>Registered pharmacist (on invoice)</Label>
-            <Input className="" value={f.pharmacist} onChange={setOnChange13} />
+            <Input className="" value={form.pharmacist} onChange={setOnChange13} />
           </Box>
         </Box>
       </Box>
@@ -302,7 +316,7 @@ export default function SettingsScreen() {
               <Label>Industry Type</Label>
               <Select
                 className=""
-                value={f.industryType}
+                value={form.industryType}
                 onChange={setOnChange14}
                 options={[...INDUSTRY_TYPES.map(renderINDUSTRYTYPES)]}
               />
@@ -311,7 +325,7 @@ export default function SettingsScreen() {
               <Label>Business Registration Type</Label>
               <Select
                 className=""
-                value={f.registrationType}
+                value={form.registrationType}
                 onChange={setOnChange15}
                 options={[...REGISTRATION_TYPES.map(renderREGISTRATIONTYPES)]}
               />
@@ -352,14 +366,14 @@ export default function SettingsScreen() {
           >
             <Label>Signature</Label>
             <Input ref={signRef} type="file" accept="image/*" hidden onChange={onFileOnChange2} />
-            {f.signature ? (
+            {form.signature ? (
               <Box
                 className={cn(
                   "!border !border-line-2 !border-dashed !rounded-md !p-3 !inline-block !mt-1",
                 )}
               >
                 <Image
-                  src={f.signature}
+                  src={form.signature}
                   alt="signature"
                   className={cn("!max-h-[90px] !max-w-[220px] !object-contain !block")}
                 />
@@ -400,13 +414,18 @@ export default function SettingsScreen() {
           <Input
             className=""
             placeholder="Label (e.g. MSME)"
-            value={nd.label}
-            onChange={setNdOnChange}
+            value={newDetail.label}
+            onChange={setNewDetailOnChange}
           />
           <Text className={cn("!flex !items-center !gap-2.5", "!text-muted")} as="span">
             =
           </Text>
-          <Input className="" placeholder="Value" value={nd.value} onChange={setNdOnChange2} />
+          <Input
+            className=""
+            placeholder="Value"
+            value={newDetail.value}
+            onChange={setNewDetailOnChange2}
+          />
           <Button
             className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green"
             onClick={addDetail}
@@ -414,8 +433,8 @@ export default function SettingsScreen() {
             <IconPlus size={15} /> Add
           </Button>
         </Box>
-        {f.extraDetails.length > 0 && (
-          <Box className={cn("!mt-3.5")}>{f.extraDetails.map(renderExtraDetail)}</Box>
+        {form.extraDetails.length > 0 && (
+          <Box className={cn("!mt-3.5")}>{form.extraDetails.map(renderExtraDetail)}</Box>
         )}
       </Box>
 
@@ -513,7 +532,7 @@ export default function SettingsScreen() {
     return set({ gstin: e.target.value.toUpperCase(), gstRegistered: true });
   }
   function setOnClick2() {
-    return set({ eInvoicing: !f.eInvoicing });
+    return set({ eInvoicing: !form.eInvoicing });
   }
   function setOnChange9(e: ChangeEvent<HTMLInputElement>) {
     return set({ pan: e.target.value });
@@ -528,10 +547,10 @@ export default function SettingsScreen() {
     return set({ tradeNo: e.target.value.toUpperCase() });
   }
   function setOnClick3() {
-    return set({ enableTDS: !f.enableTDS });
+    return set({ enableTDS: !form.enableTDS });
   }
   function setOnClick4() {
-    return set({ enableTCS: !f.enableTCS });
+    return set({ enableTCS: !form.enableTCS });
   }
   function setOnChange13(e: ChangeEvent<HTMLInputElement>) {
     return set({ pharmacist: e.target.value });
@@ -540,7 +559,7 @@ export default function SettingsScreen() {
     return (
       <Button
         key={t}
-        className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${f.businessTypes.includes(t) ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
+        className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${form.businessTypes.includes(t) ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
         onClick={toggleTypeOnClick}
       >
         {t}
@@ -574,11 +593,11 @@ export default function SettingsScreen() {
   function clickOnClick2() {
     return signRef.current?.click();
   }
-  function setNdOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setNd({ ...nd, label: e.target.value });
+  function setNewDetailOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setNewDetail({ ...newDetail, label: e.target.value });
   }
-  function setNdOnChange2(e: ChangeEvent<HTMLInputElement>) {
-    return setNd({ ...nd, value: e.target.value });
+  function setNewDetailOnChange2(e: ChangeEvent<HTMLInputElement>) {
+    return setNewDetail({ ...newDetail, value: e.target.value });
   }
   function renderExtraDetail(d: BizDetail, i: number) {
     return (

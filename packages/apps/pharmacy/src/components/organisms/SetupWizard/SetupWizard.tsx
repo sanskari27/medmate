@@ -30,7 +30,12 @@ import {
 } from "@/components/atoms/Icon";
 import { Chip } from "@/components/molecules/Chip";
 import { Field } from "@/components/molecules/Field";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { faultFrom } from "@/hooks/useConfirmedDispatch";
+import { clearFormFault, setFormFault } from "@/store/actions/feedback.actions";
+import { selectFeatureLocked } from "@/store/selectors/auth.selector";
+import { commitSetup } from "@/store/thunks/auth.thunk";
+import { faultOf } from "@/utils/validation";
 import {
   INDUSTRY_TYPES,
   INDIAN_STATES,
@@ -839,7 +844,12 @@ function StepBody({
 }
 
 export function SetupWizard({ className }: SetupWizardProps) {
-  const { profile, invoiceSettings, kiosk, commitSetup, showFault, clearFault } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const profile = useAppSelector((state) => state.auth.profile);
+  const invoiceSettings = useAppSelector((state) => state.auth.invoiceSettings);
+  const kiosk = useAppSelector((state) => state.auth.kiosk);
+  const featureLocked = useAppSelector((state) => selectFeatureLocked(state, "kiosk"));
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
@@ -860,11 +870,11 @@ export function SetupWizard({ className }: SetupWizardProps) {
   function blocked(through: number) {
     const issue = setupGap(draft);
     if (!issue || issue.step > through) {
-      clearFault();
+      dispatch(clearFormFault());
       return false;
     }
     setStep(issue.step);
-    showFault(issue.message);
+    dispatch(setFormFault(faultOf(new Error(issue.message))));
     return true;
   }
   async function finish() {
@@ -872,41 +882,47 @@ export function SetupWizard({ className }: SetupWizardProps) {
     if (blocked(STEPS.length - 1)) return;
     savingRef.current = true;
     setSaving(true);
-    const err = await commitSetup({
-      profile: {
-        name: draft.name,
-        tagline: draft.tagline,
-        logo: draft.logo,
-        email: draft.email.trim(),
-        address: draft.address,
-        city: draft.city,
-        state: draft.state,
-        pincode: draft.pincode,
-        gstRegistered: true,
-        gstin: draft.gstin,
-        eInvoicing: draft.eInvoicing,
-        pan: draft.pan,
-        dlNo: draft.dlNo,
-        fssai: draft.fssai,
-        tradeNo: draft.tradeNo,
-        gstFile: draft.gstFile,
-        panFile: draft.panFile,
-        dlFile: draft.dlFile,
-        fssaiFile: draft.fssaiFile,
-        tradeFile: draft.tradeFile,
-        enableTDS: draft.enableTDS,
-        enableTCS: draft.enableTCS,
-        businessTypes: draft.businessTypes,
-        industryType: draft.industryType,
-        registrationType: draft.registrationType,
-        signature: draft.signature,
-        pharmacist: draft.pharmacist,
-        storeOpen: draft.storeOpen,
-      },
-      invoice: { prefix: draft.invoicePrefix, terms: draft.terms },
-      kioskEnabled: draft.kioskEnabled,
-      loose: draft.looseDefault,
-    });
+    const err = faultFrom(
+      await confirm(
+        commitSetup({
+          profile: {
+            name: draft.name,
+            tagline: draft.tagline,
+            logo: draft.logo,
+            email: draft.email.trim(),
+            address: draft.address,
+            city: draft.city,
+            state: draft.state,
+            pincode: draft.pincode,
+            gstRegistered: true,
+            gstin: draft.gstin,
+            eInvoicing: draft.eInvoicing,
+            pan: draft.pan,
+            dlNo: draft.dlNo,
+            fssai: draft.fssai,
+            tradeNo: draft.tradeNo,
+            gstFile: draft.gstFile,
+            panFile: draft.panFile,
+            dlFile: draft.dlFile,
+            fssaiFile: draft.fssaiFile,
+            tradeFile: draft.tradeFile,
+            enableTDS: draft.enableTDS,
+            enableTCS: draft.enableTCS,
+            businessTypes: draft.businessTypes,
+            industryType: draft.industryType,
+            registrationType: draft.registrationType,
+            signature: draft.signature,
+            pharmacist: draft.pharmacist,
+            storeOpen: draft.storeOpen,
+          },
+          invoice: { prefix: draft.invoicePrefix, terms: draft.terms },
+          kioskEnabled: draft.kioskEnabled,
+          loose: draft.looseDefault,
+          featureLocked,
+        }),
+        { copy: { title: "Finish setup?", body: "Your pharmacy details will be saved." } },
+      ),
+    );
     savingRef.current = false;
     setSaving(false);
     if (err?.field === "gstin") setStep(3);

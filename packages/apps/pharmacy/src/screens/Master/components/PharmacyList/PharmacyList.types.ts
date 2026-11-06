@@ -34,8 +34,8 @@ type Row = {
 
 export type PharmacyListProps = {
   rows: Row[];
-  q: string;
-  setQ: (value: string) => void;
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
   plan: string;
   setPlan: (value: string) => void;
   businessType: string;

@@ -3,11 +3,12 @@ import { Box, Button, Heading, Input, Label, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { recordHospitalPayment } from "@/store/thunks/hospital.thunk";
+import { useConfirmedDispatch } from "@/hooks";
 import { inr, PayMode, PAY_LABEL } from "@/utils";
 import { IconX } from "@/components/atoms";
 export function PaymentModal({ onClose, outstanding }: PaymentModalProps) {
-  const { recordHospitalPayment } = usePharma();
+  const confirm = useConfirmedDispatch();
   const [amount, setAmount] = useState(outstanding > 0 ? String(Math.round(outstanding)) : "");
   const [mode, setMode] = useState<PayMode>("upi");
   const [ref, setRef] = useState("");
@@ -121,11 +122,13 @@ export function PaymentModal({ onClose, outstanding }: PaymentModalProps) {
     return setRef(e.target.value);
   }
   async function recordHospitalPaymentOnClick() {
-    const err = await recordHospitalPayment({
-      amount: amt,
-      mode,
-      ref: ref.trim() || undefined,
-    });
-    if (!err) onClose();
+    const result = await confirm(
+      recordHospitalPayment({
+        amount: amt,
+        mode,
+        ref: ref.trim() || undefined,
+      }),
+    );
+    if ("data" in result) onClose();
   }
 }

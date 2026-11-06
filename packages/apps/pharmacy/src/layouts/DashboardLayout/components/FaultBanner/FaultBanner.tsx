@@ -1,10 +1,15 @@
 import { useEffect } from "react";
 import { IconButton, Text } from "@/components/atoms";
 import { Alert } from "@/components/molecules/Alert";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { clearFormFault } from "@/store/actions/feedback.actions";
 
 export function FaultBanner() {
-  const { formFault, clearFault } = usePharma();
+  const dispatch = useAppDispatch();
+  const formFault = useAppSelector((state) => state.ui.formFault);
+  function clearFault() {
+    dispatch(clearFormFault());
+  }
   useEffect(
     function scrollFaultIntoView() {
       if (!formFault?.field) return;

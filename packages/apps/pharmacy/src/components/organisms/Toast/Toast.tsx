@@ -1,11 +1,11 @@
 import { Box } from "@/components/atoms/Box";
 import { Text } from "@/components/atoms/Text";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { cn } from "@/utils/className";
 import type { ToastProps } from "./Toast.types";
 
 export function Toast({ className }: ToastProps) {
-  const { toastMsg } = usePharma();
+  const toastMsg = useAppSelector((state) => state.ui.toastMsg);
   return (
     <Box
       data-slot="toast"

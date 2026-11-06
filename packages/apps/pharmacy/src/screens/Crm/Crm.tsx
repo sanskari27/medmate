@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import {
+  addCampaign,
+  addFeedback,
+  logReminder,
+  redeemPoints,
+  setPatientMeta,
+} from "@/store/thunks/crm.thunk";
 import { Box, Button } from "@/components/atoms";
 import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { buildPatients } from "@/utils/calculations/crm";
@@ -25,20 +32,35 @@ const TABS: { key: CrmTab; label: string }[] = [
 ];
 
 export default function CrmScreen() {
-  const {
-    sales,
-    inventory,
-    creditPayments,
-    crm,
-    profile,
-    now,
-    setPatientMeta,
-    addCampaign,
-    addFeedback,
-    logReminder,
-    redeemPoints,
-    go,
-  } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const creditPayments = useAppSelector((state) => state.customers.creditPayments);
+  const crm = useAppSelector((state) => state.crm.crm);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  async function savePatientMeta(
+    key: string,
+    patch: Parameters<typeof setPatientMeta>[0]["patch"],
+  ) {
+    const result = await confirm(setPatientMeta({ key, patch }), { kind: "edit" });
+    return "fault" in result ? result.fault : null;
+  }
+  async function saveCampaign(campaign: Parameters<typeof addCampaign>[0]) {
+    const result = await confirm(addCampaign(campaign));
+    return "fault" in result ? result.fault : null;
+  }
+  async function saveFeedback(feedback: Parameters<typeof addFeedback>[0]) {
+    const result = await confirm(addFeedback(feedback));
+    return "fault" in result ? result.fault : null;
+  }
+  function recordReminder(reminder: Parameters<typeof logReminder>[0]) {
+    void confirm(logReminder(reminder), { quiet: true });
+  }
+  function redeemCustomerPoints(custKey: string, custName: string, points: number) {
+    void confirm(redeemPoints({ custKey, custName, points }));
+  }
   const [tab, setTab] = useState<CrmTab>("overview");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -72,11 +94,11 @@ export default function CrmScreen() {
     sales,
     crm,
     redeemedBy,
-    setPatientMeta,
-    addCampaign,
-    addFeedback,
-    logReminder,
-    redeemPoints,
+    setPatientMeta: savePatientMeta,
+    addCampaign: saveCampaign,
+    addFeedback: saveFeedback,
+    logReminder: recordReminder,
+    redeemPoints: redeemCustomerPoints,
     openPatient: setSelectedKey,
     go,
   };

@@ -4,30 +4,28 @@ import { AppHeader } from "@/components/organisms/AppHeader";
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { OnboardingCarousel, PinSetup } from "@/components/organisms/OnboardingCarousel";
 import { SetupWizard } from "@/components/organisms/SetupWizard";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import MasterPortal from "@/screens/Master";
-import { api } from "@/services/api/apiClient";
+import { selectIsHospital } from "@/store/selectors/auth.selector";
+import { loadMasterSession } from "@/store/thunks/master.thunk";
 import { lockedRouteFallback } from "../../DashboardLayout.utils";
 import { Canvas } from "../Canvas";
 
 export function Inner() {
-  const { setupComplete, signedIn, needsPin, pinReset, route, go, me, isHospital } = usePharma();
+  const dispatch = useAppDispatch();
+  const { route, go } = usePharmacyNav();
+  const setupComplete = useAppSelector((state) => state.auth.setupComplete);
+  const signedIn = useAppSelector((state) => state.auth.signedIn);
+  const needsPin = useAppSelector((state) => state.auth.needsPin);
+  const pinReset = useAppSelector((state) => state.auth.pinReset);
+  const me = useAppSelector((state) => state.auth.me);
+  const isHospital = useAppSelector(selectIsHospital);
+  const masterSessionPhone = useAppSelector((state) => state.master.phone);
+  const sessionLoaded = useAppSelector((state) => state.master.sessionLoaded);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [masterSessionPhone, setMasterSessionPhone] = useState<string | null | undefined>(
-    undefined,
-  );
   const [masterPortalOpen, setMasterPortalOpen] = useState(false);
 
-  function loadMasterSession() {
-    api<{ phone: string }>("/master/session")
-      .then(function storeMasterPhone(row) {
-        setMasterSessionPhone(row.phone);
-      })
-      .catch(function clearMasterPhone() {
-        setMasterSessionPhone(null);
-      });
-  }
   function closeSidebar() {
     setSidebarOpen(false);
   }
@@ -43,17 +41,19 @@ export function Inner() {
     setMasterPortalOpen(false);
   }
   function leaveMasterPortal() {
-    setMasterSessionPhone(null);
     setMasterPortalOpen(false);
   }
   function openMasterFromOnboarding() {
     setMasterPortalOpen(true);
-    void loadMasterSession();
+    void dispatch(loadMasterSession());
   }
 
-  useEffect(function loadMasterOnMount() {
-    void loadMasterSession();
-  }, []);
+  useEffect(
+    function loadMasterOnMount() {
+      void dispatch(loadMasterSession());
+    },
+    [dispatch],
+  );
   useEffect(
     function redirectLockedRoute() {
       if (!me) return;
@@ -67,7 +67,7 @@ export function Inner() {
     [me, route, isHospital, go],
   );
 
-  if (masterSessionPhone === undefined && !signedIn) {
+  if (!sessionLoaded && !signedIn) {
     return <Text>Loading pharmacy…</Text>;
   }
   if (masterSessionPhone && (masterPortalOpen || !signedIn)) {

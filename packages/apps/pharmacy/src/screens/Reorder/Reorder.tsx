@@ -16,7 +16,15 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { setFormFault, showToast } from "@/store/actions/feedback.actions";
+import { setProductSupplier } from "@/store/thunks/inventory.thunk";
+import {
+  importPurchaseOrders,
+  markPurchaseOrderReceived,
+  sendPurchaseOrder,
+} from "@/store/thunks/purchases.thunk";
+import { faultOf } from "@/utils/validation";
 import {
   isLowStock,
   stockOf,
@@ -53,20 +61,14 @@ const selectChevron = `
 `;
 
 export default function ReorderScreen() {
-  const {
-    inventory,
-    suppliers,
-    supplyList,
-    purchaseOrders,
-    sendPurchaseOrder,
-    importPurchaseOrders,
-    markPOReceived,
-    setProductSupplier,
-    now,
-    go,
-    showFault,
-    toast,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const supplyList = useAppSelector((state) => state.purchases.supplyList);
+  const purchaseOrders = useAppSelector((state) => state.purchases.purchaseOrders);
+  const now = useAppSelector((state) => state.ui.now);
   const poFile = useRef<HTMLInputElement>(null);
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const low = lowStockProducts(inventory, isLowStock);
@@ -94,11 +96,11 @@ export default function ReorderScreen() {
     const poItems: POItem[] = items
       .map((p) => ({ productId: p.id, name: p.name, qty: qtyFor(p.id) }))
       .filter((x) => x.qty > 0);
-    sendPurchaseOrder(supplierId, supplierName, poItems);
-    setQtys((q) => {
-      const n = { ...q };
-      items.forEach((p) => delete n[p.id]);
-      return n;
+    void confirm(sendPurchaseOrder({ supplierId, supplierName, items: poItems }));
+    setQtys((current) => {
+      const next = { ...current };
+      items.forEach((product) => delete next[product.id]);
+      return next;
     });
   };
   return (
@@ -443,20 +445,24 @@ export default function ReorderScreen() {
       );
       function setProductSupplierOnClick() {
         if (!cheaperElsewhere) return;
-        return setProductSupplier(p.id, cheaperElsewhere.supplierId);
+        void confirm(setProductSupplier({ id: p.id, supplierId: cheaperElsewhere.supplierId }), {
+          kind: "edit",
+        });
       }
       function matchSupplier(s: Supplier) {
         if (!cheaperElsewhere) return false;
         return s.id === cheaperElsewhere.supplierId;
       }
       function setQtysOnClick() {
-        return setQtys((q) => ({ ...q, [p.id]: Math.max(0, qtyFor(p.id) - 5) }));
+        return setQtys((current) => ({ ...current, [p.id]: Math.max(0, qtyFor(p.id) - 5) }));
       }
       function setQtysOnClick2() {
-        return setQtys((q) => ({ ...q, [p.id]: qtyFor(p.id) + 5 }));
+        return setQtys((current) => ({ ...current, [p.id]: qtyFor(p.id) + 5 }));
       }
       function setProductSupplierOnChange(e: ChangeEvent<HTMLSelectElement>) {
-        return setProductSupplier(p.id, e.target.value);
+        void confirm(setProductSupplier({ id: p.id, supplierId: e.target.value }), {
+          kind: "edit",
+        });
       }
       function renderSupplier(s: Supplier) {
         const en = entryFor(p.id, s.id);
@@ -467,22 +473,29 @@ export default function ReorderScreen() {
       }
     }
   }
-  function parsePoCsvOnChange(e: ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = async () => {
-      const parsed = parsePoCsv(String(r.result));
+  function parsePoCsvOnChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const parsed = parsePoCsv(String(reader.result));
       if (!parsed.rows.length) {
-        showFault(parsed.errors[0] || "No purchase orders in that sheet");
+        dispatch(
+          setFormFault(faultOf(new Error(parsed.errors[0] || "No purchase orders in that sheet"))),
+        );
         return;
       }
-      const res = await importPurchaseOrders(parsed.rows);
-      if (res?.skipped.length)
-        toast(`${res.skipped.length} rows skipped — distributor or medicine name did not match`);
+      const result = await confirm(importPurchaseOrders(parsed.rows));
+      if ("data" in result && result.data.skipped.length) {
+        dispatch(
+          showToast(
+            `${result.data.skipped.length} rows skipped — distributor or medicine name did not match`,
+          ),
+        );
+      }
     };
-    r.readAsText(f);
-    e.target.value = "";
+    reader.readAsText(file);
+    event.target.value = "";
   }
   function clickOnClick() {
     return poFile.current?.click();
@@ -534,7 +547,7 @@ export default function ReorderScreen() {
       return go("purchases");
     }
     function markPOReceivedOnClick() {
-      return markPOReceived(po.id);
+      void confirm(markPurchaseOrderReceived(po.id));
     }
   }
 }

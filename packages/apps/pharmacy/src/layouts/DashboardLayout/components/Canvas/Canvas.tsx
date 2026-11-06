@@ -1,4 +1,5 @@
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
+import { selectFeatureLocked } from "@/store/selectors/auth.selector";
 import DashboardScreen from "@/screens/Dashboard";
 import PosScreen from "@/screens/Billing";
 import OrdersScreen from "@/screens/Orders";
@@ -36,8 +37,9 @@ import HospitalBillingScreen from "@/screens/HospitalBilling";
 import { Paywall } from "@/components/organisms/Paywall";
 
 export function Canvas() {
-  const { route, featureLocked } = usePharma();
-  if (featureLocked(route)) return <Paywall route={route} />;
+  const route = useAppSelector((state) => state.ui.route);
+  const locked = useAppSelector((state) => selectFeatureLocked(state, state.ui.route));
+  if (locked) return <Paywall route={route} />;
   switch (route) {
     case "pos":
       return <PosScreen />;

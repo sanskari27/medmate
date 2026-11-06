@@ -39,8 +39,8 @@ type Row = {
 const PLANS: Plan[] = ["Essential", "Care", "Growth", "Flagship"];
 export function PharmacyList({
   rows,
-  q,
-  setQ,
+  searchQuery,
+  setSearchQuery,
   plan,
   setPlan,
   businessType,
@@ -60,8 +60,8 @@ export function PharmacyList({
         <Input
           className=""
           placeholder="Name, phone, or city"
-          value={q}
-          onChange={setQOnChange}
+          value={searchQuery}
+          onChange={setSearchQueryOnChange}
           aria-label="Search pharmacies"
         />
         <Select
@@ -104,8 +104,8 @@ export function PharmacyList({
       </Table>
     </>
   );
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function setPlanOnChange(e: ChangeEvent<HTMLSelectElement>) {
     return setPlan(e.target.value);

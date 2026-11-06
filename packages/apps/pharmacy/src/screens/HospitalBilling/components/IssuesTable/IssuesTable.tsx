@@ -15,7 +15,7 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { inr, fmtDateTime } from "@/utils";
 import { WardSupplyReason, reasonMeta, WardSupply } from "@/utils/calculations/hospitalAccount";
 import { IconSearch, IconHospital, IconReceipt } from "@/components/atoms";
@@ -27,7 +27,10 @@ const REASON_TONE: Record<WardSupplyReason, string> = {
   refill: "!bg-teal-bg !text-teal",
 };
 export function IssuesTable() {
-  const { wardSupplies, wards, profile, hospitalAccount } = usePharma();
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
   const [inv, setInv] = useState<WardSupply | null>(null);
   const [q, setQ] = useState("");
   const [wardId, setWardId] = useState("all");
@@ -130,8 +133,8 @@ export function IssuesTable() {
   function setWardIdOnChange(e: ChangeEvent<HTMLSelectElement>) {
     return setWardId(e.target.value);
   }
-  function renderWard(w: Ward) {
-    return { value: String(w.id), label: String(w.name) };
+  function renderWard(ward: Ward) {
+    return { value: String(ward.id), label: String(ward.name) };
   }
   function renderK(k: "all" | "issue" | "return" | "refill") {
     return (

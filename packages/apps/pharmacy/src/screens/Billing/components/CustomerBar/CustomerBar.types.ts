@@ -1,4 +1,4 @@
-import type { PosCustomer } from "@/store/slices/billing/billingSlice";
+import type { PosCustomer } from "@/store/slices/billing.slice";
 
 export type CustomerBarProps = {
   customer: PosCustomer;

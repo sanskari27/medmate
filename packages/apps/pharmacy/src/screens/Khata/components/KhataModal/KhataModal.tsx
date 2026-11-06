@@ -41,15 +41,15 @@ export function KhataModal({
   const ledger = customerLedger(c.key, sales, creditPayments);
   const aging: CreditAging = creditAging(c.key, sales, creditPayments, now);
   const [repay, setRepay] = useState(c.outstanding > 0);
-  const [amt, setAmt] = useState(c.outstanding);
+  const [amount, setAmount] = useState(c.outstanding);
   const [mode, setMode] = useState<PayMode>("cash");
   const doRepay = async () => {
-    if (amt <= 0) return;
+    if (amount <= 0) return;
     const err = await recordCreditPayment({
       custKey: c.key,
       custName: c.name,
       custPhone: c.phone,
-      amount: Math.min(amt, c.outstanding || amt),
+      amount: Math.min(amount, c.outstanding || amount),
       mode,
     });
     if (!err) setRepay(false);
@@ -169,7 +169,7 @@ export function KhataModal({
             {c.outstanding > 0 && !repay && (
               <Button
                 className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green"
-                onClick={setAmtOnClick}
+                onClick={setAmountOnClick}
               >
                 <IconRupee size={15} /> Record repayment
               </Button>
@@ -206,14 +206,14 @@ export function KhataModal({
               <Box className={cn("!flex !items-center !gap-2.5", "!gap-1.5 !flex-wrap !mb-2.5")}>
                 {[500, 1000, 2000].filter(matchV).map(renderV)}
                 <Button
-                  className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amt === Math.round(c.outstanding / 2) ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
-                  onClick={setAmtOnClick3}
+                  className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amount === Math.round(c.outstanding / 2) ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
+                  onClick={setAmountOnClick3}
                 >
                   Half
                 </Button>
                 <Button
-                  className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amt === c.outstanding ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
-                  onClick={setAmtOnClick4}
+                  className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amount === c.outstanding ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
+                  onClick={setAmountOnClick4}
                 >
                   Full · {inr(c.outstanding)}
                 </Button>
@@ -225,8 +225,8 @@ export function KhataModal({
                   data-field="amount"
                   type="number"
                   min={0}
-                  value={amt || ""}
-                  onChange={setAmtOnChange}
+                  value={amount || ""}
+                  onChange={setAmountOnChange}
                   placeholder="Amount ₹"
                   autoFocus
                   className={cn("", "!w-[120px]")}
@@ -239,10 +239,10 @@ export function KhataModal({
                 />
                 <Button
                   className="!border-transparent !bg-mid !text-white !shadow-sm hover:!bg-green"
-                  disabled={amt <= 0}
+                  disabled={amount <= 0}
                   onClick={doRepay}
                 >
-                  <IconCheck size={14} /> Collect {inr(Math.min(amt, c.outstanding || amt))}
+                  <IconCheck size={14} /> Collect {inr(Math.min(amount, c.outstanding || amount))}
                 </Button>
                 <Button
                   className="!border !border-line-2 !bg-paper !text-ink-2 !shadow-none hover:!bg-wash-2"
@@ -350,8 +350,8 @@ export function KhataModal({
   function stopPropagationOnClick(e: MouseEvent<HTMLDivElement>) {
     return e.stopPropagation();
   }
-  function setAmtOnClick() {
-    setAmt(c.outstanding);
+  function setAmountOnClick() {
+    setAmount(c.outstanding);
     setRepay(true);
   }
   function openOnClick() {
@@ -368,27 +368,27 @@ export function KhataModal({
     return (
       <Button
         key={v}
-        className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amt === v ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
-        onClick={setAmtOnClick2}
+        className={`!inline-flex !h-auto !items-center !gap-[7px] !rounded-full !border !border-line-2 !bg-paper !px-3.5 !py-[7px] !text-[12.5px] !font-bold !text-ink-2 !shadow-none hover:!border-[#b9d0c2] hover:!bg-wash-2 ${amount === v ? " !border-dark !bg-dark !text-white hover:!bg-dark" : ""}`}
+        onClick={setAmountOnClick2}
       >
         {inr(v)}
       </Button>
     );
-    function setAmtOnClick2() {
-      return setAmt(v);
+    function setAmountOnClick2() {
+      return setAmount(v);
     }
   }
   function matchV(v: number) {
     return v < c.outstanding;
   }
-  function setAmtOnClick3() {
-    return setAmt(Math.round(c.outstanding / 2));
+  function setAmountOnClick3() {
+    return setAmount(Math.round(c.outstanding / 2));
   }
-  function setAmtOnClick4() {
-    return setAmt(c.outstanding);
+  function setAmountOnClick4() {
+    return setAmount(c.outstanding);
   }
-  function setAmtOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setAmt(Number(e.target.value) || 0);
+  function setAmountOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setAmount(Number(e.target.value) || 0);
   }
   function setModeOnChange(e: ChangeEvent<HTMLSelectElement>) {
     return setMode(e.target.value as PayMode);

@@ -8,7 +8,7 @@ import {
   type Batch,
   type InvProduct,
 } from "@/utils";
-import type { PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosLine } from "@/store/slices/billing.slice";
 
 export type BillingLineView = {
   product: InvProduct;

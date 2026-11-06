@@ -3,12 +3,15 @@ import { ReportHub } from "@/screens/Reports/components/ReportHub";
 import { ReportDetail } from "@/screens/Reports/components/ReportDetail";
 import { AnalyticsDashboard } from "@/screens/Reports/components/AnalyticsDashboard";
 import { useState, useEffect } from "react";
-import { usePharma } from "@/hooks";
+import { setReportTarget } from "@/store/actions/feedback.actions";
+import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
 import { reportById } from "@/utils/calculations/reportCatalog";
 type Tab = "overview" | "sales" | "products" | "accounts";
 // ════════════════════════ REPORTS (hub → detail / analytics) ════════════════════════
 export default function ReportsScreen() {
-  const { reportTarget, setReportTarget, registerBack } = usePharma();
+  const dispatch = useAppDispatch();
+  const reportTarget = useAppSelector((state) => state.reports.reportTarget);
+  const { registerBack } = usePharmacyNav();
   const initial = reportTarget && reportById(reportTarget);
   const [view, setView] = useState<
     | {
@@ -30,7 +33,7 @@ export default function ReportsScreen() {
       : { kind: "hub" },
   );
   useEffect(() => {
-    if (reportTarget) setReportTarget(null);
+    if (reportTarget) dispatch(setReportTarget(null));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // let the global Back button close a report sub-view before it pops the route
   useEffect(() => {

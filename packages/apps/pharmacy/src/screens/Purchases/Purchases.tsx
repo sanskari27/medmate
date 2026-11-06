@@ -38,7 +38,8 @@ import {
 } from "./purchaseChrome";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState, useRef } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { receivePurchase } from "@/store/thunks/purchases.thunk";
 import {
   CATEGORIES,
   inr,
@@ -79,15 +80,19 @@ const FORMS: DosageForm[] = [
 const SCHEDS: Schedule[] = ["OTC", "H", "H1", "X"];
 const GSTS = [0, 5, 12, 18];
 export default function PurchasesScreen() {
-  const { purchases, now } = usePharma();
+  const purchases = useAppSelector((state) => state.purchases.purchases);
+  const now = useAppSelector((state) => state.ui.now);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<Purchase | null>(null);
   const monthStart = new Date(now);
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
   const monthly = purchases.filter((p) => p.createdAt >= monthStart.getTime());
-  const monthValue = monthly.reduce((a, p) => a + purchaseTotals(p.items).total, 0);
-  const monthGst = monthly.reduce((a, p) => a + purchaseTotals(p.items).gst, 0);
+  const monthValue = monthly.reduce(
+    (sum, purchase) => sum + purchaseTotals(purchase.items).total,
+    0,
+  );
+  const monthGst = monthly.reduce((sum, purchase) => sum + purchaseTotals(purchase.items).gst, 0);
   return (
     <Box className="!mx-auto !max-w-[1680px]">
       <Box className={grnGridClass}>
@@ -217,26 +222,29 @@ export default function PurchasesScreen() {
 }
 // ── new purchase entry ──────────────────────────────────────────
 function PurchaseModal({ onClose }: { onClose: () => void }) {
-  const { inventory, suppliers, receivePurchase, go } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id ?? "");
   const [invoiceNo, setInvoiceNo] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("2026-06-19");
   const [lines, setLines] = useState<PurchaseItem[]>([blankPurchaseItem()]);
   const [csv, setCsv] = useState<CsvParseResult | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const onCsv = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      const res = parsePurchaseCsv(String(r.result), inventory);
-      if (res.items.length) {
-        setLines(res.items);
-        setCsv(res);
-      } else setCsv(res);
+  const onCsv = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const parsed = parsePurchaseCsv(String(reader.result), inventory);
+      if (parsed.items.length) {
+        setLines(parsed.items);
+        setCsv(parsed);
+      } else setCsv(parsed);
     };
-    r.readAsText(f);
-    e.target.value = "";
+    reader.readAsText(file);
+    event.target.value = "";
   };
   const update = (i: number, patch: Partial<PurchaseItem>) =>
     setLines((l) => l.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -267,14 +275,16 @@ function PurchaseModal({ onClose }: { onClose: () => void }) {
       (x) => x.qty + (x.freeQty || 0) > 0 && x.batchNo.trim() && (x.productId || x.name.trim()),
     );
   const save = async () => {
-    const res = await receivePurchase({
-      supplierId,
-      supplierName: supplier?.name ?? "Distributor",
-      invoiceNo,
-      invoiceDate,
-      items: lines,
-    });
-    if (res) {
+    const result = await confirm(
+      receivePurchase({
+        supplierId,
+        supplierName: supplier?.name ?? "Distributor",
+        invoiceNo,
+        invoiceDate,
+        items: lines,
+      }),
+    );
+    if ("data" in result) {
       onClose();
       go("inventory");
     }

@@ -16,7 +16,8 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { KhataModal } from "@/screens/Khata/components/KhataModal";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { recordCreditPayment } from "@/store/thunks/customers.thunk";
 import {
   inr,
   fmtDateTime,
@@ -48,9 +49,18 @@ const BUCKET_TONE: Record<string, string> = {
   d60p: "var(--color-rose)",
 };
 export default function KhataScreen() {
-  const { sales, creditPayments, recordCreditPayment, profile, now, go } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const creditPayments = useAppSelector((state) => state.customers.creditPayments);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  async function saveCreditPayment(payment: Parameters<typeof recordCreditPayment>[0]) {
+    const result = await confirm(recordCreditPayment(payment));
+    return "fault" in result ? result.fault : null;
+  }
   const [tab, setTab] = useState<"dues" | "history">("dues");
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState<CreditCustomer | null>(null);
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [sort, setSort] = useState<"out" | "age">("out");
@@ -61,10 +71,10 @@ export default function KhataScreen() {
     [due, sales, creditPayments, now],
   );
   const outstanding = totalCreditOutstanding(sales, creditPayments);
-  const given = rows.reduce((a, r) => a + r.given, 0);
-  const repaid = rows.reduce((a, r) => a + r.repaid, 0);
-  const overdue = due.filter((r) => agingByKey.get(r.key)?.overdue);
-  const overdueAmt = overdue.reduce((a, r) => a + r.outstanding, 0);
+  const given = rows.reduce((sum, row) => sum + row.given, 0);
+  const repaid = rows.reduce((sum, row) => sum + row.repaid, 0);
+  const overdue = due.filter((row) => agingByKey.get(row.key)?.overdue);
+  const overdueAmount = overdue.reduce((sum, row) => sum + row.outstanding, 0);
   const buckets = useMemo(
     () => creditAgingBuckets(due, sales, creditPayments, now),
     [due, sales, creditPayments, now],
@@ -77,23 +87,26 @@ export default function KhataScreen() {
   }, [now]);
   const collectedMonth = creditPayments
     .filter((p) => p.at >= monthStart)
-    .reduce((a, p) => a + p.amount, 0);
+    .reduce((sum, payment) => sum + payment.amount, 0);
   const avgOut = due.length ? outstanding / due.length : 0;
   const collectionRate = given > 0 ? Math.round((repaid / given) * 100) : 0;
-  const history = useMemo(() => [...creditPayments].sort((a, b) => b.at - a.at), [creditPayments]);
+  const history = useMemo(
+    () => [...creditPayments].sort((left, right) => right.at - left.at),
+    [creditPayments],
+  );
   const filteredDue = useMemo(() => {
     let l = due.filter(
       (r) =>
         (!overdueOnly || agingByKey.get(r.key)?.overdue) &&
-        (!q || `${r.name} ${r.phone}`.toLowerCase().includes(q.toLowerCase())),
+        (!searchQuery || `${r.name} ${r.phone}`.toLowerCase().includes(searchQuery.toLowerCase())),
     );
-    l = [...l].sort((a, b) =>
+    l = [...l].sort((left, right) =>
       sort === "age"
-        ? (agingByKey.get(b.key)?.ageDays ?? 0) - (agingByKey.get(a.key)?.ageDays ?? 0)
-        : b.outstanding - a.outstanding,
+        ? (agingByKey.get(right.key)?.ageDays ?? 0) - (agingByKey.get(left.key)?.ageDays ?? 0)
+        : right.outstanding - left.outstanding,
     );
     return l;
-  }, [due, overdueOnly, q, sort, agingByKey]);
+  }, [due, overdueOnly, searchQuery, sort, agingByKey]);
   const goDues = (od: boolean) => {
     setTab("dues");
     setOverdueOnly(od);
@@ -158,10 +171,10 @@ export default function KhataScreen() {
           <Box
             className={cn(
               "!mt-[3px] !mb-2.5 !font-display !text-[26px] !font-extrabold !tracking-tight !text-dark !tabular-nums",
-              overdueAmt > 0 && "!text-rose",
+              overdueAmount > 0 && "!text-rose",
             )}
           >
-            {inr(overdueAmt)}
+            {inr(overdueAmount)}
           </Box>
           <Box className="mt-auto block border-t border-line pt-[9px] text-xs text-muted">
             {overdue.length} account{overdue.length !== 1 ? "s" : ""} to chase
@@ -303,7 +316,11 @@ export default function KhataScreen() {
               <Text className="!text-green" as="span">
                 <IconSearch size={17} />
               </Text>
-              <Input placeholder="Search customer or phone…" value={q} onChange={setQOnChange} />
+              <Input
+                placeholder="Search customer or phone…"
+                value={searchQuery}
+                onChange={setSearchQueryOnChange}
+              />
             </Box>
           </>
         )}
@@ -428,7 +445,7 @@ export default function KhataScreen() {
           onClose={setOpenOnClose}
           sales={sales}
           creditPayments={creditPayments}
-          recordCreditPayment={recordCreditPayment}
+          recordCreditPayment={saveCreditPayment}
           profile={profile}
           now={now}
           go={go}
@@ -500,8 +517,8 @@ export default function KhataScreen() {
   function setSortOnClick2() {
     return setSort("age");
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function goOnClick() {
     return go("pos");

@@ -2,7 +2,9 @@ import type { IndentItem, WardIndent } from "@/utils";
 import { Box, Button, Heading, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { setBillIndentTarget, pushRoute } from "@/store/actions/feedback.actions";
+import { setIndentStatus } from "@/store/thunks/hospital.thunk";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { fmtDateTime, inr } from "@/utils";
 import { IndentStatus } from "@/utils/calculations/hospital";
 import { reasonMeta } from "@/utils/calculations/hospitalAccount";
@@ -22,7 +24,10 @@ const LABEL: Record<IndentStatus, string> = {
 };
 const FILTERS: ("all" | IndentStatus)[] = ["all", "pending", "approved", "issued", "rejected"];
 export default function IndentsScreen() {
-  const { wardIndents, setIndentStatus, wardSupplies, openIndentBilling } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const wardIndents = useAppSelector((state) => state.hospital.wardIndents);
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
   const supplyFor = (id: string) => wardSupplies.find((s) => s.indentId === id) ?? null;
   const [f, setF] = useState<"all" | IndentStatus>("all");
   const rows = useMemo(() => visibleIndents(wardIndents, f), [wardIndents, f]);
@@ -194,23 +199,27 @@ export default function IndentsScreen() {
         </Box>
       );
     }
+    function openIndentBilling(indentId: string) {
+      dispatch(setBillIndentTarget(indentId));
+      dispatch(pushRoute("hospbill"));
+    }
     function setIndentStatusOnClick() {
-      return setIndentStatus(ind.id, "approved");
+      void confirm(setIndentStatus({ id: ind.id, status: "approved" }), { kind: "edit" });
     }
     function setIndentStatusOnClick2() {
-      return setIndentStatus(ind.id, "rejected");
+      void confirm(setIndentStatus({ id: ind.id, status: "rejected" }), { kind: "edit" });
     }
     function openIndentBillingOnClick() {
-      return openIndentBilling(ind.id);
+      openIndentBilling(ind.id);
     }
     function openIndentBillingOnClick2() {
-      return openIndentBilling(ind.id);
+      openIndentBilling(ind.id);
     }
     function openIndentBillingOnClick3() {
-      return openIndentBilling(ind.id);
+      openIndentBilling(ind.id);
     }
     function setIndentStatusOnClick3() {
-      return setIndentStatus(ind.id, "pending");
+      void confirm(setIndentStatus({ id: ind.id, status: "pending" }), { kind: "edit" });
     }
   }
 }

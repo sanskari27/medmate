@@ -5,7 +5,7 @@ import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import { IconAlert, IconArrowRight, IconReceipt, IconX } from "@/components/atoms/Icon";
 import { inr } from "@/utils";
-import type { PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosLine } from "@/store/slices/billing.slice";
 import { billingLineKey, type BillingLineView } from "../../Billing.utils";
 import { CartLine } from "../CartLine";
 import type { CartPanelProps } from "./CartPanel.types";

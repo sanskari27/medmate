@@ -4,7 +4,9 @@ import { Box, Button, Heading, Input, Label, Select, Text } from "@/components/a
 import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { showToast } from "@/store/actions/feedback.actions";
+import { issueWardSupply, returnWardSupply } from "@/store/thunks/hospital.thunk";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { inr, mrpOf, stockOf, earliestBatch, findScan, hasLocation } from "@/utils";
 import {
   SUPPLY_REASONS,
@@ -18,16 +20,13 @@ import { QuantityStepper as QtyBox } from "@/components/molecules";
 import { useCreditPrice } from "@/screens/HospitalBilling/hooks/useCreditPrice";
 import { indentToRows } from "@/screens/HospitalBilling/utils/indentToRows";
 export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps) {
-  const {
-    inventory,
-    wards,
-    issueWardSupply,
-    returnWardSupply,
-    wardIndents,
-    profile,
-    hospitalAccount,
-    toast,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const wardIndents = useAppSelector((state) => state.hospital.wardIndents);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
   const cp = useCreditPrice();
   const stocked = inventory.filter((p) => stockOf(p) > 0);
   const openIndents = wardIndents.filter((i) => i.status === "pending" || i.status === "approved");
@@ -76,7 +75,7 @@ export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps
       ? "invoice"
       : "edit",
   );
-  const ward = wards.find((w) => w.id === wardId);
+  const ward = wards.find((candidate) => candidate.id === wardId);
   const pickIndent = (id: string) => {
     setIndentId(id);
     const ind = wardIndents.find((i) => i.id === id);
@@ -109,7 +108,7 @@ export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps
     }
     const hit = findScan(inventory, code);
     if (!hit) {
-      toast(`No match for “${code}”`);
+      dispatch(showToast(`No match for “${code}”`));
       setScan("");
       return;
     }
@@ -122,7 +121,7 @@ export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps
         batchNo: hit.batch?.batchNo ?? defBatch(hit.product.id),
       },
     ]);
-    toast(`${hit.product.name}${hit.batch ? " · Batch " + hit.batch.batchNo : ""}`);
+    dispatch(showToast(`${hit.product.name}${hit.batch ? " · Batch " + hit.batch.batchNo : ""}`));
     setScan("");
   };
   const total = rows.reduce((a, x) => a + x.qty * x.price, 0);
@@ -161,8 +160,11 @@ export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps
       refDoc: refDoc.trim() || indentId || undefined,
       indentId: mode === "issue" && indentId ? indentId : undefined,
     };
-    const res = mode === "return" ? await returnWardSupply(draft) : await issueWardSupply(draft);
-    if (res) onClose();
+    const result =
+      mode === "return"
+        ? await confirm(returnWardSupply(draft))
+        : await confirm(issueWardSupply(draft));
+    if ("data" in result) onClose();
     else setView("edit");
   };
   // invoice preview before sending to the hospital
@@ -440,8 +442,8 @@ export function SupplyModal({ mode, onClose, prefillIndentId }: SupplyModalProps
   function setWardIdOnChange(e: ChangeEvent<HTMLSelectElement>) {
     return setWardId(e.target.value);
   }
-  function renderWard(w: Ward) {
-    return { value: String(w.id), label: String(w.name) };
+  function renderWard(wardOption: Ward) {
+    return { value: String(wardOption.id), label: String(wardOption.name) };
   }
   function setRefDocOnChange(e: ChangeEvent<HTMLInputElement>) {
     return setRefDoc(e.target.value);

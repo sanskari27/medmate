@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { faultFrom } from "@/hooks/useConfirmedDispatch";
+import { addUser, toggleUser, updateUser } from "@/store/thunks/auth.thunk";
 import {
   ALL_PERM_KEYS,
   seatCeiling,
@@ -45,7 +47,11 @@ import { USER_ROLES } from "./Users.types";
 import { countActiveUsers, countUsersWithLogin, userHasFullAccess } from "./Users.utils";
 
 export default function UsersScreen() {
-  const { users, addUser, toggleUser, updateUser, subscription, extraSeats, profile } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const users = useAppSelector((state) => state.auth.users);
+  const subscription = useAppSelector((state) => state.auth.subscription);
+  const extraSeats = useAppSelector((state) => state.auth.extraSeats);
+  const profile = useAppSelector((state) => state.auth.profile);
   const [editing, setEditing] = useState<StaffUser | "new" | null>(null);
   const [share, setShare] = useState<StaffUser | null>(null);
   const [reveal, setReveal] = useState<Record<string, boolean>>({});
@@ -68,10 +74,18 @@ export default function UsersScreen() {
     setShare(null);
   }
 
+  function toggleUserActive(id: string) {
+    void confirm(toggleUser(id), { kind: "edit" });
+  }
+
+  function changeUser(id: string, patch: Partial<StaffUser>) {
+    void confirm(updateUser({ id, patch }), { kind: "edit" });
+  }
+
   async function handleSave(payload: Partial<StaffUser>, id?: string) {
     const error = id
-      ? await updateUser(id, payload)
-      : await addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">);
+      ? faultFrom(await confirm(updateUser({ id, patch: payload }), { kind: "edit" }))
+      : faultFrom(await confirm(addUser(payload as Omit<StaffUser, "id" | "lastActiveMins">)));
     if (!error) setEditing(null);
     return error;
   }
@@ -150,8 +164,8 @@ export default function UsersScreen() {
                 setReveal={setReveal}
                 onEdit={setEditing}
                 onShare={setShare}
-                onToggle={toggleUser}
-                onRole={updateUser}
+                onToggle={toggleUserActive}
+                onRole={changeUser}
               />
             </TableBody>
           </Table>

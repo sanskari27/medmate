@@ -3,28 +3,29 @@ import { Box, Button, Heading, Text } from "@/components/atoms";
 import { cn } from "@/utils/className";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { inr, waLink, smsLink } from "@/utils";
 import { IconX, IconAlert, IconWhatsApp, IconMail, IconCheck, IconCopy } from "@/components/atoms";
 import { fmtDay } from "@/utils/date";
 export function ReminderModal({ onClose, outstanding, aging }: ReminderModalProps) {
-  const { hospitalAccount: a, profile } = usePharma();
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const profile = useAppSelector((state) => state.auth.profile);
   const [copied, setCopied] = useState(false);
   const msg = [
-    `Dear ${a.name},`,
+    `Dear ${hospitalAccount.name},`,
     ``,
     `This is a payment reminder from ${profile.name}.`,
     `Outstanding on your credit account: ${inr(outstanding)}.`,
     ...(aging.overdue > 0
       ? [
-          `Overdue (past ${a.creditTerms}): ${inr(aging.overdue)}${aging.dueDate ? `, due ${fmtDay(aging.dueDate)}` : ""}.`,
+          `Overdue (past ${hospitalAccount.creditTerms}): ${inr(aging.overdue)}${aging.dueDate ? `, due ${fmtDay(aging.dueDate)}` : ""}.`,
         ]
       : []),
     ``,
     `Kindly arrange settlement at your earliest. Thank you.`,
   ].join("\n");
-  const phone = a.phone || "";
-  const mail = `mailto:${a.email || ""}?subject=${encodeURIComponent(`Payment reminder — ${inr(outstanding)} outstanding`)}&body=${encodeURIComponent(msg)}`;
+  const phone = hospitalAccount.phone || "";
+  const mail = `mailto:${hospitalAccount.email || ""}?subject=${encodeURIComponent(`Payment reminder — ${inr(outstanding)} outstanding`)}&body=${encodeURIComponent(msg)}`;
   return (
     <Box
       className="!fixed !inset-0 !z-[100] !flex !items-center !justify-center !bg-[rgba(13,32,21,0.5)] !p-6 !backdrop-blur-[3px] animate-[pd-fade_0.16s_ease] motion-reduce:animate-none max-[767px]:!items-end max-[767px]:!p-0"
@@ -79,7 +80,7 @@ export function ReminderModal({ onClose, outstanding, aging }: ReminderModalProp
                 as="span"
                 className="font-bold mt-px block font-display text-[15px] font-bold text-dark"
               >
-                {a.creditTerms}
+                {hospitalAccount.creditTerms}
               </Text>
             </Box>
           </Box>

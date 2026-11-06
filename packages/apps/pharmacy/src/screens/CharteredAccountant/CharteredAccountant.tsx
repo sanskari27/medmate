@@ -17,7 +17,9 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { faultFrom } from "@/hooks/useConfirmedDispatch";
+import { addAdvisor, shareWithCA, updateAdvisor } from "@/store/thunks/auth.thunk";
 import {
   CA_REPORT_TYPES,
   inr,
@@ -44,8 +46,12 @@ const TYPE_PILL: Record<AdvisorType, string> = {
   Accountant: "!bg-wash !text-mid",
 };
 export default function CAReportScreen() {
-  const { advisors, addAdvisor, updateAdvisor, caShares, shareWithCA, sales, purchases, profile } =
-    usePharma();
+  const confirm = useConfirmedDispatch();
+  const advisors = useAppSelector((state) => state.auth.advisors);
+  const caShares = useAppSelector((state) => state.auth.caShares);
+  const sales = useAppSelector((state) => state.sales.sales);
+  const purchases = useAppSelector((state) => state.purchases.purchases);
+  const profile = useAppSelector((state) => state.auth.profile);
   const [period, setPeriod] = useState(PERIODS[0]);
   const [picked, setPicked] = useState<string[]>(["gst", "sales", "pl"]);
   const [recipient, setRecipient] = useState(advisors[0]?.id ?? "");
@@ -292,7 +298,7 @@ export default function CAReportScreen() {
     }
   }
   function shareWithCAOnClick() {
-    return shareWithCA(period, picked, recipient);
+    void confirm(shareWithCA({ period, reports: picked, advisorId: recipient }));
   }
   function setEditOnClick() {
     return setEdit("CA");
@@ -373,9 +379,11 @@ export default function CAReportScreen() {
   function setEditOnClose() {
     return setEdit(null);
   }
-  async function updateAdvisorOnSave(a: Omit<Advisor, "id">, id: string | undefined) {
-    const err = id ? await updateAdvisor(id, a) : await addAdvisor(a);
-    if (!err) setEdit(null);
+  async function updateAdvisorOnSave(advisor: Omit<Advisor, "id">, id: string | undefined) {
+    const error = id
+      ? faultFrom(await confirm(updateAdvisor({ id, patch: advisor }), { kind: "edit" }))
+      : faultFrom(await confirm(addAdvisor(advisor)));
+    if (!error) setEdit(null);
   }
 }
 function AdvisorModal({

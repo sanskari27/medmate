@@ -28,7 +28,8 @@ import {
 } from "@/screens/Purchases/purchaseChrome";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { addSupply, setPreferredSupply, updateSupply } from "@/store/thunks/purchases.thunk";
 import {
   SupplyEntry,
   inr2,
@@ -44,11 +45,13 @@ import { Thumb } from "@/components/molecules";
 import { multiSourceCount } from "@/screens/Purchases/utils/multiSourceCount";
 import { SupplyModal } from "@/screens/Purchases/components/SupplyModal";
 export function SupplyList() {
-  const { supplyList, suppliers, inventory, addSupply, updateSupply, setPreferredSupply } =
-    usePharma();
+  const confirm = useConfirmedDispatch();
+  const supplyList = useAppSelector((state) => state.purchases.supplyList);
+  const suppliers = useAppSelector((state) => state.purchases.suppliers);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
   const [edit, setEdit] = useState<SupplyEntry | null>(null);
   const [adding, setAdding] = useState(false);
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [supFilter, setSupFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState<"all" | "medicine" | "device">("all");
   const prodOf = (id: string) => inventory.find((p) => p.id === id);
@@ -60,8 +63,8 @@ export function SupplyList() {
       if (supFilter !== "all" && e.supplierId !== supFilter) return false;
       if (typeFilter === "device" && !isDevice(p)) return false;
       if (typeFilter === "medicine" && isDevice(p)) return false;
-      if (q.trim()) {
-        const t = q.toLowerCase();
+      if (searchQuery.trim()) {
+        const t = searchQuery.toLowerCase();
         if (
           ![p.name, p.composition, p.manufacturer, supOf(e.supplierId)?.name]
             .filter(Boolean)
@@ -71,7 +74,9 @@ export function SupplyList() {
       }
       return true;
     })
-    .sort((a, b) => prodOf(a.productId)!.name.localeCompare(prodOf(b.productId)!.name));
+    .sort((left, right) =>
+      prodOf(left.productId)!.name.localeCompare(prodOf(right.productId)!.name),
+    );
   const deviceCount = supplyList.filter((e) => {
     const p = prodOf(e.productId);
     return p && isDevice(p);
@@ -130,8 +135,8 @@ export function SupplyList() {
         />
         <Input
           placeholder="Search medicine / device…"
-          value={q}
-          onChange={setQOnChange}
+          value={searchQuery}
+          onChange={setSearchQueryOnChange}
           className={cn(toolbarControlClass, "!max-w-[220px]")}
         />
         <Button onClick={setAddingOnClick}>
@@ -196,8 +201,8 @@ export function SupplyList() {
   function renderSupplier(s: Supplier) {
     return { value: String(s.id), label: String(s.name) };
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function setAddingOnClick() {
     return setAdding(true);
@@ -317,7 +322,7 @@ export function SupplyList() {
       return x.productId === e.productId;
     }
     function setPreferredSupplyOnClick() {
-      return setPreferredSupply(e.id);
+      void confirm(setPreferredSupply(e.id));
     }
     function setEditOnClick() {
       return setEdit(e);
@@ -328,8 +333,10 @@ export function SupplyList() {
     setEdit(null);
   }
   async function updateSupplyOnSave(data: Omit<SupplyEntry, "id">) {
-    const err = edit ? await updateSupply(edit.id, data) : await addSupply(data);
-    if (!err) {
+    const result = edit
+      ? await confirm(updateSupply({ id: edit.id, patch: data }), { kind: "edit" })
+      : await confirm(addSupply(data));
+    if ("data" in result) {
       setAdding(false);
       setEdit(null);
     }

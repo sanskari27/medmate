@@ -16,7 +16,9 @@ import { saleTotal } from "@/screens/Dashboard/utils/saleTotal";
 import { Spark } from "@/components/molecules/Sparkline";
 import { SalesAnalytics } from "@/screens/Dashboard/components/SalesAnalytics";
 import { useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
+import { setInvFilter } from "@/store/actions/feedback.actions";
+import { selectIsHospital } from "@/store/selectors/auth.selector";
 import {
   inr,
   isLowStock,
@@ -51,10 +53,16 @@ import {
 import { monogramOf } from "@/components/molecules";
 const DAY_MS = 86400000;
 export default function DashboardScreen() {
-  const { sales, inventory, prescriptions, now, go, setInvFilter, isHospital, profile } =
-    usePharma();
+  const dispatch = useAppDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const now = useAppSelector((state) => state.ui.now);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const isHospital = useAppSelector(selectIsHospital);
   const openAlerts = () => {
-    setInvFilter("alerts");
+    dispatch(setInvFilter("alerts"));
     go("inventory");
   };
   function kpiKey(fn: () => void) {

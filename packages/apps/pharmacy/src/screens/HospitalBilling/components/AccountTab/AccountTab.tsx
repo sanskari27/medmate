@@ -18,7 +18,8 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent } from "react";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { updateHospitalAccount } from "@/store/thunks/hospital.thunk";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
 import { inr, fmtDateTime } from "@/utils";
 import {
   CreditTerms,
@@ -48,27 +49,26 @@ const LINE_FILTERS: {
   { k: "payment", label: "Payments" },
 ];
 export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
-  const {
-    hospitalAccount: a,
-    updateHospitalAccount,
-    wardSupplies,
-    hospitalPayments,
-    profile,
-    now,
-  } = usePharma();
-  const limit = a.creditLimit || 0;
+  const confirm = useConfirmedDispatch();
+  const hospitalAccount = useAppSelector((state) => state.hospital.hospitalAccount);
+  const wardSupplies = useAppSelector((state) => state.hospital.wardSupplies);
+  const hospitalPayments = useAppSelector((state) => state.hospital.hospitalPayments);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  const limit = hospitalAccount.creditLimit || 0;
   const util = limit > 0 ? Math.min(100, Math.round((outstanding / limit) * 100)) : 0;
   const lines = useMemo(
     () => buildStatement(wardSupplies, hospitalPayments),
     [wardSupplies, hospitalPayments],
   );
-  const dueDays = termDays(a.creditTerms);
+  const dueDays = termDays(hospitalAccount.creditTerms);
   // standard date-range filter (+ entry-type filter) over the statement
   const period = useDateRange(now, "last-365");
-  const [tf, setTf] = useState<LineType>("all");
+  const [typeFilter, setTypeFilter] = useState<LineType>("all");
   const shown = useMemo(
-    () => lines.filter((l) => period.inWindow(l.at) && (tf === "all" || l.type === tf)),
-    [lines, period, tf],
+    () =>
+      lines.filter((l) => period.inWindow(l.at) && (typeFilter === "all" || l.type === typeFilter)),
+    [lines, period, typeFilter],
   );
   const prior = lines.filter((l) => !period.inWindow(l.at) && l.at < (shown[0]?.at ?? Infinity));
   const opening = prior.length ? prior[prior.length - 1].balance : 0;
@@ -81,7 +81,7 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
       fmtDateTime(l.at),
       l.ref,
       l.label,
-      a.flagRefills && l.patientId ? `${l.patientId} ${l.patientName ?? ""}` : "",
+      hospitalAccount.flagRefills && l.patientId ? `${l.patientId} ${l.patientName ?? ""}` : "",
       l.debit || "",
       l.credit || "",
       l.balance,
@@ -107,13 +107,13 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
       `${pad("Opening balance", 57)}${("Rs " + Math.round(opening)).padStart(11)}`,
       ...shown.map(
         (l) =>
-          `${pad(fmtDateTime(l.at), 17)} ${pad(l.ref, 9)} ${pad(l.label + (a.flagRefills && l.patientId ? ` [${l.patientId}]` : ""), 30)} ${(l.debit ? "Rs " + Math.round(l.debit) : "").padStart(10)} ${(l.credit ? "Rs " + Math.round(l.credit) : "").padStart(10)} ${("Rs " + Math.round(l.balance)).padStart(11)}`,
+          `${pad(fmtDateTime(l.at), 17)} ${pad(l.ref, 9)} ${pad(l.label + (hospitalAccount.flagRefills && l.patientId ? ` [${l.patientId}]` : ""), 30)} ${(l.debit ? "Rs " + Math.round(l.debit) : "").padStart(10)} ${(l.credit ? "Rs " + Math.round(l.credit) : "").padStart(10)} ${("Rs " + Math.round(l.balance)).padStart(11)}`,
       ),
     ];
     download(
       buildReportPdf({
         title: "Hospital Credit Statement",
-        subtitle: `${a.name} · ${period.label}${tf !== "all" ? " · " + LINE_FILTERS.find((x) => x.k === tf)!.label : ""} · terms ${a.creditTerms}`,
+        subtitle: `${hospitalAccount.name} · ${period.label}${typeFilter !== "all" ? " · " + LINE_FILTERS.find((x) => x.k === typeFilter)!.label : ""} · terms ${hospitalAccount.creditTerms}`,
         generatedAt: fmtDateTime(now),
         profile,
         headerLine,
@@ -132,7 +132,11 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
         <Box className="!grid !grid-cols-2 !gap-3.5 max-[767px]:!grid-cols-1">
           <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
             <Label>Hospital / institution name</Label>
-            <Input className="" value={a.name} onChange={updateHospitalAccountOnChange} />
+            <Input
+              className=""
+              value={hospitalAccount.name}
+              onChange={updateHospitalAccountOnChange}
+            />
           </Box>
           <Box
             className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2"
@@ -141,13 +145,17 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
             <Label>GSTIN</Label>
             <Input
               className="!font-mono"
-              value={a.gstin}
+              value={hospitalAccount.gstin}
               onChange={updateHospitalAccountOnChange2}
             />
           </Box>
           <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
             <Label>Stores contact</Label>
-            <Input className="" value={a.contact} onChange={updateHospitalAccountOnChange3} />
+            <Input
+              className=""
+              value={hospitalAccount.contact}
+              onChange={updateHospitalAccountOnChange3}
+            />
           </Box>
           <Box
             className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2"
@@ -156,20 +164,24 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
             <Label>Billing phone</Label>
             <Input
               className=""
-              value={a.phone ?? ""}
+              value={hospitalAccount.phone ?? ""}
               onChange={updateHospitalAccountOnChange4}
               placeholder="+91 "
             />
           </Box>
           <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
             <Label>Billing email</Label>
-            <Input className="" value={a.email ?? ""} onChange={updateHospitalAccountOnChange5} />
+            <Input
+              className=""
+              value={hospitalAccount.email ?? ""}
+              onChange={updateHospitalAccountOnChange5}
+            />
           </Box>
           <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2">
             <Label>Credit terms</Label>
             <Select
               className=""
-              value={a.creditTerms}
+              value={hospitalAccount.creditTerms}
               onChange={updateHospitalAccountOnChange6}
               options={[...CREDIT_TERMS.map(renderCREDITTERMS)]}
             />
@@ -180,14 +192,14 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
               className=""
               type="number"
               min={0}
-              value={a.creditLimit}
+              value={hospitalAccount.creditLimit}
               onChange={updateHospitalAccountOnChange7}
             />
           </Box>
           <Box className="!flex !flex-col !gap-1.5 [&_label]:!text-[11.5px] [&_label]:!font-bold [&_label]:!tracking-wide [&_label]:!text-ink-2 !col-span-2 max-[767px]:!col-span-1">
             <Label>Institutional discount</Label>
             <Input
-              value={`${a.discountPct}% off MRP · managed in Price list`}
+              value={`${hospitalAccount.discountPct}% off MRP · managed in Price list`}
               readOnly
               className={cn("", "!bg-wash-2 !text-muted")}
             />
@@ -256,10 +268,10 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
           <Button
             className={cn(
               "!relative !h-[22px] !w-[38px] !shrink-0 !rounded-full !border-0 !bg-[#cddcd3] !p-0 !shadow-none after:!absolute after:!top-0.5 after:!left-0.5 after:!h-[18px] after:!w-[18px] after:!rounded-full after:!bg-white after:!shadow-[0_1px_3px_rgba(0,0,0,0.22)] after:!transition after:!content-['']",
-              a.flagRefills && "!bg-mid after:!translate-x-4",
+              hospitalAccount.flagRefills && "!bg-mid after:!translate-x-4",
             )}
             onClick={updateHospitalAccountOnClick}
-            aria-pressed={a.flagRefills}
+            aria-pressed={hospitalAccount.flagRefills}
           />
         </Box>
       </Box>
@@ -382,48 +394,54 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
     </Box>
   );
   function updateHospitalAccountOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ name: e.target.value });
+    void confirm(updateHospitalAccount({ name: e.target.value }), { kind: "edit" });
   }
   function updateHospitalAccountOnChange2(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ gstin: e.target.value.toUpperCase() });
+    void confirm(updateHospitalAccount({ gstin: e.target.value.toUpperCase() }), { kind: "edit" });
   }
   function updateHospitalAccountOnChange3(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ contact: e.target.value });
+    void confirm(updateHospitalAccount({ contact: e.target.value }), { kind: "edit" });
   }
   function updateHospitalAccountOnChange4(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ phone: e.target.value });
+    void confirm(updateHospitalAccount({ phone: e.target.value }), { kind: "edit" });
   }
   function updateHospitalAccountOnChange5(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ email: e.target.value });
+    void confirm(updateHospitalAccount({ email: e.target.value }), { kind: "edit" });
   }
   function updateHospitalAccountOnChange6(e: ChangeEvent<HTMLSelectElement>) {
-    return updateHospitalAccount({ creditTerms: e.target.value as CreditTerms });
+    void confirm(updateHospitalAccount({ creditTerms: e.target.value as CreditTerms }), {
+      kind: "edit",
+    });
   }
   function renderCREDITTERMS(t: CreditTerms) {
     return { value: String(t), label: String(t) };
   }
   function updateHospitalAccountOnChange7(e: ChangeEvent<HTMLInputElement>) {
-    return updateHospitalAccount({ creditLimit: Math.max(0, Number(e.target.value) || 0) });
+    void confirm(updateHospitalAccount({ creditLimit: Math.max(0, Number(e.target.value) || 0) }), {
+      kind: "edit",
+    });
   }
   function updateHospitalAccountOnClick() {
-    return updateHospitalAccount({ flagRefills: !a.flagRefills });
+    void confirm(updateHospitalAccount({ flagRefills: !hospitalAccount.flagRefills }), {
+      kind: "edit",
+    });
   }
   function renderLINEFILTERS(x: { k: LineType; label: string }) {
     return (
       <Button
         key={x.k}
         className={
-          tf === x.k
+          typeFilter === x.k
             ? "!border-0 !bg-paper !text-dark !shadow-sm !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"
             : "!border-0 !bg-transparent !text-muted !shadow-none !rounded-[6px] !px-[13px] !py-1.5 !text-[12.5px] !font-bold"
         }
-        onClick={setTfOnClick}
+        onClick={setTypeFilterOnClick}
       >
         {x.label}
       </Button>
     );
-    function setTfOnClick() {
-      return setTf(x.k);
+    function setTypeFilterOnClick() {
+      return setTypeFilter(x.k);
     }
   }
   function renderL(l: StatementLine, i: number) {
@@ -435,7 +453,7 @@ export function AccountTab({ outstanding, aging, onRemind }: AccountTabProps) {
         </TableCell>
         <TableCell>
           {l.label}
-          {a.flagRefills && l.patientId && (
+          {hospitalAccount.flagRefills && l.patientId && (
             <Box
               className={cn(
                 "!inline-flex !items-center !gap-1 !whitespace-nowrap !rounded-full !px-[9px] !py-[3px] !text-[11px] !font-bold !bg-teal-bg !text-teal",

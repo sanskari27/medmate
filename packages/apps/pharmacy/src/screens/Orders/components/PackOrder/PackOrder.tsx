@@ -1,5 +1,14 @@
 import { useEffect, useState, type ChangeEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { showToast } from "@/store/actions/feedback.actions";
+import {
+  advanceOrder,
+  handToRider,
+  pickPackLine,
+  scanPackLine,
+  sealPacket,
+  startPacking,
+} from "@/store/thunks/sales.thunk";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
 import { Heading } from "@/components/atoms/Heading";
@@ -55,18 +64,11 @@ const qtyBtn =
   "h-7 w-[26px] rounded-none border-0 bg-wash-2 px-0 text-[15px] font-extrabold text-mid shadow-none hover:bg-wash disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-0 disabled:bg-wash-2 disabled:text-mid disabled:opacity-40 disabled:shadow-none max-md:h-9 max-md:w-9";
 
 export default function PackOrder({ saleId, onClose }: PackOrderProps) {
-  const {
-    sales,
-    inventory,
-    profile,
-    startPacking,
-    scanPackLine,
-    pickPackLine,
-    sealPacket,
-    handToRider,
-    advanceOrder,
-    toast,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const profile = useAppSelector((state) => state.auth.profile);
   const sale =
     sales.find(function same(item) {
       return item.id === saleId;
@@ -76,7 +78,7 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
 
   useEffect(
     function beginPacking() {
-      startPacking(saleId);
+      void confirm(startPacking(saleId));
     },
     [saleId], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -115,8 +117,13 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
   async function doScan() {
     const code = scan.trim();
     if (!code) return;
-    const result = await scanPackLine(saleId, code);
-    if (result) toast(`${result.name} · batch ${result.batchNo} · ${result.scanned}/${result.qty}`);
+    const result = await confirm(scanPackLine({ id: saleId, code }), { quiet: true });
+    if ("data" in result) {
+      const scanned = result.data;
+      dispatch(
+        showToast(`${scanned.name} · batch ${scanned.batchNo} · ${scanned.scanned}/${scanned.qty}`),
+      );
+    }
     setScan("");
   }
   function addScan() {
@@ -131,17 +138,22 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
     event.stopPropagation();
   }
   function seal() {
-    sealPacket(saleId);
+    void confirm(sealPacket(saleId));
   }
   function handOver() {
-    handToRider(saleId, {
-      name: rider.name.trim(),
-      phone: rider.phone.trim() || undefined,
-      vehicle: rider.vehicle.trim() || undefined,
-    });
+    void confirm(
+      handToRider({
+        id: saleId,
+        rider: {
+          name: rider.name.trim(),
+          phone: rider.phone.trim() || undefined,
+          vehicle: rider.vehicle.trim() || undefined,
+        },
+      }),
+    );
   }
   function markDelivered() {
-    advanceOrder(saleId);
+    void confirm(advanceOrder(saleId));
   }
   function printPacket() {
     window.print();
@@ -152,7 +164,7 @@ export default function PackOrder({ saleId, onClose }: PackOrderProps) {
     });
   }
   function pick(productId: string, delta: number) {
-    pickPackLine(saleId, productId, delta);
+    void confirm(pickPackLine({ id: saleId, productId, delta }), { quiet: true });
   }
 
   if (!sale) return null;

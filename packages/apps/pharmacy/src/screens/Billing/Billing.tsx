@@ -1,6 +1,31 @@
 import { useEffect, useState, type ChangeEvent, type MouseEvent, type ReactNode } from "react";
-import { usePharma } from "@/hooks";
-import { CATEGORIES, inr, SALE_SOURCES, type InvProduct, type SaleSource } from "@/utils";
+import { showToast } from "@/store/actions/feedback.actions";
+import {
+  posAdd,
+  posClear,
+  posDec,
+  posRemove,
+  posSetBatch,
+  posSetQty,
+  setPosCustomer,
+  setPosDiscount,
+  setPosDiscountMode,
+  setPosInsurer,
+  setPosPatientId,
+  setPosPay,
+  setPosSource,
+  setPosWard,
+} from "@/store/slices/billing.slice";
+import { setLastInvoice } from "@/store/slices/sales.slice";
+import { selectIsHospital } from "@/store/selectors/auth.selector";
+import {
+  selectPosCount,
+  selectPosDiscountFlat,
+  selectPosTotals,
+} from "@/store/selectors/billing.selector";
+import { checkoutPos } from "@/store/thunks/billing.thunk";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { CATEGORIES, findScan, inr, SALE_SOURCES, type InvProduct, type SaleSource } from "@/utils";
 import { INSURERS } from "@/utils/calculations/hospital";
 import { Box } from "@/components/atoms/Box";
 import { Button } from "@/components/atoms/Button";
@@ -25,7 +50,7 @@ import {
 } from "@/components/atoms/Icon";
 import { Invoice } from "@/components/organisms";
 import { ShareSheet } from "@/components/organisms";
-import type { PosLine } from "@/store/slices/billing/billingSlice";
+import type { PosLine } from "@/store/slices/billing.slice";
 import { cn } from "@/utils/className";
 import {
   billingCheckoutGates,
@@ -56,44 +81,26 @@ const PAY_OPTS: PayOption[] = [
 ];
 
 export default function Billing() {
-  const {
-    inventory,
-    pos,
-    posAdd,
-    posDec,
-    posSetQty,
-    posRemove,
-    posClear,
-    posSetBatch,
-    scanToPos,
-    toast,
-    posCustomer,
-    setPosCustomer,
-    posDiscount,
-    setPosDiscount,
-    posDiscountMode,
-    setPosDiscountMode,
-    posDiscountFlat,
-    posPay,
-    setPosPay,
-    posTotals,
-    posCount,
-    checkoutPos,
-    lastInvoice,
-    setLastInvoice,
-    profile,
-    registerBack,
-    isHospital,
-    wards,
-    posSource,
-    setPosSource,
-    posWard,
-    setPosWard,
-    posInsurer,
-    setPosInsurer,
-    posPatientId,
-    setPosPatientId,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const { registerBack } = usePharmacyNav();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const pos = useAppSelector((state) => state.billing.pos);
+  const posCustomer = useAppSelector((state) => state.billing.posCustomer);
+  const posDiscount = useAppSelector((state) => state.billing.posDiscount);
+  const posDiscountMode = useAppSelector((state) => state.billing.posDiscountMode);
+  const posPay = useAppSelector((state) => state.billing.posPay);
+  const posSource = useAppSelector((state) => state.billing.posSource);
+  const posWard = useAppSelector((state) => state.billing.posWard);
+  const posInsurer = useAppSelector((state) => state.billing.posInsurer);
+  const posPatientId = useAppSelector((state) => state.billing.posPatientId);
+  const lastInvoice = useAppSelector((state) => state.sales.lastInvoice);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const wards = useAppSelector((state) => state.hospital.wards);
+  const isHospital = useAppSelector(selectIsHospital);
+  const posTotals = useAppSelector(selectPosTotals);
+  const posCount = useAppSelector(selectPosCount);
+  const posDiscountFlat = useAppSelector(selectPosDiscountFlat);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [share, setShare] = useState(false);
@@ -124,17 +131,24 @@ export default function Billing() {
   function submitScan() {
     const code = scan.trim();
     if (!code) return;
-    const hit = scanToPos(code);
-    toast(
-      hit ? `${hit.name}${hit.batchNo ? " · Batch " + hit.batchNo : ""}` : `No match for “${code}”`,
+    const hit = findScan(inventory, code);
+    if (hit) {
+      dispatch(posAdd({ id: hit.product.id, loose: false, batchNo: hit.batch?.batchNo }));
+    }
+    dispatch(
+      showToast(
+        hit
+          ? `${hit.product.name}${hit.batch?.batchNo ? " · Batch " + hit.batch.batchNo : ""}`
+          : `No match for “${code}”`,
+      ),
     );
     setScan("");
   }
   function addPack(productId: string) {
-    posAdd(productId);
+    dispatch(posAdd({ id: productId }));
   }
   function addLoose(productId: string) {
-    posAdd(productId, true);
+    dispatch(posAdd({ id: productId, loose: true }));
   }
   function packQty(productId: string) {
     return (
@@ -151,26 +165,26 @@ export default function Billing() {
     );
   }
   function setCustomerName(name: string) {
-    setPosCustomer({ name });
+    dispatch(setPosCustomer({ name }));
   }
   function setCustomerPhone(phone: string) {
-    setPosCustomer({ phone });
+    dispatch(setPosCustomer({ phone }));
   }
   function setCustomerDoctor(doctor: string) {
-    setPosCustomer({ doctor });
+    dispatch(setPosCustomer({ doctor }));
   }
   async function doCheckout() {
     if (!okToBill) return;
-    const err = await checkoutPos();
-    if (!err) setStep("cart");
+    const result = await confirm(checkoutPos());
+    if ("data" in result) setStep("cart");
   }
   async function doReception() {
     if (!rxOk || !wardOk || !insurerOk) return;
-    const err = await checkoutPos({ paid: false });
-    if (!err) setStep("cart");
+    const result = await confirm(checkoutPos({ paid: false }));
+    if ("data" in result) setStep("cart");
   }
   function closeInvoice() {
-    setLastInvoice(null);
+    dispatch(setLastInvoice(null));
   }
   function openShare() {
     setShare(true);
@@ -185,7 +199,43 @@ export default function Billing() {
     event.stopPropagation();
   }
   function changeInsurer(event: ChangeEvent<HTMLSelectElement>) {
-    setPosInsurer(event.target.value);
+    dispatch(setPosInsurer(event.target.value));
+  }
+  function clearCart() {
+    dispatch(posClear());
+  }
+  function decreaseLine(productId: string, loose?: boolean, batchNo?: string) {
+    dispatch(posDec({ id: productId, loose, batchNo }));
+  }
+  function increaseLine(productId: string, loose?: boolean, batchNo?: string) {
+    dispatch(posAdd({ id: productId, loose, batchNo }));
+  }
+  function setLineQuantity(productId: string, quantity: number, loose?: boolean, batchNo?: string) {
+    dispatch(posSetQty({ id: productId, qty: quantity, loose, batchNo }));
+  }
+  function removeLine(productId: string, loose?: boolean, batchNo?: string) {
+    dispatch(posRemove({ id: productId, loose, batchNo }));
+  }
+  function setLineBatch(productId: string, batchNo?: string, loose?: boolean) {
+    dispatch(posSetBatch({ id: productId, batchNo, loose }));
+  }
+  function changeSource(source: SaleSource) {
+    dispatch(setPosSource(source));
+  }
+  function changeWard(ward: string) {
+    dispatch(setPosWard(ward));
+  }
+  function changePatientId(patientId: string) {
+    dispatch(setPosPatientId(patientId));
+  }
+  function changeDiscount(value: number) {
+    dispatch(setPosDiscount(value));
+  }
+  function changeDiscountMode(mode: "flat" | "percent") {
+    dispatch(setPosDiscountMode(mode));
+  }
+  function changePay(mode: Parameters<typeof setPosPay>[0]) {
+    dispatch(setPosPay(mode));
   }
   function changeSearch(value: string) {
     setSearchQuery(value);
@@ -294,14 +344,14 @@ export default function Billing() {
             payable={posTotals.payable}
             canProceed={detailsOk}
             prescriptionReady={rxOk}
-            onClear={posClear}
+            onClear={clearCart}
             onProceed={showPay}
             lines={cartLines}
-            onDecrease={posDec}
-            onIncrease={posAdd}
-            onQuantity={posSetQty}
-            onRemove={posRemove}
-            onBatch={posSetBatch}
+            onDecrease={decreaseLine}
+            onIncrease={increaseLine}
+            onQuantity={setLineQuantity}
+            onRemove={removeLine}
+            onBatch={setLineBatch}
             customer={
               <CustomerBar
                 customer={posCustomer}
@@ -320,9 +370,9 @@ export default function Billing() {
                   ward={posWard}
                   wards={wards}
                   patientId={posPatientId}
-                  onSource={setPosSource}
-                  onWard={setPosWard}
-                  onPatientId={setPosPatientId}
+                  onSource={changeSource}
+                  onWard={changeWard}
+                  onPatientId={changePatientId}
                 />
               ) : null
             }
@@ -361,8 +411,8 @@ export default function Billing() {
                 discount={posDiscount}
                 discountMode={posDiscountMode}
                 discountAmount={posDiscountFlat}
-                onDiscount={setPosDiscount}
-                onDiscountMode={setPosDiscountMode}
+                onDiscount={changeDiscount}
+                onDiscountMode={changeDiscountMode}
               />
               <Box className="px-4 pt-3 pb-4">
                 <Text
@@ -371,7 +421,7 @@ export default function Billing() {
                 >
                   Payment method
                 </Text>
-                <PayModePicker options={payOpts} selected={posPay} onSelect={setPosPay} />
+                <PayModePicker options={payOpts} selected={posPay} onSelect={changePay} />
                 {isInsurance ? (
                   <Select
                     className={cn("mb-2.5", billingSelectClass)}

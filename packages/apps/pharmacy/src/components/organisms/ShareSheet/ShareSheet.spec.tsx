@@ -1,13 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { Provider } from "react-redux";
+import { describe, expect, it } from "vitest";
 import type { PharmacyProfile, Sale } from "@/utils";
+import { store } from "@/store";
 import ShareSheet from "./ShareSheet";
-
-vi.mock("@/hooks", () => ({
-  usePharma: () => ({
-    toast: () => undefined,
-  }),
-}));
 
 const profile = {
   name: "Sri Sai Medicals",
@@ -64,7 +60,11 @@ describe("ShareSheet", () => {
     function onClose() {
       return undefined;
     }
-    render(<ShareSheet sale={sale} profile={profile} onClose={onClose} />);
+    render(
+      <Provider store={store}>
+        <ShareSheet sale={sale} profile={profile} onClose={onClose} />
+      </Provider>,
+    );
     expect(screen.getByRole("heading", { name: "Share bill INV-9" })).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "WhatsApp Send bill link on WhatsApp" }),

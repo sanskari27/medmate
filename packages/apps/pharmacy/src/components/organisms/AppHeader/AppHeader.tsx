@@ -8,7 +8,7 @@ import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import { IconBell, IconChevronLeft, IconMenu, IconSearch } from "@/components/atoms/Icon";
 import { UpgradeChip } from "@/components/molecules/UpgradeChip";
-import { usePharma } from "@/hooks";
+import { useAppSelector, usePharmacyNav } from "@/hooks";
 import type { Route } from "@/types";
 import { canSeeRoute } from "@/utils";
 import { cn } from "@/utils/className";
@@ -54,7 +54,10 @@ const PAGE_META: Record<Route, { title: string; sub: string }> = {
 };
 
 export function AppHeader({ onMenu, className }: AppHeaderProps) {
-  const { route, go, back, canGoBack, prescriptions, subscription, me } = usePharma();
+  const { route, go, back, canGoBack } = usePharmacyNav();
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const subscription = useAppSelector((state) => state.auth.subscription);
+  const me = useAppSelector((state) => state.auth.me);
   const meta = PAGE_META[route];
   const pendingRx = prescriptions.filter(function pending(rx) {
     return rx.status === "pending";

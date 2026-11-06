@@ -7,7 +7,9 @@ import { MedicineDetailModal } from "@/screens/RackMap/components/MedicineDetail
 import { AssignLocations } from "@/screens/RackMap/components/AssignLocations";
 import { LabelSheet } from "@/screens/RackMap/components/LabelSheet";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { showToast } from "@/store/actions/feedback.actions";
+import { bulkAssignLocation, createRack, setProductLocation } from "@/store/thunks/inventory.thunk";
 import { hasLocation, groupByLocation, normalizeRack } from "@/utils";
 import {
   IconSearch,
@@ -22,8 +24,11 @@ import { unassignedProducts } from "./RackMap.utils";
 import { exportRackAuditCsv } from "@/utils/calculations/stockExport";
 type Tab = "map" | "assign";
 export default function RackMapScreen() {
-  const { inventory, racks, now, createRack, setProductLocation, bulkAssignLocation, toast } =
-    usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const racks = useAppSelector((state) => state.inventory.racks);
+  const now = useAppSelector((state) => state.ui.now);
   const [tab, setTab] = useState<Tab>("map");
   const [q, setQ] = useState("");
   const [labels, setLabels] = useState(false);
@@ -164,8 +169,8 @@ export default function RackMapScreen() {
         <AssignLocations
           inventory={inventory}
           q={q}
-          setProductLocation={setProductLocation}
-          bulkAssignLocation={bulkAssignLocation}
+          setProductLocation={saveProductLocation}
+          bulkAssignLocation={saveBulkLocation}
           toast={toast}
         />
       )}
@@ -195,6 +200,19 @@ export default function RackMapScreen() {
   function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
     return setQ(e.target.value);
   }
+  function toast(message: string) {
+    dispatch(showToast(message));
+  }
+  async function saveProductLocation(id: string, rack: string, rackAlt?: string) {
+    const result = await confirm(setProductLocation({ id, rack, rackAlt }), { kind: "edit" });
+    if ("data" in result) return null;
+    return result.fault;
+  }
+  async function saveBulkLocation(ids: string[], rack: string) {
+    const result = await confirm(bulkAssignLocation({ ids, rack }));
+    if ("data" in result) return null;
+    return result.fault;
+  }
   function exportRackAuditCsvOnClick() {
     exportRackAuditCsv(inventory, now);
     toast("Rack & storage audit exported");
@@ -205,13 +223,14 @@ export default function RackMapScreen() {
   function setTabOnGoAssign() {
     return setTab("assign");
   }
-  async function createRackOnAction(c: string) {
-    const result = await createRack(c);
-    if (result === "added") {
-      toast(`Rack ${normalizeRack(c)} created`);
+  async function createRackOnAction(code: string) {
+    const result = await confirm(createRack(code));
+    if (!("data" in result)) return false;
+    if (result.data === "added") {
+      toast(`Rack ${normalizeRack(code)} created`);
       return true;
     }
-    if (result === "exists") toast("That rack already exists");
+    if (result.data === "exists") toast("That rack already exists");
     return false;
   }
   function setOpenRackOnOpen(c: string) {
@@ -231,12 +250,11 @@ export default function RackMapScreen() {
   }
   async function findOnAdd(id: string) {
     if (!detail) return;
-    const p = inventory.find(matchInventory);
-    if (!(await setProductLocation(id, detail.code)))
-      toast(`${p?.name ?? "Item"} → ${detail.code}`);
-    function matchInventory(x: InvProduct) {
-      return x.id === id;
-    }
+    const product = inventory.find(function matchInventory(item: InvProduct) {
+      return item.id === id;
+    });
+    const saved = await saveProductLocation(id, detail.code);
+    if (!saved) toast(`${product?.name ?? "Item"} → ${detail.code}`);
   }
   function toastOnRemoveItem() {
     toast("Records cannot be deleted");

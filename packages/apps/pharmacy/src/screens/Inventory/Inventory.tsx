@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { usePharma } from "@/hooks";
+import { setFormFault, setInvFilter, showToast } from "@/store/actions/feedback.actions";
+import {
+  importMedicines,
+  toggleLoose,
+  toggleOnline,
+  updateProduct,
+} from "@/store/thunks/inventory.thunk";
+import { faultOf } from "@/utils/validation";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
 import { Box } from "@/components/atoms/Box";
 import type { InvProduct, PharmacyProfile } from "@/utils";
 import { exportStockCsv, exportStockPdf } from "@/utils/calculations/stockExport";
@@ -19,21 +27,14 @@ import { ProductDetailModal } from "./components/ProductDetailModal";
 import { ProductModal } from "./components/ProductModal";
 
 export default function InventoryScreen() {
-  const {
-    inventory,
-    sales,
-    profile,
-    now,
-    toggleOnline,
-    toggleLoose,
-    updateProduct,
-    go,
-    invFilter,
-    setInvFilter,
-    importMedicines,
-    showFault,
-    toast,
-  } = usePharma();
+  const dispatch = useAppDispatch();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const inventory = useAppSelector((state) => state.inventory.inventory);
+  const sales = useAppSelector((state) => state.sales.sales);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  const invFilter = useAppSelector((state) => state.ui.invFilter);
   const [filter, setFilter] = useState<InventoryFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [edit, setEdit] = useState<InvProduct | null>(null);
@@ -43,10 +44,10 @@ export default function InventoryScreen() {
     function applyRequestedFilter() {
       if (invFilter && isInventoryFilter(invFilter)) {
         setFilter(invFilter);
-        setInvFilter(null);
+        dispatch(setInvFilter(null));
       }
     },
-    [invFilter, setInvFilter],
+    [dispatch, invFilter],
   );
 
   const list = filterInventoryProducts(inventory, filter, searchQuery, now);
@@ -77,8 +78,10 @@ export default function InventoryScreen() {
     setDetail(null);
   }
   async function saveProduct(product: InvProduct) {
-    const err = await updateProduct(product.id, product);
-    if (!err) setEdit(null);
+    const result = await confirm(updateProduct({ id: product.id, patch: product }), {
+      kind: "edit",
+    });
+    if ("data" in result) setEdit(null);
   }
   function exportExcel() {
     exportStockCsv(list, INVENTORY_FILTER_LABEL[filter], now);
@@ -96,11 +99,13 @@ export default function InventoryScreen() {
   async function finishImport(text: string) {
     const parsed = parseMedicineCsv(text);
     if (!parsed.products.length) {
-      showFault(parsed.errors[0] || "No medicines in that sheet");
+      dispatch(setFormFault(faultOf(new Error(parsed.errors[0] || "No medicines in that sheet"))));
       return;
     }
-    const result = await importMedicines(parsed.products);
-    if (result?.skipped.length) toast(`${result.skipped.length} already in the catalogue`);
+    const result = await confirm(importMedicines(parsed.products));
+    if ("data" in result && result.data.skipped.length) {
+      dispatch(showToast(`${result.data.skipped.length} already in the catalogue`));
+    }
   }
   function downloadSample() {
     downloadMedicineTemplate();
@@ -136,8 +141,8 @@ export default function InventoryScreen() {
         now={now}
         onOpen={openDetail}
         onEdit={openEdit}
-        onToggleLoose={toggleLoose}
-        onToggleOnline={toggleOnline}
+        onToggleLoose={(id) => void confirm(toggleLoose(id))}
+        onToggleOnline={(id) => void confirm(toggleOnline(id))}
         onGo={go}
       />
       {edit ? <ProductModal product={edit} onClose={closeEdit} onSave={saveProduct} /> : null}
@@ -148,8 +153,8 @@ export default function InventoryScreen() {
           now={now}
           onClose={closeDetail}
           onEdit={editFromDetail}
-          toggleOnline={toggleOnline}
-          toggleLoose={toggleLoose}
+          toggleOnline={(id) => void confirm(toggleOnline(id))}
+          toggleLoose={(id) => void confirm(toggleLoose(id))}
           go={go}
         />
       ) : null}

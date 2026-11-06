@@ -17,7 +17,9 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { redeemCoupon, requestPlan, toggleAutoRenew } from "@/store/thunks/auth.thunk";
+import { previewCoupon } from "@/store/thunks/master.thunk";
 import {
   PLANS,
   Plan,
@@ -31,7 +33,6 @@ import {
   GST_RATE,
   subscriptionLapsed,
 } from "@/utils";
-import { ApiError, api } from "@/services/api/apiClient";
 import { IconCheck, IconCrown, IconStar } from "@/components/atoms";
 import { subscriptionStatusLabel } from "./Subscription.utils";
 type CouponOffer = {
@@ -43,20 +44,22 @@ type CouponOffer = {
   renewsOn: string;
 };
 export default function SubscriptionScreen() {
-  const {
-    subscription,
-    subscriptionRequests,
-    couponRedeemed,
-    requestPlan,
-    redeemCoupon,
-    toggleAutoRenew,
-  } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const subscription = useAppSelector((state) => state.auth.subscription);
+  const subscriptionRequests = useAppSelector((state) => state.auth.subscriptionRequests);
+  const couponRedeemed = useAppSelector((state) => state.auth.couponRedeemed);
   const current = PLANS.find((p) => p.key === subscription.plan)!;
   const [cycle, setCycle] = useState<BillingCycle>(subscription.cycle);
   const curPrice = planPrice(current, subscription.cycle);
   const isFree = subscription.plan === "Essential";
   const lapsed = subscriptionLapsed(subscription);
   const statusLabel = subscriptionStatusLabel(lapsed, subscription.status);
+  function toggleRenewal() {
+    void confirm(toggleAutoRenew(), { kind: "edit" });
+  }
+  function redeem(code: string) {
+    return confirm(redeemCoupon(code));
+  }
   return (
     <Box className="!mx-auto !max-w-[1680px]">
       {/* status banner */}
@@ -142,7 +145,7 @@ export default function SubscriptionScreen() {
           <Switch
             checked={subscription.autoRenew}
             label="Auto-renew"
-            onClick={toggleAutoRenew}
+            onClick={toggleRenewal}
             className="origin-center scale-110"
           />
         </Box>
@@ -194,7 +197,7 @@ export default function SubscriptionScreen() {
       >
         {PLANS.map(renderPLANS)}
       </Box>
-      {!couponRedeemed && <CouponRedeem onRedeem={redeemCoupon} />}
+      {!couponRedeemed && <CouponRedeem onRedeem={redeem} />}
       <Text className={cn("!text-muted", "!text-[12.5px]")}>
         Online payment is not connected. A request goes to Namma MedMate, who assigns the plan.
       </Text>
@@ -323,7 +326,13 @@ export default function SubscriptionScreen() {
       );
     }
     function requestPlanOnClick() {
-      return requestPlan(p.key, free ? "monthly" : cycle, isCurrent ? "renewal" : "plan");
+      void confirm(
+        requestPlan({
+          plan: p.key,
+          cycle: free ? "monthly" : cycle,
+          kind: isCurrent ? "renewal" : "plan",
+        }),
+      );
     }
   }
   function renderSubscriptionRequest(request: SubRequest) {
@@ -339,6 +348,7 @@ export default function SubscriptionScreen() {
   }
 }
 function CouponRedeem({ onRedeem }: { onRedeem: (code: string) => Promise<unknown> }) {
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [offer, setOffer] = useState<CouponOffer | null>(null);
@@ -349,11 +359,9 @@ function CouponRedeem({ onRedeem }: { onRedeem: (code: string) => Promise<unknow
     setOffer(null);
     setBusy(true);
     try {
-      setOffer(
-        await api<CouponOffer>("/subscription/coupons/preview", { method: "POST", body: { code } }),
-      );
+      setOffer(await dispatch(previewCoupon(code)).unwrap());
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not check that code");
+      setError(typeof err === "string" ? err : "Could not check that code");
     } finally {
       setBusy(false);
     }

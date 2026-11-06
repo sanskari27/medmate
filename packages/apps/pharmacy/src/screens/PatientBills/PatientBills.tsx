@@ -15,7 +15,8 @@ import {
 import { cn } from "@/utils/className";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useState, useMemo } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch } from "@/hooks";
+import { settleBills } from "@/store/thunks/sales.thunk";
 import { inr, fmtDateTime, Sale, PayMode, PAY_LABEL, SALE_SOURCES, saleSourceOf } from "@/utils";
 import { billTotal } from "./PatientBills.utils";
 import { buildPatientLedger, PatientGroup } from "@/utils/calculations/hospital";
@@ -23,20 +24,27 @@ import { IconSearch, IconX, IconRupee, IconCheck } from "@/components/atoms";
 import { SaleSourceIcon } from "@/components/molecules";
 const SETTLE_MODES: PayMode[] = ["cash", "upi", "card", "insurance"];
 export default function PatientBillsScreen() {
-  const { sales, settleBills, profile, now } = usePharma();
+  const confirm = useConfirmedDispatch();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
+  function settlePatientBills(ids: string[], payMode: PayMode) {
+    void confirm(settleBills({ ids, payMode }));
+  }
   const [tab, setTab] = useState<"active" | "all">("active");
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [sel, setSel] = useState<string | null>(null);
   const groups = useMemo(() => buildPatientLedger(sales), [sales]);
   const shown = groups
     .filter((g) => tab === "all" || g.outstanding > 0)
     .filter(
       (g) =>
-        !q.trim() || `${g.patientId} ${g.name} ${g.ward}`.toLowerCase().includes(q.toLowerCase()),
+        !searchQuery.trim() ||
+        `${g.patientId} ${g.name} ${g.ward}`.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   const activeCount = groups.filter((g) => g.outstanding > 0).length;
-  const totalOutstanding = groups.reduce((a, g) => a + g.outstanding, 0);
-  const unsettledBills = groups.reduce((a, g) => a + g.unsettled, 0);
+  const totalOutstanding = groups.reduce((sum, group) => sum + group.outstanding, 0);
+  const unsettledBills = groups.reduce((sum, group) => sum + group.unsettled, 0);
   const current = groups.find((g) => g.key === sel) ?? null;
   return (
     <Box className="!mx-auto !max-w-[1680px]">
@@ -107,7 +115,11 @@ export default function PatientBillsScreen() {
           <Text className="!text-green" as="span">
             <IconSearch size={17} />
           </Text>
-          <Input placeholder="Patient ID, name, ward…" value={q} onChange={setQOnChange} />
+          <Input
+            placeholder="Patient ID, name, ward…"
+            value={searchQuery}
+            onChange={setSearchQueryOnChange}
+          />
         </Box>
       </Box>
 
@@ -124,7 +136,7 @@ export default function PatientBillsScreen() {
         <SettleModal
           g={current}
           onClose={setSelOnClose}
-          settleBills={settleBills}
+          settleBills={settlePatientBills}
           profileName={profile.name}
           now={now}
         />
@@ -137,8 +149,8 @@ export default function PatientBillsScreen() {
   function setTabOnClick2() {
     return setTab("all");
   }
-  function setQOnChange(e: ChangeEvent<HTMLInputElement>) {
-    return setQ(e.target.value);
+  function setSearchQueryOnChange(e: ChangeEvent<HTMLInputElement>) {
+    return setSearchQuery(e.target.value);
   }
   function renderShown(g: PatientGroup) {
     const so = SALE_SOURCES.find(matchSALESOURCES)!;

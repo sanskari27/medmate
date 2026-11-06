@@ -1,9 +1,15 @@
 import { Button, Stack, Text } from "@/components/atoms";
 import { Banner } from "@/components/molecules/Banner";
-import { usePharma } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { setLeaveOpen } from "@/store/actions/feedback.actions";
 
 export function SupportBanner() {
-  const { impersonator, profile, signOut } = usePharma();
+  const dispatch = useAppDispatch();
+  const impersonator = useAppSelector((state) => state.auth.impersonator);
+  const profile = useAppSelector((state) => state.auth.profile);
+  function signOut() {
+    dispatch(setLeaveOpen(true));
+  }
   if (!impersonator) return null;
   return (
     <Banner

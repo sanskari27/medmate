@@ -4,7 +4,8 @@ import { OrderDetail } from "@/screens/Orders/components/OrderDetail";
 export { matchRx, OrderDetail };
 
 import { useState } from "react";
-import { usePharma } from "@/hooks";
+import { useAppSelector, useConfirmedDispatch, usePharmacyNav } from "@/hooks";
+import { advanceOrder, cancelOrder, markPaid } from "@/store/thunks/sales.thunk";
 import { Box } from "@/components/atoms/Box";
 import { ShareSheet } from "@/components/organisms";
 import type { PayMode, Prescription, Sale } from "@/utils";
@@ -15,8 +16,12 @@ import { OrderTable } from "./components/OrderTable";
 import PackOrder from "./components/PackOrder";
 
 export default function OrdersScreen() {
-  const { sales, prescriptions, profile, advanceOrder, cancelOrder, markPaid, now, go } =
-    usePharma();
+  const confirm = useConfirmedDispatch();
+  const { go } = usePharmacyNav();
+  const sales = useAppSelector((state) => state.sales.sales);
+  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const profile = useAppSelector((state) => state.auth.profile);
+  const now = useAppSelector((state) => state.ui.now);
   const [filter, setFilter] = useState<OrderFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<Sale | null>(null);
@@ -48,14 +53,23 @@ export default function OrdersScreen() {
   function shareCurrent() {
     if (view) setShareSale(view);
   }
+  function advanceSale(id: string) {
+    void confirm(advanceOrder(id));
+  }
+  function cancelSale(id: string) {
+    void confirm(cancelOrder(id));
+  }
+  function markOrderPaid(id: string, payMode: PayMode) {
+    void confirm(markPaid({ id, payMode }));
+  }
   function advanceCurrent() {
-    if (view) advanceOrder(view.id);
+    if (view) advanceSale(view.id);
   }
   function cancelCurrent() {
-    if (view) cancelOrder(view.id);
+    if (view) cancelSale(view.id);
   }
   function markCurrent(mode: PayMode) {
-    if (view) markPaid(view.id, mode);
+    if (view) markOrderPaid(view.id, mode);
   }
   function openPrescriptions() {
     setView(null);
@@ -86,9 +100,9 @@ export default function OrdersScreen() {
         sales={list}
         now={now}
         onOpen={openOrder}
-        onMarkPaid={markPaid}
-        onAdvance={advanceOrder}
-        onCancel={cancelOrder}
+        onMarkPaid={markOrderPaid}
+        onAdvance={advanceSale}
+        onCancel={cancelSale}
         onPack={setPackId}
         onShare={setShareSale}
       />
