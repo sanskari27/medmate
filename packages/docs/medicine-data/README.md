@@ -11,7 +11,7 @@ The process applies those files on startup. They create the tables when missing 
 
 The container has no data volume and does not use the uploads prefix.
 
-`pg_trgm` is created by `ensure-database` when the database is provisioned. The GIN trigram indexes below depend on it.
+`pg_trgm` is created by `ensure-database`. Each deploy copies that script onto the instance and runs it before the container starts. The GIN trigram indexes below depend on it.
 
 Drug search indexes:
 

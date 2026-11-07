@@ -73,11 +73,16 @@ resource "terraform_data" "database" {
   triggers_replace = [
     var.database_name,
     var.instance_id,
+    filemd5("${path.module}/../../scripts/ensure-database.sh"),
   ]
 
   provisioner "local-exec" {
     command = <<-EOT
       bash "${path.module}/../../../../scripts/ssm-run.sh" ${var.instance_id} ${var.region} 180 <<'EOF'
+      set -euo pipefail
+      bucket="$(aws ssm get-parameter --region ${var.region} --name /medmate-repo/common/bucket --query Parameter.Value --output text)"
+      aws s3 cp "s3://$${bucket}/platform-scripts/ensure-database.sh" /opt/medmate/bin/ensure-database --region ${var.region}
+      chmod 755 /opt/medmate/bin/ensure-database
       /opt/medmate/bin/ensure-database ${var.name} ${var.database_name}
       EOF
     EOT

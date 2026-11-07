@@ -103,21 +103,26 @@ def deploy_container(project: dict) -> None:
     run(["docker", "push", image])
     instance_id = parameter("/medmate-repo/common/ec2_instance_id")
     hosts = ",".join(hosts_of(project))
-    remote = "\n".join([
+    database = project["resources"]["database"]
+    lines = [
         "set -euo pipefail",
         f"aws s3 cp s3://{BUCKET}/platform-scripts/deploy-app.sh /opt/medmate/bin/deploy-app --region {REGION}",
-        "chmod 755 /opt/medmate/bin/deploy-app",
-        " ".join([
-            "/opt/medmate/bin/deploy-app",
-            project["name"],
-            image,
-            str(runtime["port"]),
-            hosts,
-            runtime["healthPath"],
-            runtime["memory"],
-            runtime["cpus"],
-        ]),
-    ])
+        f"aws s3 cp s3://{BUCKET}/platform-scripts/ensure-database.sh /opt/medmate/bin/ensure-database --region {REGION}",
+        "chmod 755 /opt/medmate/bin/deploy-app /opt/medmate/bin/ensure-database",
+    ]
+    if database["enabled"]:
+        lines.append(f"/opt/medmate/bin/ensure-database {project['name']} {database['name']}")
+    lines.append(" ".join([
+        "/opt/medmate/bin/deploy-app",
+        project["name"],
+        image,
+        str(runtime["port"]),
+        hosts,
+        runtime["healthPath"],
+        runtime["memory"],
+        runtime["cpus"],
+    ]))
+    remote = "\n".join(lines)
     script = repo_root() / "scripts" / "ssm-run.sh"
     print(f"+ ssm deploy {project['name']}", flush=True)
     subprocess.run(

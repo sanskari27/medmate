@@ -14,7 +14,7 @@ React:
 Next.js, Node, and Java:
 
 1. Build the Dockerfile for `linux/amd64` and push it to the application's ECR repository.
-2. Ask the shared instance, through SSM, to pull that image and restart only that container.
+2. Ask the shared instance, through SSM, to pull that image and restart only that container. When the application has a database, the instance first copies the current `ensure-database` script and runs it.
 3. Caddy routes each hostname in `project.yaml` to the container. Certificates are issued on the instance after DNS points at the Elastic IP.
 
 Defaults when a block is omitted: npm, `npm ci`, `npm run build`, output `dist`, health path `/`, 512 MB, 0.5 CPU, database off, uploads off. Next.js and Node listen on port 3000 and Java on port 8080 unless `runtime.port` is set.
