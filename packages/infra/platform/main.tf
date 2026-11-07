@@ -31,6 +31,10 @@ data "aws_ssm_parameter" "al2023" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 }
 
+data "aws_kms_alias" "ssm" {
+  name = "alias/aws/ssm"
+}
+
 data "aws_route53_zone" "nammamedmate" {
   name         = "nammamedmate.com."
   private_zone = false
@@ -233,6 +237,17 @@ resource "aws_iam_role_policy" "ec2" {
         Effect   = "Allow"
         Action   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter"]
         Resource = "arn:aws:ssm:${var.aws_region}:${local.account_id}:parameter/medmate-repo/*"
+      },
+      {
+        Sid      = "DecryptSsmParameters"
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = data.aws_kms_alias.ssm.target_key_arn
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "ssm.${var.aws_region}.amazonaws.com"
+          }
+        }
       },
       {
         Sid    = "ApplicationSecrets"

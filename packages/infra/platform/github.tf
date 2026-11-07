@@ -107,6 +107,17 @@ resource "aws_iam_role_policy" "deploy" {
         Resource = "arn:aws:ssm:${var.aws_region}:${local.account_id}:parameter/medmate-repo/*"
       },
       {
+        Sid      = "DecryptSsmParameters"
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = data.aws_kms_alias.ssm.target_key_arn
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "ssm.${var.aws_region}.amazonaws.com"
+          }
+        }
+      },
+      {
         Sid    = "RestartContainers"
         Effect = "Allow"
         Action = ["ssm:SendCommand"]

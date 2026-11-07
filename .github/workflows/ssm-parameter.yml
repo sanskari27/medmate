@@ -1,0 +1,48 @@
+name: SSM parameter
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Application name, or common
+        required: true
+        type: string
+      name:
+        description: Parameter name (one path segment)
+        required: true
+        type: string
+      type:
+        description: Parameter type
+        required: true
+        type: choice
+        default: String
+        options:
+          - String
+          - SecureString
+      value:
+        description: Parameter value
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  put:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: ap-south-1
+      - name: Put SSM parameter
+        env:
+          SCOPE: ${{ inputs.scope }}
+          NAME: ${{ inputs.name }}
+          TYPE: ${{ inputs.type }}
+          VALUE: ${{ inputs.value }}
+        run: python3 scripts/put_ssm_parameter.py

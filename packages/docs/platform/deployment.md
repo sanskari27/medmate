@@ -55,3 +55,16 @@ gh variable set AWS_INFRA_ROLE_ARN --body "<infra_role_arn>"
 ```
 
 `.github/workflows/infra.yml` plans on pull requests and applies on `main`. `.github/workflows/deploy.yml` publishes changed applications after that Infra run has finished. An app-only push deploys immediately unless an Infra run is still applying.
+
+## SSM parameters
+
+Run **SSM parameter** from the Actions tab (`.github/workflows/ssm-parameter.yml`, `workflow_dispatch`). The run assumes `AWS_INFRA_ROLE_ARN` and writes `/medmate-repo/<scope>/<name>`.
+
+- `scope`: `common`, or an application name.
+- `name`: one path segment of letters, numbers, `.`, `_`, or `-`.
+- `type`: `String` or `SecureString`.
+- `value`: the parameter value. The run page shows this input.
+
+A rejected scope prints the scopes allowed for that checkout. `common` is always allowed. An application is allowed when `packages/apps/<name>/project.yaml` names that directory and `packages/infra/<name>` exists. Adding an application by the onboarding steps adds its scope on the next run.
+
+A later Infra apply overwrites the value when Terraform already manages that name, such as `/medmate-repo/common/bucket` or `/medmate-repo/<name>/ecr_repository`. `SecureString` uses the AWS-managed `alias/aws/ssm` key. The platform instance and the deploy role can read it after the platform stack that grants `kms:Decrypt` has been applied.
