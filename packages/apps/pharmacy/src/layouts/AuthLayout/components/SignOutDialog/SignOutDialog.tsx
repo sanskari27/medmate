@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Button } from "@/components/atoms";
 import { IconLogout } from "@/components/atoms/Icon";
-import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { ConfirmDialog, type ConfirmTone } from "@/components/molecules/ConfirmDialog";
+import type { ButtonVariant } from "@/components/atoms/Button";
 import type { SaveConfirmProps, SignOutDialogProps } from "./SignOutDialog.types";
 
 export function SignOutDialog({ onCancel, onConfirm }: SignOutDialogProps) {
@@ -24,15 +25,36 @@ export function SignOutDialog({ onCancel, onConfirm }: SignOutDialogProps) {
   );
 }
 
-export function SaveConfirm({ title, body, onCancel, onConfirm }: SaveConfirmProps) {
+const confirmVariant: Record<ConfirmTone, ButtonVariant> = {
+  positive: "primary",
+  caution: "gold",
+  danger: "rose",
+  info: "primary",
+};
+
+const infoButton = "!border-blue !bg-blue !text-white hover:!bg-[#1d4ed8]";
+
+export function SaveConfirm({
+  title,
+  body,
+  tone = "positive",
+  confirm = "Save",
+  onCancel,
+  onConfirm,
+}: SaveConfirmProps) {
   useDismissOnEscape(onCancel);
   return (
-    <ConfirmDialog title={title} body={body} onClose={onCancel} tone="positive">
+    <ConfirmDialog title={title} body={body} onClose={onCancel} tone={tone}>
       <Button variant="ghost" onClick={onCancel}>
         Cancel
       </Button>
-      <Button variant="primary" autoFocus onClick={onConfirm}>
-        Save
+      <Button
+        variant={confirmVariant[tone]}
+        className={tone === "info" ? infoButton : undefined}
+        autoFocus
+        onClick={onConfirm}
+      >
+        {confirm}
       </Button>
     </ConfirmDialog>
   );

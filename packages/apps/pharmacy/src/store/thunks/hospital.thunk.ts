@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@/store/createAsyncThunk";
 import type { Action, ThunkDispatch } from "@reduxjs/toolkit";
 import { hospitalService } from "@/services/api/endpoints/hospital";
 import type {

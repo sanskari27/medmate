@@ -7,6 +7,7 @@ import { loadSession, signOutRequest } from "@/store/thunks/auth.thunk";
 import { resetRoute } from "@/store/actions/feedback.actions";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import type { ConfirmPrompt } from "./confirmPrompt";
 import { SaveConfirmContext } from "./saveConfirm";
 
 export function PharmaProvider({ children }: { children: ReactNode }) {
@@ -17,24 +18,18 @@ export function PharmaProvider({ children }: { children: ReactNode }) {
   const quietRefresh = useAppSelector((state) => state.ui.quietRefresh);
   const toastMsg = useAppSelector((state) => state.ui.toastMsg);
   const leaveOpen = useAppSelector((state) => state.ui.leaveOpen);
-  const [saveAsk, setSaveAsk] = useState<{
-    title: string;
-    body: string;
-    resolve: (accepted: boolean) => void;
-  } | null>(null);
+  const [saveAsk, setSaveAsk] = useState<
+    (ConfirmPrompt & { resolve: (accepted: boolean) => void }) | null
+  >(null);
   const signedInRef = useRef(signedIn);
   const quietRef = useRef(quietRefresh);
   signedInRef.current = signedIn;
   quietRef.current = quietRefresh;
 
   const ask = useCallback(
-    (kind: "save" | "edit", copy?: { title: string; body: string }) =>
+    (prompt: ConfirmPrompt) =>
       new Promise<boolean>((resolve) => {
-        setSaveAsk({
-          title: copy?.title ?? (kind === "edit" ? "Save these changes?" : "Save this?"),
-          body: copy?.body ?? "Nothing already stored will be deleted.",
-          resolve,
-        });
+        setSaveAsk({ ...prompt, resolve });
       }),
     [],
   );
@@ -82,6 +77,8 @@ export function PharmaProvider({ children }: { children: ReactNode }) {
         <SaveConfirm
           title={saveAsk.title}
           body={saveAsk.body}
+          tone={saveAsk.tone}
+          confirm={saveAsk.confirm}
           onCancel={() => {
             saveAsk.resolve(false);
             setSaveAsk(null);

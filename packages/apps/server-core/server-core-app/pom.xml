@@ -9,6 +9,9 @@
     <version>1.0.0</version>
   </parent>
   <artifactId>server-core-app</artifactId>
+  <properties>
+    <spring-boot.run.skip>false</spring-boot.run.skip>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.medmate</groupId>

@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@/store/createAsyncThunk";
 import { ApiError } from "@/services/api/apiClient";
 import { masterService, subscriptionService } from "@/services/api/endpoints/master";
 import type {

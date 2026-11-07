@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SaveConfirm, SignOutDialog } from "./SignOutDialog";
 
@@ -19,6 +19,23 @@ describe("SignOutDialog", () => {
       />,
     );
     expect(screen.getByRole("dialog", { name: "Save this bill?" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save" })).toBeTruthy();
+  });
+
+  it("uses the action label and color", () => {
+    const view = render(
+      <SaveConfirm
+        title="Cancel this order?"
+        body="The order is marked cancelled."
+        tone="danger"
+        confirm="Cancel order"
+        onCancel={cancel}
+        onConfirm={confirm}
+      />,
+    );
+    const dialog = within(view.container);
+    expect(dialog.getByRole("dialog").getAttribute("data-tone")).toBe("danger");
+    expect(dialog.getByRole("button", { name: "Cancel order" })).toBeTruthy();
   });
 });
 

@@ -3,7 +3,7 @@ import { showToast } from "@/store/actions/feedback.actions";
 import { loadSession } from "@/store/thunks/auth.thunk";
 import { write } from "@/store/write";
 import type { InvProduct, PayMode, Prescription, Sale, SaleSource } from "@/utils";
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@/store/createAsyncThunk";
 
 type Gate = {
   auth: { signedIn: boolean };

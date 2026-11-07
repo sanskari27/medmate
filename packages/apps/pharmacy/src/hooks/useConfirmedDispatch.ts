@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import type { AsyncThunkAction } from "@reduxjs/toolkit";
+import { resolveConfirm, type ConfirmPrompt } from "@/app/providers/PharmaProvider/confirmPrompt";
 import { useSaveConfirm } from "@/app/providers/PharmaProvider/saveConfirm";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import type { SaveFault } from "@/utils";
@@ -9,7 +10,12 @@ type ConfirmOptions = {
   quiet?: boolean;
   confirmed?: boolean;
   kind?: "save" | "edit";
-  copy?: { title: string; body: string };
+  copy?: Partial<ConfirmPrompt>;
+};
+
+type TaggedThunk = {
+  typePrefix?: string;
+  arg?: unknown;
 };
 
 export function useConfirmedDispatch() {
@@ -17,11 +23,11 @@ export function useConfirmedDispatch() {
   const ask = useSaveConfirm();
   return useCallback(
     async function confirmDispatch<Result>(
-      action: AsyncThunkAction<Result, any, any>,
+      action: AsyncThunkAction<Result, any, any> & TaggedThunk,
       options?: ConfirmOptions,
     ): Promise<{ data: Result } | { fault: SaveFault }> {
       if (!options?.quiet && !options?.confirmed) {
-        const accepted = await ask(options?.kind ?? "save", options?.copy);
+        const accepted = await ask(resolveConfirm(action.typePrefix ?? "", action.arg, options));
         if (!accepted) return { fault: { message: "Save cancelled" } };
       }
       try {

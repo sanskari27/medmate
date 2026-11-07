@@ -1,1 +1,1 @@
-export type { ConfirmDialogProps } from "./ConfirmDialog";
+export type { ConfirmDialogProps, ConfirmTone } from "./ConfirmDialog";

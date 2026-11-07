@@ -1,13 +1,12 @@
 import { createContext, useContext } from "react";
+import type { ConfirmPrompt } from "./confirmPrompt";
 
-export type SavePrompt = {
-  title: string;
-  body: string;
+export type SavePrompt = ConfirmPrompt & {
   resolve: (accepted: boolean) => void;
 };
 
 export const SaveConfirmContext = createContext<{
-  ask: (kind: "save" | "edit", copy?: { title: string; body: string }) => Promise<boolean>;
+  ask: (prompt: ConfirmPrompt) => Promise<boolean>;
 } | null>(null);
 
 export function useSaveConfirm() {
