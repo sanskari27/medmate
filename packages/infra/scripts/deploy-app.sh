@@ -72,7 +72,13 @@ if [[ -n "${DB_SECRET:-}" && "$DB_SECRET" != "None" ]]; then
 data = json.loads(sys.argv[1])
 print("SPRING_DATASOURCE_URL=" + data["jdbcUrl"])
 print("SPRING_DATASOURCE_USERNAME=" + data["username"])
-print("SPRING_DATASOURCE_PASSWORD=" + data["password"])' "$JSON" >> "$ENV_FILE"
+print("SPRING_DATASOURCE_PASSWORD=" + data["password"])
+print("PGHOST=" + data["host"])
+print("PGPORT=" + str(data["port"]))
+print("PGDATABASE=" + data["dbname"])
+print("PGUSER=" + data["username"])
+print("PGPASSWORD=" + data["password"])
+print("PGSSLMODE=require")' "$JSON" >> "$ENV_FILE"
 fi
 
 RUNTIME="$(aws ssm get-parameter --region "$REGION" --name "/medmate-repo/${APP}/runtime_env" --query Parameter.Value --output text 2>/dev/null || echo '{}')"

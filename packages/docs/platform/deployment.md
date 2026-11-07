@@ -11,13 +11,13 @@ React:
 
 `quality` in `project.yaml` chooses the gates that must pass before that application is published. Each key is `true`. Leaving `quality` out publishes the application without those checks. React and Next.js accept `typecheck`, `lint`, `format`, and `test`. Java accepts `compile` (`mvn -B -DskipTests compile`), `test` (`mvn -B test`), and `verify` (`mvn -B verify`). `.github/workflows/quality.yml` runs those gates only for applications whose own files changed, and records `quality/<app>/<gate>`. Deploy reads those results. It does not compare the previous commit again. An application with no recorded results for that publish is published without waiting.
 
-Next.js and Java:
+Next.js, Node, and Java:
 
 1. Build the Dockerfile for `linux/amd64` and push it to the application's ECR repository.
 2. Ask the shared instance, through SSM, to pull that image and restart only that container.
 3. Caddy routes each hostname in `project.yaml` to the container. Certificates are issued on the instance after DNS points at the Elastic IP.
 
-Defaults when a block is omitted: npm, `npm ci`, `npm run build`, output `dist`, health path `/`, 512 MB, 0.5 CPU, database off, uploads off. Next.js listens on port 3000 and Java on port 8080 unless `runtime.port` is set.
+Defaults when a block is omitted: npm, `npm ci`, `npm run build`, output `dist`, health path `/`, 512 MB, 0.5 CPU, database off, uploads off. Next.js and Node listen on port 3000 and Java on port 8080 unless `runtime.port` is set.
 
 If the AWS CLI is signed in with `aws login`, Terraform does not see that session on its own. Point it at `scripts/aws-export.sh`:
 

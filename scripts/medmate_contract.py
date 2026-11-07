@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 ZONES = {"nammamedmate.com", "medmatepharmacy.com"}
-KINDS = {"react", "next", "java"}
+KINDS = {"react", "next", "node", "java"}
 PACKAGE_MANAGERS = {"npm", "pnpm", "yarn"}
 JAVA_VERSION = "21"
 # Gate name to the npm script package.json must define.
@@ -41,7 +41,7 @@ def quality_commands(kind: str) -> dict[str, str]:
             "test": "mvn -B test",
             "verify": "mvn -B verify",
         }
-    if kind in {"react", "next"}:
+    if kind in {"react", "next", "node"}:
         return {
             "typecheck": "npm run typecheck",
             "lint": "npm run lint",
@@ -99,7 +99,7 @@ def normalize(raw: dict, directory_name: str) -> dict:
     if name != directory_name or not isinstance(name, str) or not NAME_RE.match(str(name)):
         errors.append(f"{directory_name}: name must match the directory and {NAME_RE.pattern}")
     if kind not in KINDS:
-        errors.append(f"{directory_name}: kind must be react, next, or java")
+        errors.append(f"{directory_name}: kind must be react, next, node, or java")
 
     routing = _mapping(raw.get("routing"), f"{directory_name}.routing", errors)
     records_raw = routing.get("records")
@@ -179,9 +179,9 @@ def normalize(raw: dict, directory_name: str) -> dict:
         errors.append(f"{directory_name}: a React site cannot request a database or uploads")
 
     runtime = _mapping(raw.get("runtime"), f"{directory_name}.runtime", errors)
-    default_port = 3000 if kind == "next" else 8080
+    default_port = 3000 if kind in {"next", "node"} else 8080
     port = runtime.get("port", default_port)
-    if kind in {"next", "java"}:
+    if kind in {"next", "node", "java"}:
         if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
             errors.append(f"{directory_name}: runtime.port must be an integer from 1 to 65535")
     health_path = runtime.get("healthPath", "/")
@@ -189,7 +189,7 @@ def normalize(raw: dict, directory_name: str) -> dict:
         errors.append(f"{directory_name}: runtime.healthPath must start with /")
     memory = str(runtime.get("memory", "512m"))
     cpus = str(runtime.get("cpus", "0.5"))
-    if kind in {"next", "java"}:
+    if kind in {"next", "node", "java"}:
         if not MEMORY_RE.match(memory):
             errors.append(f"{directory_name}: runtime.memory must look like 512m")
         if not CPU_RE.match(cpus):
@@ -289,7 +289,7 @@ def load_projects(root: Path | None = None) -> list[dict]:
         project["path"] = app_dir
         for forbidden in _forbidden_infra(app_dir):
             project_errors.append(f"{forbidden}: application directories cannot contain infrastructure code")
-        if project["kind"] in {"next", "java"}:
+        if project["kind"] in {"next", "node", "java"}:
             dockerfile = (app_dir / project["build"]["dockerfile"]).resolve()
             context = (app_dir / project["build"]["context"]).resolve()
             if not dockerfile.is_file() or context not in dockerfile.parents and dockerfile.parent != context:
@@ -323,7 +323,7 @@ def _quality_tools(project: dict, app_dir: Path) -> list[str]:
     if not gates:
         return []
     kind = project.get("kind")
-    if kind in {"react", "next"}:
+    if kind in {"react", "next", "node"}:
         package_path = app_dir / "package.json"
         try:
             package = json.loads(package_path.read_text())

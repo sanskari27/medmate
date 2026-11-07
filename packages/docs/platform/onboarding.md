@@ -1,6 +1,6 @@
 # Onboard an application
 
-1. Add `packages/apps/<name>` with source and `project.yaml`. The directory name and `name` must match. `kind` is `react`, `next`, or `java`.
+1. Add `packages/apps/<name>` with source and `project.yaml`. The directory name and `name` must match. `kind` is `react`, `next`, `node`, or `java`.
 2. Request hosts only inside `nammamedmate.com` or `medmatepharmacy.com`. Apex names and subdomains are both allowed. The platform creates the records. It does not create a hosted zone.
 3. Add `packages/docs/<name>` from `packages/docs/_template`.
 4. Add `packages/infra/<name>` that reads `project.yaml` and calls `modules/static-site` or `modules/app-service`. Do not put Terraform, CDK, Pulumi, or CloudFormation in the application directory.

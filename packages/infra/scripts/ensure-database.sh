@@ -64,7 +64,8 @@ if [[ "$EXISTS" != "1" ]]; then
 fi
 
 psql "host=${ENDPOINT} port=${PORT} user=${MUSER} dbname=${DB_NAME} sslmode=require" -v ON_ERROR_STOP=1 \
-  -c "ALTER SCHEMA public OWNER TO ${APP_USER}; GRANT ALL ON SCHEMA public TO ${APP_USER};"
+  -c "ALTER SCHEMA public OWNER TO ${APP_USER}; GRANT ALL ON SCHEMA public TO ${APP_USER};" \
+  -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 if [[ "$CREATE_SECRET" == "1" ]]; then
   SECRET_JSON="$(python3 -c 'import json, sys
