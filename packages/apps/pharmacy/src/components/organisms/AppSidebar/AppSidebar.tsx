@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/atoms/Avatar";
-import { Button } from "@/components/atoms/Button";
 import { Stack } from "@/components/atoms/Stack";
 import { Text } from "@/components/atoms/Text";
 import {
@@ -166,7 +165,7 @@ function SidebarNav({
   });
 }
 
-export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebarProps) {
+export function AppSidebar({ open, onNavigate, className }: AppSidebarProps) {
   const dispatch = useAppDispatch();
   const { route, go } = usePharmacyNav();
   const auth = useAppSelector((state) => state.auth);
@@ -210,9 +209,6 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
   }
   function onSignOut() {
     signOut();
-  }
-  function onMasterClick() {
-    if (onMaster) onMaster();
   }
 
   return (
@@ -264,15 +260,6 @@ export function AppSidebar({ open, onNavigate, onMaster, className }: AppSidebar
             <IconLogout size={17} />
           </button>
         </Stack>
-        {onMaster ? (
-          <Button
-            variant="link"
-            className="mx-3 my-2 block w-full px-1.5 py-1.5 text-center text-[13px] font-bold text-mid"
-            onClick={onMasterClick}
-          >
-            Master portal
-          </Button>
-        ) : null}
         <Text
           as="span"
           className="block w-full px-3 pt-2 pb-3 text-center text-[10px] leading-[1.5] tracking-[0.01em] text-white/40"

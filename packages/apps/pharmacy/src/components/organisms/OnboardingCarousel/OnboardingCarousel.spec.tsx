@@ -7,13 +7,10 @@ import { OnboardingCarousel } from "./OnboardingCarousel";
 
 describe("OnboardingCarousel", () => {
   it("shows the first intro slide", () => {
-    function onMaster() {
-      return undefined;
-    }
     render(
       <Provider store={store}>
         <SaveConfirmContext.Provider value={{ ask: () => Promise.resolve(true) }}>
-          <OnboardingCarousel onMaster={onMaster} />
+          <OnboardingCarousel />
         </SaveConfirmContext.Provider>
       </Provider>,
     );

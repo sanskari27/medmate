@@ -1,1 +1,1 @@
-export { authService } from "./auth.service";
+export { authService, type CouponPreview } from "./auth.service";

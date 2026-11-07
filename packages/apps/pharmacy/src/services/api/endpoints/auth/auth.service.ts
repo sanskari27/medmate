@@ -14,9 +14,18 @@ import { api } from "@/services/api/apiClient";
 import { request } from "@/services/api/request";
 import type { SessionSnapshot } from "@/store/session";
 
+export type CouponPreview = {
+  code: string;
+  plan: Plan;
+  expiresOn: string;
+  validDays: number;
+  expired: boolean;
+  renewsOn: string;
+};
+
 export const authService = {
   loadSession: () => api<SessionSnapshot>("/session"),
-  sendOtp: (body: { phone: string; purpose?: "reset"; portal?: "master" }) =>
+  sendOtp: (body: { phone: string; purpose?: "reset" }) =>
     request<{ delivery?: string }>("/auth/otp/send", { method: "POST", body }),
   beginLogin: (phone: string) =>
     request<{ mode: "pin" | "otp" }>("/auth/login", { method: "POST", body: { phone } }),
@@ -26,7 +35,6 @@ export const authService = {
     businessType?: BusinessType;
     name?: string;
     purpose?: "reset";
-    portal?: "master";
   }) => request("/auth/otp/verify", { method: "POST", body }),
   pinSignIn: (body: { phone: string; pin: string }) =>
     request("/auth/pin", { method: "POST", body }),
@@ -64,4 +72,6 @@ export const authService = {
     request("/ca/shares", { method: "POST", body }),
   raiseTicket: (subject: string, category: string) =>
     request("/support/tickets", { method: "POST", body: { subject, category } }),
+  previewCoupon: (code: string) =>
+    request<CouponPreview>("/subscription/coupons/preview", { method: "POST", body: { code } }),
 };

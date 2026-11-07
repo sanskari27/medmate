@@ -233,13 +233,11 @@ function IntroPhase({
   onPick,
   onStart,
   onLogin,
-  onStaff,
 }: {
   slide: number;
   onPick: (index: number) => void;
   onStart: () => void;
   onLogin: () => void;
-  onStaff: () => void;
 }) {
   const current = SLIDES[slide];
   return (
@@ -271,13 +269,6 @@ function IntroPhase({
         onClick={onLogin}
       >
         I already have an account · Log in
-      </Button>
-      <Button
-        variant="link"
-        className="mt-3.5 block w-full px-1.5 py-1.5 text-[13px]"
-        onClick={onStaff}
-      >
-        Namma MedMate staff sign in
       </Button>
     </Stack>
   );
@@ -385,17 +376,7 @@ function TypePhase({
   );
 }
 
-function LoginPhase({
-  staff,
-  type,
-  onBack,
-  onMaster,
-}: {
-  staff: boolean;
-  type: BusinessType;
-  onBack: () => void;
-  onMaster: () => void;
-}) {
+function LoginPhase({ type, onBack }: { type: BusinessType; onBack: () => void }) {
   const dispatch = useAppDispatch();
   const { reset } = usePharmacyNav();
   const formFault = useAppSelector((state) => state.ui.formFault);
@@ -424,9 +405,7 @@ function LoginPhase({
   async function sendOtp(purpose?: "reset") {
     if (!phoneOk) return;
     try {
-      const res = await dispatch(
-        sendOtpRequest({ phone, purpose, portal: staff ? "master" : undefined }),
-      ).unwrap();
+      const res = await dispatch(sendOtpRequest({ phone, purpose })).unwrap();
       setOtpSent(true);
       setPinMode(false);
       setResetPin(purpose === "reset");
@@ -437,10 +416,6 @@ function LoginPhase({
   }
   async function continuePhone() {
     if (!phoneOk) return;
-    if (staff) {
-      await sendOtp();
-      return;
-    }
     try {
       const res = await dispatch(beginLogin(phone)).unwrap();
       if (res.mode === "pin") {
@@ -469,11 +444,6 @@ function LoginPhase({
     }
     if (otp.replace(/\D/g, "").length !== 6) return;
     try {
-      if (staff) {
-        await dispatch(verifyOtp({ phone, code: otp, portal: "master" })).unwrap();
-        onMaster();
-        return;
-      }
       const purpose = resetPin ? "reset" : undefined;
       await dispatch(verifyOtp({ phone, code: otp, businessType: type, name, purpose })).unwrap();
       reset("dashboard");
@@ -515,20 +485,12 @@ function LoginPhase({
     setPinMode(false);
     setResetPin(false);
   }
-  const heading = otpSent
-    ? "Enter the OTP"
-    : pinMode
-      ? "Enter your PIN"
-      : staff
-        ? "Staff sign in"
-        : "Log in to continue";
+  const heading = otpSent ? "Enter the OTP" : pinMode ? "Enter your PIN" : "Log in to continue";
   const subtitle = otpSent
     ? `We sent a 6-digit code to ${phone}.`
     : pinMode
       ? "Use the 4-digit PIN you created after signup."
-      : staff
-        ? "Staff sign in uses a one-time code."
-        : "New pharmacies get a code by SMS. After that, sign in with your PIN.";
+      : "New pharmacies get a code by SMS. After that, sign in with your PIN.";
 
   return (
     <Stack className="animate-[pd-ob-in_0.25s_ease] motion-reduce:animate-none">
@@ -536,13 +498,7 @@ function LoginPhase({
         as="span"
         className="mb-3.5 inline-block w-fit self-start rounded-[99px] bg-wash px-3 py-[5px] text-[12.5px] font-extrabold text-dark [&_svg]:inline [&_svg]:align-baseline"
       >
-        {staff ? (
-          "Master"
-        ) : (
-          <>
-            <GlyphView glyph={chosen.icon} size={15} /> {chosen.title}
-          </>
-        )}
+        <GlyphView glyph={chosen.icon} size={15} /> {chosen.title}
       </Text>
       <Heading level={2} className="text-[24px]">
         {heading}
@@ -550,23 +506,19 @@ function LoginPhase({
       <Text className="mt-1.5 mb-[22px] text-[13.5px] text-muted">{subtitle}</Text>
       {!otpSent && !pinMode ? (
         <Stack className="gap-0">
-          {staff ? null : (
-            <Field
-              label={
-                <>
-                  Business name <span className="font-semibold text-faint">(optional)</span>
-                </>
-              }
-            >
-              <Input
-                value={name}
-                onChange={onName}
-                placeholder={
-                  type === "hospital" ? "City Care Hospital Pharmacy" : "Sri Sai Medicals"
-                }
-              />
-            </Field>
-          )}
+          <Field
+            label={
+              <>
+                Business name <span className="font-semibold text-faint">(optional)</span>
+              </>
+            }
+          >
+            <Input
+              value={name}
+              onChange={onName}
+              placeholder={type === "hospital" ? "City Care Hospital Pharmacy" : "Sri Sai Medicals"}
+            />
+          </Field>
           <Field
             className="mt-3"
             label="Mobile number"
@@ -594,7 +546,7 @@ function LoginPhase({
             </Stack>
           </Field>
           <Button size="lg" block className="mt-[22px]" disabled={!phoneOk} onClick={continuePhone}>
-            {staff ? "Send OTP" : "Continue"} <IconArrowRight size={16} />
+            Continue <IconArrowRight size={16} />
           </Button>
         </Stack>
       ) : null}
@@ -673,7 +625,7 @@ function LoginPhase({
             disabled={otp.replace(/\D/g, "").length !== 6}
             onClick={verify}
           >
-            <IconCheck size={16} /> {staff ? "Verify & open master" : "Verify & log in"}
+            <IconCheck size={16} /> Verify & log in
           </Button>
           <Button
             variant="link"
@@ -700,8 +652,7 @@ function LoginPhase({
   );
 }
 
-export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselProps) {
-  const [staff, setStaff] = useState(false);
+export function OnboardingCarousel({ className }: OnboardingCarouselProps) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [slide, setSlide] = useState(0);
   const [type, setType] = useState<BusinessType>("pharmacy");
@@ -726,15 +677,9 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
   }
   function start() {
     setPhase("type");
-    setStaff(false);
   }
   function login() {
     setPhase("login");
-    setStaff(false);
-  }
-  function staffLogin() {
-    setPhase("login");
-    setStaff(true);
   }
   function backToIntro() {
     setPhase("intro");
@@ -759,13 +704,7 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
       <Stack className="grid min-w-0 flex-1 place-items-center p-8 max-[767px]:px-4 max-[767px]:py-5">
         <Stack className="w-full max-w-[440px]">
           {phase === "intro" ? (
-            <IntroPhase
-              slide={slide}
-              onPick={pickSlide}
-              onStart={start}
-              onLogin={login}
-              onStaff={staffLogin}
-            />
+            <IntroPhase slide={slide} onPick={pickSlide} onStart={start} onLogin={login} />
           ) : null}
           {phase === "type" ? (
             <TypePhase
@@ -775,9 +714,7 @@ export function OnboardingCarousel({ onMaster, className }: OnboardingCarouselPr
               onContinue={continueType}
             />
           ) : null}
-          {phase === "login" ? (
-            <LoginPhase staff={staff} type={type} onBack={backToIntro} onMaster={onMaster} />
-          ) : null}
+          {phase === "login" ? <LoginPhase type={type} onBack={backToIntro} /> : null}
         </Stack>
       </Stack>
     </Stack>

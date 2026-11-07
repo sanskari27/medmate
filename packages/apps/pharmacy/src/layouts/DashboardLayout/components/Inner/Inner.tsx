@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Grid, Stack, Text } from "@/components/atoms";
+import { Box, Button, Grid, Stack } from "@/components/atoms";
 import { AppHeader } from "@/components/organisms/AppHeader";
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { OnboardingCarousel, PinSetup } from "@/components/organisms/OnboardingCarousel";
 import { SetupWizard } from "@/components/organisms/SetupWizard";
-import { useAppDispatch, useAppSelector, usePharmacyNav } from "@/hooks";
+import { useAppSelector, usePharmacyNav } from "@/hooks";
 import { AuthLayout } from "@/layouts/AuthLayout";
-import MasterPortal from "@/screens/Master";
 import { selectIsHospital } from "@/store/selectors/auth.selector";
-import { loadMasterSession } from "@/store/thunks/master.thunk";
 import { lockedRouteFallback } from "../../DashboardLayout.utils";
 import { Canvas } from "../Canvas";
 
 export function Inner() {
-  const dispatch = useAppDispatch();
   const { route, go } = usePharmacyNav();
   const setupComplete = useAppSelector((state) => state.auth.setupComplete);
   const signedIn = useAppSelector((state) => state.auth.signedIn);
@@ -21,10 +18,7 @@ export function Inner() {
   const pinReset = useAppSelector((state) => state.auth.pinReset);
   const me = useAppSelector((state) => state.auth.me);
   const isHospital = useAppSelector(selectIsHospital);
-  const masterSessionPhone = useAppSelector((state) => state.master.phone);
-  const sessionLoaded = useAppSelector((state) => state.master.sessionLoaded);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [masterPortalOpen, setMasterPortalOpen] = useState(false);
 
   function closeSidebar() {
     setSidebarOpen(false);
@@ -34,26 +28,7 @@ export function Inner() {
       return !open;
     });
   }
-  function openMasterPortal() {
-    setMasterPortalOpen(true);
-  }
-  function closeMasterPortal() {
-    setMasterPortalOpen(false);
-  }
-  function leaveMasterPortal() {
-    setMasterPortalOpen(false);
-  }
-  function openMasterFromOnboarding() {
-    setMasterPortalOpen(true);
-    void dispatch(loadMasterSession());
-  }
 
-  useEffect(
-    function loadMasterOnMount() {
-      void dispatch(loadMasterSession());
-    },
-    [dispatch],
-  );
   useEffect(
     function redirectLockedRoute() {
       if (!me) return;
@@ -67,23 +42,10 @@ export function Inner() {
     [me, route, isHospital, go],
   );
 
-  if (!sessionLoaded && !signedIn) {
-    return <Text>Loading pharmacy…</Text>;
-  }
-  if (masterSessionPhone && (masterPortalOpen || !signedIn)) {
-    return (
-      <MasterPortal
-        phone={masterSessionPhone}
-        pharmacyLabel={signedIn ? "Pharmacy" : "Pharmacy sign in"}
-        onPharmacy={closeMasterPortal}
-        onSignedOut={leaveMasterPortal}
-      />
-    );
-  }
   if (!signedIn) {
     return (
       <AuthLayout>
-        <OnboardingCarousel onMaster={openMasterFromOnboarding} />
+        <OnboardingCarousel />
       </AuthLayout>
     );
   }
@@ -108,11 +70,7 @@ export function Inner() {
         columns={1}
         className="h-dvh grid-cols-1 gap-0 overflow-hidden min-[1100px]:grid-cols-[248px_minmax(0,1fr)]"
       >
-        <AppSidebar
-          open={sidebarOpen}
-          onNavigate={closeSidebar}
-          onMaster={masterSessionPhone ? openMasterPortal : undefined}
-        />
+        <AppSidebar open={sidebarOpen} onNavigate={closeSidebar} />
         <Stack className="h-dvh min-w-0">
           <AppHeader onMenu={toggleSidebar} />
           <Box className="min-h-0 flex-1 overflow-y-auto bg-canvas px-3 pt-3.5 pb-[max(28px,env(safe-area-inset-bottom))] min-[768px]:px-4 min-[768px]:pt-[18px] min-[768px]:pb-9 min-[1100px]:px-6 min-[1100px]:pt-[22px] min-[1100px]:pb-10">

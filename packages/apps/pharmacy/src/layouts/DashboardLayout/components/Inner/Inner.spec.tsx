@@ -3,6 +3,7 @@ import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
 import { SaveConfirmContext } from "@/app/providers/PharmaProvider/saveConfirm";
 import { store } from "@/store";
+import { loadSession } from "@/store/thunks/auth.thunk";
 import { Inner } from "./Inner";
 
 function renderInner() {
@@ -16,8 +17,10 @@ function renderInner() {
 }
 
 describe("Inner", () => {
-  it("waits for the master session before showing sign in", () => {
+  it("shows pharmacy sign in when there is no session", () => {
+    store.dispatch(loadSession.rejected(null, "inner-spec", undefined, "UNAUTHORIZED"));
     renderInner();
-    expect(screen.getByText("Loading pharmacy…")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Get started" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Namma MedMate staff sign in" })).toBeNull();
   });
 });

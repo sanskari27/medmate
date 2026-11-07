@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@/store/createAsyncThunk";
 import type { Action, ThunkDispatch } from "@reduxjs/toolkit";
 import { ApiError } from "@/services/api/apiClient";
-import { authService } from "@/services/api/endpoints/auth";
+import { authService, type CouponPreview } from "@/services/api/endpoints/auth";
 import { inventoryService } from "@/services/api/endpoints/inventory";
 import type { BusinessType } from "@/types";
 import type {
@@ -72,7 +72,7 @@ export const signOutRequest = createAsyncThunk<void, void, { rejectValue: string
 
 export const sendOtp = createAsyncThunk<
   { delivery?: string },
-  { phone: string; purpose?: "reset"; portal?: "master" },
+  { phone: string; purpose?: "reset" },
   { rejectValue: string }
 >("auth/sendOtp", async (body, { rejectWithValue }) => {
   try {
@@ -102,13 +102,12 @@ export const verifyOtp = createAsyncThunk<
     businessType?: BusinessType;
     name?: string;
     purpose?: "reset";
-    portal?: "master";
   },
   { state: AuthGate; rejectValue: string }
 >("auth/verifyOtp", async (body, { dispatch, rejectWithValue }) => {
   try {
     await authService.verifyOtp(body);
-    if (!body.portal) await dispatch(loadSession()).unwrap();
+    await dispatch(loadSession()).unwrap();
   } catch (error: unknown) {
     return rejectWithValue(faultMessage(error, "Could not sign in"));
   }
@@ -563,3 +562,14 @@ export const raiseTicket = createAsyncThunk<
 export function planOf(value: unknown) {
   return asPlan(value);
 }
+
+export const previewCoupon = createAsyncThunk<CouponPreview, string, { rejectValue: string }>(
+  "auth/previewCoupon",
+  async (code, { rejectWithValue }) => {
+    try {
+      return await authService.previewCoupon(code);
+    } catch (error: unknown) {
+      return rejectWithValue(faultMessage(error, "Could not check that code"));
+    }
+  },
+);

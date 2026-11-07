@@ -8,7 +8,6 @@ import crmReducer from "@/store/slices/crm.slice";
 import customersReducer from "@/store/slices/customers.slice";
 import hospitalReducer from "@/store/slices/hospital.slice";
 import inventoryReducer from "@/store/slices/inventory.slice";
-import masterReducer from "@/store/slices/master.slice";
 import ordersReducer from "@/store/slices/orders.slice";
 import prescriptionsReducer from "@/store/slices/prescriptions.slice";
 import purchasesReducer from "@/store/slices/purchases.slice";
@@ -23,7 +22,6 @@ export const rootReducer = combineReducers({
   customers: customersReducer,
   hospital: hospitalReducer,
   inventory: inventoryReducer,
-  master: masterReducer,
   orders: ordersReducer,
   prescriptions: prescriptionsReducer,
   purchases: purchasesReducer,

@@ -18,8 +18,12 @@ import { cn } from "@/utils/className";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector, useConfirmedDispatch } from "@/hooks";
-import { redeemCoupon, requestPlan, toggleAutoRenew } from "@/store/thunks/auth.thunk";
-import { previewCoupon } from "@/store/thunks/master.thunk";
+import {
+  previewCoupon,
+  redeemCoupon,
+  requestPlan,
+  toggleAutoRenew,
+} from "@/store/thunks/auth.thunk";
 import {
   PLANS,
   Plan,
