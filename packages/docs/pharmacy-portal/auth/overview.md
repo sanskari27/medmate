@@ -15,7 +15,11 @@ A pharmacy has one owner. The owner is the only pharmacy user who can sign up. S
 
 ## Roles and permissions
 
-Roles and permissions are separate. Permissions work as role-based access control. Some roles have a predefined set of permissions. Those lists are documented with the later modules.
+Pharmacy roles are owner, pharmacist, inventory-manager, ward-attendant, and accountant. Permission tables use the name ward-attendant for that role.
+
+Keys are fixed and use the form `screen_name:action`. Each key is true or false. The lists are in [Permissions](../access/permissions.md).
+
+A new owner starts with every key true. An admin user with the master role can set the owner’s keys true or false. The owner cannot change their own keys. The owner sets the four staff roles. A staff user can act only when the key is true on the owner and true on that user’s role. There is no separate permission list on each staff user.
 
 An admin user with the master role can do everything.
 
@@ -36,6 +40,8 @@ These owner steps always send the OTP by SMS to the phone number on the account:
 
 The account is identified by phone number when a pharmacy user requests an OTP.
 
+A demo run uses the fixed code `000000`. Any other run creates a random 6-digit code on the server and sends it by SMS or email. The screen does not show the code and does not offer autofill. This covers owner and staff sign-in, PIN reset, and the hospital pricing unlock. See [Hospital billing](../hospital/hospital-billing.md).
+
 ## Message delivery
 
 Email OTPs are sent with Resend. The Resend API key is a secure string in Parameter Store at `/medmate-repo/server-core/resend_api_key`.
@@ -48,3 +54,4 @@ SMS OTPs are sent with DLT. Promotional SMS messages are also sent with DLT.
 - [Pharmacy signup](pharmacy-signup.md)
 - [Pharmacy staff login](pharmacy-staff-login.md)
 - [Plans](plans.md)
+- [Permissions](../access/permissions.md)

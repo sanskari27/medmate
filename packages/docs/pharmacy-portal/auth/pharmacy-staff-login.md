@@ -8,12 +8,12 @@ A pharmacy has one owner. The owner account comes from signup, not from this scr
 
 - pharmacist
 - inventory-manager
-- ward-attendant / staff
+- ward-attendant
 - accountant
 
-The owner chooses one of these roles when creating the user. Each role has its own work. The tasks and the permission list are documented with the later modules.
+The owner chooses one of these roles when creating the user. The same role shares one set of permission keys. There is no separate permission list on the user.
 
-The owner also sets that user's permissions on this screen. A role is not a permission. See [Overview](overview.md).
+The owner sets those four role key sets on Manage Users. A key can be set true only when it is true on the owner. The owner cannot change the owner’s own keys. An admin master does that. See [Permissions](../access/permissions.md) and [Overview](overview.md).
 
 ## Fields
 
@@ -23,7 +23,8 @@ The owner enters:
 - Phone
 - Email
 - Role
-- Permissions
+
+The role selects that role’s key set. The owner does not pick keys on the person.
 
 ## Seats
 

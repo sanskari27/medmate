@@ -36,6 +36,8 @@ The request goes to an admin user with the support role. See [Admin login](admin
 
 The pharmacy stays on its current plan until support approves the request.
 
+A permission key does not open a screen the plan does not include. The paywall stays in front of that screen. See [Permissions](../access/permissions.md).
+
 Support may approve the request, or reject it with comments. The owner sees the result only. The owner does not see support’s comments.
 
 Payment collection and downgrades are documented later.

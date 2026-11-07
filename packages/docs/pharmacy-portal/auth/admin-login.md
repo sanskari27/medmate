@@ -46,3 +46,5 @@ Pharmacy applications are reviewed in two steps. See [Pharmacy signup](pharmacy-
 The master step starts only after compliance has approved. The compliance step belongs to the compliance role.
 
 Plan upgrade requests go to an admin user with the support role. See [Plans](plans.md).
+
+An admin master sets the pharmacy owner’s permission keys true or false. The pharmacy owner cannot change those keys. This portal does not include the admin screens. The keys are listed in [Permissions](../access/permissions.md).
