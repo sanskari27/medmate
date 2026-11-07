@@ -7,7 +7,10 @@ COPY src ./src
 RUN npm run build
 
 FROM node:22-bookworm-slim
-RUN useradd --system --uid 10001 --home /app app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && useradd --system --uid 10001 --home /app app
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
