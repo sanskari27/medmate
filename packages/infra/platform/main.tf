@@ -379,6 +379,11 @@ resource "aws_ssm_parameter" "common" {
 }
 
 resource "terraform_data" "instance_ready" {
+  # depends_on does not re-run this check when the instance is replaced.
+  triggers_replace = [
+    aws_instance.platform.id,
+  ]
+
   depends_on = [
     aws_instance.platform,
     aws_eip_association.platform,
