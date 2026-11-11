@@ -1,0 +1,12 @@
+---
+description: Docs and ADRs for medmate-server
+globs: packages/docs/medmate-server/**/*.md
+alwaysApply: false
+---
+
+# medmate-server docs
+
+- Requirement specs live in `requirements/YYYY-MM-DD-<slug>.md` and are written before implementation.
+- Structural choices go in `decisions/` as the next numbered ADR. Do not hide them only in a requirement spec.
+- `architecture.md` describes the current system. Update it when a module, datastore, or host changes.
+- `cutover.md` stays the source for releasing `api.nammamedmate.com` from server-core.

@@ -1,0 +1,35 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: medmate-server
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  mvc:
+    problemdetails:
+      enabled: true
+
+logging:
+  pattern:
+    level: "%5p [requestId=%X{requestId:-}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  info:
+    build:
+      enabled: true
+    java:
+      enabled: true

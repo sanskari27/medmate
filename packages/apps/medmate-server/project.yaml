@@ -1,0 +1,22 @@
+name: medmate-server
+kind: java
+quality:
+  compile: true
+  test: true
+  verify: true
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - api.nammamedmate.com
+runtime:
+  port: 8080
+  healthPath: /actuator/health
+  memory: 768m
+  env:
+    SPRING_PROFILES_ACTIVE: prod
+resources:
+  database:
+    enabled: false
+  uploads:
+    enabled: false

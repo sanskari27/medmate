@@ -1,0 +1,26 @@
+meta {
+  name: Get info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator/info
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.build.artifact: eq medmate-server-app
+  res.body.build.version: eq 1.0.0
+}
+
+docs {
+  Build coordinates published by the Maven build-info goal.
+}

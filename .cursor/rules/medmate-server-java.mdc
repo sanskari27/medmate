@@ -1,0 +1,14 @@
+---
+description: Java layout and tests for medmate-server
+globs: packages/apps/medmate-server/**/*.java
+alwaysApply: false
+---
+
+# medmate-server Java
+
+- Base package is `com.medmate.server`. A new CRM area is a sibling Maven module, not a class dumped in the app module.
+- Controllers stay thin. Domain rules live in plain types that unit tests can construct without Spring.
+- Pure tests use JUnit and AssertJ. HTTP slices use `@WebMvcTest`. Full-process tests are named `*IT` and run in Failsafe.
+- Errors use `ProblemDetail` through `ApiExceptionHandler`. Do not add a second error JSON shape.
+- Do not add Spring Security, JPA, Flyway, or a new starter until a requirement and an ADR call for it.
+- Format with Palantir Java Format (`make api-format`). `make api-verify` must pass.

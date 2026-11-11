@@ -1,0 +1,14 @@
+---
+description: Bruno collection shape for the medmate-server API
+globs: bruno/medmate/**/*
+alwaysApply: false
+---
+
+# medmate Bruno
+
+- One folder per module, one request file per operation.
+- Record only endpoints the server actually serves.
+- Keep example values in `environments/`. Reuse `examplePharmacyId`, `examplePhone`, and `exampleRequestId`.
+- Environment files contain only `vars` (and optional `@description` lines). Do not add a `meta` block; Bruno 4 ignores the file and the values show up empty.
+- Assert the status code and the response fields the endpoint guarantees.
+- Point requests at `{{baseUrl}}` so local and production environments both work.

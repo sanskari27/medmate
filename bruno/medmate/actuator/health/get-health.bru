@@ -1,0 +1,26 @@
+meta {
+  name: Get health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator/health
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq UP
+}
+
+docs {
+  Platform health check for api.nammamedmate.com.
+  examplePharmacyId {{examplePharmacyId}} and examplePhone {{examplePhone}} are reserved for later CRM requests.
+}

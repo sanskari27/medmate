@@ -1,0 +1,25 @@
+meta {
+  name: Get liveness
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/actuator/health/liveness
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq UP
+}
+
+docs {
+  Process liveness. A failure means the JVM should be restarted.
+}
