@@ -7,6 +7,7 @@ import com.medmate.server.identity.otp.OtpPurpose;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -44,6 +45,14 @@ public class IdentityStore {
                 .param("type", type.wire())
                 .query(this::account)
                 .optional();
+    }
+
+    public List<AccountRow> findPlatformAccounts(String phone) {
+        return jdbc.sql(
+                        "SELECT id, phone, account_type, display_name, disabled FROM account WHERE phone = :phone AND account_type IN ('admin', 'staff')")
+                .param("phone", phone)
+                .query(this::account)
+                .list();
     }
 
     public void insertAccount(UUID id, String phone, AccountType type, String displayName, Instant now) {

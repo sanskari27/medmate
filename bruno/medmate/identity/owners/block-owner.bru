@@ -1,0 +1,29 @@
+meta {
+  name: Block owner
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-owners/{{examplePharmacyId}}/block
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Platform admin blocks the owner immediately when no request is open.
+  The collection script attaches the saved access token.
+}

@@ -31,6 +31,10 @@ Local development runs Java 21 on the host and talks to a Postgres 16 installed 
 
 Deployment is a Docker image on the shared EC2 instance, the same shape server-core used. Building that image is not part of the local run loop. Production documents go to the private prefix `app-uploads/medmate-server`.
 
+## Identity
+
+Accounts, sessions, and pharmacy verification live in `medmate-server-identity`. A phone may hold one account of each stored type: `admin`, `pharmacy`, `customer`, `rider`, and `staff`. Admin and staff are the exception: one phone is at most one of those two. `accountType: "platform"` on OTP send and verify is a login scope, not a stored type. It resolves to that single admin or staff row. Pharmacy, customer, and rider login are unchanged.
+
 ## Not in this process
 
 The old `server_core` database, `app-uploads/server-core/` prefix, and `/medmate-repo/server-core/` parameters are leftovers from the previous service. This process does not read them.

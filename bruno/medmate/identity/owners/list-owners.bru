@@ -1,0 +1,40 @@
+meta {
+  name: List owners
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy-owners
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body).to.be.an("array");
+    body.forEach(function(row) {
+      expect(row.pharmacyId).to.be.a("string");
+      expect(row).to.have.property("name");
+      expect(row.phone).to.be.a("string");
+      expect(row.status).to.be.a("string");
+      expect(row.blockState).to.be.oneOf(["clear", "requested", "blocked"]);
+    });
+  });
+}
+
+docs {
+  Platform admin and every staff subtype list pharmacy owners.
+  Pharmacy staff accounts are not rows. The collection script attaches the saved access token.
+}

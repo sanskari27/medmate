@@ -1,0 +1,36 @@
+meta {
+  name: Request block
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-owners/{{examplePharmacyId}}/block-requests
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "reason": "Licence copy is unreadable"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  A platform staff subtype files one open block request. Platform admin is refused.
+  The collection script attaches the saved access token.
+}

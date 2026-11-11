@@ -32,6 +32,16 @@ public class AccountDirectory {
         return principal(account);
     }
 
+    public boolean ownerAccountDisabled(AccountPrincipal principal) {
+        if (principal == null || principal.accountType() != AccountType.PHARMACY || principal.pharmacyId() == null) {
+            return false;
+        }
+        if (principal.pharmacyRole() == PharmacyRole.OWNER) {
+            return principal.disabled();
+        }
+        return pharmacies.ownerDisabled(principal.pharmacyId());
+    }
+
     private AccountPrincipal principal(IdentityStore.AccountRow account) {
         UUID pharmacyId = null;
         PharmacyRole role = null;

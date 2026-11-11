@@ -2,6 +2,7 @@ package com.medmate.server.identity.security;
 
 import com.medmate.server.identity.access.AccountAuthentication;
 import com.medmate.server.identity.access.AccountPrincipal;
+import com.medmate.server.identity.access.BlockRules;
 import com.medmate.server.identity.session.AccessTokens;
 import com.medmate.server.identity.session.AccountDirectory;
 import com.medmate.server.shared.error.ProblemResponses;
@@ -46,13 +47,45 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
         AccountPrincipal principal = directory.load(accountId);
-        if (principal == null || principal.disabled()) {
-            ProblemResponses.write(
-                    request, response, HttpStatus.UNAUTHORIZED, "Unauthorized", "Session was not accepted");
+        if (principal == null) {
+            reject(request, response, "Session was not accepted");
             return;
         }
+        if (isPost(request, "/auth/sign-out")) {
+            authenticate(principal);
+            chain.doFilter(request, response);
+            return;
+        }
+        if (principal.disabled()) {
+            if (BlockRules.restrictedOwnerSession(principal.accountType(), principal.pharmacyRole(), true)
+                    && isPost(request, "/auth/refresh")) {
+                authenticate(principal);
+                chain.doFilter(request, response);
+                return;
+            }
+            reject(request, response, "Session was not accepted");
+            return;
+        }
+        if (BlockRules.staffOfRestrictedPharmacy(
+                principal.accountType(), principal.pharmacyRole(), directory.ownerAccountDisabled(principal))) {
+            reject(request, response, "This pharmacy is restricted.");
+            return;
+        }
+        authenticate(principal);
+        chain.doFilter(request, response);
+    }
+
+    private static boolean isPost(HttpServletRequest request, String path) {
+        return "POST".equals(request.getMethod()) && path.equals(request.getRequestURI());
+    }
+
+    private static void authenticate(AccountPrincipal principal) {
         org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .setAuthentication(new AccountAuthentication(principal));
-        chain.doFilter(request, response);
+    }
+
+    private static void reject(HttpServletRequest request, HttpServletResponse response, String detail)
+            throws IOException {
+        ProblemResponses.write(request, response, HttpStatus.UNAUTHORIZED, "Unauthorized", detail);
     }
 }

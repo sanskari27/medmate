@@ -1,0 +1,38 @@
+meta {
+  name: Read owner
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy-owners/{{examplePharmacyId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.pharmacyId).to.equal(bru.getEnvVar("examplePharmacyId"));
+    expect(body.status).to.be.a("string");
+    expect(body.phone).to.be.a("string");
+    expect(body.blockState).to.be.oneOf(["clear", "requested", "blocked"]);
+    expect(body).to.have.property("request");
+    expect(body.documents).to.be.an("array");
+  });
+}
+
+docs {
+  The detail matches the application read, plus the block state and any open request.
+  The collection script attaches the saved access token.
+}

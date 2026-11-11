@@ -1,0 +1,41 @@
+meta {
+  name: Read application
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/application
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.status).to.be.a("string");
+    expect(body).to.have.property("pharmacyType");
+    expect(body.documents).to.be.an("array");
+    body.documents.forEach(function(document) {
+      expect(document.slot).to.be.a("string");
+      expect(document.contentType).to.be.a("string");
+      expect(document.url).to.be.a("string");
+      expect(document).to.not.have.property("objectKey");
+    });
+  });
+}
+
+docs {
+  The pharmacy owner reads the stored application, including pharmacyType and document slots.
+  The collection script attaches the saved access token.
+}

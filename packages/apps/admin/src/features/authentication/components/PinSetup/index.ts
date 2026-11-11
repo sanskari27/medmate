@@ -1,0 +1,1 @@
+export { PinSetupPage } from "./PinSetup";

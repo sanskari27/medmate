@@ -8,11 +8,29 @@ auth {
 
 script:pre-request {
   function pathnameOf(url) {
-    try {
-      return new URL(url).pathname;
-    } catch (error) {
-      return String(url || "");
+    let value = String(url || "").trim();
+    if (typeof bru.interpolate === "function") {
+      try {
+        const interpolated = bru.interpolate(value);
+        if (interpolated) {
+          value = String(interpolated).trim();
+        }
+      } catch (error) {
+        // Bruno substitutes {{vars}} after this script. Keep the raw url.
+      }
     }
+    let pathname = value;
+    try {
+      pathname = new URL(value).pathname;
+    } catch (error) {
+      const withoutQuery = value.split("?")[0].split("#")[0];
+      const slash = withoutQuery.indexOf("/");
+      pathname = slash === -1 ? withoutQuery : withoutQuery.slice(slash);
+    }
+    if (pathname.length > 1 && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+    return pathname || "/";
   }
 
   function skipsUserAuth(pathname) {
@@ -57,7 +75,7 @@ script:pre-request {
   async function refreshSession() {
     const refreshToken = bru.getEnvVar("refreshToken");
     if (!refreshToken) {
-      return false;
+      return "";
     }
     try {
       const response = await bru.sendRequest({
@@ -75,13 +93,16 @@ script:pre-request {
         bru.setEnvVar("accessToken", "");
         bru.setEnvVar("refreshToken", "");
         bru.setEnvVar("accessTokenExpiresAt", "0");
-        return false;
+        return "";
       }
       saveSession(body);
-      return true;
+      return body.accessToken;
     } catch (error) {
       console.log("Refresh failed before the request");
-      return false;
+      bru.setEnvVar("accessToken", "");
+      bru.setEnvVar("refreshToken", "");
+      bru.setEnvVar("accessTokenExpiresAt", "0");
+      return "";
     }
   }
 
@@ -91,23 +112,38 @@ script:pre-request {
     const refreshToken = bru.getEnvVar("refreshToken") || "";
     const expiresAt = Number(bru.getEnvVar("accessTokenExpiresAt") || 0);
     const expired = !accessToken || Date.now() >= expiresAt - 15000;
-    if (expired && refreshToken) {
-      await refreshSession();
-    }
-    const latest = bru.getEnvVar("accessToken") || "";
-    if (latest) {
-      req.setHeader("Authorization", "Bearer " + latest);
+    const bearer = expired ? (refreshToken ? await refreshSession() : "") : accessToken;
+    if (bearer) {
+      req.setHeader("Authorization", "Bearer " + bearer);
     }
   }
 }
 
 script:post-response {
   function pathnameOf(url) {
-    try {
-      return new URL(url).pathname;
-    } catch (error) {
-      return String(url || "");
+    let value = String(url || "").trim();
+    if (typeof bru.interpolate === "function") {
+      try {
+        const interpolated = bru.interpolate(value);
+        if (interpolated) {
+          value = String(interpolated).trim();
+        }
+      } catch (error) {
+        // Bruno substitutes {{vars}} after this script. Keep the raw url.
+      }
     }
+    let pathname = value;
+    try {
+      pathname = new URL(value).pathname;
+    } catch (error) {
+      const withoutQuery = value.split("?")[0].split("#")[0];
+      const slash = withoutQuery.indexOf("/");
+      pathname = slash === -1 ? withoutQuery : withoutQuery.slice(slash);
+    }
+    if (pathname.length > 1 && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+    return pathname || "/";
   }
 
   function responseBody() {

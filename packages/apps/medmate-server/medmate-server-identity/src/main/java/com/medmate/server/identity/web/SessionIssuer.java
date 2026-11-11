@@ -58,7 +58,8 @@ public class SessionIssuer {
             RejectionResponse rejection,
             List<String> subtypes,
             List<String> permissions,
-            boolean pinSetupRequired) {
+            boolean pinSetupRequired,
+            boolean disabled) {
 
         static AccountResponse from(AccountPrincipal principal) {
             RejectionResponse rejection = null;
@@ -84,7 +85,8 @@ public class SessionIssuer {
                     rejection,
                     principal.subtypes().stream().map(subtype -> subtype.wire()).toList(),
                     principal.permissions().stream().toList(),
-                    pinSetup);
+                    pinSetup,
+                    principal.disabled());
         }
     }
 }

@@ -3,6 +3,7 @@ package com.medmate.server.identity.pharmacy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PharmacyRulesTest {
@@ -25,6 +26,24 @@ class PharmacyRulesTest {
         assertThat(PharmacyRules.invalid(phone, "+919876543210")).isEqualTo("Phone number cannot be changed");
     }
 
+    @Test
+    void rejectsAMissingOrUnknownPharmacyType() {
+        assertThat(PharmacyRules.invalid(typed(sample(), null), "+919876543210"))
+                .isEqualTo("Pharmacy type is required");
+        assertThat(PharmacyRules.invalid(typed(sample(), "clinic"), "+919876543210"))
+                .isEqualTo("Pharmacy type is required");
+        assertThat(PharmacyRules.invalid(typed(sample(), "hospital"), "+919876543210"))
+                .isNull();
+    }
+
+    @Test
+    void acceptsAStoredDocumentInPlaceOfANewFile() {
+        PharmacyRules.ApplicationInput missing = withoutGst(sample());
+        assertThat(PharmacyRules.invalid(missing, "+919876543210", Set.of())).isEqualTo("GST certificate is required");
+        assertThat(PharmacyRules.invalid(missing, "+919876543210", Set.of("gst")))
+                .isNull();
+    }
+
     private static PharmacyRules.ApplicationInput sample() {
         PharmacyRules.Upload image = new PharmacyRules.Upload("image/png", new byte[] {1, 2, 3});
         PharmacyRules.Upload pdf = new PharmacyRules.Upload("application/pdf", new byte[] {1, 2, 3, 4});
@@ -39,6 +58,7 @@ class PharmacyRulesTest {
                 List.of("Retail Pharmacy"),
                 "Pharmacy & Healthcare",
                 "Proprietorship",
+                "pharmacy",
                 "29ABCDE1234F1Z5",
                 pdf,
                 "ABCDE1234F",
@@ -78,6 +98,7 @@ class PharmacyRulesTest {
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
+                input.pharmacyType(),
                 gstin,
                 input.gst(),
                 input.pan(),
@@ -102,5 +123,83 @@ class PharmacyRulesTest {
                 lowStockAlerts,
                 input.logo(),
                 phone);
+    }
+
+    private static PharmacyRules.ApplicationInput typed(PharmacyRules.ApplicationInput input, String pharmacyType) {
+        return new PharmacyRules.ApplicationInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                pharmacyType,
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.invoicePrefix(),
+                input.signature(),
+                input.terms(),
+                input.acceptOnlineOrders(),
+                input.selfOrderKiosk(),
+                input.eInvoicing(),
+                input.looseSelling(),
+                input.lowStockAlerts(),
+                input.logo(),
+                input.submittedPhone());
+    }
+
+    private static PharmacyRules.ApplicationInput withoutGst(PharmacyRules.ApplicationInput input) {
+        return new PharmacyRules.ApplicationInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.pharmacyType(),
+                input.gstin(),
+                null,
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.invoicePrefix(),
+                input.signature(),
+                input.terms(),
+                input.acceptOnlineOrders(),
+                input.selfOrderKiosk(),
+                input.eInvoicing(),
+                input.looseSelling(),
+                input.lowStockAlerts(),
+                input.logo(),
+                input.submittedPhone());
     }
 }

@@ -119,6 +119,93 @@ class IdentityFlowIT {
     }
 
     @Test
+    void platformLoginUsesTheStaffAccount() {
+        bootstrap("9811111141");
+        String adminToken = token(verify("9811111141", "admin", "login"));
+        ResponseEntity<JsonNode> created = rest.exchange(
+                "/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "phone",
+                                "9811111142",
+                                "displayName",
+                                "Nia",
+                                "subtypes",
+                                List.of("finance", "compliance")),
+                        bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        JsonNode session = verify("9811111142", "platform", "login");
+        assertThat(session.get("account").get("accountType").asText()).isEqualTo("staff");
+        JsonNode subtypes = session.get("account").get("subtypes");
+        assertThat(subtypes).hasSize(2);
+        assertThat(subtypes.get(0).asText()).isEqualTo("compliance");
+        assertThat(subtypes.get(1).asText()).isEqualTo("finance");
+    }
+
+    @Test
+    void unknownPlatformPhoneIsRejectedWithoutACode() {
+        ResponseEntity<JsonNode> sent = rest.exchange(
+                "/auth/otp/send",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111143", "accountType", "platform", "purpose", "login"), json()),
+                JsonNode.class);
+        assertThat(sent.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(sent.getBody().get("mode").asText()).isEqualTo("otp");
+        assertThat(sms.latestCode("+919811111143")).isNull();
+
+        ResponseEntity<JsonNode> verified = rest.exchange(
+                "/auth/otp/verify",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "phone", "9811111143", "accountType", "platform", "purpose", "login", "code", "000000"),
+                        json()),
+                JsonNode.class);
+        assertThat(verified.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(verified.getBody().get("detail").asText()).isEqualTo("Code was not accepted");
+    }
+
+    @Test
+    void platformPhonesStayOnOneAccountType() {
+        bootstrap("9811111144");
+        String adminToken = token(verify("9811111144", "admin", "login"));
+        ResponseEntity<JsonNode> staffOnAdmin = rest.exchange(
+                "/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111144", "displayName", "Ada", "subtypes", List.of("sales")),
+                        bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(staffOnAdmin.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(staffOnAdmin.getBody().get("detail").asText())
+                .isEqualTo("A platform admin already exists for this phone");
+
+        ResponseEntity<JsonNode> staff = rest.exchange(
+                "/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111145", "displayName", "Nia", "subtypes", List.of("support")),
+                        bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(staff.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        HttpHeaders headers = json();
+        headers.setBearerAuth("test-bootstrap");
+        ResponseEntity<JsonNode> bootstrapStaff = rest.exchange(
+                "/auth/admin-bootstrap",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("phone", "9811111145"), headers),
+                JsonNode.class);
+        assertThat(bootstrapStaff.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(bootstrapStaff.getBody().get("detail").asText())
+                .isEqualTo("A staff account already exists for this phone");
+    }
+
+    @Test
     void anIncompleteSubmissionDoesNotAdvance() {
         String token = token(verify("9811111102", "pharmacy", "signup"));
         ResponseEntity<JsonNode> rejected = rest.exchange(
@@ -151,6 +238,7 @@ class IdentityFlowIT {
         assertThat(incomplete.get("phone").asText()).isEqualTo("+919811111103");
         assertThat(incomplete.get("lowStockAlerts").asBoolean()).isTrue();
         assertThat(incomplete.get("rejection").isNull()).isTrue();
+        assertThat(incomplete.get("pharmacyType").isNull()).isTrue();
 
         JsonNode submitted = submit(ownerToken);
         assertThat(submitted.get("status").asText()).isEqualTo("pending_compliance");
@@ -181,6 +269,7 @@ class IdentityFlowIT {
         assertThat(detail.get("businessTypes").get(0).asText()).isEqualTo("Retail Pharmacy");
         assertThat(detail.get("industry").asText()).isEqualTo("Pharmacy & Healthcare");
         assertThat(detail.get("registrationType").asText()).isEqualTo("Proprietorship");
+        assertThat(detail.get("pharmacyType").asText()).isEqualTo("pharmacy");
         assertThat(detail.get("gstin").asText()).isEqualTo("29ABCDE1234F1Z5");
         assertThat(detail.get("pan").asText()).isEqualTo("ABCDE1234F");
         assertThat(detail.get("drugLicenceNo").asText()).isEqualTo("DL-1");
@@ -234,6 +323,10 @@ class IdentityFlowIT {
         String financeToken = tokenForStaff(adminToken, "9811111104", List.of("finance"));
         assertThat(applicationDetail(financeToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(applicationDetail(ownerToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        JsonNode ownerRead = ownerApplication(ownerToken).getBody();
+        assertThat(ownerRead.get("pharmacyType").asText()).isEqualTo("pharmacy");
+        assertThat(ownerRead.get("name").asText()).isEqualTo("Care Pharmacy");
+        assertThat(ownerApplication(adminToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(applicationDetail(adminToken, "00000000-0000-4000-8000-000000009999")
                         .getStatusCode())
                 .isEqualTo(HttpStatus.NOT_FOUND);
@@ -270,6 +363,49 @@ class IdentityFlowIT {
         assertThat(approved.get("status").asText()).isEqualTo("approved");
         assertThat(mail.messages()).anyMatch(message -> message.subject().equals("Your pharmacy is approved"));
         assertThat(admin.get("accountId").asText()).isNotBlank();
+    }
+
+    @Test
+    void aRejectedResubmitKeepsAnOmittedDocumentAndReplacesAnother() {
+        String ownerToken = token(verify("9811111112", "pharmacy", "signup"));
+        String pharmacyId = verification(ownerToken).get("pharmacyId").asText();
+        assertThat(submit(ownerToken).get("status").asText()).isEqualTo("pending_compliance");
+        bootstrap("9811111113");
+        String adminToken = token(verify("9811111113", "admin", "login"));
+        assertThat(decision(adminToken, pharmacyId, "compliance-decision", "reject", "Missing seal")
+                        .getBody()
+                        .get("status")
+                        .asText())
+                .isEqualTo("rejected");
+
+        JsonNode rejected = ownerApplication(ownerToken).getBody();
+        assertThat(rejected.get("status").asText()).isEqualTo("rejected");
+        assertThat(rejected.get("rejection").get("comment").asText()).isEqualTo("Missing seal");
+        assertThat(rejected.get("pharmacyType").asText()).isEqualTo("pharmacy");
+        assertThat(contentType(rejected, "gst")).isEqualTo("application/pdf");
+        assertThat(contentType(rejected, "pan")).isEqualTo("image/png");
+
+        MultiValueMap<String, Object> invalid = application();
+        invalid.remove("pharmacyType");
+        ResponseEntity<JsonNode> bad = postApplication(ownerToken, invalid);
+        assertThat(bad.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        JsonNode unchanged = ownerApplication(ownerToken).getBody();
+        assertThat(unchanged.get("status").asText()).isEqualTo("rejected");
+        assertThat(contentType(unchanged, "gst")).isEqualTo("application/pdf");
+        assertThat(contentType(unchanged, "pan")).isEqualTo("image/png");
+
+        MultiValueMap<String, Object> again = application();
+        again.remove("gstCertificate");
+        again.remove("logo");
+        again.set("panCard", file("application/pdf"));
+        ResponseEntity<JsonNode> resubmitted = postApplication(ownerToken, again);
+        assertThat(resubmitted.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resubmitted.getBody().get("status").asText()).isEqualTo("pending_compliance");
+        JsonNode kept = ownerApplication(ownerToken).getBody();
+        assertThat(contentType(kept, "gst")).isEqualTo("application/pdf");
+        assertThat(contentType(kept, "logo")).isEqualTo("image/png");
+        assertThat(contentType(kept, "pan")).isEqualTo("application/pdf");
+        assertThat(kept.get("documents").findValuesAsText("slot")).contains("signature", "pharmacist-certificate");
     }
 
     @Test
@@ -325,6 +461,8 @@ class IdentityFlowIT {
         String staffToken = token(verify("9811111108", "pharmacy", "login"));
         assertThat(permission(staffToken, "inventory:read").getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(permission(staffToken, "billing:create").getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(ownerApplication(staffToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(ownerApplication(adminToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(business(refreshedOwner).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
@@ -373,6 +511,195 @@ class IdentityFlowIT {
                         json()),
                 JsonNode.class);
         assertThat(afterSignOut.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void pharmacyOwnersCanBeListedAndBlocked() {
+        JsonNode ownerLogin = verify("9811111121", "pharmacy", "signup");
+        String ownerToken = token(ownerLogin);
+        String ownerRefresh = ownerLogin.get("refreshToken").asText();
+        String pharmacyId = submit(ownerToken).get("pharmacyId").asText();
+        verify("9811111122", "pharmacy", "signup");
+        bootstrap("9811111190");
+        String adminToken = token(verify("9811111190", "admin", "login"));
+        String complianceToken = tokenForStaff(adminToken, "9811111127", List.of("compliance"));
+        decision(complianceToken, pharmacyId, "compliance-decision", "approve", "ok");
+        decision(adminToken, pharmacyId, "admin-decision", "approve", "ok");
+
+        JsonNode pinReady = verify("9811111121", "pharmacy", "login");
+        assertThat(pinReady.get("account").get("disabled").asBoolean()).isFalse();
+        rest.exchange(
+                "/auth/pin/set",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("pin", "2468"), bearer(token(pinReady), MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        JsonNode ownerPin = rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111121", "accountType", "pharmacy", "pin", "2468"),
+                                json()),
+                        JsonNode.class)
+                .getBody();
+        ownerToken = token(ownerPin);
+        ownerRefresh = ownerPin.get("refreshToken").asText();
+        assertThat(rest.exchange(
+                                "/pharmacy/staff",
+                                HttpMethod.POST,
+                                new HttpEntity<>(
+                                        java.util.Map.of(
+                                                "phone",
+                                                "9811111123",
+                                                "displayName",
+                                                "Counter",
+                                                "permissions",
+                                                List.of("inventory:read")),
+                                        bearer(ownerToken, MediaType.APPLICATION_JSON)),
+                                JsonNode.class)
+                        .getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+        JsonNode staffLogin = verify("9811111123", "pharmacy", "login");
+        String staffToken = token(staffLogin);
+        String staffRefresh = staffLogin.get("refreshToken").asText();
+
+        String financeToken = tokenForStaff(adminToken, "9811111124", List.of("finance"));
+        String salesToken = tokenForStaff(adminToken, "9811111125", List.of("sales"));
+        String customerToken = token(verify("9811111126", "customer", "login"));
+
+        ResponseEntity<JsonNode> listed = owners(financeToken);
+        assertThat(listed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listed.getBody()).hasSize(2);
+        assertThat(listed.getBody().get(0).get("name").asText()).isEqualTo("Care Pharmacy");
+        assertThat(listed.getBody().get(0).get("phone").asText()).isEqualTo("+919811111121");
+        assertThat(listed.getBody().get(0).get("status").asText()).isEqualTo("approved");
+        assertThat(listed.getBody().get(0).get("blockState").asText()).isEqualTo("clear");
+        assertThat(listed.getBody().get(1).get("name").isNull()).isTrue();
+        assertThat(listed.getBody().findValuesAsText("phone")).containsExactly("+919811111121", "+919811111122");
+        assertThat(owners(ownerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(owners(customerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        ResponseEntity<byte[]> financeDocument = rest.exchange(
+                "/pharmacies/" + pharmacyId + "/documents/gst",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(financeToken, MediaType.APPLICATION_JSON)),
+                byte[].class);
+        assertThat(financeDocument.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<JsonNode> blank = blockRequest(salesToken, pharmacyId, " ");
+        assertThat(blank.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(blank.getBody().get("detail").asText()).isEqualTo("A reason is required.");
+        ResponseEntity<JsonNode> adminRequest = blockRequest(adminToken, pharmacyId, "Needs a review");
+        assertThat(adminRequest.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(adminRequest.getBody().get("detail").asText()).isEqualTo("Platform admin decides a block directly.");
+
+        ResponseEntity<JsonNode> requested = blockRequest(salesToken, pharmacyId, "Missing licence");
+        assertThat(requested.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(requested.getBody().get("blockState").asText()).isEqualTo("requested");
+        String requestId = requested.getBody().get("request").get("id").asText();
+        assertThat(requested.getBody().get("request").get("reason").asText()).isEqualTo("Missing licence");
+        assertThat(blockRequest(salesToken, pharmacyId, "Again").getStatusCode())
+                .isEqualTo(HttpStatus.CONFLICT);
+        assertThat(block(adminToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+        ResponseEntity<JsonNode> rejected = blockDecision(adminToken, pharmacyId, requestId, "reject");
+        assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(rejected.getBody().get("blockState").asText()).isEqualTo("clear");
+        assertThat(rejected.getBody().get("request").isNull()).isTrue();
+
+        ResponseEntity<JsonNode> blocked = block(adminToken, pharmacyId);
+        assertThat(blocked.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(blocked.getBody().get("blockState").asText()).isEqualTo("blocked");
+        assertThat(block(adminToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        ResponseEntity<JsonNode> unblocked = unblock(adminToken, pharmacyId);
+        assertThat(unblocked.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(unblocked.getBody().get("blockState").asText()).isEqualTo("clear");
+        assertThat(unblock(adminToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+        String openId = blockRequest(salesToken, pharmacyId, "Restrict the counter")
+                .getBody()
+                .get("request")
+                .get("id")
+                .asText();
+        ResponseEntity<JsonNode> approved = blockDecision(adminToken, pharmacyId, openId, "approve");
+        assertThat(approved.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(approved.getBody().get("blockState").asText()).isEqualTo("blocked");
+
+        ResponseEntity<JsonNode> staleRead = rest.exchange(
+                "/pharmacy/verification",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(ownerToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(staleRead.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(staleRead.getBody().get("detail").asText()).isEqualTo("Session was not accepted");
+
+        ResponseEntity<JsonNode> refreshed = rest.exchange(
+                "/auth/refresh",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("refreshToken", ownerRefresh), json()),
+                JsonNode.class);
+        assertThat(refreshed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(refreshed.getBody().get("account").get("disabled").asBoolean())
+                .isTrue();
+        ResponseEntity<JsonNode> afterRefresh = rest.exchange(
+                "/pharmacy/verification",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token(refreshed.getBody()), MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(afterRefresh.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        ResponseEntity<JsonNode> pinLogin = rest.exchange(
+                "/auth/pin",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111121", "accountType", "pharmacy", "pin", "2468"), json()),
+                JsonNode.class);
+        assertThat(pinLogin.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(pinLogin.getBody().get("account").get("disabled").asBoolean())
+                .isTrue();
+        ResponseEntity<byte[]> ownerDocument = rest.exchange(
+                "/pharmacies/" + pharmacyId + "/documents/gst",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token(pinLogin.getBody()), MediaType.APPLICATION_JSON)),
+                byte[].class);
+        assertThat(ownerDocument.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        ResponseEntity<JsonNode> staffCall = rest.exchange(
+                "/probe/permission/inventory:read",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(staffToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(staffCall.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(staffCall.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
+        ResponseEntity<JsonNode> staffRefreshResponse = rest.exchange(
+                "/auth/refresh",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("refreshToken", staffRefresh), json()),
+                JsonNode.class);
+        assertThat(staffRefreshResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(staffRefreshResponse.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
+        ResponseEntity<JsonNode> staffVerify = postVerify("9811111123", "pharmacy", "login");
+        assertThat(staffVerify.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(staffVerify.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
+        ResponseEntity<JsonNode> staffPin = rest.exchange(
+                "/auth/pin",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111123", "accountType", "pharmacy", "pin", "2468"), json()),
+                JsonNode.class);
+        assertThat(staffPin.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(staffPin.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
+
+        String blankId = owners(financeToken).getBody().get(1).get("pharmacyId").asText();
+        assertThat(block(adminToken, blankId).getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode restrictedLogin = verify("9811111122", "pharmacy", "login");
+        assertThat(restrictedLogin.get("account").get("disabled").asBoolean()).isTrue();
+        ResponseEntity<JsonNode> restrictedRead = rest.exchange(
+                "/pharmacy/verification",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token(restrictedLogin), MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(restrictedRead.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(restrictedRead.getBody().get("detail").asText()).isEqualTo("Session was not accepted");
     }
 
     private JsonNode verify(String phone, String type, String purpose) {
@@ -426,13 +753,34 @@ class IdentityFlowIT {
     }
 
     private JsonNode submit(String token) {
-        ResponseEntity<JsonNode> response = rest.exchange(
-                "/pharmacy/application",
-                HttpMethod.POST,
-                new HttpEntity<>(application(), bearer(token, MediaType.MULTIPART_FORM_DATA)),
-                JsonNode.class);
+        ResponseEntity<JsonNode> response = postApplication(token, application());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         return response.getBody();
+    }
+
+    private ResponseEntity<JsonNode> postApplication(String token, MultiValueMap<String, Object> body) {
+        return rest.exchange(
+                "/pharmacy/application",
+                HttpMethod.POST,
+                new HttpEntity<>(body, bearer(token, MediaType.MULTIPART_FORM_DATA)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> ownerApplication(String token) {
+        return rest.exchange(
+                "/pharmacy/application",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private static String contentType(JsonNode application, String slot) {
+        for (JsonNode document : application.get("documents")) {
+            if (slot.equals(document.get("slot").asText())) {
+                return document.get("contentType").asText();
+            }
+        }
+        return "";
     }
 
     private JsonNode verification(String token) {
@@ -480,6 +828,57 @@ class IdentityFlowIT {
                 JsonNode.class);
     }
 
+    private ResponseEntity<JsonNode> postVerify(String phone, String type, String purpose) {
+        String code = send(phone, type, purpose);
+        return rest.exchange(
+                "/auth/otp/verify",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", phone, "accountType", type, "purpose", purpose, "code", code),
+                        json()),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> owners(String token) {
+        return rest.exchange(
+                "/pharmacy-owners",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> blockRequest(String token, String pharmacyId, String reason) {
+        return rest.exchange(
+                "/pharmacy-owners/" + pharmacyId + "/block-requests",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("reason", reason), bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> blockDecision(String token, String pharmacyId, String requestId, String decision) {
+        return rest.exchange(
+                "/pharmacy-owners/" + pharmacyId + "/block-requests/" + requestId + "/decision",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("decision", decision), bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> block(String token, String pharmacyId) {
+        return rest.exchange(
+                "/pharmacy-owners/" + pharmacyId + "/block",
+                HttpMethod.POST,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> unblock(String token, String pharmacyId) {
+        return rest.exchange(
+                "/pharmacy-owners/" + pharmacyId + "/unblock",
+                HttpMethod.POST,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
     private static String token(JsonNode session) {
         return session.get("accessToken").asText();
     }
@@ -499,6 +898,7 @@ class IdentityFlowIT {
 
     private static MultiValueMap<String, Object> application() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("pharmacyType", "pharmacy");
         body.add("name", "Care Pharmacy");
         body.add("tagline", "Open late");
         body.add("email", "owner@example.com");

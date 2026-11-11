@@ -1,0 +1,16 @@
+name: dispensary
+kind: react
+quality:
+  typecheck: true
+  lint: true
+  format: true
+  test: true
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - dispensary.nammamedmate.com
+build:
+  env:
+    VITE_SITE_URL: https://dispensary.nammamedmate.com
+    VITE_API_BASE_URL: https://api.nammamedmate.com

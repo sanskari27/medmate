@@ -1,0 +1,72 @@
+meta {
+  name: Send platform OTP
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/auth/otp/send
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "accountType": "platform",
+    "purpose": "login"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.mode: eq otp
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (res.getStatus() !== 200 || !body || body.mode !== "otp") {
+    return;
+  }
+  const sent = req.getBody() || {};
+  const rawPhone = typeof sent === "object" ? sent.phone : bru.getEnvVar("examplePhone");
+  const digits = String(rawPhone || "").replace(/\D/g, "");
+  let target = String(rawPhone || "");
+  if (digits.length === 10) {
+    target = "+91" + digits;
+  } else if (digits.length === 12 && digits.startsWith("91")) {
+    target = "+" + digits;
+  }
+  const mock = String(bru.getEnvVar("smsMockUrl") || "http://127.0.0.1:8090").replace(/\/$/, "");
+  const response = await bru.sendRequest({
+    method: "GET",
+    url: mock + "/messages"
+  });
+  let messages = response && response.data;
+  if (typeof messages === "string") {
+    messages = JSON.parse(messages);
+  }
+  if (!Array.isArray(messages)) {
+    return;
+  }
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = messages[index];
+    if (message && message.phone === target && message.code) {
+      bru.setEnvVar("otpCode", message.code);
+      bru.setVar("otpCode", message.code);
+      return;
+    }
+  }
+}
+
+docs {
+  Sends a login code for the admin or staff account on this phone.
+  Start `make sms-mock` first. The post-response script stores the latest code in otpCode.
+  examplePhone {{examplePhone}} is the sample mobile.
+}

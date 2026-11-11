@@ -30,6 +30,8 @@ public final class PharmacyRules {
     public static final Set<String> INDUSTRIES =
             Set.of("Pharmacy & Healthcare", "Retail", "Wholesale", "Hospital / Clinic", "Diagnostics");
 
+    public static final Set<String> PHARMACY_TYPES = Set.of("pharmacy", "hospital");
+
     public static final Set<String> REGIONS = Set.of(
             "Andhra Pradesh",
             "Arunachal Pradesh",
@@ -86,6 +88,7 @@ public final class PharmacyRules {
             List<String> businessTypes,
             String industry,
             String registrationType,
+            String pharmacyType,
             String gstin,
             Upload gst,
             String pan,
@@ -112,6 +115,11 @@ public final class PharmacyRules {
             String submittedPhone) {}
 
     public static String invalid(ApplicationInput input, String accountPhone) {
+        return invalid(input, accountPhone, Set.of());
+    }
+
+    public static String invalid(ApplicationInput input, String accountPhone, Set<String> storedSlots) {
+        Set<String> stored = storedSlots == null ? Set.of() : storedSlots;
         if (input.submittedPhone() != null && !input.submittedPhone().isBlank()) {
             String normalized = PhoneNumbers.normalize(input.submittedPhone());
             if (normalized == null || !normalized.equals(accountPhone)) {
@@ -126,6 +134,9 @@ public final class PharmacyRules {
         }
         if (input.registrationType() == null || !REGISTRATION_TYPES.contains(input.registrationType())) {
             return "Registration type is required";
+        }
+        if (input.pharmacyType() == null || !PHARMACY_TYPES.contains(input.pharmacyType())) {
+            return "Pharmacy type is required";
         }
         if (input.industry() == null || !INDUSTRIES.contains(input.industry())) {
             return "Industry is required";
@@ -161,40 +172,47 @@ public final class PharmacyRules {
                         .matches("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")) {
             return "Enter a valid GSTIN";
         }
-        String gstFile = file(input.gst(), "GST certificate", true, false);
+        String gstFile = file(input.gst(), "GST certificate", true, false, stored.contains("gst"));
         if (gstFile != null) {
             return gstFile;
         }
         if (input.pan() == null || !input.pan().trim().toUpperCase(Locale.ROOT).matches("^[A-Z]{5}[0-9]{4}[A-Z]$")) {
             return "PAN number is required";
         }
-        String panFile = file(input.panCard(), "PAN card", true, false);
+        String panFile = file(input.panCard(), "PAN card", true, false, stored.contains("pan"));
         if (panFile != null) {
             return panFile;
         }
-        String drug = licence(input.drugLicenceNo(), input.drugLicence(), "Drug licence");
+        String drug =
+                licence(input.drugLicenceNo(), input.drugLicence(), "Drug licence", stored.contains("drug-licence"));
         if (drug != null) {
             return drug;
         }
-        String fssai = licence(input.fssaiNo(), input.fssai(), "FSSAI licence");
+        String fssai = licence(input.fssaiNo(), input.fssai(), "FSSAI licence", stored.contains("fssai"));
         if (fssai != null) {
             return fssai;
         }
-        String trade = licence(input.tradeLicenceNo(), input.tradeLicence(), "Trade licence");
+        String trade = licence(
+                input.tradeLicenceNo(), input.tradeLicence(), "Trade licence", stored.contains("trade-licence"));
         if (trade != null) {
             return trade;
         }
         if (blank(input.pharmacistName()) || input.pharmacistName().trim().length() > 160) {
             return "Registered pharmacist name is required";
         }
-        String certificate = file(input.pharmacistCertificate(), "Pharmacist certificate", true, false);
+        String certificate = file(
+                input.pharmacistCertificate(),
+                "Pharmacist certificate",
+                true,
+                false,
+                stored.contains("pharmacist-certificate"));
         if (certificate != null) {
             return certificate;
         }
         if (input.invoicePrefix() == null || !input.invoicePrefix().trim().matches("^[A-Za-z0-9-]{1,16}$")) {
             return "Invoice prefix is required";
         }
-        String signature = file(input.signature(), "Signature", true, true);
+        String signature = file(input.signature(), "Signature", true, true, stored.contains("signature"));
         if (signature != null) {
             return signature;
         }
@@ -204,19 +222,19 @@ public final class PharmacyRules {
         if (Boolean.FALSE.equals(input.lowStockAlerts())) {
             return "Low-stock alerts stay on";
         }
-        return file(input.logo(), "Logo", false, true);
+        return file(input.logo(), "Logo", false, true, stored.contains("logo"));
     }
 
-    private static String licence(String number, Upload upload, String label) {
+    private static String licence(String number, Upload upload, String label, boolean stored) {
         if (blank(number) || number.trim().length() > 40) {
             return label + " number is required";
         }
-        return file(upload, label, true, false);
+        return file(upload, label, true, false, stored);
     }
 
-    private static String file(Upload upload, String label, boolean required, boolean imageOnly) {
+    private static String file(Upload upload, String label, boolean required, boolean imageOnly, boolean stored) {
         if (upload == null || upload.body() == null || upload.body().length == 0) {
-            return required ? label + " is required" : null;
+            return required && !stored ? label + " is required" : null;
         }
         if (!allowed(upload.contentType(), imageOnly)) {
             return imageOnly ? label + " must be an image" : label + " must be an image or PDF";

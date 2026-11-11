@@ -1,0 +1,15 @@
+export {
+  IconArrowRight,
+  IconChart,
+  IconCheck,
+  IconDashboard,
+  IconGlobe,
+  IconLogout,
+  IconMenu,
+  IconReceipt,
+  IconReports,
+  IconRx,
+  IconSettings,
+  IconStore,
+  IconUsers,
+} from "./Icon";

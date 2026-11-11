@@ -1,8 +1,8 @@
 package com.medmate.server.identity.web;
 
-import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.access.AccountType;
+import com.medmate.server.identity.access.BlockRules;
 import com.medmate.server.identity.access.PharmacyRole;
 import com.medmate.server.identity.documents.DocumentStore;
 import com.medmate.server.identity.store.PharmacyStore;
@@ -47,10 +47,7 @@ public class DocumentService {
         if (actor.disabled()) {
             return false;
         }
-        if (actor.accountType() == AccountType.ADMIN) {
-            return true;
-        }
-        if (Access.platform(actor.accountType(), false, actor.subtypes(), "compliance")) {
+        if (BlockRules.directoryReader(actor.accountType(), false, actor.subtypes())) {
             return true;
         }
         return actor.accountType() == AccountType.PHARMACY

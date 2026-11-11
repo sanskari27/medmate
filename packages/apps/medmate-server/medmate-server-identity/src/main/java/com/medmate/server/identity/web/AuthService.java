@@ -2,7 +2,9 @@ package com.medmate.server.identity.web;
 
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.access.AccountType;
+import com.medmate.server.identity.access.BlockRules;
 import com.medmate.server.identity.access.PharmacyRole;
+import com.medmate.server.identity.access.PlatformAccounts;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.config.MedmateIdentityProperties;
 import com.medmate.server.identity.crypto.Secrets;
@@ -17,6 +19,9 @@ import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.shared.error.ApiProblem;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,44 +67,20 @@ public class AuthService {
 
     public OtpSendResponse send(String rawPhone, String rawType, String rawPurpose) {
         String phone = phone(rawPhone);
-        AccountType type = type(rawType);
         OtpPurpose purpose = purpose(rawPurpose);
-        if (purpose == OtpPurpose.SIGNUP && type != AccountType.PHARMACY) {
-            throw bad("Signup is only for a pharmacy owner");
+        if (platformScope(rawType)) {
+            IdentityStore.AccountRow existing = solePlatform(phone);
+            AccountType type = existing == null ? null : existing.type();
+            return sendFor(phone, purpose, type, existing);
         }
-        if (purpose == OtpPurpose.PIN_RESET && type != AccountType.PHARMACY) {
-            throw bad("PIN reset is only for a pharmacy owner");
-        }
-        IdentityStore.AccountRow existing = accounts.findAccount(phone, type).orElse(null);
-        if (purpose == OtpPurpose.SIGNUP && existing != null) {
-            throw conflict("A pharmacy account already exists for this phone");
-        }
-        if (purpose == OtpPurpose.LOGIN && pinLogin(existing)) {
-            return new OtpSendResponse("pin");
-        }
-        if (purpose == OtpPurpose.PIN_RESET && !pinResetAllowed(existing)) {
-            throw bad("PIN reset is not available");
-        }
-        if (!shouldDeliver(purpose, type, existing)) {
-            return new OtpSendResponse("otp");
-        }
-        String code = Secrets.otpCode();
-        Instant now = clock.instant();
-        accounts.upsertOtp(phone, type, purpose, OtpMachine.issue(Secrets.sha256(code), now));
-        try {
-            sms.send(phone, code);
-        } catch (RuntimeException exception) {
-            accounts.deleteOtp(phone, type, purpose);
-            log.warn("OTP delivery failed for {}", phone);
-            throw new ApiProblem(HttpStatus.SERVICE_UNAVAILABLE, "OTP unavailable", "OTP could not be sent");
-        }
-        return new OtpSendResponse("otp");
+        AccountType type = type(rawType);
+        return sendFor(phone, purpose, type, accounts.findAccount(phone, type).orElse(null));
     }
 
     public SessionIssuer.SessionResponse verify(String rawPhone, String rawType, String rawPurpose, String code) {
         String phone = phone(rawPhone);
-        AccountType type = type(rawType);
         OtpPurpose purpose = purpose(rawPurpose);
+        AccountType type = resolvedType(phone, rawType, purpose);
         if (code == null || code.isBlank()) {
             throw unauthorized("Code was not accepted");
         }
@@ -119,7 +100,12 @@ public class AuthService {
         }
         IdentityStore.AccountRow account = resolve(phone, type, purpose);
         AccountPrincipal principal = directory.load(account);
-        if (principal.disabled()) {
+        if (restrictedStaff(principal)) {
+            throw unauthorized("This pharmacy is restricted.");
+        }
+        if (principal.disabled()
+                && !BlockRules.restrictedOwnerSession(
+                        principal.accountType(), principal.pharmacyRole(), principal.disabled())) {
             throw unauthorized("Code was not accepted");
         }
         if (purpose == OtpPurpose.PIN_RESET && !pinResetAllowed(account)) {
@@ -129,6 +115,9 @@ public class AuthService {
     }
 
     public SessionIssuer.SessionResponse pin(String rawPhone, String rawType, String pin) {
+        if (platformScope(rawType)) {
+            throw unauthorized("PIN was not accepted");
+        }
         if (!Pins.valid(pin)) {
             throw bad("PIN must be 4 digits");
         }
@@ -138,6 +127,9 @@ public class AuthService {
             throw unauthorized("PIN was not accepted");
         }
         IdentityStore.AccountRow account = accounts.findAccount(phone, type).orElse(null);
+        if (account != null && restrictedStaff(directory.load(account))) {
+            throw unauthorized("This pharmacy is restricted.");
+        }
         if (!pinLogin(account)) {
             throw unauthorized("PIN was not accepted");
         }
@@ -166,7 +158,15 @@ public class AuthService {
         IdentityStore.RefreshRow row = refreshRow(refreshToken);
         accounts.revokeRefresh(Secrets.sha256(refreshToken));
         AccountPrincipal principal = directory.load(row.accountId());
-        if (principal == null || principal.disabled()) {
+        if (principal == null) {
+            throw unauthorized("Session was not accepted");
+        }
+        if (restrictedStaff(principal)) {
+            throw unauthorized("This pharmacy is restricted.");
+        }
+        if (principal.disabled()
+                && !BlockRules.restrictedOwnerSession(
+                        principal.accountType(), principal.pharmacyRole(), principal.disabled())) {
             throw unauthorized("Session was not accepted");
         }
         return sessions.issue(principal, clock.instant());
@@ -189,14 +189,89 @@ public class AuthService {
         if (existing != null) {
             return new BootstrapResponse(existing.id(), false);
         }
+        if (accounts.findAccount(phone, AccountType.STAFF).isPresent()) {
+            throw conflict("A staff account already exists for this phone");
+        }
         try {
             IdentityStore.AccountRow created = creator.create(phone, AccountType.ADMIN, null, clock.instant());
             return new BootstrapResponse(created.id(), true);
         } catch (DuplicateKeyException exception) {
             IdentityStore.AccountRow winner =
-                    accounts.findAccount(phone, AccountType.ADMIN).orElseThrow();
-            return new BootstrapResponse(winner.id(), false);
+                    accounts.findAccount(phone, AccountType.ADMIN).orElse(null);
+            if (winner != null) {
+                return new BootstrapResponse(winner.id(), false);
+            }
+            throw conflict("A staff account already exists for this phone");
         }
+    }
+
+    private OtpSendResponse sendFor(
+            String phone, OtpPurpose purpose, AccountType type, IdentityStore.AccountRow existing) {
+        if (purpose == OtpPurpose.SIGNUP && type != AccountType.PHARMACY) {
+            throw bad("Signup is only for a pharmacy owner");
+        }
+        if (purpose == OtpPurpose.PIN_RESET && type != AccountType.PHARMACY) {
+            throw bad("PIN reset is only for a pharmacy owner");
+        }
+        if (purpose == OtpPurpose.SIGNUP && existing != null) {
+            throw conflict("A pharmacy account already exists for this phone");
+        }
+        if (purpose == OtpPurpose.LOGIN && pinLogin(existing)) {
+            return new OtpSendResponse("pin");
+        }
+        if (purpose == OtpPurpose.PIN_RESET && !pinResetAllowed(existing)) {
+            throw bad("PIN reset is not available");
+        }
+        if (!shouldDeliver(purpose, type, existing)) {
+            return new OtpSendResponse("otp");
+        }
+        String code = Secrets.otpCode();
+        Instant now = clock.instant();
+        accounts.upsertOtp(phone, type, purpose, OtpMachine.issue(Secrets.sha256(code), now));
+        try {
+            sms.send(phone, code);
+        } catch (RuntimeException exception) {
+            accounts.deleteOtp(phone, type, purpose);
+            log.warn("OTP delivery failed for {}", phone);
+            throw new ApiProblem(HttpStatus.SERVICE_UNAVAILABLE, "OTP unavailable", "OTP could not be sent");
+        }
+        return new OtpSendResponse("otp");
+    }
+
+    private AccountType resolvedType(String phone, String rawType, OtpPurpose purpose) {
+        if (!platformScope(rawType)) {
+            return type(rawType);
+        }
+        if (purpose == OtpPurpose.SIGNUP) {
+            throw bad("Signup is only for a pharmacy owner");
+        }
+        if (purpose == OtpPurpose.PIN_RESET) {
+            throw bad("PIN reset is only for a pharmacy owner");
+        }
+        IdentityStore.AccountRow existing = solePlatform(phone);
+        if (existing == null) {
+            throw unauthorized("Code was not accepted");
+        }
+        return existing.type();
+    }
+
+    private IdentityStore.AccountRow solePlatform(String phone) {
+        List<IdentityStore.AccountRow> rows = accounts.findPlatformAccounts(phone);
+        Optional<AccountType> chosen = PlatformAccounts.sole(
+                rows.stream().map(IdentityStore.AccountRow::type).toList());
+        if (chosen.isEmpty()) {
+            return null;
+        }
+        for (IdentityStore.AccountRow row : rows) {
+            if (row.type() == chosen.get()) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private static boolean platformScope(String raw) {
+        return raw != null && "platform".equals(raw.trim().toLowerCase(Locale.ROOT));
     }
 
     private IdentityStore.AccountRow resolve(String phone, AccountType type, OtpPurpose purpose) {
@@ -225,17 +300,28 @@ public class AuthService {
     }
 
     private boolean pinLogin(IdentityStore.AccountRow account) {
-        if (account == null || account.disabled() || account.type() != AccountType.PHARMACY) {
+        if (account == null || account.type() != AccountType.PHARMACY) {
             return false;
         }
         AccountPrincipal principal = directory.load(account);
+        if (principal.disabled()
+                && !BlockRules.restrictedOwnerSession(
+                        principal.accountType(), principal.pharmacyRole(), principal.disabled())) {
+            return false;
+        }
         return principal.pharmacyRole() == PharmacyRole.OWNER
                 && principal.verificationStatus() == VerificationStatus.APPROVED
                 && principal.pinSet();
     }
 
     private boolean pinResetAllowed(IdentityStore.AccountRow account) {
-        return pinLogin(account);
+        return account != null && !account.disabled() && pinLogin(account);
+    }
+
+    private boolean restrictedStaff(AccountPrincipal principal) {
+        return principal != null
+                && BlockRules.staffOfRestrictedPharmacy(
+                        principal.accountType(), principal.pharmacyRole(), directory.ownerAccountDisabled(principal));
     }
 
     private boolean shouldDeliver(OtpPurpose purpose, AccountType type, IdentityStore.AccountRow existing) {
@@ -245,7 +331,15 @@ public class AuthService {
         if (type == AccountType.CUSTOMER || type == AccountType.RIDER) {
             return true;
         }
-        return existing != null && !existing.disabled();
+        if (existing == null) {
+            return false;
+        }
+        if (!existing.disabled()) {
+            return true;
+        }
+        AccountPrincipal principal = directory.load(existing);
+        return BlockRules.restrictedOwnerSession(
+                principal.accountType(), principal.pharmacyRole(), principal.disabled());
     }
 
     private IdentityStore.RefreshRow refreshRow(String refreshToken) {

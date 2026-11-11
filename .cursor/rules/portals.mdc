@@ -1,0 +1,18 @@
+---
+description: Structure and boundaries for the dispensary and admin portals
+globs:
+  - packages/apps/dispensary/**/*
+  - packages/apps/admin/**/*
+alwaysApply: false
+---
+
+# Portals
+
+Read `packages/docs/portals/architecture.md` before adding a screen.
+
+- Keep pharmacy code and `packages/infra/pharmacy` unchanged. Do not import that app.
+- Put a new screen in its feature. Other features import only that feature's `index.ts`.
+- Shared UI does not import features. Components do not call `fetch`.
+- Copy a pharmacy screen with the same element order and placement. Style with the existing Tailwind tokens.
+- Dispensary login sends `accountType: "pharmacy"`. Admin login sends `accountType: "platform"`.
+- Dev OTP comes from `GET /sms-mock/messages`, using the same phone match as the Bruno Send OTP script. Production does not show that code.

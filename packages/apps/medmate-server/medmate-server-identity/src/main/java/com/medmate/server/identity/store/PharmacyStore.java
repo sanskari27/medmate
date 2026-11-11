@@ -7,9 +7,11 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.pharmacy.PharmacyRules;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -59,6 +61,7 @@ public class PharmacyStore {
             List<String> businessTypes,
             String industry,
             String registrationType,
+            String pharmacyType,
             String gstin,
             String pan,
             String drugLicenceNo,
@@ -94,6 +97,7 @@ public class PharmacyStore {
                     businessTypes,
                     industry,
                     registrationType,
+                    pharmacyType,
                     gstin,
                     pan,
                     drugLicenceNo,
@@ -155,7 +159,7 @@ public class PharmacyStore {
                         """
                         SELECT p.id, p.verification_status, p.rejection_stage, p.rejection_comment, a.phone,
                           p.name, p.tagline, p.email, p.address, p.city, p.state, p.pincode, p.business_types,
-                          p.industry, p.registration_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
+                          p.industry, p.registration_type, p.pharmacy_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
                           p.trade_licence_no, p.enable_tds, p.enable_tcs, p.pharmacist_name, p.invoice_prefix,
                           p.terms, p.accept_online_orders, p.self_order_kiosk, p.e_invoicing, p.loose_selling,
                           p.low_stock_alerts, p.submitted_at
@@ -197,6 +201,7 @@ public class PharmacyStore {
                           business_types = :businessTypes,
                           industry = :industry,
                           registration_type = :registration,
+                          pharmacy_type = :pharmacyType,
                           gstin = :gstin,
                           pan = :pan,
                           drug_licence_no = :drug,
@@ -226,6 +231,7 @@ public class PharmacyStore {
                 .param("businessTypes", businessTypes(input.businessTypes()))
                 .param("industry", input.industry())
                 .param("registration", input.registrationType())
+                .param("pharmacyType", input.pharmacyType())
                 .param("gstin", input.gstin().trim().toUpperCase(Locale.ROOT))
                 .param("pan", input.pan().trim().toUpperCase(Locale.ROOT))
                 .param("drug", input.drugLicenceNo().trim())
@@ -258,16 +264,17 @@ public class PharmacyStore {
                 .update();
     }
 
-    public List<String> documentKeys(UUID pharmacyId) {
-        return jdbc.sql("SELECT object_key FROM pharmacy_document WHERE pharmacy_id = :id")
+    public Set<String> storedSlots(UUID pharmacyId) {
+        return new LinkedHashSet<>(jdbc.sql("SELECT slot FROM pharmacy_document WHERE pharmacy_id = :id")
                 .param("id", pharmacyId)
                 .query(String.class)
-                .list();
+                .list());
     }
 
-    public void deleteDocuments(UUID pharmacyId) {
-        jdbc.sql("DELETE FROM pharmacy_document WHERE pharmacy_id = :id")
+    public void deleteDocument(UUID pharmacyId, String slot) {
+        jdbc.sql("DELETE FROM pharmacy_document WHERE pharmacy_id = :id AND slot = :slot")
                 .param("id", pharmacyId)
+                .param("slot", slot)
                 .update();
     }
 
@@ -301,6 +308,55 @@ public class PharmacyStore {
                 .param("slot", slot)
                 .query((rs, row) -> new DocumentRow(rs.getString("object_key"), rs.getString("content_type")))
                 .optional();
+    }
+
+    public record OwnerListing(
+            UUID pharmacyId,
+            String name,
+            String phone,
+            VerificationStatus status,
+            boolean ownerDisabled,
+            boolean openRequest) {}
+
+    public List<OwnerListing> listOwners() {
+        return jdbc.sql(
+                        """
+                        SELECT p.id, p.name, a.phone, p.verification_status, a.disabled AS owner_disabled,
+                          EXISTS (
+                            SELECT 1 FROM pharmacy_block_request r
+                            WHERE r.pharmacy_id = p.id AND r.status = 'open'
+                          ) AS open_request
+                        FROM pharmacy p
+                        JOIN account a ON a.id = p.owner_account_id
+                        ORDER BY CASE WHEN p.name IS NULL OR btrim(p.name) = '' THEN 1 ELSE 0 END,
+                          lower(p.name),
+                          p.id
+                        """)
+                .query((rs, row) -> new OwnerListing(
+                        rs.getObject("id", UUID.class),
+                        rs.getString("name"),
+                        rs.getString("phone"),
+                        VerificationStatus.parse(rs.getString("verification_status")),
+                        rs.getBoolean("owner_disabled"),
+                        rs.getBoolean("open_request")))
+                .list();
+    }
+
+    public boolean ownerDisabled(UUID pharmacyId) {
+        if (pharmacyId == null) {
+            return false;
+        }
+        return jdbc.sql(
+                        """
+                        SELECT a.disabled
+                        FROM pharmacy p
+                        JOIN account a ON a.id = p.owner_account_id
+                        WHERE p.id = :id
+                        """)
+                .param("id", pharmacyId)
+                .query(Boolean.class)
+                .optional()
+                .orElse(false);
     }
 
     public List<Summary> list(VerificationStatus status) {
@@ -357,6 +413,7 @@ public class PharmacyStore {
                 readBusinessTypes(rs.getString("business_types")),
                 rs.getString("industry"),
                 rs.getString("registration_type"),
+                rs.getString("pharmacy_type"),
                 rs.getString("gstin"),
                 rs.getString("pan"),
                 rs.getString("drug_licence_no"),

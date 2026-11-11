@@ -27,6 +27,7 @@ tests {
     expect(body.status).to.be.a("string");
     expect(body.phone).to.be.a("string");
     expect(body.lowStockAlerts).to.equal(true);
+    expect(body).to.have.property("pharmacyType");
     expect(body.documents).to.be.an("array");
     body.documents.forEach(function(document) {
       expect(document.slot).to.be.a("string");

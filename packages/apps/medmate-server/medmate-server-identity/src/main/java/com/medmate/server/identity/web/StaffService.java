@@ -53,6 +53,9 @@ public class StaffService {
         String phone = phone(rawPhone);
         String name = name(displayName);
         Set<StaffSubtype> parsed = subtypes(subtypes);
+        if (accounts.findAccount(phone, AccountType.ADMIN).isPresent()) {
+            throw conflict("A platform admin already exists for this phone");
+        }
         if (accounts.findAccount(phone, AccountType.STAFF).isPresent()) {
             throw conflict("A staff account already exists for this phone");
         }
@@ -61,6 +64,9 @@ public class StaffService {
             accounts.replaceSubtypes(created.id(), parsed);
             return StaffResponse.from(directory.load(created.id()));
         } catch (DuplicateKeyException exception) {
+            if (accounts.findAccount(phone, AccountType.ADMIN).isPresent()) {
+                throw conflict("A platform admin already exists for this phone");
+            }
             throw conflict("A staff account already exists for this phone");
         }
     }

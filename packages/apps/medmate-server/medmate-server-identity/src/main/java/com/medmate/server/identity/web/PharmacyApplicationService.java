@@ -13,8 +13,6 @@ import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
 import java.time.Clock;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +63,7 @@ public class PharmacyApplicationService {
         if (Verification.submit(pharmacy.status()).isEmpty()) {
             throw new ApiProblem(HttpStatus.CONFLICT, "Conflict", "The application is already under review");
         }
-        String problem = PharmacyRules.invalid(input, actor.phone());
+        String problem = PharmacyRules.invalid(input, actor.phone(), pharmacies.storedSlots(pharmacy.id()));
         if (problem != null) {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", problem);
         }
@@ -76,6 +74,19 @@ public class PharmacyApplicationService {
         accounts.updateDisplayName(actor.id(), input.name().trim());
         send(input.email(), received(input.name().trim()));
         return verification(actor.id());
+    }
+
+    public ReviewService.ApplicationDetail application(AccountPrincipal actor) {
+        if (actor.accountType() != AccountType.PHARMACY || actor.pharmacyRole() != PharmacyRole.OWNER) {
+            throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", "Only the pharmacy owner can read the application");
+        }
+        if (actor.pharmacyId() == null) {
+            throw new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy was not found");
+        }
+        PharmacyStore.ApplicationRow row = pharmacies
+                .application(actor.pharmacyId())
+                .orElseThrow(() -> new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy was not found"));
+        return ReviewService.ApplicationDetail.from(row, documents);
     }
 
     public VerificationResponse verification(AccountPrincipal actor) {
@@ -90,33 +101,28 @@ public class PharmacyApplicationService {
     }
 
     private void replaceDocuments(UUID pharmacyId, PharmacyRules.ApplicationInput input) {
-        Set<String> previous = new LinkedHashSet<>(pharmacies.documentKeys(pharmacyId));
-        pharmacies.deleteDocuments(pharmacyId);
-        Set<String> next = new LinkedHashSet<>();
-        put(pharmacyId, "logo", input.logo(), next);
-        put(pharmacyId, "gst", input.gst(), next);
-        put(pharmacyId, "pan", input.panCard(), next);
-        put(pharmacyId, "drug-licence", input.drugLicence(), next);
-        put(pharmacyId, "fssai", input.fssai(), next);
-        put(pharmacyId, "trade-licence", input.tradeLicence(), next);
-        put(pharmacyId, "pharmacist-certificate", input.pharmacistCertificate(), next);
-        put(pharmacyId, "signature", input.signature(), next);
-        for (String old : previous) {
-            if (!next.contains(old)) {
-                documents.delete(old);
-            }
-        }
+        put(pharmacyId, "logo", input.logo());
+        put(pharmacyId, "gst", input.gst());
+        put(pharmacyId, "pan", input.panCard());
+        put(pharmacyId, "drug-licence", input.drugLicence());
+        put(pharmacyId, "fssai", input.fssai());
+        put(pharmacyId, "trade-licence", input.tradeLicence());
+        put(pharmacyId, "pharmacist-certificate", input.pharmacistCertificate());
+        put(pharmacyId, "signature", input.signature());
     }
 
-    private void put(UUID pharmacyId, String slot, PharmacyRules.Upload upload, Set<String> keys) {
+    private void put(UUID pharmacyId, String slot, PharmacyRules.Upload upload) {
         if (upload == null || upload.body() == null || upload.body().length == 0) {
             return;
         }
+        pharmacies.document(pharmacyId, slot).ifPresent(existing -> {
+            documents.delete(existing.objectKey());
+            pharmacies.deleteDocument(pharmacyId, slot);
+        });
         String key = properties.uploadPrefix() + "/pharmacy-documents/" + pharmacyId + "/" + slot;
         String contentType = PharmacyRules.media(upload.contentType());
         documents.put(key, contentType, upload.body());
         pharmacies.insertDocument(pharmacyId, slot, key, contentType);
-        keys.add(key);
     }
 
     private void send(String email, Mail mailMessage) {

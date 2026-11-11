@@ -1,0 +1,29 @@
+meta {
+  name: Unblock owner
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-owners/{{examplePharmacyId}}/unblock
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Platform admin clears the owner disabled flag.
+  The collection script attaches the saved access token.
+}

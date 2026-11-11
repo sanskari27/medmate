@@ -35,11 +35,11 @@ PG_BIN := $(shell \
 
 SPRING_DATASOURCE_URL ?= jdbc:postgresql://127.0.0.1:$(DB_PORT)/$(DB_NAME)
 
-NODE_APPS := pharmacy nammamedmate medmatepharmacy todo-react
+NODE_APPS := pharmacy nammamedmate medmatepharmacy todo-react dispensary admin
 
 .PHONY: help install doctor check dev db-up db-ready db-down db-logs db-psql db-local java21-check \
 	api api-compile api-test api-verify api-format api-package sms-mock todo-api todo-compile \
-	pharmacy nammamedmate medmatepharmacy todo-react \
+	pharmacy nammamedmate medmatepharmacy todo-react dispensary admin \
 	pharmacy-check pharmacy-format build clean
 
 help: ## Show available targets
@@ -105,6 +105,14 @@ sms-mock: java21-check ## Record OTP deliveries on http://127.0.0.1:8090
 pharmacy: ## Pharmacy console on :3203 (proxies /api to :8080)
 	@test -d packages/apps/pharmacy/node_modules || { echo "Run 'make install' first"; exit 1; }
 	npm run dev --prefix packages/apps/pharmacy
+
+dispensary: ## Dispensary console on :3204 (proxies /auth to :8080)
+	@test -d packages/apps/dispensary/node_modules || { echo "Run 'make install' first"; exit 1; }
+	npm run dev --prefix packages/apps/dispensary
+
+admin: ## Admin console on :3205 (proxies /auth to :8080)
+	@test -d packages/apps/admin/node_modules || { echo "Run 'make install' first"; exit 1; }
+	npm run dev --prefix packages/apps/admin
 
 nammamedmate: ## nammamedmate.com site on :3202
 	@test -d packages/apps/nammamedmate/node_modules || { echo "Run 'make install' first"; exit 1; }
@@ -228,6 +236,8 @@ todo-compile: ## Compile todo-server
 
 build: ## Build every frontend and package both Java apps
 	npm run build --prefix packages/apps/pharmacy
+	npm run build --prefix packages/apps/dispensary
+	npm run build --prefix packages/apps/admin
 	npm run build --prefix packages/apps/nammamedmate
 	npm run build --prefix packages/apps/medmatepharmacy
 	npm run build --prefix packages/apps/todo-react
@@ -237,6 +247,8 @@ build: ## Build every frontend and package both Java apps
 clean: ## Remove frontend dist output and Maven target directories
 	rm -rf \
 	  packages/apps/pharmacy/dist \
+	  packages/apps/dispensary/dist \
+	  packages/apps/admin/dist \
 	  packages/apps/nammamedmate/dist \
 	  packages/apps/nammamedmate/dist-server \
 	  packages/apps/medmatepharmacy/dist \

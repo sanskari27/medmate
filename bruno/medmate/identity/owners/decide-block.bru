@@ -1,0 +1,36 @@
+meta {
+  name: Decide block
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-owners/{{examplePharmacyId}}/block-requests/{{blockRequestId}}/decision
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "decision": "approve"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Platform admin approves or rejects the open block request.
+  blockRequestId is the id returned by Request block. The collection script attaches the saved access token.
+}

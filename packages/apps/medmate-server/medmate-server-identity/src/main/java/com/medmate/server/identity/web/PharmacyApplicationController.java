@@ -39,6 +39,7 @@ public class PharmacyApplicationController {
             @RequestParam(required = false) List<String> businessTypes,
             @RequestParam(required = false) String industry,
             @RequestParam(required = false) String registrationType,
+            @RequestParam(required = false) String pharmacyType,
             @RequestParam(required = false) String gstin,
             @RequestParam(required = false) String pan,
             @RequestParam(required = false) String drugLicenceNo,
@@ -75,6 +76,7 @@ public class PharmacyApplicationController {
                 split(businessTypes),
                 industry,
                 registrationType,
+                pharmacyType,
                 gstin,
                 upload(gstCertificate),
                 pan,
@@ -100,6 +102,11 @@ public class PharmacyApplicationController {
                 upload(logo),
                 phone);
         return applications.submit(Current.require(authentication), input);
+    }
+
+    @GetMapping("/pharmacy/application")
+    public ReviewService.ApplicationDetail application(Authentication authentication) {
+        return applications.application(Current.require(authentication));
     }
 
     @GetMapping("/pharmacy/verification")

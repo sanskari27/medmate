@@ -1,0 +1,38 @@
+meta {
+  name: Verify platform OTP
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "accountType": "platform",
+    "purpose": "login",
+    "code": "{{otpCode}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isString
+  res.body.refreshToken: isString
+  res.body.account.accountType: isString
+}
+
+docs {
+  Sends the otpCode stored by Send platform OTP. Run that request first, with `make sms-mock` running.
+  The account type in the session is admin or staff, whichever phone this number belongs to.
+}
