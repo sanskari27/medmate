@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 @Configuration
-@Profile("local")
+@Profile({"local", "prod", "identity-it"})
 public class LocalDataSourceConfig {
 
     @Bean

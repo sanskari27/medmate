@@ -1,0 +1,32 @@
+meta {
+  name: Set PIN
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/pin/set
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "pin": "1234"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  An approved pharmacy owner sets this after the first OTP login that follows approval.
+}

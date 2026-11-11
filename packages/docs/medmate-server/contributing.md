@@ -14,7 +14,7 @@ From the repository root, with Java 21 and PostgreSQL 16 installed:
 
 - `make api` starts local Postgres, then the API on the host JVM.
 - `make api-format` rewrites Java with Palantir Java Format.
-- `make api-verify` checks that formatting and runs unit tests plus `*IT` integration tests. Those tests do not need Postgres.
+- `make api-verify` checks formatting and runs unit tests plus `*IT` integration tests. The health test does not need Postgres. The identity flow test starts Postgres with Testcontainers when Docker is running, and otherwise uses database `medmate_server_it` on the local Postgres 16.
 - `make api-package` builds the runnable jar. The Docker image is the deployment artifact, not the local run loop.
 
 Unit tests construct plain types with JUnit and AssertJ. `@WebMvcTest` covers one web slice. A class named `*IT` boots the application. Do not mark a slice test as an integration test to skip the boot.

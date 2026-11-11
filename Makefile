@@ -38,7 +38,7 @@ SPRING_DATASOURCE_URL ?= jdbc:postgresql://127.0.0.1:$(DB_PORT)/$(DB_NAME)
 NODE_APPS := pharmacy nammamedmate medmatepharmacy todo-react
 
 .PHONY: help install doctor check dev db-up db-ready db-down db-logs db-psql db-local java21-check \
-	api api-compile api-test api-verify api-format api-package todo-api todo-compile \
+	api api-compile api-test api-verify api-format api-package sms-mock todo-api todo-compile \
 	pharmacy nammamedmate medmatepharmacy todo-react \
 	pharmacy-check pharmacy-format build clean
 
@@ -96,6 +96,11 @@ api: db-local java21-check ## Run medmate-server on :8080 with local Java and Po
 	  SPRING_DATASOURCE_USERNAME="$(DB_USER)" \
 	  SPRING_DATASOURCE_PASSWORD="$(DB_PASSWORD)" \
 	  ./mvnw -pl medmate-server-app -am spring-boot:run
+
+sms-mock: java21-check ## Record OTP deliveries on http://127.0.0.1:8090
+	cd packages/apps/medmate-server && \
+	  JAVA_HOME="$(JAVA21_HOME)" ./mvnw -pl medmate-server-identity -am -DskipTests compile && \
+	  JAVA_HOME="$(JAVA21_HOME)" "$(JAVA21_HOME)/bin/java" -cp medmate-server-identity/target/classes com.medmate.server.identity.sms.SmsMock
 
 pharmacy: ## Pharmacy console on :3203 (proxies /api to :8080)
 	@test -d packages/apps/pharmacy/node_modules || { echo "Run 'make install' first"; exit 1; }
@@ -238,4 +243,6 @@ clean: ## Remove frontend dist output and Maven target directories
 	  packages/apps/medmatepharmacy/dist-server \
 	  packages/apps/todo-react/dist \
 	  packages/apps/todo-server/target \
+	  packages/apps/medmate-server/medmate-server-shared/target \
+	  packages/apps/medmate-server/medmate-server-identity/target \
 	  packages/apps/medmate-server/medmate-server-app/target

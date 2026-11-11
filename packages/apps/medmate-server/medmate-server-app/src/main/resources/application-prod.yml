@@ -2,3 +2,28 @@ logging:
   structured:
     format:
       console: ecs
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  flyway:
+    enabled: true
+
+medmate:
+  jwt:
+    secret: ${MEDMATE_JWT_SECRET}
+    access-seconds: 900
+    refresh-seconds: 2592000
+  admin-bootstrap-token: ${MEDMATE_ADMIN_BOOTSTRAP_TOKEN}
+  sms:
+    base-url: ${MEDMATE_SMS_BASE_URL:}
+  mail:
+    mode: resend
+    from: "Medmate <noreply@nammamedmate.com>"
+    resend-api-key: ${RESEND_API_KEY:}
+  uploads:
+    bucket: ${APP_UPLOADS_BUCKET:}
+    prefix: ${APP_UPLOADS_PREFIX:app-uploads/medmate-server}
+    region: ${AWS_REGION:ap-south-1}

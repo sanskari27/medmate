@@ -1,0 +1,35 @@
+meta {
+  name: Verify OTP
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "accountType": "customer",
+    "purpose": "login",
+    "code": "000000"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  A code that was not issued is rejected. The SMS mock shows a real code after Send OTP.
+}

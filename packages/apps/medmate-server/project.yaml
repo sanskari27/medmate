@@ -17,6 +17,6 @@ runtime:
     SPRING_PROFILES_ACTIVE: prod
 resources:
   database:
-    enabled: false
+    enabled: true
   uploads:
-    enabled: false
+    enabled: true

@@ -1,0 +1,25 @@
+meta {
+  name: Read document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/pharmacies/{{examplePharmacyId}}/documents/gst
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  The owner, compliance, and admin download a private pharmacy document.
+}

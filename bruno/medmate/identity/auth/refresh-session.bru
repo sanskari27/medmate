@@ -1,0 +1,32 @@
+meta {
+  name: Refresh session
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "refreshToken": "missing"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  A refresh token lasts 30 days and rotates. This sample token is not stored.
+}

@@ -1,0 +1,20 @@
+spring:
+  flyway:
+    enabled: true
+
+medmate:
+  jwt:
+    secret: test-jwt-secret-test-jwt-secret-32
+    access-seconds: 900
+    refresh-seconds: 2592000
+  admin-bootstrap-token: test-bootstrap
+  sms:
+    base-url: ""
+  mail:
+    mode: recording
+    from: "Medmate <noreply@nammamedmate.com>"
+    resend-api-key: ""
+  uploads:
+    bucket: ""
+    prefix: app-uploads/medmate-server
+    region: ap-south-1

@@ -1,0 +1,33 @@
+meta {
+  name: Admin decision
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-applications/{{examplePharmacyId}}/admin-decision
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "decision": "approve",
+    "comment": "Approved"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  Only an admin records the final decision, and only after compliance approval.
+}

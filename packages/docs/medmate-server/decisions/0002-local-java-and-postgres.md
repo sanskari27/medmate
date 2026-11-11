@@ -19,4 +19,4 @@ The production container does not get a database yet. `project.yaml` leaves `res
 
 - `make api` requires Java 21 and PostgreSQL 16 on the developer machine.
 - Docker remains required to publish the image, and `make db-up` remains the Docker Postgres used by todo-server. medmate-server does not use that container.
-- Enabling the production database is a later change to `project.yaml` and Terraform, plus an ADR.
+- Production Postgres and Flyway are decided in [0004](0004-production-postgres-and-flyway.md). Local Java and the Docker deployment in this ADR stay as they are.

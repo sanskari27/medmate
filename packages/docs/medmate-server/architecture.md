@@ -6,14 +6,14 @@ medmate-server is a modular monolith. One Spring Boot process serves `api.nammam
 
 ```text
 packages/apps/medmate-server/          Maven reactor
+  medmate-server-shared/               request ids and ProblemDetail
+  medmate-server-identity/             accounts, sessions, pharmacy verification
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
-    com.medmate.server.config          process concerns (request id)
-    com.medmate.server.shared.web      values shared by every module
-    com.medmate.server.shared.error    ProblemDetail responses
+    com.medmate.server.config          process concerns (request id, local datasource)
 ```
 
-A feature module depends on `shared` types. It does not depend on another feature module unless an ADR says the dependency is part of the domain.
+A feature module depends on `medmate-server-shared`. It may depend on identity for access checks. It does not depend on another feature module unless an ADR says the dependency is part of the domain. Identity does not depend on a feature module.
 
 ## Request path
 
@@ -27,10 +27,10 @@ Actuator exposes `health` and `info` on the application port. Liveness is `/actu
 
 ## Local development and deployment
 
-Local development runs Java 21 on the host and talks to a Postgres 16 installed on the host. `make api` selects the `local` profile, which opens `jdbc:postgresql://127.0.0.1:5432/medmate_server` as the `pharmacy` role. The default profile and the `prod` profile do not open a database, so tests and the deployed container start without one.
+Local development runs Java 21 on the host and talks to a Postgres 16 installed on the host. `make api` selects the `local` profile, which opens `jdbc:postgresql://127.0.0.1:5432/medmate_server` as the `pharmacy` role and runs Flyway. `make sms-mock` records OTP deliveries on port 8090. The default profile does not open a database, so the health test starts without one. The `prod` profile opens the production database and runs Flyway.
 
-Deployment is a Docker image on the shared EC2 instance, the same shape server-core used. Building that image is not part of the local run loop.
+Deployment is a Docker image on the shared EC2 instance, the same shape server-core used. Building that image is not part of the local run loop. Production documents go to the private prefix `app-uploads/medmate-server`.
 
-## Not in this process yet
+## Not in this process
 
-There is no Flyway migration, object storage, or authentication. The production database stays disabled until a requirement asks for stored CRM data. The old `server_core` database and `app-uploads/server-core/` prefix are leftovers from the previous service. This process does not read them.
+The old `server_core` database, `app-uploads/server-core/` prefix, and `/medmate-repo/server-core/` parameters are leftovers from the previous service. This process does not read them.

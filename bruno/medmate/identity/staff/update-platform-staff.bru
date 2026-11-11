@@ -1,0 +1,32 @@
+meta {
+  name: Update platform staff
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/staff/{{examplePharmacyId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "disabled": true
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  An admin replaces subtypes or disables a platform staff account. The sample id is examplePharmacyId {{examplePharmacyId}}.
+}

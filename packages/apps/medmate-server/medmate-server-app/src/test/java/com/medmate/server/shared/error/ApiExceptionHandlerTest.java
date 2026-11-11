@@ -10,11 +10,13 @@ import com.medmate.server.shared.web.RequestIds;
 import com.medmate.servertest.TestErrorController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = TestErrorController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({ApiExceptionHandler.class, TestErrorController.class})
 class ApiExceptionHandlerTest {
 

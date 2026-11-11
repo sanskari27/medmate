@@ -1,0 +1,25 @@
+meta {
+  name: Read verification
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/verification
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  A pharmacy account reads its verification status. examplePharmacyId {{examplePharmacyId}} is the sample tenant id.
+}

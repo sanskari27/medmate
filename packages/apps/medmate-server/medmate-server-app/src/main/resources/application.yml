@@ -8,6 +8,14 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+  flyway:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 40MB
   lifecycle:
     timeout-per-shutdown-phase: 20s
   mvc:

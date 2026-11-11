@@ -3,3 +3,22 @@ spring:
     url: jdbc:postgresql://127.0.0.1:5432/medmate_server
     username: pharmacy
     password: pharmacy
+  flyway:
+    enabled: true
+
+medmate:
+  jwt:
+    secret: local-dev-jwt-secret-local-dev-jwt-32
+    access-seconds: 900
+    refresh-seconds: 2592000
+  admin-bootstrap-token: local-bootstrap
+  sms:
+    base-url: http://127.0.0.1:8090
+  mail:
+    mode: recording
+    from: "Medmate <noreply@nammamedmate.com>"
+    resend-api-key: ""
+  uploads:
+    bucket: ""
+    prefix: app-uploads/medmate-server
+    region: ap-south-1

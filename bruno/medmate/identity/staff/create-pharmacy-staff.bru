@@ -1,0 +1,34 @@
+meta {
+  name: Create pharmacy staff
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/staff
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "displayName": "Counter",
+    "permissions": ["inventory:read"]
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  An approved pharmacy owner grants keys such as inventory:read inside that pharmacy.
+}

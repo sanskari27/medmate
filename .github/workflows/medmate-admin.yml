@@ -1,0 +1,41 @@
+name: Medmate admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      phone:
+        description: Indian mobile number
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  add-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: ap-south-1
+      - name: Create admin
+        env:
+          PHONE: ${{ inputs.phone }}
+        run: |
+          set -euo pipefail
+          phone="${PHONE// /}"
+          if [[ "$phone" =~ ^[6-9][0-9]{9}$ ]]; then
+            phone="+91${phone}"
+          elif [[ ! "$phone" =~ ^\+91[6-9][0-9]{9}$ ]]; then
+            echo "phone must be an Indian mobile" >&2
+            exit 1
+          fi
+          token="$(aws ssm get-parameter --with-decryption --region ap-south-1 --name /medmate-repo/medmate-server/admin_bootstrap_token --query Parameter.Value --output text)"
+          curl --fail-with-body -sS -X POST "https://api.nammamedmate.com/auth/admin-bootstrap" \
+            -H "Authorization: Bearer ${token}" \
+            -H "Content-Type: application/json" \
+            -d "{\"phone\":\"${phone}\"}"
+          echo

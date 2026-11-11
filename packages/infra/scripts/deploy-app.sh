@@ -92,6 +92,24 @@ for key, value in data.items():
     if "\n" in text or "\r" in text:
         raise SystemExit("environment values cannot contain newlines")
     print(f"{key}={text}")' "$RUNTIME" >> "$ENV_FILE"
+
+append_parameter() {
+  local name="$1"
+  local env_name="$2"
+  local value
+  value="$(aws ssm get-parameter --with-decryption --region "$REGION" --name "/medmate-repo/${APP}/${name}" --query Parameter.Value --output text 2>/dev/null || true)"
+  if [[ -n "${value:-}" && "$value" != "None" ]]; then
+    if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+      echo "parameter ${name} contains a newline" >&2
+      exit 1
+    fi
+    printf '%s=%s\n' "$env_name" "$value" >> "$ENV_FILE"
+  fi
+}
+append_parameter resend_api_key RESEND_API_KEY
+append_parameter jwt_secret MEDMATE_JWT_SECRET
+append_parameter admin_bootstrap_token MEDMATE_ADMIN_BOOTSTRAP_TOKEN
+append_parameter sms_base_url MEDMATE_SMS_BASE_URL
 chmod 600 "$ENV_FILE"
 
 docker network create medmate >/dev/null 2>&1 || true

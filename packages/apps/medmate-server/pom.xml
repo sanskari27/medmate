@@ -18,6 +18,8 @@
   <name>medmate-server</name>
 
   <modules>
+    <module>medmate-server-shared</module>
+    <module>medmate-server-identity</module>
     <module>medmate-server-app</module>
   </modules>
 

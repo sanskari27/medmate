@@ -1,0 +1,32 @@
+meta {
+  name: Update pharmacy staff
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/staff/{{examplePharmacyId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "permissions": ["inventory:read", "billing:create"]
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.title: eq Unauthorized
+}
+
+docs {
+  The owner replaces the permission keys for one staff account.
+}
