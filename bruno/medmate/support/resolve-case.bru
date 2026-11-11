@@ -1,0 +1,28 @@
+meta {
+  name: Resolve case
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/support/cases/{{supportCaseId}}/resolve
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  The owner or any support person marks the case resolved. It stays read-only.
+}

@@ -6,6 +6,7 @@ export type NavEntry = {
   title: string;
   sub: string;
   icon: ReactNode;
+  group?: string;
 };
 
 export type SidebarProps = {

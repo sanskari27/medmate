@@ -36,6 +36,15 @@ export default defineConfig({
         target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
+      "/support": {
+        target: "http://127.0.0.1:8080",
+        changeOrigin: true,
+        ws: true,
+        bypass(req) {
+          const accept = req.headers.accept ?? "";
+          if (accept.includes("text/html")) return "/index.html";
+        },
+      },
       "/sms-mock": {
         target: "http://127.0.0.1:8090",
         changeOrigin: true,

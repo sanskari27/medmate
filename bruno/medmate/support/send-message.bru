@@ -1,0 +1,35 @@
+meta {
+  name: Send message
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/support/cases/{{supportCaseId}}/messages
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "text": "We are looking at the invoice line."
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  The owner or any support person can reply while the case is waiting or open.
+}

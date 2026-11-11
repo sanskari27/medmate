@@ -1,0 +1,31 @@
+meta {
+  name: List cases
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/support/cases
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.be.an("array");
+  });
+}
+
+docs {
+  An owner sees that pharmacy's cases. Admin and support see every pharmacy.
+}

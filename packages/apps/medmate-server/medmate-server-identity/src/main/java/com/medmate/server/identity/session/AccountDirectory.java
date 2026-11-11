@@ -7,6 +7,8 @@ import com.medmate.server.identity.access.StaffSubtype;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
@@ -30,6 +32,20 @@ public class AccountDirectory {
 
     public AccountPrincipal load(IdentityStore.AccountRow account) {
         return principal(account);
+    }
+
+    public Map<UUID, String> displayNames(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return accounts.displayNames(ids);
+    }
+
+    public Map<UUID, String> pharmacyNames(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return pharmacies.names(ids);
     }
 
     public boolean ownerAccountDisabled(AccountPrincipal principal) {

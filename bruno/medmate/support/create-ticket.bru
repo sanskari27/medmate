@@ -1,0 +1,44 @@
+meta {
+  name: Create ticket
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/support/cases
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "kind": "ticket",
+    "subject": "GST rate wrong on one product",
+    "category": "Billing",
+    "details": "One invoice line used the wrong slab."
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 200) {
+      bru.setVar("supportCaseId", res.getBody().id);
+      expect(res.getBody().status).to.equal("waiting");
+      expect(res.getBody().ticketNumber).to.match(/^TKT-/);
+    }
+  });
+}
+
+docs {
+  An approved pharmacy owner raises a ticket. Non-empty details become the first message.
+}

@@ -4,6 +4,7 @@ import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Stack } from "@/components/ui/Stack";
 import { Header } from "../Header";
+import { activeNavItem } from "../navMatch";
 import { Sidebar, type NavEntry } from "../Sidebar";
 
 export function DashboardLayout({
@@ -20,7 +21,7 @@ export function DashboardLayout({
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const current = items.find((item) => item.path === location.pathname) ?? items[0];
+  const current = activeNavItem(items, location.pathname) ?? items[0];
   if (!current) return null;
 
   function navigateTo(path: string) {

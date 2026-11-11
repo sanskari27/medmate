@@ -359,4 +359,22 @@ describe("AppRouter", () => {
     expect(screen.queryByText("This page is not built yet.")).toBeNull();
     expect(sessionStorage.length).toBe(0);
   });
+
+  it("shows Help & Support to an owner under Management", () => {
+    writeSession(session);
+    renderAt("/dashboard");
+    expect(screen.getByText("Management")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Help & Support" })).toBeTruthy();
+  });
+
+  it("sends pharmacy staff away from Help & Support", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff" },
+    });
+    renderAt("/support");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Help & Support" })).toBeNull();
+    expect(screen.queryByText("Management")).toBeNull();
+  });
 });

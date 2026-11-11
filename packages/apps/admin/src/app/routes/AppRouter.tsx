@@ -6,12 +6,14 @@ import {
   PinSetupPage,
   accountRoleLabel,
   canReview,
+  canSupport,
   canUseAdminPortal,
   useAuthActions,
   useAuthState,
 } from "@/features/authentication";
 import { PharmacyDetailPage } from "@/features/pharmacies";
 import { ReviewDetailPage, ReviewsPage } from "@/features/reviews";
+import { SupportCasePage, SupportPage } from "@/features/support";
 import { GuestRoute, PinRoute, ProtectedRoute } from "./ProtectedRoute";
 import { navRoutes } from "./routeConfig";
 
@@ -23,6 +25,7 @@ export function AppRouter() {
   const blockedToken = session && !canUseAdminPortal(session.account) ? session.refreshToken : null;
   const items = navRoutes(session?.account);
   const review = canReview(session?.account);
+  const support = canSupport(session?.account);
   const roleLabel = session ? accountRoleLabel(session.account) : "";
   const storedName = session?.account.displayName?.trim() ?? "";
   const displayName = storedName || roleLabel;
@@ -50,7 +53,7 @@ export function AppRouter() {
           }
         >
           {items
-            .filter((route) => route.path !== "/reviews")
+            .filter((route) => route.path !== "/reviews" && route.path !== "/support")
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
@@ -61,6 +64,11 @@ export function AppRouter() {
           <Route
             path="/reviews/:pharmacyId"
             element={review ? <ReviewDetailPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route path="/support" element={support ? <SupportPage /> : <Navigate to="/dashboard" replace />} />
+          <Route
+            path="/support/cases/:caseId"
+            element={support ? <SupportCasePage /> : <Navigate to="/dashboard" replace />}
           />
           <Route path="/pharmacies/:pharmacyId" element={<PharmacyDetailPage />} />
         </Route>

@@ -7,9 +7,12 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.pharmacy.PharmacyRules;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -130,6 +133,15 @@ public class PharmacyStore {
                 .param("owner", ownerAccountId)
                 .param("created", Timestamp.from(now))
                 .update();
+    }
+
+    public Map<UUID, String> names(Collection<UUID> ids) {
+        Map<UUID, String> names = new HashMap<>();
+        jdbc.sql("SELECT id, name FROM pharmacy WHERE id IN (:ids)")
+                .param("ids", ids)
+                .query((rs, row) -> names.put(rs.getObject("id", UUID.class), blank(rs.getString("name"))))
+                .list();
+        return names;
     }
 
     public Optional<PharmacyRow> findById(UUID id) {
@@ -453,6 +465,10 @@ public class PharmacyStore {
                 rs.getString("name"),
                 rs.getString("email"),
                 submitted == null ? null : submitted.toInstant());
+    }
+
+    private static String blank(String value) {
+        return value == null ? "" : value;
     }
 
     private static String blankToNull(String value) {

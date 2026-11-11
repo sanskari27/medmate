@@ -1,0 +1,36 @@
+meta {
+  name: Create FAQ
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/support/faqs
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "question": "How do I reset my PIN?",
+    "answer": "Open Settings and choose PIN. A pharmacy owner can set a new one after signing in."
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Admin and support append a published FAQ. An owner receives 403.
+}

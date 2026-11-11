@@ -1,0 +1,37 @@
+meta {
+  name: Update FAQ
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/support/faqs/{{exampleSupportFaqId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "question": "How do I add a new medicine to inventory?",
+    "answer": "Go to Inventory → Add product, or simply enter a distributor bill under Purchases → New purchase entry and stock is created automatically.",
+    "published": true
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Admin and support edit or hide a FAQ. published false hides it from pharmacy owners.
+}

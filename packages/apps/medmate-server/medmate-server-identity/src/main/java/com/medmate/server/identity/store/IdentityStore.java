@@ -6,8 +6,11 @@ import com.medmate.server.identity.otp.OtpMachine;
 import com.medmate.server.identity.otp.OtpPurpose;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +33,15 @@ public class IdentityStore {
     public record OtpRow(OtpMachine.State state) {}
 
     public record RefreshRow(UUID accountId, Instant expiresAt, boolean revoked) {}
+
+    public Map<UUID, String> displayNames(Collection<UUID> ids) {
+        Map<UUID, String> names = new HashMap<>();
+        jdbc.sql("SELECT id, display_name FROM account WHERE id IN (:ids)")
+                .param("ids", ids)
+                .query((rs, row) -> names.put(rs.getObject("id", UUID.class), blank(rs.getString("display_name"))))
+                .list();
+        return names;
+    }
 
     public Optional<AccountRow> findAccount(UUID id) {
         return jdbc.sql("SELECT id, phone, account_type, display_name, disabled FROM account WHERE id = :id")
@@ -213,6 +225,10 @@ public class IdentityStore {
                 .param("id", accountId)
                 .query(String.class)
                 .list());
+    }
+
+    private static String blank(String value) {
+        return value == null ? "" : value;
     }
 
     private AccountRow account(java.sql.ResultSet rs, int row) throws java.sql.SQLException {

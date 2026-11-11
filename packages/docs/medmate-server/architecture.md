@@ -8,6 +8,7 @@ medmate-server is a modular monolith. One Spring Boot process serves `api.nammam
 packages/apps/medmate-server/          Maven reactor
   medmate-server-shared/               request ids and ProblemDetail
   medmate-server-identity/             accounts, sessions, pharmacy verification
+  medmate-server-support/              FAQs, support cases, and the live chat socket
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -34,6 +35,10 @@ Deployment is a Docker image on the shared EC2 instance, the same shape server-c
 ## Identity
 
 Accounts, sessions, and pharmacy verification live in `medmate-server-identity`. A phone may hold one account of each stored type: `admin`, `pharmacy`, `customer`, `rider`, and `staff`. Admin and staff are the exception: one phone is at most one of those two. `accountType: "platform"` on OTP send and verify is a login scope, not a stored type. It resolves to that single admin or staff row. Pharmacy, customer, and rider login are unchanged.
+
+## Support
+
+FAQs and support cases live in `medmate-server-support`. The module depends on identity for access checks and for pharmacy and account names. Identity does not depend on it. Tables are created by `V5__support.sql` in the single Flyway history. Live chat is a raw WebSocket at `/support/stream` on this process. The handshake is open, and the first frame carries the access token. Case writes stay on HTTP. [0009](decisions/0009-support-module-and-live-chat.md) records that boundary.
 
 ## Not in this process
 

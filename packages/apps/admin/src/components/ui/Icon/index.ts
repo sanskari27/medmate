@@ -4,6 +4,7 @@ export {
   IconCheck,
   IconDashboard,
   IconGlobe,
+  IconHelp,
   IconHospital,
   IconLogout,
   IconMenu,

@@ -14,11 +14,11 @@ vars {
   @description('4-digit PIN for an approved pharmacy owner')
   pin: 1234
   @description('Filled by Verify OTP, PIN login, and refresh')
-  accessToken: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3OTQ0MzEwMjgsInN1YiI6IjJhMmVmM2U0LTQ3YmQtNDNiMy04OTEzLTM0Zjc2NDk2Y2ExYSIsImlhdCI6MTc5NDQzMDEyOH0.qvPOQsU8LB6eCZXqEiTifAS9hHpy27jqazpuOjYkRuc
-  refreshToken: 42c6ffe74eeeb4622273009275d4b3a52c9ed0b4506f8ad72205d47fd4a96c5b
-  accessTokenExpiresAt: 1794431028701
-  otpCode: 295696
-  accountId: 2a2ef3e4-47bd-43b3-8913-34f76496ca1a
+  accessToken: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3OTQ0NDA2MjAsInN1YiI6IjA4ZDk0NDUyLTRmOWEtNDY3MC1iNjEwLTI3ZTY1YWZjMDg1MiIsImlhdCI6MTc5NDQzOTcyMH0.WhTVh1y_g8dq0SbSRzZOFaS2-gm7IsUsFmnmC9Exkvw
+  refreshToken: 41fe6b408e0cfb16a1976151e73451f9174f61f1a10e61f8508c5eff884cbda4
+  accessTokenExpiresAt: 1794440620979
+  otpCode: 855442
+  accountId: 08d94452-4f9a-4670-b610-27e65afc0852
   @description('Replaced when a pharmacy account signs in')
   pharmacyId: b47c8268-4d3a-4dee-93f7-befbbf937702
   @description('Replaced when platform staff are created')
@@ -27,4 +27,8 @@ vars {
   pharmacyStaffId: 00000000-0000-4000-8000-000000000001
   @description('Open block request returned by Request block')
   blockRequestId: 00000000-0000-4000-8000-000000000002
+  @description('Seeded FAQ id')
+  exampleSupportFaqId: 00000000-0000-4000-8000-000000000101
+  @description('Filled by Create ticket')
+  supportCaseId: 64e98707-fb99-4867-b95b-c466f89b36d6
 }

@@ -321,6 +321,46 @@ describe("AppRouter", () => {
     expect(screen.getByRole("button", { name: "Pharmacies" })).toBeTruthy();
   });
 
+  it("sends finance staff away from Support", async () => {
+    const finance: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["finance"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
+    );
+    renderAt("/support");
+    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Support" })).toBeNull();
+  });
+
+  it("shows Support to support staff", async () => {
+    const support: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["support"], displayName: "Nia" }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: support, pinReset: false, portalChoice: "support" }),
+    );
+    vi.stubGlobal("WebSocket", class {
+      onclose: (() => void) | null = null;
+      constructor() {}
+      send() {}
+      close() {
+        this.onclose?.();
+      }
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json([])),
+    );
+    renderAt("/support");
+    expect(await screen.findByRole("button", { name: "Support" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "FAQs" })).toBeTruthy();
+  });
+
   it("clears a stored pharmacy session", async () => {
     const pharmacy: Session = {
       ...session,

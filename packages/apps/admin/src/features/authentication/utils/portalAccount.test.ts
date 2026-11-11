@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Account, AccountType } from "@/types";
-import { accountRoleLabel, canReview, canUseAdminPortal } from "./portalAccount";
+import { accountRoleLabel, canHandleSupportCases, canReview, canSupport, canUseAdminPortal } from "./portalAccount";
 
 function account(type: AccountType, subtypes: string[] = []): Account {
   return {
@@ -43,5 +43,11 @@ describe("portal access", () => {
     expect(canReview(account("staff", ["compliance"]))).toBe(true);
     expect(canReview(account("staff", ["finance", "compliance"]))).toBe(true);
     expect(canReview(account("staff", ["finance"]))).toBe(false);
+    expect(canSupport(account("admin"))).toBe(true);
+    expect(canSupport(account("staff", ["support"]))).toBe(true);
+    expect(canSupport(account("staff", ["finance", "support"]))).toBe(true);
+    expect(canSupport(account("staff", ["finance"]))).toBe(false);
+    expect(canHandleSupportCases(account("admin"))).toBe(false);
+    expect(canHandleSupportCases(account("staff", ["support"]))).toBe(true);
   });
 });

@@ -1,0 +1,40 @@
+meta {
+  name: Create chat
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/support/cases
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "kind": "chat",
+    "subject": "Need help with billing"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 200) {
+      expect(res.getBody().category).to.equal("Live chat");
+    }
+  });
+}
+
+docs {
+  An approved pharmacy owner starts a chat. The category is stored as Live chat.
+}

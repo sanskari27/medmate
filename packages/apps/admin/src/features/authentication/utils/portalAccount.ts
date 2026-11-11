@@ -18,6 +18,16 @@ export function canReview(account: Account | null | undefined): boolean {
   return account.accountType === "admin" || account.subtypes.includes("compliance");
 }
 
+export function canHandleSupportCases(account: Account | null | undefined): boolean {
+  if (!account || account.accountType !== "staff") return false;
+  return account.subtypes.includes("support");
+}
+
+export function canSupport(account: Account | null | undefined): boolean {
+  if (!account) return false;
+  return account.accountType === "admin" || canHandleSupportCases(account);
+}
+
 export function canUseAdminPortal(account: Account): boolean {
   if (account.accountType === "admin") return true;
   return (

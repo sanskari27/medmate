@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "@/features/authentication";
 import { pharmaciesApi } from "@/features/pharmacies";
 import { reviewsApi } from "@/features/reviews";
+import { supportApi } from "@/features/support";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -22,6 +23,7 @@ export function createAppStore() {
         authApi.middleware,
         reviewsApi.middleware,
         pharmaciesApi.middleware,
+        supportApi.middleware,
       ),
   });
 }

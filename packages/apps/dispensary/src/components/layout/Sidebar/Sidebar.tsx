@@ -5,6 +5,7 @@ import { IconLogout } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/utils/className";
+import { isNavActive } from "../navMatch";
 import type { SidebarProps } from "./Sidebar.types";
 
 function BrandMark() {
@@ -71,10 +72,19 @@ export function Sidebar({
       </Stack>
       <Stack data-slot="nav" className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5">
         {items.map((item) => {
-          const active = item.path === currentPath;
+          const active = isNavActive(item.path, currentPath);
           return (
-            <Button
-              key={item.path}
+            <span key={item.path} className="block">
+              {item.group ? (
+                <Text
+                  as="span"
+                  data-slot="nav-section-label"
+                  className="block px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[#8fd4a87a] uppercase"
+                >
+                  {item.group}
+                </Text>
+              ) : null}
+              <Button
               variant="ghost"
               aria-current={active ? "page" : undefined}
               onClick={() => onNavigate(item.path)}
@@ -94,6 +104,7 @@ export function Sidebar({
               </Box>
               {item.label}
             </Button>
+            </span>
           );
         })}
       </Stack>

@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { IconDashboard, IconReports, IconSettings, IconUsers } from "@/components/ui/Icon";
+import { IconDashboard, IconHelp, IconReports, IconSettings, IconUsers } from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
 import { ReportsPage } from "@/features/reports";
 import { SettingsPage } from "@/features/settings";
+import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
 import type { NavEntry } from "@/components/layout";
 
@@ -40,5 +41,14 @@ export const appRoutes: AppRoute[] = [
     sub: "Sales & GST summary",
     icon: <IconReports size={19} />,
     element: <ReportsPage />,
+  },
+  {
+    path: "/support",
+    label: "Help & Support",
+    title: "Help & Support",
+    sub: "FAQs, tickets & contact",
+    group: "Management",
+    icon: <IconHelp size={19} />,
+    element: <SupportPage />,
   },
 ];

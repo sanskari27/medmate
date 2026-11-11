@@ -127,6 +127,41 @@ export function IconSettings(props: IconProps) {
   );
 }
 
+export function IconHelp(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9a2.5 2.5 0 0 1 3.5 2.3c-.8.4-1.5 1-1.5 2" />
+      <path d="M12 17h.01" />
+    </Svg>
+  );
+}
+
+export function IconChat(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6A2.5 2.5 0 0 1 16.5 15H9l-4 3.5V6.5Z" />
+    </Svg>
+  );
+}
+
+export function IconMail(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </Svg>
+  );
+}
+
+export function IconTicket(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z" />
+    </Svg>
+  );
+}
+
 export function IconMenu(props: IconProps) {
   return (
     <Svg {...props}>

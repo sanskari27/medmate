@@ -1,0 +1,31 @@
+meta {
+  name: List FAQs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/support/faqs
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.be.an("array");
+  });
+}
+
+docs {
+  An owner receives published FAQs. Admin and support receive every FAQ.
+}

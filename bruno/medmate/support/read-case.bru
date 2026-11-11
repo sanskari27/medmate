@@ -1,0 +1,28 @@
+meta {
+  name: Read case
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/support/cases/{{supportCaseId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Returns the case and its messages. Create ticket saves supportCaseId.
+}

@@ -8,6 +8,7 @@ import {
   useAuthState,
 } from "@/features/authentication";
 import { AccountRestrictedPage, ApplicationStatusPage, SetupPage } from "@/features/setup";
+import { SupportPage } from "@/features/support";
 import {
   GuestRoute,
   PinRoute,
@@ -21,6 +22,8 @@ import { appRoutes } from "./routeConfig";
 export function AppRouter() {
   const { session } = useAuthState();
   const auth = useAuthActions();
+  const owner = session?.account.pharmacyRole === "owner";
+  const items = appRoutes.filter((route) => route.path !== "/support" || owner);
   return (
     <Routes>
       <Route element={<GuestRoute />}>
@@ -42,16 +45,26 @@ export function AppRouter() {
         <Route
           element={
             <DashboardLayout
-              items={appRoutes}
+              items={items}
               displayName={session?.account.displayName || "Pharmacist"}
               roleLabel={pharmacyRoleLabel(session?.account.pharmacyRole)}
               onSignOut={() => void auth.signOut()}
             />
           }
         >
-          {appRoutes.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))}
+          {items
+            .filter((route) => route.path !== "/support")
+            .map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
+            ))}
+          <Route
+            path="/support"
+            element={owner ? <SupportPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/support/:caseId"
+            element={owner ? <SupportPage /> : <Navigate to="/dashboard" replace />}
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
