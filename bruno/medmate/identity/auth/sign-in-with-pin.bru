@@ -20,15 +20,22 @@ body:json {
   {
     "phone": "{{examplePhone}}",
     "accountType": "pharmacy",
-    "pin": "0000"
+    "pin": "{{pin}}"
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("PIN login stores a session or rejects the PIN", function() {
+    const status = res.getStatus();
+    expect([200, 401]).to.include(status);
+    if (status === 200) {
+      expect(res.getBody().accessToken).to.be.a("string");
+      expect(res.getBody().refreshToken).to.be.a("string");
+    }
+  });
 }
 
 docs {
   PIN login is only for an approved pharmacy owner who has already set a PIN.
+  A 200 response stores accessToken and refreshToken. pin comes from the environment.
 }

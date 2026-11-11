@@ -18,15 +18,30 @@ headers {
 
 body:json {
   {
-    "refreshToken": "missing"
+    "refreshToken": "{{refreshToken}}"
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+script:post-response {
+  if (res.getStatus() === 204) {
+    bru.setEnvVar("accessToken", "");
+    bru.setEnvVar("refreshToken", "");
+    bru.setEnvVar("accessTokenExpiresAt", "0");
+  }
+}
+
+tests {
+  test("saved refresh token is revoked", function() {
+    if (res.getStatus() === 204) {
+      expect(bru.getEnvVar("refreshToken")).to.equal("");
+      expect(bru.getEnvVar("accessToken")).to.equal("");
+      return;
+    }
+    expect(res.getStatus()).to.equal(401);
+  });
 }
 
 docs {
-  Sign-out revokes the presented refresh token. The access token stays valid until it expires.
+  Revokes the saved refreshToken and clears accessToken and refreshToken.
+  The access token would stay valid until it expires. This collection clears it so later calls do not reuse it.
 }

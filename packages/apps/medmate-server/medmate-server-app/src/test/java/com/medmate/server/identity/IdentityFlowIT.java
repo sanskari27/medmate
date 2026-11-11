@@ -137,10 +137,25 @@ class IdentityFlowIT {
     @Test
     void reviewRequiresComplianceThenAdminAndARejectionCanBeResubmitted() {
         String ownerToken = token(verify("9811111103", "pharmacy", "signup"));
+        String pharmacyId = verification(ownerToken).get("pharmacyId").asText();
+        JsonNode admin = bootstrap("9811111199");
+        assertThat(bootstrap("9811111199").get("created").asBoolean()).isFalse();
+        String adminToken = token(verify("9811111199", "admin", "login"));
+        ResponseEntity<JsonNode> incompleteResponse = applicationDetail(adminToken, pharmacyId);
+        assertThat(incompleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode incomplete = incompleteResponse.getBody();
+        assertThat(incomplete.get("status").asText()).isEqualTo("incomplete");
+        assertThat(incomplete.get("name").isNull()).isTrue();
+        assertThat(incomplete.get("submittedAt").isNull()).isTrue();
+        assertThat(incomplete.get("documents")).isEmpty();
+        assertThat(incomplete.get("phone").asText()).isEqualTo("+919811111103");
+        assertThat(incomplete.get("lowStockAlerts").asBoolean()).isTrue();
+        assertThat(incomplete.get("rejection").isNull()).isTrue();
+
         JsonNode submitted = submit(ownerToken);
         assertThat(submitted.get("status").asText()).isEqualTo("pending_compliance");
         ResponseEntity<byte[]> document = rest.exchange(
-                "/pharmacies/" + submitted.get("pharmacyId").asText() + "/documents/gst",
+                "/pharmacies/" + pharmacyId + "/documents/gst",
                 HttpMethod.GET,
                 new HttpEntity<>(bearer(ownerToken, MediaType.APPLICATION_JSON)),
                 byte[].class);
@@ -148,12 +163,80 @@ class IdentityFlowIT {
         assertThat(document.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         assertThat(mail.messages())
                 .anyMatch(message -> message.subject().equals("We received your pharmacy application"));
-        String pharmacyId = submitted.get("pharmacyId").asText();
 
-        JsonNode admin = bootstrap("9811111199");
-        assertThat(bootstrap("9811111199").get("created").asBoolean()).isFalse();
-        String adminToken = token(verify("9811111199", "admin", "login"));
+        ResponseEntity<JsonNode> detailResponse = applicationDetail(adminToken, pharmacyId);
+        assertThat(detailResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode detail = detailResponse.getBody();
+        assertThat(detail.get("pharmacyId").asText()).isEqualTo(pharmacyId);
+        assertThat(detail.get("status").asText()).isEqualTo("pending_compliance");
+        assertThat(detail.get("rejection").isNull()).isTrue();
+        assertThat(detail.get("phone").asText()).isEqualTo("+919811111103");
+        assertThat(detail.get("name").asText()).isEqualTo("Care Pharmacy");
+        assertThat(detail.get("tagline").asText()).isEqualTo("Open late");
+        assertThat(detail.get("email").asText()).isEqualTo("owner@example.com");
+        assertThat(detail.get("address").asText()).isEqualTo("12 Market Road");
+        assertThat(detail.get("city").asText()).isEqualTo("Bengaluru");
+        assertThat(detail.get("state").asText()).isEqualTo("Karnataka");
+        assertThat(detail.get("pincode").asText()).isEqualTo("560001");
+        assertThat(detail.get("businessTypes").get(0).asText()).isEqualTo("Retail Pharmacy");
+        assertThat(detail.get("industry").asText()).isEqualTo("Pharmacy & Healthcare");
+        assertThat(detail.get("registrationType").asText()).isEqualTo("Proprietorship");
+        assertThat(detail.get("gstin").asText()).isEqualTo("29ABCDE1234F1Z5");
+        assertThat(detail.get("pan").asText()).isEqualTo("ABCDE1234F");
+        assertThat(detail.get("drugLicenceNo").asText()).isEqualTo("DL-1");
+        assertThat(detail.get("fssaiNo").asText()).isEqualTo("FSSAI-1");
+        assertThat(detail.get("tradeLicenceNo").asText()).isEqualTo("TL-1");
+        assertThat(detail.get("enableTds").asBoolean()).isFalse();
+        assertThat(detail.get("enableTcs").asBoolean()).isFalse();
+        assertThat(detail.get("pharmacistName").asText()).isEqualTo("Asha Rao, B.Pharm (Reg. No. 12)");
+        assertThat(detail.get("invoicePrefix").asText()).isEqualTo("CARE");
+        assertThat(detail.get("terms").asText()).isEqualTo("Goods once sold");
+        assertThat(detail.get("acceptOnlineOrders").asBoolean()).isTrue();
+        assertThat(detail.get("selfOrderKiosk").asBoolean()).isFalse();
+        assertThat(detail.get("eInvoicing").asBoolean()).isFalse();
+        assertThat(detail.get("looseSelling").asBoolean()).isTrue();
+        assertThat(detail.get("lowStockAlerts").asBoolean()).isTrue();
+        assertThat(detail.get("submittedAt").asText()).isNotBlank();
+        assertThat(detail.get("documents").findValuesAsText("slot"))
+                .containsExactly(
+                        "logo",
+                        "gst",
+                        "pan",
+                        "drug-licence",
+                        "fssai",
+                        "trade-licence",
+                        "pharmacist-certificate",
+                        "signature");
+        assertThat(detail.get("documents").findValuesAsText("contentType"))
+                .containsExactly(
+                        "image/png",
+                        "application/pdf",
+                        "image/png",
+                        "image/png",
+                        "image/png",
+                        "image/png",
+                        "application/pdf",
+                        "image/png");
+        assertThat(detail.findValues("objectKey")).isEmpty();
+        for (JsonNode stored : detail.get("documents")) {
+            assertThat(stored.get("url").asText())
+                    .isEqualTo("/pharmacies/" + pharmacyId + "/documents/"
+                            + stored.get("slot").asText());
+        }
+        ResponseEntity<byte[]> reviewedDocument = rest.exchange(
+                "/pharmacies/" + pharmacyId + "/documents/gst",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(adminToken, MediaType.APPLICATION_JSON)),
+                byte[].class);
+        assertThat(reviewedDocument.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(reviewedDocument.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
+
         String financeToken = tokenForStaff(adminToken, "9811111104", List.of("finance"));
+        assertThat(applicationDetail(financeToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(applicationDetail(ownerToken, pharmacyId).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(applicationDetail(adminToken, "00000000-0000-4000-8000-000000009999")
+                        .getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(decision(financeToken, pharmacyId, "compliance-decision", "approve", "ok")
                         .getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -172,6 +255,11 @@ class IdentityFlowIT {
 
         assertThat(submit(ownerToken).get("status").asText()).isEqualTo("pending_compliance");
         String complianceToken = tokenForStaff(adminToken, "9811111105", List.of("compliance"));
+        ResponseEntity<JsonNode> complianceResponse = applicationDetail(complianceToken, pharmacyId);
+        assertThat(complianceResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode complianceRead = complianceResponse.getBody();
+        assertThat(complianceRead.get("status").asText()).isEqualTo("pending_compliance");
+        assertThat(complianceRead.get("name").asText()).isEqualTo("Care Pharmacy");
         assertThat(decision(complianceToken, pharmacyId, "compliance-decision", "approve", "Looks complete")
                         .getBody()
                         .get("status")
@@ -368,6 +456,14 @@ class IdentityFlowIT {
     private ResponseEntity<JsonNode> permission(String token, String key) {
         return rest.exchange(
                 "/probe/permission/" + key,
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> applicationDetail(String token, String pharmacyId) {
+        return rest.exchange(
+                "/pharmacy-applications/" + pharmacyId,
                 HttpMethod.GET,
                 new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
                 JsonNode.class);

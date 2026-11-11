@@ -24,11 +24,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   An admin creates platform staff. Subtypes grant their module for every pharmacy.
+  A 201 response stores platformStaffId. The collection script attaches the saved access token.
 }

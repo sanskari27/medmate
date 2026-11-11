@@ -19,17 +19,18 @@ headers {
 body:json {
   {
     "phone": "{{examplePhone}}",
-    "accountType": "customer",
+    "accountType": "admin",
     "purpose": "login",
-    "code": "000000"
+    "code": "{{otpCode}}"
   }
 }
 
 assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+  res.status: eq 200
+  res.body.accessToken: isString
+  res.body.refreshToken: isString
 }
 
 docs {
-  A code that was not issued is rejected. The SMS mock shows a real code after Send OTP.
+  Sends the otpCode stored by Send OTP. Run Send OTP first, with `make sms-mock` running.
 }

@@ -28,6 +28,11 @@ public class ReviewController {
                 .toList();
     }
 
+    @GetMapping("/pharmacy-applications/{id}")
+    public ReviewService.ApplicationDetail detail(Authentication authentication, @PathVariable UUID id) {
+        return reviews.detail(Current.require(authentication), id);
+    }
+
     @PostMapping("/pharmacy-applications/{id}/compliance-decision")
     public PharmacyApplicationService.VerificationResponse compliance(
             Authentication authentication, @PathVariable UUID id, @RequestBody DecisionRequest request) {

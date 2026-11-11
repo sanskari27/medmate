@@ -1,10 +1,28 @@
 vars {
-  @description('''API origin for local Java''')
+  @description('API origin for local Java')
   baseUrl: http://127.0.0.1:8080
-  @description('''Example pharmacy id for later CRM requests''')
-  examplePharmacyId: 00000000-0000-4000-8000-000000000001
-  @description('''Example phone number for later CRM requests''')
+  @description('Example pharmacy id for later CRM requests')
+  examplePharmacyId: b47c8268-4d3a-4dee-93f7-befbbf937702
+  @description('Example phone number for later CRM requests')
   examplePhone: 9876543210
-  @description('''Example X-Request-Id''')
+  @description('Example X-Request-Id')
   exampleRequestId: req-example-001
+  @description('Local SMS mock. Start make sms-mock on port 8090.')
+  smsMockUrl: http://127.0.0.1:8090
+  @description('Bearer token for POST /auth/admin-bootstrap')
+  adminBootstrapToken: local-bootstrap
+  @description('4-digit PIN for an approved pharmacy owner')
+  pin: 1234
+  @description('Filled by Verify OTP, PIN login, and refresh')
+  accessToken: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3OTQ0MTU0NTIsInN1YiI6IjJhMmVmM2U0LTQ3YmQtNDNiMy04OTEzLTM0Zjc2NDk2Y2ExYSIsImlhdCI6MTc5NDQxNDU1Mn0.beKNravCzsNDTBwdsMd2dLJdLMIeYtlqtHtKxMKuMt0
+  refreshToken: c2278b9bb19a3d5106fef14d0a16640eb03a7ef9fdbdcd129aaec6e85f80902e
+  accessTokenExpiresAt: 1794415452560
+  otpCode: 745979
+  accountId: 2a2ef3e4-47bd-43b3-8913-34f76496ca1a
+  @description('Replaced when a pharmacy account signs in')
+  pharmacyId: b47c8268-4d3a-4dee-93f7-befbbf937702
+  @description('Replaced when platform staff are created')
+  platformStaffId: 00000000-0000-4000-8000-000000000001
+  @description('Replaced when pharmacy staff are created')
+  pharmacyStaffId: 00000000-0000-4000-8000-000000000001
 }

@@ -6,8 +6,216 @@ auth {
   mode: none
 }
 
+script:pre-request {
+  function pathnameOf(url) {
+    try {
+      return new URL(url).pathname;
+    } catch (error) {
+      return String(url || "");
+    }
+  }
+
+  function skipsUserAuth(pathname) {
+    return pathname.startsWith("/actuator")
+      || pathname === "/auth/otp/send"
+      || pathname === "/auth/otp/verify"
+      || pathname === "/auth/pin"
+      || pathname === "/auth/refresh"
+      || pathname === "/auth/sign-out"
+      || pathname === "/auth/admin-bootstrap";
+  }
+
+  function readPayload(response) {
+    const data = response && response.data;
+    if (typeof data === "string") {
+      try {
+        return JSON.parse(data);
+      } catch (error) {
+        return null;
+      }
+    }
+    return data || null;
+  }
+
+  function saveSession(body) {
+    if (!body || !body.accessToken || !body.refreshToken) {
+      return;
+    }
+    bru.setEnvVar("accessToken", body.accessToken);
+    bru.setEnvVar("refreshToken", body.refreshToken);
+    const seconds = Number(body.expiresIn || 900);
+    bru.setEnvVar("accessTokenExpiresAt", String(Date.now() + seconds * 1000));
+    const account = body.account || {};
+    if (account.id) {
+      bru.setEnvVar("accountId", account.id);
+    }
+    if (account.pharmacyId) {
+      bru.setEnvVar("pharmacyId", account.pharmacyId);
+    }
+  }
+
+  async function refreshSession() {
+    const refreshToken = bru.getEnvVar("refreshToken");
+    if (!refreshToken) {
+      return false;
+    }
+    try {
+      const response = await bru.sendRequest({
+        method: "POST",
+        url: bru.getEnvVar("baseUrl") + "/auth/refresh",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Request-Id": bru.getEnvVar("exampleRequestId") || "req-bruno-refresh"
+        },
+        data: { refreshToken: refreshToken }
+      });
+      const body = readPayload(response);
+      if (!response || response.status !== 200 || !body || !body.accessToken) {
+        bru.setEnvVar("accessToken", "");
+        bru.setEnvVar("refreshToken", "");
+        bru.setEnvVar("accessTokenExpiresAt", "0");
+        return false;
+      }
+      saveSession(body);
+      return true;
+    } catch (error) {
+      console.log("Refresh failed before the request");
+      return false;
+    }
+  }
+
+  const pathname = pathnameOf(req.getUrl());
+  if (!skipsUserAuth(pathname)) {
+    const accessToken = bru.getEnvVar("accessToken") || "";
+    const refreshToken = bru.getEnvVar("refreshToken") || "";
+    const expiresAt = Number(bru.getEnvVar("accessTokenExpiresAt") || 0);
+    const expired = !accessToken || Date.now() >= expiresAt - 15000;
+    if (expired && refreshToken) {
+      await refreshSession();
+    }
+    const latest = bru.getEnvVar("accessToken") || "";
+    if (latest) {
+      req.setHeader("Authorization", "Bearer " + latest);
+    }
+  }
+}
+
+script:post-response {
+  function pathnameOf(url) {
+    try {
+      return new URL(url).pathname;
+    } catch (error) {
+      return String(url || "");
+    }
+  }
+
+  function responseBody() {
+    const body = res.getBody();
+    if (typeof body === "string") {
+      try {
+        return JSON.parse(body);
+      } catch (error) {
+        return null;
+      }
+    }
+    return body;
+  }
+
+  function readPayload(response) {
+    const data = response && response.data;
+    if (typeof data === "string") {
+      try {
+        return JSON.parse(data);
+      } catch (error) {
+        return null;
+      }
+    }
+    return data || null;
+  }
+
+  function saveSession(body) {
+    if (!body || !body.accessToken || !body.refreshToken) {
+      return;
+    }
+    bru.setEnvVar("accessToken", body.accessToken);
+    bru.setEnvVar("refreshToken", body.refreshToken);
+    const seconds = Number(body.expiresIn || 900);
+    bru.setEnvVar("accessTokenExpiresAt", String(Date.now() + seconds * 1000));
+    const account = body.account || {};
+    if (account.id) {
+      bru.setEnvVar("accountId", account.id);
+    }
+    if (account.pharmacyId) {
+      bru.setEnvVar("pharmacyId", account.pharmacyId);
+    }
+  }
+
+  function clearSession() {
+    bru.setEnvVar("accessToken", "");
+    bru.setEnvVar("refreshToken", "");
+    bru.setEnvVar("accessTokenExpiresAt", "0");
+  }
+
+  async function refreshSession() {
+    const refreshToken = bru.getEnvVar("refreshToken");
+    if (!refreshToken) {
+      return false;
+    }
+    try {
+      const response = await bru.sendRequest({
+        method: "POST",
+        url: bru.getEnvVar("baseUrl") + "/auth/refresh",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Request-Id": bru.getEnvVar("exampleRequestId") || "req-bruno-refresh"
+        },
+        data: { refreshToken: refreshToken }
+      });
+      const body = readPayload(response);
+      if (!response || response.status !== 200 || !body || !body.accessToken) {
+        clearSession();
+        return false;
+      }
+      saveSession(body);
+      return true;
+    } catch (error) {
+      console.log("Refresh failed after a rejected session");
+      return false;
+    }
+  }
+
+  const pathname = pathnameOf(req.getUrl());
+  const status = res.getStatus();
+  const body = responseBody();
+  saveSession(body);
+
+  if (pathname === "/auth/sign-out" && status === 204) {
+    clearSession();
+  }
+
+  if (body && body.id && (status === 200 || status === 201)) {
+    if (pathname === "/staff" || pathname.startsWith("/staff/")) {
+      bru.setEnvVar("platformStaffId", body.id);
+    }
+    if (pathname === "/pharmacy/staff" || pathname.startsWith("/pharmacy/staff/")) {
+      bru.setEnvVar("pharmacyStaffId", body.id);
+    }
+  }
+
+  const sessionRejected = status === 401 && body && body.detail === "Session was not accepted";
+  const canRefresh = pathname !== "/auth/refresh" && pathname !== "/auth/sign-out";
+  if (sessionRejected && canRefresh && bru.getEnvVar("refreshToken")) {
+    await refreshSession();
+  }
+}
+
 docs {
   One folder per module, one request file per operation.
   Example values live in environments: baseUrl, examplePharmacyId, examplePhone, and exampleRequestId.
+  The collection script stores accessToken, refreshToken, and accessTokenExpiresAt from any login or refresh response.
+  It sends Authorization: Bearer on protected calls, and calls POST /auth/refresh when the access token is expired or the server rejects the session.
+  Send OTP stores the latest mock code in otpCode. Verify OTP sends that value. Start `make sms-mock` first.
   Record only endpoints the running server serves.
 }

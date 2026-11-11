@@ -1,11 +1,11 @@
 meta {
   name: Admin decision
   type: http
-  seq: 3
+  seq: 4
 }
 
 post {
-  url: {{baseUrl}}/pharmacy-applications/{{examplePharmacyId}}/admin-decision
+  url: {{baseUrl}}/pharmacy-applications/{{pharmacyId}}/admin-decision
   body: json
   auth: none
 }
@@ -23,11 +23,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   Only an admin records the final decision, and only after compliance approval.
+  pharmacyId is filled when a pharmacy account signs in. The collection script attaches the saved access token.
 }

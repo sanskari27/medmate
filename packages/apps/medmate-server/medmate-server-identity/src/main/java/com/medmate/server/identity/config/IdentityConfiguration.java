@@ -31,6 +31,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
 @Profile({"local", "prod", "identity-it"})
@@ -73,7 +74,7 @@ public class IdentityConfiguration {
         return recording;
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     DocumentStore documentStore(MedmateIdentityProperties properties) {
         String bucket = properties.uploads() == null ? "" : properties.uploads().bucket();
         if (bucket == null || bucket.isBlank()) {
@@ -83,7 +84,11 @@ public class IdentityConfiguration {
                         || properties.uploads().region().isBlank()
                 ? "ap-south-1"
                 : properties.uploads().region();
-        return new S3DocumentStore(S3Client.builder().region(Region.of(region)).build(), bucket);
+        Region awsRegion = Region.of(region);
+        return new S3DocumentStore(
+                S3Client.builder().region(awsRegion).build(),
+                S3Presigner.builder().region(awsRegion).build(),
+                bucket);
     }
 
     @Bean

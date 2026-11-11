@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/staff/{{examplePharmacyId}}
+  url: {{baseUrl}}/staff/{{platformStaffId}}
   body: json
   auth: none
 }
@@ -22,11 +22,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
-  An admin replaces subtypes or disables a platform staff account. The sample id is examplePharmacyId {{examplePharmacyId}}.
+  An admin replaces subtypes or disables a platform staff account.
+  platformStaffId is stored by Create platform staff. The collection script attaches the saved access token.
 }

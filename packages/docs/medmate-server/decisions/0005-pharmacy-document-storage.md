@@ -17,5 +17,6 @@ Pharmacy verification stores licence images and PDFs. The platform bucket `medma
 ## Consequences
 
 - Deploy writes `APP_UPLOADS_BUCKET` and `APP_UPLOADS_PREFIX` when uploads are enabled.
+- A review response may also include a 15-minute presigned URL. See [0006](0006-presigned-pharmacy-document-links.md).
 - An operator copies the Resend key to `/medmate-repo/medmate-server/resend_api_key` with the existing SSM workflow. Cutover deletes the server-core parameter.
 - Losing the in-memory store on a local restart drops local documents. Production objects remain in S3.

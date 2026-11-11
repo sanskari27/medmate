@@ -9,7 +9,8 @@ Architecture decisions for medmate-server.
 | [0003](0003-identity-and-access.md) | Identity module, JWT sessions, and access checks |
 | [0004](0004-production-postgres-and-flyway.md) | Enable production Postgres and Flyway |
 | [0005](0005-pharmacy-document-storage.md) | Private pharmacy documents under app-uploads/medmate-server |
+| [0006](0006-presigned-pharmacy-document-links.md) | Presigned S3 links on the pharmacy application detail |
 
-The next file is the next number: `0006-<slug>.md`.
+The next file is the next number: `0007-<slug>.md`.
 
 Write an ADR when the change picks a structure that later work has to live with: a new module boundary, a datastore, authentication, or a different deployable. A requirement spec records product behavior. It does not replace an ADR.

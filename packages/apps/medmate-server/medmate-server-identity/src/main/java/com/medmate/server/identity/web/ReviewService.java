@@ -5,6 +5,7 @@ import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.access.AccountType;
 import com.medmate.server.identity.access.Verification;
 import com.medmate.server.identity.access.VerificationStatus;
+import com.medmate.server.identity.documents.DocumentStore;
 import com.medmate.server.identity.mail.MailSender;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
@@ -26,11 +27,13 @@ public class ReviewService {
     private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
 
     private final PharmacyStore pharmacies;
+    private final DocumentStore documents;
     private final MailSender mail;
     private final Clock clock;
 
-    public ReviewService(PharmacyStore pharmacies, MailSender mail, Clock clock) {
+    public ReviewService(PharmacyStore pharmacies, DocumentStore documents, MailSender mail, Clock clock) {
         this.pharmacies = pharmacies;
+        this.documents = documents;
         this.mail = mail;
         this.clock = clock;
     }
@@ -44,6 +47,16 @@ public class ReviewService {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Status is required");
         }
         return pharmacies.list(status);
+    }
+
+    public ApplicationDetail detail(AccountPrincipal actor, UUID pharmacyId) {
+        if (!Access.platform(actor.accountType(), actor.disabled(), actor.subtypes(), "compliance")) {
+            throw forbidden("Compliance review is not allowed");
+        }
+        PharmacyStore.ApplicationRow application = pharmacies
+                .application(pharmacyId)
+                .orElseThrow(() -> new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy was not found"));
+        return ApplicationDetail.from(application, documents);
     }
 
     @Transactional
@@ -159,6 +172,80 @@ public class ReviewService {
                     summary.phone(),
                     summary.status().wire(),
                     summary.submittedAt());
+        }
+    }
+
+    public record DocumentItem(String slot, String contentType, String url) {}
+
+    public record ApplicationDetail(
+            UUID pharmacyId,
+            String status,
+            SessionIssuer.RejectionResponse rejection,
+            String phone,
+            String name,
+            String tagline,
+            String email,
+            String address,
+            String city,
+            String state,
+            String pincode,
+            List<String> businessTypes,
+            String industry,
+            String registrationType,
+            String gstin,
+            String pan,
+            String drugLicenceNo,
+            String fssaiNo,
+            String tradeLicenceNo,
+            boolean enableTds,
+            boolean enableTcs,
+            String pharmacistName,
+            String invoicePrefix,
+            String terms,
+            boolean acceptOnlineOrders,
+            boolean selfOrderKiosk,
+            boolean eInvoicing,
+            boolean looseSelling,
+            boolean lowStockAlerts,
+            Instant submittedAt,
+            List<DocumentItem> documents) {
+
+        static ApplicationDetail from(PharmacyStore.ApplicationRow row, DocumentStore documents) {
+            return new ApplicationDetail(
+                    row.id(),
+                    row.status().wire(),
+                    ReviewService.rejection(row.status(), row.rejectionStage(), row.rejectionComment()),
+                    row.phone(),
+                    row.name(),
+                    row.tagline(),
+                    row.email(),
+                    row.address(),
+                    row.city(),
+                    row.state(),
+                    row.pincode(),
+                    row.businessTypes(),
+                    row.industry(),
+                    row.registrationType(),
+                    row.gstin(),
+                    row.pan(),
+                    row.drugLicenceNo(),
+                    row.fssaiNo(),
+                    row.tradeLicenceNo(),
+                    row.enableTds(),
+                    row.enableTcs(),
+                    row.pharmacistName(),
+                    row.invoicePrefix(),
+                    row.terms(),
+                    row.acceptOnlineOrders(),
+                    row.selfOrderKiosk(),
+                    row.eInvoicing(),
+                    row.looseSelling(),
+                    row.lowStockAlerts(),
+                    row.submittedAt(),
+                    row.documents().stream()
+                            .map(document -> new DocumentItem(
+                                    document.slot(), document.contentType(), documents.url(document.objectKey())))
+                            .toList());
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.medmate.server.identity.store;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.pharmacy.PharmacyRules;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Repository;
 public class PharmacyStore {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final List<String> SLOT_ORDER = List.of(
+            "logo", "gst", "pan", "drug-licence", "fssai", "trade-licence", "pharmacist-certificate", "signature");
 
     private final JdbcClient jdbc;
 
@@ -37,6 +40,79 @@ public class PharmacyStore {
             Instant submittedAt) {}
 
     public record DocumentRow(String objectKey, String contentType) {}
+
+    public record StoredDocument(String slot, String contentType, String objectKey) {}
+
+    public record ApplicationRow(
+            UUID id,
+            VerificationStatus status,
+            String rejectionStage,
+            String rejectionComment,
+            String phone,
+            String name,
+            String tagline,
+            String email,
+            String address,
+            String city,
+            String state,
+            String pincode,
+            List<String> businessTypes,
+            String industry,
+            String registrationType,
+            String gstin,
+            String pan,
+            String drugLicenceNo,
+            String fssaiNo,
+            String tradeLicenceNo,
+            boolean enableTds,
+            boolean enableTcs,
+            String pharmacistName,
+            String invoicePrefix,
+            String terms,
+            boolean acceptOnlineOrders,
+            boolean selfOrderKiosk,
+            boolean eInvoicing,
+            boolean looseSelling,
+            boolean lowStockAlerts,
+            Instant submittedAt,
+            List<StoredDocument> documents) {
+
+        ApplicationRow withDocuments(List<StoredDocument> documents) {
+            return new ApplicationRow(
+                    id,
+                    status,
+                    rejectionStage,
+                    rejectionComment,
+                    phone,
+                    name,
+                    tagline,
+                    email,
+                    address,
+                    city,
+                    state,
+                    pincode,
+                    businessTypes,
+                    industry,
+                    registrationType,
+                    gstin,
+                    pan,
+                    drugLicenceNo,
+                    fssaiNo,
+                    tradeLicenceNo,
+                    enableTds,
+                    enableTcs,
+                    pharmacistName,
+                    invoicePrefix,
+                    terms,
+                    acceptOnlineOrders,
+                    selfOrderKiosk,
+                    eInvoicing,
+                    looseSelling,
+                    lowStockAlerts,
+                    submittedAt,
+                    documents);
+        }
+    }
 
     public record Summary(UUID pharmacyId, String name, String phone, VerificationStatus status, Instant submittedAt) {}
 
@@ -72,6 +148,25 @@ public class PharmacyStore {
                 .param("owner", ownerAccountId)
                 .query(this::pharmacy)
                 .optional();
+    }
+
+    public Optional<ApplicationRow> application(UUID id) {
+        Optional<ApplicationRow> found = jdbc.sql(
+                        """
+                        SELECT p.id, p.verification_status, p.rejection_stage, p.rejection_comment, a.phone,
+                          p.name, p.tagline, p.email, p.address, p.city, p.state, p.pincode, p.business_types,
+                          p.industry, p.registration_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
+                          p.trade_licence_no, p.enable_tds, p.enable_tcs, p.pharmacist_name, p.invoice_prefix,
+                          p.terms, p.accept_online_orders, p.self_order_kiosk, p.e_invoicing, p.loose_selling,
+                          p.low_stock_alerts, p.submitted_at
+                        FROM pharmacy p
+                        JOIN account a ON a.id = p.owner_account_id
+                        WHERE p.id = :id
+                        """)
+                .param("id", id)
+                .query(this::readApplication)
+                .optional();
+        return found.map(row -> row.withDocuments(documentSlots(id)));
     }
 
     public Optional<UUID> membership(UUID accountId) {
@@ -186,6 +281,19 @@ public class PharmacyStore {
                 .update();
     }
 
+    private List<StoredDocument> documentSlots(UUID pharmacyId) {
+        List<StoredDocument> stored = jdbc.sql(
+                        "SELECT slot, content_type, object_key FROM pharmacy_document WHERE pharmacy_id = :id")
+                .param("id", pharmacyId)
+                .query((rs, row) -> new StoredDocument(
+                        rs.getString("slot"), rs.getString("content_type"), rs.getString("object_key")))
+                .list();
+        return SLOT_ORDER.stream()
+                .flatMap(slot ->
+                        stored.stream().filter(document -> document.slot().equals(slot)))
+                .toList();
+    }
+
     public Optional<DocumentRow> document(UUID pharmacyId, String slot) {
         return jdbc.sql(
                         "SELECT object_key, content_type FROM pharmacy_document WHERE pharmacy_id = :id AND slot = :slot")
@@ -229,6 +337,52 @@ public class PharmacyStore {
                 .param("actor", actorId)
                 .param("created", Timestamp.from(now))
                 .update();
+    }
+
+    private ApplicationRow readApplication(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+        Timestamp submitted = rs.getTimestamp("submitted_at");
+        return new ApplicationRow(
+                rs.getObject("id", UUID.class),
+                VerificationStatus.parse(rs.getString("verification_status")),
+                rs.getString("rejection_stage"),
+                rs.getString("rejection_comment"),
+                rs.getString("phone"),
+                rs.getString("name"),
+                rs.getString("tagline"),
+                rs.getString("email"),
+                rs.getString("address"),
+                rs.getString("city"),
+                rs.getString("state"),
+                rs.getString("pincode"),
+                readBusinessTypes(rs.getString("business_types")),
+                rs.getString("industry"),
+                rs.getString("registration_type"),
+                rs.getString("gstin"),
+                rs.getString("pan"),
+                rs.getString("drug_licence_no"),
+                rs.getString("fssai_no"),
+                rs.getString("trade_licence_no"),
+                rs.getBoolean("enable_tds"),
+                rs.getBoolean("enable_tcs"),
+                rs.getString("pharmacist_name"),
+                rs.getString("invoice_prefix"),
+                rs.getString("terms"),
+                rs.getBoolean("accept_online_orders"),
+                rs.getBoolean("self_order_kiosk"),
+                rs.getBoolean("e_invoicing"),
+                rs.getBoolean("loose_selling"),
+                rs.getBoolean("low_stock_alerts"),
+                submitted == null ? null : submitted.toInstant(),
+                List.of());
+    }
+
+    private static List<String> readBusinessTypes(String json) {
+        try {
+            List<String> types = JSON.readValue(json, new TypeReference<List<String>>() {});
+            return types == null ? List.of() : types;
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private PharmacyRow pharmacy(java.sql.ResultSet rs, int row) throws java.sql.SQLException {

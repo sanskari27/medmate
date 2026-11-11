@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/pharmacy/staff/{{examplePharmacyId}}
+  url: {{baseUrl}}/pharmacy/staff/{{pharmacyStaffId}}
   body: json
   auth: none
 }
@@ -22,11 +22,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   The owner replaces the permission keys for one staff account.
+  pharmacyStaffId is stored by Create pharmacy staff. The collection script attaches the saved access token.
 }

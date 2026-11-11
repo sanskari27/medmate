@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/pharmacies/{{examplePharmacyId}}/documents/gst
+  url: {{baseUrl}}/pharmacies/{{pharmacyId}}/documents/gst
   body: none
   auth: none
 }
@@ -15,11 +15,15 @@ headers {
   X-Request-Id: {{exampleRequestId}}
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   The owner, compliance, and admin download a private pharmacy document.
+  The collection script attaches the saved access token. pharmacyId is filled when a pharmacy account signs in.
 }

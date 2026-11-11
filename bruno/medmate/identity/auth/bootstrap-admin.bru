@@ -12,6 +12,7 @@ post {
 
 headers {
   Accept: application/json
+  Authorization: Bearer {{adminBootstrapToken}}
   Content-Type: application/json
   X-Request-Id: {{exampleRequestId}}
 }
@@ -22,11 +23,18 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("bootstrap token is accepted when it is configured", function() {
+    if (!bru.getEnvVar("adminBootstrapToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().accountId).to.be.a("string");
+  });
 }
 
 docs {
-  The GitHub workflow Medmate admin calls this route with the bootstrap token. A user JWT cannot create an admin.
+  Sends adminBootstrapToken, not the user access token. Local value is local-bootstrap.
+  A user JWT cannot create an admin.
 }

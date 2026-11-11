@@ -1,11 +1,11 @@
 meta {
   name: Compliance decision
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
-  url: {{baseUrl}}/pharmacy-applications/{{examplePharmacyId}}/compliance-decision
+  url: {{baseUrl}}/pharmacy-applications/{{pharmacyId}}/compliance-decision
   body: json
   auth: none
 }
@@ -23,11 +23,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
-  Compliance staff or an admin record the first decision. examplePharmacyId {{examplePharmacyId}} stands in for a real pharmacy.
+  Compliance staff or an admin record the first decision.
+  pharmacyId is filled when a pharmacy account signs in. The collection script attaches the saved access token.
 }

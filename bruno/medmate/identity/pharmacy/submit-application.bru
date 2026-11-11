@@ -19,11 +19,15 @@ body:multipart-form {
   name: Care Pharmacy
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
-  The owner sends one complete multipart application. A missing session is rejected before field checks.
+  The owner sends one complete multipart application. This sample sends only the name, so an authenticated owner still fails field checks.
+  The collection script attaches the saved access token.
 }

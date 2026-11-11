@@ -7,4 +7,22 @@ vars {
   examplePhone: 9876543210
   @description('''Example X-Request-Id''')
   exampleRequestId: req-example-001
+  @description('''Unused in production. Local OTP is read only from a localhost API.''')
+  smsMockUrl:
+  @description('''Bearer token for POST /auth/admin-bootstrap. Leave empty in this file.''')
+  adminBootstrapToken:
+  @description('''4-digit PIN for an approved pharmacy owner''')
+  pin: 1234
+  @description('''Filled by Verify OTP, PIN login, and refresh''')
+  accessToken:
+  refreshToken:
+  accessTokenExpiresAt: 0
+  otpCode:
+  accountId:
+  @description('''Replaced when a pharmacy account signs in''')
+  pharmacyId: 00000000-0000-4000-8000-000000000001
+  @description('''Replaced when platform staff are created''')
+  platformStaffId: 00000000-0000-4000-8000-000000000001
+  @description('''Replaced when pharmacy staff are created''')
+  pharmacyStaffId: 00000000-0000-4000-8000-000000000001
 }

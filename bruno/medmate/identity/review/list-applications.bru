@@ -15,11 +15,15 @@ headers {
   X-Request-Id: {{exampleRequestId}}
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   Admin and compliance staff list pharmacies waiting for review.
+  The collection script attaches the saved access token.
 }

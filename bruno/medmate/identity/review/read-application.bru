@@ -1,0 +1,43 @@
+meta {
+  name: Read application
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy-applications/{{examplePharmacyId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.pharmacyId).to.equal(bru.getEnvVar("examplePharmacyId"));
+    expect(body.status).to.be.a("string");
+    expect(body.phone).to.be.a("string");
+    expect(body.lowStockAlerts).to.equal(true);
+    expect(body.documents).to.be.an("array");
+    body.documents.forEach(function(document) {
+      expect(document.slot).to.be.a("string");
+      expect(document.contentType).to.be.a("string");
+      expect(document.url).to.be.a("string");
+      expect(document).to.not.have.property("objectKey");
+    });
+  });
+}
+
+docs {
+  Admin and compliance staff read every stored field and document slot before one overall decision.
+  The collection script attaches the saved access token.
+}

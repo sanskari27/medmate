@@ -18,15 +18,23 @@ headers {
 
 body:json {
   {
-    "refreshToken": "missing"
+    "refreshToken": "{{refreshToken}}"
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved refresh token rotates", function() {
+    if (!bru.getEnvVar("refreshToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().accessToken).to.be.a("string");
+    expect(res.getBody().refreshToken).to.be.a("string");
+  });
 }
 
 docs {
-  A refresh token lasts 30 days and rotates. This sample token is not stored.
+  Uses the saved refreshToken, rotates it, and stores the new accessToken and refreshToken.
+  A refresh token lasts 30 days.
 }

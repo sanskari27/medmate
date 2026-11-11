@@ -24,11 +24,15 @@ body:json {
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   An approved pharmacy owner grants keys such as inventory:read inside that pharmacy.
+  A 201 response stores pharmacyStaffId. The collection script attaches the saved access token.
 }

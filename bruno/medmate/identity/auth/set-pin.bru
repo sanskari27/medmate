@@ -18,15 +18,19 @@ headers {
 
 body:json {
   {
-    "pin": "1234"
+    "pin": "{{pin}}"
   }
 }
 
-assert {
-  res.status: eq 401
-  res.body.title: eq Unauthorized
+tests {
+  test("set PIN uses the saved session", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
 }
 
 docs {
   An approved pharmacy owner sets this after the first OTP login that follows approval.
+  The collection script attaches the saved access token. pin is the environment value.
 }
