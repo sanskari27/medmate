@@ -8,6 +8,7 @@ import { employeesApi } from "@/features/employees";
 import { distributorsApi } from "@/features/distributors";
 import { inventoryApi } from "@/features/inventory";
 import { offersApi } from "@/features/offers";
+import { racksApi } from "@/features/racks";
 import { purchasesApi } from "@/features/purchases";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { readPersistedAuth } from "@/services/storage";
@@ -29,6 +30,7 @@ export function createAppStore() {
         distributorsApi.middleware,
         purchasesApi.middleware,
         inventoryApi.middleware,
+        racksApi.middleware,
         offersApi.middleware,
         invoiceSettingsApi.middleware,
       ),

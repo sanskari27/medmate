@@ -11,7 +11,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-support/              FAQs, support cases, and the live chat socket
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
-  medmate-server-stock/                purchase bills, returns, and inventory
+  medmate-server-stock/                purchase bills, returns, inventory, and rack placement
   medmate-server-offers/               pharmacy discounts for a later billing module
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
@@ -54,7 +54,7 @@ The supplier directory and its payable ledger live in `medmate-server-distributo
 
 ## Stock
 
-Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. The module reads medicine identity from medicine-data. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records that boundary.
+Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. `V13__racks.sql` adds the product location and the empty-rack list. The location belongs to the product, not a batch. The module reads medicine identity from medicine-data. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records the stock boundary. [0015](decisions/0015-pharmacy-racks.md) records the rack boundary.
 
 ## Offers
 

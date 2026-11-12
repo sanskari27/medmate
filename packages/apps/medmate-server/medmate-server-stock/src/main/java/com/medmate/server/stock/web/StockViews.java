@@ -59,9 +59,13 @@ public final class StockViews {
             String pack,
             String type,
             int reorderLevel,
+            String rack,
+            String rackAlt,
             List<BatchView> batches) {}
 
     public record InventoryList(List<ProductView> products) {}
+
+    public record RackList(List<String> racks, List<ProductView> products) {}
 
     public record InventoryOne(ProductView product) {}
 

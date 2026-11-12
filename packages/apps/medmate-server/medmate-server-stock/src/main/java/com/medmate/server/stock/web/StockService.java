@@ -10,6 +10,7 @@ import com.medmate.server.stock.CatalogUnavailable;
 import com.medmate.server.stock.InventoryRules;
 import com.medmate.server.stock.MedicineCatalog;
 import com.medmate.server.stock.PurchaseRules;
+import com.medmate.server.stock.RackRules;
 import com.medmate.server.stock.store.StockStore;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -200,6 +201,64 @@ public class StockService {
             throw missingProduct();
         }
         return loadedProduct(actor.pharmacyId(), productId);
+    }
+
+    public StockViews.RackList racks(AccountPrincipal actor) {
+        require(actor, RackRules.READ, "Racks cannot be read");
+        return rackList(actor.pharmacyId());
+    }
+
+    @Transactional
+    public StockViews.RackList createRack(AccountPrincipal actor, JsonNode body) {
+        require(actor, RackRules.CREATE, "Racks cannot be created");
+        RackRules.Code code = RackRules.requiredRack(body);
+        if (code.problem() != null) {
+            throw bad(code.problem());
+        }
+        if (RackRules.taken(code.value(), stock.rackCodes(actor.pharmacyId()))
+                || stock.insertRack(actor.pharmacyId(), code.value()) == 0) {
+            throw rackExists();
+        }
+        return rackList(actor.pharmacyId());
+    }
+
+    @Transactional
+    public StockViews.InventoryOne location(AccountPrincipal actor, String productId, JsonNode body) {
+        require(actor, RackRules.UPDATE, "Racks cannot be updated");
+        StockStore.ProductRow current =
+                stock.product(actor.pharmacyId(), productId).orElseThrow(StockService::missingProduct);
+        RackRules.Change change = RackRules.location(body, new RackRules.Placement(current.rack(), current.rackAlt()));
+        if (change.problem() != null) {
+            throw bad(change.problem());
+        }
+        RackRules.Placement placement = change.placement();
+        if (stock.updateLocation(actor.pharmacyId(), productId, placement.rack(), placement.rackAlt()) == 0) {
+            throw missingProduct();
+        }
+        return loadedProduct(actor.pharmacyId(), productId);
+    }
+
+    @Transactional
+    public StockViews.RackList bulkLocation(AccountPrincipal actor, JsonNode body) {
+        require(actor, RackRules.UPDATE, "Racks cannot be updated");
+        RackRules.IdList ids = RackRules.ids(body);
+        if (ids.problem() != null) {
+            throw bad(ids.problem());
+        }
+        RackRules.Code code = RackRules.requiredRack(body);
+        if (code.problem() != null) {
+            throw bad(code.problem());
+        }
+        for (String productId : ids.ids()) {
+            StockStore.ProductRow current =
+                    stock.product(actor.pharmacyId(), productId).orElseThrow(StockService::missingProduct);
+            RackRules.Placement placement =
+                    RackRules.assignPrimary(new RackRules.Placement(current.rack(), current.rackAlt()), code.value());
+            if (stock.updateLocation(actor.pharmacyId(), productId, placement.rack(), placement.rackAlt()) == 0) {
+                throw missingProduct();
+            }
+        }
+        return rackList(actor.pharmacyId());
     }
 
     private StockViews.PurchaseOne loaded(UUID pharmacyId, String id) {
@@ -523,6 +582,8 @@ public class StockService {
                 product.pack(),
                 product.type(),
                 product.reorderLevel(),
+                product.rack(),
+                product.rackAlt(),
                 views);
     }
 
@@ -615,6 +676,14 @@ public class StockService {
 
     private static ApiProblem missingProduct() {
         return new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Product was not found");
+    }
+
+    private static ApiProblem rackExists() {
+        return new ApiProblem(HttpStatus.CONFLICT, "Conflict", "That rack already exists");
+    }
+
+    private StockViews.RackList rackList(UUID pharmacyId) {
+        return new StockViews.RackList(stock.rackCodes(pharmacyId), products(pharmacyId));
     }
 
     private static ApiProblem missingPharmacy() {

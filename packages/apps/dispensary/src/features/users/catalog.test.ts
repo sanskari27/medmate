@@ -40,6 +40,10 @@ describe("staff permission catalog", () => {
       "inventory:read",
       "inventory:update",
       "inventory:export",
+      "racks:read",
+      "racks:create",
+      "racks:update",
+      "racks:export",
       "offers:read",
       "offers:create",
       "offers:update",
@@ -49,10 +53,11 @@ describe("staff permission catalog", () => {
       "Distributors",
       "Purchases",
       "Inventory",
+      "Rack & Locations",
       "Offers",
     ]);
-    expect(PERMISSION_KEYS).toHaveLength(27);
-    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 27");
+    expect(PERMISSION_KEYS).toHaveLength(31);
+    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 31");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
     expect(togglePermission(["users:read"], "users:create")).toEqual([
       "users:read",

@@ -16,6 +16,7 @@ import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
 import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
+import { RacksPage, canOpenRacks } from "@/features/racks";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
 import {
   GuestRoute,
@@ -51,6 +52,7 @@ export function AppRouter() {
     session?.account.pharmacyRole,
     session?.account.permissions,
   );
+  const racksOpen = canOpenRacks(session?.account.pharmacyRole, session?.account.permissions);
   const offersOpen = canOpenOffers(session?.account.pharmacyRole, session?.account.permissions);
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
@@ -60,7 +62,13 @@ export function AppRouter() {
     "/profile",
     "/support",
   ]);
-  const cataloguePaths = new Set(["/distributors", "/purchases", "/inventory", "/offers"]);
+  const cataloguePaths = new Set([
+    "/distributors",
+    "/purchases",
+    "/inventory",
+    "/racks",
+    "/offers",
+  ]);
   let catalogueLabeled = false;
   let managementLabeled = false;
   const items = appRoutes
@@ -70,6 +78,7 @@ export function AppRouter() {
       if (route.path === "/distributors") return distributorsOpen;
       if (route.path === "/purchases") return purchasesOpen;
       if (route.path === "/inventory") return inventoryOpen;
+      if (route.path === "/racks") return racksOpen;
       if (route.path === "/offers") return offersOpen;
       return !ownerPaths.has(route.path) || owner;
     })
@@ -121,6 +130,7 @@ export function AppRouter() {
                 route.path !== "/distributors" &&
                 route.path !== "/purchases" &&
                 route.path !== "/inventory" &&
+                route.path !== "/racks" &&
                 route.path !== "/offers",
             )
             .map((route) => (
@@ -141,6 +151,10 @@ export function AppRouter() {
           <Route
             path="/inventory"
             element={inventoryOpen ? <InventoryPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/racks"
+            element={racksOpen ? <RacksPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/offers"

@@ -397,6 +397,7 @@ describe("AppRouter", () => {
       "Distributors",
       "Purchases",
       "Inventory",
+      "Rack & Locations",
       "Offers",
       "Employees",
       "Invoice Settings",
@@ -551,6 +552,46 @@ describe("AppRouter", () => {
     renderAt("/offers");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Offers" })).toBeNull();
+  });
+
+  it("shows Rack & Locations to staff who can read it", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Rack & Locations" })).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without racks:read away from Rack & Locations", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:create"] },
+    });
+    renderAt("/racks");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Rack & Locations" })).toBeNull();
+  });
+
+  it("shows Rack & Locations to staff who can read it", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Rack & Locations" })).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without racks:read away from Rack & Locations", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:create"] },
+    });
+    renderAt("/racks");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Rack & Locations" })).toBeNull();
   });
 
   it("sends pharmacy staff without employees:read away from Employees", () => {

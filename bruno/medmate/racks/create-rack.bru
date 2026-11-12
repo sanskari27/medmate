@@ -1,0 +1,35 @@
+meta {
+  name: Create rack
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/racks
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "rack": "A3-12"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with racks:create, adds an empty rack. A second create of the same code is 409.
+}

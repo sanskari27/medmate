@@ -1,0 +1,36 @@
+meta {
+  name: Bulk location
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/inventory/location/bulk
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "ids": ["DR100"],
+    "rack": "A3-12"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with racks:update, sets the primary code for each id and keeps the second slot.
+}

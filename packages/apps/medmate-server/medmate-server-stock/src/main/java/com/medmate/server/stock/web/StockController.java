@@ -63,6 +63,27 @@ public class StockController {
         return stock.reorder(Current.require(authentication), productId, body);
     }
 
+    @GetMapping("/pharmacy/racks")
+    public StockViews.RackList racks(Authentication authentication) {
+        return stock.racks(Current.require(authentication));
+    }
+
+    @PostMapping("/pharmacy/racks")
+    public ResponseEntity<StockViews.RackList> createRack(Authentication authentication, @RequestBody JsonNode body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(stock.createRack(Current.require(authentication), body));
+    }
+
+    @PatchMapping("/pharmacy/inventory/{productId}/location")
+    public StockViews.InventoryOne location(
+            Authentication authentication, @PathVariable String productId, @RequestBody JsonNode body) {
+        return stock.location(Current.require(authentication), productId, body);
+    }
+
+    @PostMapping("/pharmacy/inventory/location/bulk")
+    public StockViews.RackList bulkLocation(Authentication authentication, @RequestBody JsonNode body) {
+        return stock.bulkLocation(Current.require(authentication), body);
+    }
+
     @GetMapping("/pharmacy/medicines/search")
     public StockViews.SearchResponse search(
             Authentication authentication,

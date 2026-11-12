@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
@@ -6,7 +6,7 @@ import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
-import { useAuthState } from "@/features/authentication";
+import { problemMessage, useAuthState } from "@/features/authentication";
 import { useListPurchasesQuery } from "@/features/purchases";
 import { cn } from "@/utils/className";
 import {
@@ -20,6 +20,7 @@ import {
   isExpiring,
   isLow,
   isOut,
+  locationLabel,
   matches,
   nearestExpiry,
   retail,
@@ -29,7 +30,7 @@ import {
   type InventoryFilter,
   type InventoryProduct,
 } from "../../model";
-import { useListInventoryQuery } from "../../inventory.api";
+import { useListInventoryQuery, useSetLocationMutation } from "../../inventory.api";
 
 const headCell =
   "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
@@ -131,11 +132,14 @@ export function InventoryPage() {
           <table className="w-full border-separate border-spacing-0 text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
             <thead>
               <tr>
-                {["Product", "Type", "Batches", "Expiry", "Stock", "MRP", "Value"].map(
-                  (heading, index) => (
+                {["Product", "Location", "Type", "Batches", "Expiry", "Stock", "MRP", "Value"].map(
+                  (heading) => (
                     <th
                       key={heading}
-                      className={cn(headCell, index >= 2 && heading !== "Expiry" && "text-right")}
+                      className={cn(
+                        headCell,
+                        ["Batches", "Stock", "MRP", "Value"].includes(heading) && "text-right",
+                      )}
                     >
                       {heading}
                     </th>
@@ -168,6 +172,9 @@ export function InventoryPage() {
                       <Text className="text-[12px] leading-normal text-muted">
                         {subtitle || "—"}
                       </Text>
+                    </td>
+                    <td className={cn(bodyCell, "font-mono whitespace-nowrap")}>
+                      {locationLabel(product)}
                     </td>
                     <td className={cn(bodyCell, "whitespace-nowrap")}>{product.type ?? "—"}</td>
                     <td className={cn(bodyCell, "text-right font-semibold")}>{shown.length}</td>
@@ -234,15 +241,24 @@ function Stat({
   );
 }
 
-function ProductDialog({
+export function ProductDialog({
   product,
   onClose,
+  onLocationSaved,
 }: {
   product: InventoryProduct | null;
   onClose: () => void;
+  onLocationSaved?: () => void;
 }) {
   const navigate = useNavigate();
+  const { session } = useAuthState();
+  const canPlace =
+    session?.account.pharmacyRole === "owner" ||
+    (session?.account.permissions ?? []).includes("racks:update");
   const [tab, setTab] = useState<"details" | "batches">("details");
+  const [rack, setRack] = useState(product?.rack ?? "");
+  const [alt, setAlt] = useState(product?.rackAlt ?? "");
+  const [setLocation, locationState] = useSetLocationMutation();
   const history = useListPurchasesQuery(product?.productId, {
     skip: !product || tab !== "batches",
   });
@@ -250,10 +266,17 @@ function ProductDialog({
     () => (product?.batches ?? []).filter((batch) => batch.qty > 0),
     [product],
   );
+  useEffect(() => {
+    setRack(product?.rack ?? "");
+    setAlt(product?.rackAlt ?? "");
+  }, [product]);
   if (!product) return null;
   const stock = units(product);
   const purchases = history.data?.purchases ?? [];
   const expiry = nearestExpiry(product);
+  const dirty =
+    rack.trim().toUpperCase() !== (product.rack ?? "").trim().toUpperCase() ||
+    alt.trim().toUpperCase() !== (product.rackAlt ?? "").trim().toUpperCase();
   const detailRows: { label: string; value: ReactNode }[] = [
     { label: "Marketer", value: product.marketer ?? "—" },
     { label: "Composition", value: product.composition ?? "—" },
@@ -329,6 +352,55 @@ function ProductDialog({
                     <td className={cn(bodyCell, "font-semibold text-ink")}>{value}</td>
                   </tr>
                 ))}
+                <tr className="transition-colors duration-100 hover:bg-wash-2">
+                  <td className={cn(bodyCell, "w-[180px] font-semibold text-muted")}>
+                    Rack location
+                  </td>
+                  <td className={cn(bodyCell, "font-semibold text-ink")}>
+                    {canPlace ? (
+                      <Box className="flex items-center gap-2">
+                        <Input
+                          aria-label="Rack location"
+                          value={rack}
+                          onChange={(event) => setRack(event.target.value.toUpperCase())}
+                          placeholder="A3-12"
+                          className="w-[110px] font-mono"
+                        />
+                        <Input
+                          aria-label="2nd slot"
+                          value={alt}
+                          onChange={(event) => setAlt(event.target.value.toUpperCase())}
+                          placeholder="2nd slot"
+                          className="w-[110px] font-mono"
+                        />
+                        <Button
+                          type="button"
+                          size="md"
+                          disabled={!dirty || locationState.isLoading}
+                          onClick={() => {
+                            void setLocation({
+                              productId: product.productId,
+                              rack: rack.trim(),
+                              rackAlt: alt.trim(),
+                            })
+                              .unwrap()
+                              .then(() => onLocationSaved?.())
+                              .catch(() => undefined);
+                          }}
+                        >
+                          Save location
+                        </Button>
+                        {locationState.isError ? (
+                          <Text className="text-[12.5px] text-rose">
+                            {problemMessage(locationState.error, "Could not set the location")}
+                          </Text>
+                        ) : null}
+                      </Box>
+                    ) : (
+                      locationLabel(product)
+                    )}
+                  </td>
+                </tr>
               </DataTable>
             </Box>
           ) : (

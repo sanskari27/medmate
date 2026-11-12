@@ -18,6 +18,8 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.shared.error.ApiExceptionHandler;
 import com.medmate.server.stock.MedicineCatalog;
 import com.medmate.server.stock.store.StockStore;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -101,6 +103,83 @@ class StockControllerTest {
                 .andExpect(status().isForbidden());
         verify(catalog, never()).search(any(), any(int.class));
         verify(catalog, never()).lookup(any());
+    }
+
+    @Test
+    void readIsRequiredToListRacks() throws Exception {
+        mvc.perform(get("/pharmacy/racks").principal(staff("racks:create")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Racks cannot be read"));
+        verify(stock, never()).rackCodes(any());
+        verify(stock, never()).products(any());
+    }
+
+    @Test
+    void createIsRequiredToAddARack() throws Exception {
+        mvc.perform(post("/pharmacy/racks")
+                        .principal(staff("racks:read"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rack\":\"A1\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Racks cannot be created"));
+        verify(stock, never()).insertRack(any(), any());
+    }
+
+    @Test
+    void updateIsRequiredToPlaceAProduct() throws Exception {
+        mvc.perform(patch("/pharmacy/inventory/DR100/location")
+                        .principal(staff("racks:read"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rack\":\"A1\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Racks cannot be updated"));
+        mvc.perform(post("/pharmacy/inventory/location/bulk")
+                        .principal(staff("racks:read"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ids\":[\"DR100\"],\"rack\":\"A1\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Racks cannot be updated"));
+        verify(stock, never()).updateLocation(any(), any(), any(), any());
+    }
+
+    @Test
+    void blankAndDuplicateRacksAreRefused() throws Exception {
+        mvc.perform(post("/pharmacy/racks")
+                        .principal(staff("racks:create"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rack\":\"  \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Rack code is required"));
+
+        Mockito.when(stock.rackCodes(PHARMACY)).thenReturn(List.of("A3-12"));
+        mvc.perform(post("/pharmacy/racks")
+                        .principal(staff("racks:create"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rack\":\"a3-12\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("That rack already exists"));
+        verify(stock, never()).insertRack(any(), any());
+    }
+
+    @Test
+    void placingAProductKeepsTheSecondSlot() throws Exception {
+        StockStore.ProductRow current = product(null, "C2");
+        StockStore.ProductRow saved = product("A1", "C2");
+        Mockito.when(stock.product(PHARMACY, "DR100")).thenReturn(Optional.of(current), Optional.of(saved));
+        Mockito.when(stock.updateLocation(PHARMACY, "DR100", "A1", "C2")).thenReturn(1);
+        Mockito.when(stock.batches(PHARMACY)).thenReturn(List.of());
+
+        mvc.perform(patch("/pharmacy/inventory/DR100/location")
+                        .principal(staff("racks:update"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rack\":\"a1\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.product.rack").value("A1"))
+                .andExpect(jsonPath("$.product.rackAlt").value("C2"));
+    }
+
+    private static StockStore.ProductRow product(String rack, String rackAlt) {
+        return new StockStore.ProductRow("DR100", "Crocin", null, null, null, null, null, 20, rack, rackAlt);
     }
 
     private static AccountAuthentication staff(String... keys) {

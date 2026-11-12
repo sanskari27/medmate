@@ -81,6 +81,15 @@ export const PERMISSION_AREAS: PermissionArea[] = [
         ],
       },
       {
+        module: "Rack & Locations",
+        actions: [
+          { key: "racks:read", label: "Read" },
+          { key: "racks:create", label: "Create" },
+          { key: "racks:update", label: "Update" },
+          { key: "racks:export", label: "Export" },
+        ],
+      },
+      {
         module: "Offers",
         actions: [
           { key: "offers:read", label: "Read" },

@@ -1,1 +1,1 @@
-export { InventoryPage } from "./InventoryPage";
+export { InventoryPage, ProductDialog } from "./InventoryPage";

@@ -61,7 +61,9 @@ public class StockStore {
             String form,
             String pack,
             String type,
-            int reorderLevel) {}
+            int reorderLevel,
+            String rack,
+            String rackAlt) {}
 
     public record BatchRow(String productId, String batchNo, String expiry, int qty, BigDecimal rate, BigDecimal mrp) {}
 
@@ -253,7 +255,8 @@ public class StockStore {
     public List<ProductRow> products(UUID pharmacyId) {
         return jdbc.sql(
                         """
-                        SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level
+                        SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
+                               rack, rack_alt
                         FROM inventory_product
                         WHERE pharmacy_id = :id
                         ORDER BY name, product_id
@@ -266,7 +269,8 @@ public class StockStore {
     public Optional<ProductRow> product(UUID pharmacyId, String productId) {
         return jdbc.sql(
                         """
-                        SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level
+                        SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
+                               rack, rack_alt
                         FROM inventory_product
                         WHERE pharmacy_id = :id AND product_id = :product
                         """)
@@ -349,6 +353,39 @@ public class StockStore {
                 .update();
     }
 
+    public List<String> rackCodes(UUID pharmacyId) {
+        return jdbc.sql("SELECT code FROM rack WHERE pharmacy_id = :id ORDER BY code")
+                .param("id", pharmacyId)
+                .query(String.class)
+                .list();
+    }
+
+    public int insertRack(UUID pharmacyId, String code) {
+        return jdbc.sql(
+                        """
+                        INSERT INTO rack (pharmacy_id, code)
+                        VALUES (:pharmacy, :code)
+                        ON CONFLICT DO NOTHING
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("code", code)
+                .update();
+    }
+
+    public int updateLocation(UUID pharmacyId, String productId, String rack, String rackAlt) {
+        return jdbc.sql(
+                        """
+                        UPDATE inventory_product
+                        SET rack = :rack, rack_alt = :alt
+                        WHERE pharmacy_id = :pharmacy AND product_id = :product
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("product", productId)
+                .param("rack", rack, Types.VARCHAR)
+                .param("alt", rackAlt, Types.VARCHAR)
+                .update();
+    }
+
     public int updateReorder(UUID pharmacyId, String productId, int reorderLevel) {
         return jdbc.sql(
                         """
@@ -410,7 +447,9 @@ public class StockStore {
                 row.getString("form"),
                 row.getString("pack"),
                 row.getString("product_type"),
-                row.getInt("reorder_level"));
+                row.getInt("reorder_level"),
+                row.getString("rack"),
+                row.getString("rack_alt"));
     }
 
     private BatchRow batch(ResultSet row, int number) throws SQLException {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -39,6 +39,8 @@ const inventory = {
       pack: "Strip",
       type: "Tablet",
       reorderLevel: 20,
+      rack: "A3-12",
+      rackAlt: "C2",
       batches: [
         { batchNo: "B1", expiry: "2027-03", qty: 5, rate: "10.00", mrp: "18.00" },
         { batchNo: "OLD", expiry: "2026-01", qty: 0, rate: "10.00", mrp: "18.00" },
@@ -53,6 +55,8 @@ const inventory = {
       pack: "Bottle",
       type: "Drops",
       reorderLevel: 10,
+      rack: null,
+      rackAlt: null,
       batches: [{ batchNo: "B2", expiry: "2027-06", qty: 80, rate: "10.00", mrp: "15.00" }],
     },
     {
@@ -64,6 +68,8 @@ const inventory = {
       pack: "Strip",
       type: "Tablet",
       reorderLevel: 20,
+      rack: null,
+      rackAlt: null,
       batches: [{ batchNo: "B3", expiry: "2027-08", qty: 4, rate: "300.00", mrp: "400.00" }],
     },
     {
@@ -75,10 +81,14 @@ const inventory = {
       pack: "1",
       type: "Device",
       reorderLevel: 20,
+      rack: null,
+      rackAlt: null,
       batches: [],
     },
   ],
 };
+
+const locationCalls: { method: string; body: string }[] = [];
 
 function json(body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -91,9 +101,13 @@ function renderPage(permissions: string[] = ["inventory:read"]) {
   writeSession({ ...session, account: { ...session.account, permissions } });
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (input: RequestInfo | URL) => {
-      const url = input instanceof Request ? input.url : String(input);
-      if (url.includes("/pharmacy/purchases")) {
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = input instanceof Request ? input : new Request(input, init);
+      if (request.url.includes("/location")) {
+        locationCalls.push({ method: request.method, body: await request.clone().text() });
+        return json({ product: inventory.products[0] });
+      }
+      if (request.url.includes("/pharmacy/purchases")) {
         return json({
           purchases: [
             {
@@ -123,6 +137,7 @@ describe("InventoryPage", () => {
   afterEach(() => {
     cleanup();
     sessionStorage.clear();
+    locationCalls.length = 0;
     vi.unstubAllGlobals();
   });
 
@@ -178,5 +193,29 @@ describe("InventoryPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Crocin Advance" }));
     expect(screen.queryByLabelText("Reorder level")).toBeNull();
     expect(screen.queryByRole("button", { name: "Save reorder level" })).toBeNull();
+  });
+
+  it("shows the location and saves it with racks:update", async () => {
+    renderPage(["inventory:read"]);
+    expect(await screen.findByRole("columnheader", { name: "Location" })).toBeTruthy();
+    expect(screen.getByText("A3-12 · C2")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Crocin Advance" }));
+    expect(screen.getByText("Rack location")).toBeTruthy();
+    expect(screen.queryByLabelText("2nd slot")).toBeNull();
+
+    cleanup();
+    renderPage(["inventory:read", "racks:update"]);
+    fireEvent.click(await screen.findByRole("button", { name: "Crocin Advance" }));
+    fireEvent.change(screen.getByLabelText("Rack location"), { target: { value: "c4" } });
+    fireEvent.change(screen.getByLabelText("2nd slot"), { target: { value: "d1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save location" }));
+    await waitFor(() =>
+      expect(locationCalls).toEqual([
+        {
+          method: "PATCH",
+          body: JSON.stringify({ rack: "C4", rackAlt: "D1" }),
+        },
+      ]),
+    );
   });
 });

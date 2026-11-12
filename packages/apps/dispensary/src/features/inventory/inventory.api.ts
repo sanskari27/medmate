@@ -22,7 +22,19 @@ export const inventoryApi = createApi({
       }),
       invalidatesTags: ["Inventory"],
     }),
+    setLocation: build.mutation<
+      { product: InventoryProduct },
+      { productId: string; rack: string; rackAlt: string }
+    >({
+      query: ({ productId, rack, rackAlt }) => ({
+        url: `/pharmacy/inventory/${encodeURIComponent(productId)}/location`,
+        method: "PATCH",
+        body: { rack, rackAlt },
+      }),
+      invalidatesTags: ["Inventory"],
+    }),
   }),
 });
 
-export const { useListInventoryQuery, useUpdateReorderMutation } = inventoryApi;
+export const { useListInventoryQuery, useUpdateReorderMutation, useSetLocationMutation } =
+  inventoryApi;

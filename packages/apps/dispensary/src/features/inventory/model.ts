@@ -21,6 +21,8 @@ export type InventoryProduct = {
   pack: string | null;
   type: string | null;
   reorderLevel: number;
+  rack: string | null;
+  rackAlt: string | null;
   batches: InventoryBatch[];
 };
 
@@ -44,6 +46,13 @@ export function inventoryAccess(
     export: owner || keys.includes("inventory:export"),
     purchase: owner || (keys.includes("purchases:read") && keys.includes("purchases:create")),
   };
+}
+
+export function locationLabel(product: Pick<InventoryProduct, "rack" | "rackAlt">) {
+  const codes = [product.rack, product.rackAlt]
+    .map((code) => (code ?? "").trim())
+    .filter((code) => code.length > 0);
+  return codes.length > 0 ? codes.join(" · ") : "—";
 }
 
 export function units(product: InventoryProduct): number {

@@ -11,6 +11,8 @@ function product(batches: InventoryProduct["batches"], reorderLevel = 20): Inven
     pack: null,
     type: null,
     reorderLevel,
+    rack: null,
+    rackAlt: null,
     batches,
   };
 }

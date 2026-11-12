@@ -14,6 +14,7 @@ import { DistributorsPage } from "@/features/distributors";
 import { InventoryPage } from "@/features/inventory";
 import { OffersPage } from "@/features/offers";
 import { PurchasesPage } from "@/features/purchases";
+import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
 import { InvoiceSettingsPage } from "@/features/invoice-settings";
 import { ProfilePage } from "@/features/profile";
@@ -56,6 +57,14 @@ export const appRoutes: AppRoute[] = [
     sub: "Stock, batches and expiry",
     icon: <IconStore size={19} />,
     element: <InventoryPage />,
+  },
+  {
+    path: "/racks",
+    label: "Rack & Locations",
+    title: "Rack & Locations",
+    sub: "Where each medicine is stored on the shelves",
+    icon: <IconStore size={19} />,
+    element: <RacksPage />,
   },
   {
     path: "/offers",
