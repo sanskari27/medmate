@@ -1,5 +1,8 @@
 package com.medmate.server.identity.pharmacy;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medmate.server.identity.phone.PhoneNumbers;
 import java.util.List;
 import java.util.Locale;
@@ -72,6 +75,8 @@ public final class PharmacyRules {
 
     private static final Set<String> DOCUMENTS = Set.of("image/jpeg", "image/png", "image/webp", "application/pdf");
     private static final Set<String> IMAGES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final int EXTRA_LIMIT = 20;
 
     private PharmacyRules() {}
 
@@ -113,6 +118,103 @@ public final class PharmacyRules {
             Boolean lowStockAlerts,
             Upload logo,
             String submittedPhone) {}
+
+    public record ExtraDetail(String label, String value) {}
+
+    public record ExtraRead(List<ExtraDetail> details, String problem) {}
+
+    public record Preserved(
+            String pharmacyType,
+            String invoicePrefix,
+            Boolean acceptOnlineOrders,
+            Boolean selfOrderKiosk,
+            Boolean looseSelling) {}
+
+    public record StoredLicences(
+            String gstin,
+            String pan,
+            String drugLicenceNo,
+            String fssaiNo,
+            String tradeLicenceNo,
+            String pharmacistName) {}
+
+    public record ProfileInput(
+            String name,
+            String tagline,
+            String email,
+            String address,
+            String city,
+            String state,
+            String pincode,
+            List<String> businessTypes,
+            String industry,
+            String registrationType,
+            String gstin,
+            Upload gst,
+            String pan,
+            Upload panCard,
+            String drugLicenceNo,
+            Upload drugLicence,
+            String fssaiNo,
+            Upload fssai,
+            String tradeLicenceNo,
+            Upload tradeLicence,
+            Boolean enableTds,
+            Boolean enableTcs,
+            Boolean eInvoicing,
+            String pharmacistName,
+            Upload pharmacistCertificate,
+            Upload signature,
+            String terms,
+            Upload logo,
+            String submittedPhone,
+            List<ExtraDetail> extraDetails) {}
+
+    public static ExtraRead readExtra(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new ExtraRead(List.of(), null);
+        }
+        try {
+            List<ExtraDetail> parsed = JSON.readValue(raw, new TypeReference<List<ExtraDetail>>() {});
+            if (parsed == null) {
+                return new ExtraRead(List.of(), null);
+            }
+            if (parsed.stream().anyMatch(item -> item == null)) {
+                return new ExtraRead(List.of(), "Extra details are not valid.");
+            }
+            return new ExtraRead(parsed, null);
+        } catch (JsonProcessingException exception) {
+            return new ExtraRead(List.of(), "Extra details are not valid.");
+        }
+    }
+
+    public static String profileInvalid(
+            ProfileInput input, String accountPhone, Set<String> storedSlots, Preserved preserved) {
+        String extra = extraProblem(input.extraDetails());
+        if (extra != null) {
+            return extra;
+        }
+        return invalid(asApplication(input, preserved), accountPhone, storedSlots);
+    }
+
+    public static boolean needsReview(StoredLicences stored, ProfileInput input) {
+        if (!sameCode(stored.gstin(), input.gstin()) || !sameCode(stored.pan(), input.pan())) {
+            return true;
+        }
+        if (!sameText(stored.drugLicenceNo(), input.drugLicenceNo())
+                || !sameText(stored.fssaiNo(), input.fssaiNo())
+                || !sameText(stored.tradeLicenceNo(), input.tradeLicenceNo())
+                || !sameText(stored.pharmacistName(), input.pharmacistName())) {
+            return true;
+        }
+        return uploaded(input.gst())
+                || uploaded(input.panCard())
+                || uploaded(input.drugLicence())
+                || uploaded(input.fssai())
+                || uploaded(input.tradeLicence())
+                || uploaded(input.pharmacistCertificate())
+                || uploaded(input.signature());
+    }
 
     public static String invalid(ApplicationInput input, String accountPhone) {
         return invalid(input, accountPhone, Set.of());
@@ -223,6 +325,92 @@ public final class PharmacyRules {
             return "Low-stock alerts stay on";
         }
         return file(input.logo(), "Logo", false, true, stored.contains("logo"));
+    }
+
+    /** A missing stored type is not written back. The stand-in only satisfies the shared checks. */
+    private static String storedPharmacyType(String pharmacyType) {
+        return pharmacyType != null && PHARMACY_TYPES.contains(pharmacyType) ? pharmacyType : "pharmacy";
+    }
+
+    private static ApplicationInput asApplication(ProfileInput input, Preserved preserved) {
+        return new ApplicationInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                storedPharmacyType(preserved.pharmacyType()),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                preserved.invoicePrefix(),
+                input.signature(),
+                input.terms(),
+                preserved.acceptOnlineOrders(),
+                preserved.selfOrderKiosk(),
+                input.eInvoicing(),
+                preserved.looseSelling(),
+                null,
+                input.logo(),
+                input.submittedPhone());
+    }
+
+    private static String extraProblem(List<ExtraDetail> details) {
+        if (details == null) {
+            return null;
+        }
+        if (details.size() > EXTRA_LIMIT) {
+            return "Too many extra details";
+        }
+        for (ExtraDetail detail : details) {
+            if (detail == null || blank(detail.label())) {
+                return "Extra detail label is required";
+            }
+            if (blank(detail.value())) {
+                return "Extra detail value is required";
+            }
+            if (detail.label().trim().length() > 80) {
+                return "Extra detail label is too long";
+            }
+            if (detail.value().trim().length() > 200) {
+                return "Extra detail value is too long";
+            }
+        }
+        return null;
+    }
+
+    private static boolean sameCode(String stored, String incoming) {
+        return code(stored).equals(code(incoming));
+    }
+
+    private static String code(String value) {
+        return value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static boolean sameText(String stored, String incoming) {
+        String left = stored == null ? "" : stored.trim();
+        String right = incoming == null ? "" : incoming.trim();
+        return left.equals(right);
+    }
+
+    private static boolean uploaded(Upload upload) {
+        return upload != null && upload.body() != null && upload.body().length > 0;
     }
 
     private static String licence(String number, Upload upload, String label, boolean stored) {

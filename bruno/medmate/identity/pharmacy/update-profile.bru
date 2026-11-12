@@ -1,0 +1,36 @@
+meta {
+  name: Update profile
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/profile
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:multipart-form {
+  name: Care Pharmacy
+  tagline: Open early
+  extraDetails: []
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner updates the pharmacy profile. This sample sends only a name, tagline, and empty extra details, so an authenticated owner still fails the required field checks.
+  A licence, pharmacist, or signature change moves the pharmacy to pending_compliance.
+  The collection script attaches the saved access token.
+}

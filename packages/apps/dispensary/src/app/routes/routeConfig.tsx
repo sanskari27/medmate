@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
-import { IconDashboard, IconHelp, IconReports, IconSettings, IconUsers } from "@/components/ui/Icon";
+import {
+  IconDashboard,
+  IconHelp,
+  IconReports,
+  IconSettings,
+  IconUser,
+  IconUsers,
+} from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
+import { ProfilePage } from "@/features/profile";
 import { ReportsPage } from "@/features/reports";
 import { SettingsPage } from "@/features/settings";
 import { SupportPage } from "@/features/support";
@@ -43,11 +51,19 @@ export const appRoutes: AppRoute[] = [
     element: <ReportsPage />,
   },
   {
+    path: "/profile",
+    label: "Profile",
+    title: "Profile",
+    sub: "Edit your pharmacy details — shown on invoices & reports",
+    group: "Management",
+    icon: <IconUser size={19} />,
+    element: <ProfilePage />,
+  },
+  {
     path: "/support",
     label: "Help & Support",
     title: "Help & Support",
     sub: "FAQs, tickets & contact",
-    group: "Management",
     icon: <IconHelp size={19} />,
     element: <SupportPage />,
   },

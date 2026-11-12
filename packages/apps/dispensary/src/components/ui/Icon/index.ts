@@ -15,5 +15,6 @@ export {
   IconSettings,
   IconStore,
   IconTicket,
+  IconUser,
   IconUsers,
 } from "./Icon";

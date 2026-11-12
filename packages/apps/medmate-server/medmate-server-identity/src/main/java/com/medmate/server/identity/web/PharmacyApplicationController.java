@@ -1,6 +1,7 @@
 package com.medmate.server.identity.web;
 
 import com.medmate.server.identity.pharmacy.PharmacyRules;
+import com.medmate.server.shared.error.ApiProblem;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
@@ -102,6 +103,80 @@ public class PharmacyApplicationController {
                 upload(logo),
                 phone);
         return applications.submit(Current.require(authentication), input);
+    }
+
+    @PostMapping(value = "/pharmacy/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public PharmacyApplicationService.VerificationResponse updateProfile(
+            Authentication authentication,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String tagline,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String pincode,
+            @RequestParam(required = false) List<String> businessTypes,
+            @RequestParam(required = false) String industry,
+            @RequestParam(required = false) String registrationType,
+            @RequestParam(required = false) String gstin,
+            @RequestParam(required = false) String pan,
+            @RequestParam(required = false) String drugLicenceNo,
+            @RequestParam(required = false) String fssaiNo,
+            @RequestParam(required = false) String tradeLicenceNo,
+            @RequestParam(required = false) Boolean enableTds,
+            @RequestParam(required = false) Boolean enableTcs,
+            @RequestParam(required = false) Boolean eInvoicing,
+            @RequestParam(required = false) String pharmacistName,
+            @RequestParam(required = false) String terms,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String extraDetails,
+            @RequestParam(required = false, defaultValue = "false") boolean removeLogo,
+            @RequestPart(required = false) MultipartFile logo,
+            @RequestPart(required = false) MultipartFile gstCertificate,
+            @RequestPart(required = false) MultipartFile panCard,
+            @RequestPart(required = false) MultipartFile drugLicence,
+            @RequestPart(required = false) MultipartFile fssaiLicence,
+            @RequestPart(required = false) MultipartFile tradeLicence,
+            @RequestPart(required = false) MultipartFile pharmacistCertificate,
+            @RequestPart(required = false) MultipartFile signature)
+            throws java.io.IOException {
+        PharmacyRules.ExtraRead extra = PharmacyRules.readExtra(extraDetails);
+        if (extra.problem() != null) {
+            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", extra.problem());
+        }
+        PharmacyRules.ProfileInput input = new PharmacyRules.ProfileInput(
+                name,
+                tagline,
+                email,
+                address,
+                city,
+                state,
+                pincode,
+                split(businessTypes),
+                industry,
+                registrationType,
+                gstin,
+                upload(gstCertificate),
+                pan,
+                upload(panCard),
+                drugLicenceNo,
+                upload(drugLicence),
+                fssaiNo,
+                upload(fssaiLicence),
+                tradeLicenceNo,
+                upload(tradeLicence),
+                enableTds,
+                enableTcs,
+                eInvoicing,
+                pharmacistName,
+                upload(pharmacistCertificate),
+                upload(signature),
+                terms,
+                upload(logo),
+                phone,
+                extra.details());
+        return applications.updateProfile(Current.require(authentication), input, removeLogo);
     }
 
     @GetMapping("/pharmacy/application")

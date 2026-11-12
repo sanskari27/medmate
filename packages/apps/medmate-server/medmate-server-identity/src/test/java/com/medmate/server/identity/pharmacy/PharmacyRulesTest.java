@@ -37,11 +37,229 @@ class PharmacyRulesTest {
     }
 
     @Test
+    void aSafeProfileChangeDoesNotNeedReviewAndALicenceChangeDoes() {
+        PharmacyRules.ProfileInput safe = profile();
+        assertThat(PharmacyRules.needsReview(stored(), safe)).isFalse();
+        assertThat(PharmacyRules.profileInvalid(safe, "+919876543210", storedSlots(), preserved()))
+                .isNull();
+        assertThat(PharmacyRules.profileInvalid(
+                        safe,
+                        "+919876543210",
+                        storedSlots(),
+                        new PharmacyRules.Preserved(null, "CARE", true, false, true)))
+                .isNull();
+
+        PharmacyRules.ProfileInput gstin = profileWithGstin("");
+        assertThat(PharmacyRules.profileInvalid(gstin, "+919876543210", storedSlots(), preserved()))
+                .isEqualTo("Enter a valid GSTIN");
+
+        PharmacyRules.ProfileInput licence = profileWithGstin("29ABCDE1234F2Z5");
+        assertThat(PharmacyRules.needsReview(stored(), licence)).isTrue();
+
+        PharmacyRules.ProfileInput pharmacist = profileWithPharmacist("Other Rao");
+        assertThat(PharmacyRules.needsReview(stored(), pharmacist)).isTrue();
+
+        PharmacyRules.Upload image = new PharmacyRules.Upload("image/png", new byte[] {9});
+        assertThat(PharmacyRules.needsReview(stored(), profileWithSignature(image)))
+                .isTrue();
+        assertThat(PharmacyRules.needsReview(stored(), profileWithLogo(image))).isFalse();
+        assertThat(PharmacyRules.needsReview(stored(), profileWithGstin("29abcde1234f1z5")))
+                .isFalse();
+    }
+
+    @Test
     void acceptsAStoredDocumentInPlaceOfANewFile() {
         PharmacyRules.ApplicationInput missing = withoutGst(sample());
         assertThat(PharmacyRules.invalid(missing, "+919876543210", Set.of())).isEqualTo("GST certificate is required");
         assertThat(PharmacyRules.invalid(missing, "+919876543210", Set.of("gst")))
                 .isNull();
+    }
+
+    private static PharmacyRules.StoredLicences stored() {
+        return new PharmacyRules.StoredLicences(
+                "29ABCDE1234F1Z5", "ABCDE1234F", "DL-1", "FSSAI-1", "TL-1", "Asha Rao, B.Pharm (Reg. No. 12)");
+    }
+
+    private static Set<String> storedSlots() {
+        return Set.of("gst", "pan", "drug-licence", "fssai", "trade-licence", "pharmacist-certificate", "signature");
+    }
+
+    private static PharmacyRules.Preserved preserved() {
+        return new PharmacyRules.Preserved("pharmacy", "CARE", true, false, true);
+    }
+
+    private static PharmacyRules.ProfileInput profile() {
+        return new PharmacyRules.ProfileInput(
+                "Care Pharmacy",
+                "Open early",
+                "owner@example.com",
+                "12 Market Road",
+                "Bengaluru",
+                "Karnataka",
+                "560001",
+                List.of("Retail Pharmacy"),
+                "Pharmacy & Healthcare",
+                "Proprietorship",
+                "29ABCDE1234F1Z5",
+                null,
+                "ABCDE1234F",
+                null,
+                "DL-1",
+                null,
+                "FSSAI-1",
+                null,
+                "TL-1",
+                null,
+                false,
+                false,
+                true,
+                "Asha Rao, B.Pharm (Reg. No. 12)",
+                null,
+                null,
+                "Goods once sold",
+                null,
+                null,
+                List.of());
+    }
+
+    private static PharmacyRules.ProfileInput profileWithGstin(String gstin) {
+        PharmacyRules.ProfileInput input = profile();
+        return new PharmacyRules.ProfileInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                gstin,
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.eInvoicing(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.signature(),
+                input.terms(),
+                input.logo(),
+                input.submittedPhone(),
+                input.extraDetails());
+    }
+
+    private static PharmacyRules.ProfileInput profileWithPharmacist(String name) {
+        PharmacyRules.ProfileInput input = profile();
+        return new PharmacyRules.ProfileInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.eInvoicing(),
+                name,
+                input.pharmacistCertificate(),
+                input.signature(),
+                input.terms(),
+                input.logo(),
+                input.submittedPhone(),
+                input.extraDetails());
+    }
+
+    private static PharmacyRules.ProfileInput profileWithSignature(PharmacyRules.Upload signature) {
+        PharmacyRules.ProfileInput input = profile();
+        return new PharmacyRules.ProfileInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.eInvoicing(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                signature,
+                input.terms(),
+                input.logo(),
+                input.submittedPhone(),
+                input.extraDetails());
+    }
+
+    private static PharmacyRules.ProfileInput profileWithLogo(PharmacyRules.Upload logo) {
+        PharmacyRules.ProfileInput input = profile();
+        return new PharmacyRules.ProfileInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.eInvoicing(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.signature(),
+                input.terms(),
+                logo,
+                input.submittedPhone(),
+                input.extraDetails());
     }
 
     private static PharmacyRules.ApplicationInput sample() {

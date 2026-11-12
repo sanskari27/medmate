@@ -7,6 +7,7 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.pharmacy.PharmacyRules;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -81,6 +82,7 @@ public class PharmacyStore {
             boolean looseSelling,
             boolean lowStockAlerts,
             Instant submittedAt,
+            List<PharmacyRules.ExtraDetail> extraDetails,
             List<StoredDocument> documents) {
 
         ApplicationRow withDocuments(List<StoredDocument> documents) {
@@ -117,6 +119,7 @@ public class PharmacyStore {
                     looseSelling,
                     lowStockAlerts,
                     submittedAt,
+                    extraDetails,
                     documents);
         }
     }
@@ -174,7 +177,7 @@ public class PharmacyStore {
                           p.industry, p.registration_type, p.pharmacy_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
                           p.trade_licence_no, p.enable_tds, p.enable_tcs, p.pharmacist_name, p.invoice_prefix,
                           p.terms, p.accept_online_orders, p.self_order_kiosk, p.e_invoicing, p.loose_selling,
-                          p.low_stock_alerts, p.submitted_at
+                          p.low_stock_alerts, p.submitted_at, p.extra_details
                         FROM pharmacy p
                         JOIN account a ON a.id = p.owner_account_id
                         WHERE p.id = :id
@@ -260,6 +263,64 @@ public class PharmacyStore {
                 .param("loose", Boolean.TRUE.equals(input.looseSelling()))
                 .param("submitted", Timestamp.from(now))
                 .update();
+    }
+
+    public void saveProfile(UUID id, PharmacyRules.ProfileInput input, Instant submittedAt) {
+        jdbc.sql(
+                        """
+                        UPDATE pharmacy SET
+                          name = :name,
+                          tagline = :tagline,
+                          email = :email,
+                          address = :address,
+                          city = :city,
+                          state = :state,
+                          pincode = :pincode,
+                          business_types = :businessTypes,
+                          industry = :industry,
+                          registration_type = :registration,
+                          gstin = :gstin,
+                          pan = :pan,
+                          drug_licence_no = :drug,
+                          fssai_no = :fssai,
+                          trade_licence_no = :trade,
+                          enable_tds = :tds,
+                          enable_tcs = :tcs,
+                          e_invoicing = :einvoice,
+                          pharmacist_name = :pharmacist,
+                          terms = :terms,
+                          extra_details = :extra
+                        WHERE id = :id
+                        """)
+                .param("id", id)
+                .param("name", input.name().trim())
+                .param("tagline", blankToNull(input.tagline()))
+                .param("email", input.email().trim().toLowerCase(Locale.ROOT))
+                .param("address", input.address().trim())
+                .param("city", input.city().trim())
+                .param("state", input.state())
+                .param("pincode", input.pincode().trim())
+                .param("businessTypes", businessTypes(input.businessTypes()))
+                .param("industry", input.industry())
+                .param("registration", input.registrationType())
+                .param("gstin", input.gstin().trim().toUpperCase(Locale.ROOT))
+                .param("pan", input.pan().trim().toUpperCase(Locale.ROOT))
+                .param("drug", input.drugLicenceNo().trim())
+                .param("fssai", input.fssaiNo().trim())
+                .param("trade", input.tradeLicenceNo().trim())
+                .param("tds", Boolean.TRUE.equals(input.enableTds()))
+                .param("tcs", Boolean.TRUE.equals(input.enableTcs()))
+                .param("einvoice", Boolean.TRUE.equals(input.eInvoicing()))
+                .param("pharmacist", input.pharmacistName().trim())
+                .param("terms", blankToNull(input.terms()))
+                .param("extra", extraDetails(input.extraDetails()))
+                .update();
+        if (submittedAt != null) {
+            jdbc.sql("UPDATE pharmacy SET submitted_at = :submitted WHERE id = :id")
+                    .param("id", id)
+                    .param("submitted", Timestamp.from(submittedAt))
+                    .update();
+        }
     }
 
     public void updateStatus(UUID id, VerificationStatus status, String stage, String comment) {
@@ -442,7 +503,36 @@ public class PharmacyStore {
                 rs.getBoolean("loose_selling"),
                 rs.getBoolean("low_stock_alerts"),
                 submitted == null ? null : submitted.toInstant(),
+                readExtra(rs.getString("extra_details")),
                 List.of());
+    }
+
+    private static List<PharmacyRules.ExtraDetail> readExtra(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            List<PharmacyRules.ExtraDetail> details =
+                    JSON.readValue(json, new TypeReference<List<PharmacyRules.ExtraDetail>>() {});
+            return details == null ? List.of() : details;
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private static String extraDetails(List<PharmacyRules.ExtraDetail> details) {
+        List<PharmacyRules.ExtraDetail> trimmed = new ArrayList<>();
+        if (details != null) {
+            for (PharmacyRules.ExtraDetail detail : details) {
+                trimmed.add(new PharmacyRules.ExtraDetail(
+                        detail.label().trim(), detail.value().trim()));
+            }
+        }
+        try {
+            return JSON.writeValueAsString(trimmed);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private static List<String> readBusinessTypes(String json) {

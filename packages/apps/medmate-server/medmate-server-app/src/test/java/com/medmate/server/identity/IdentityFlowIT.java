@@ -702,6 +702,110 @@ class IdentityFlowIT {
         assertThat(restrictedRead.getBody().get("detail").asText()).isEqualTo("Session was not accepted");
     }
 
+    @Test
+    void anApprovedOwnerCanUpdateProfileWithoutAReviewAndALicenceChangeLocksThePharmacy() {
+        String signup = token(verify("9811111130", "pharmacy", "signup"));
+        String pharmacyId = submit(signup).get("pharmacyId").asText();
+        bootstrap("9811111131");
+        String adminToken = token(verify("9811111131", "admin", "login"));
+        String complianceToken = tokenForStaff(adminToken, "9811111132", List.of("compliance"));
+        decision(complianceToken, pharmacyId, "compliance-decision", "approve", "ok");
+        decision(adminToken, pharmacyId, "admin-decision", "approve", "ok");
+
+        JsonNode pinReady = verify("9811111130", "pharmacy", "login");
+        rest.exchange(
+                "/auth/pin/set",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("pin", "2468"), bearer(token(pinReady), MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        JsonNode pinLogin = rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111130", "accountType", "pharmacy", "pin", "2468"),
+                                json()),
+                        JsonNode.class)
+                .getBody();
+        String ownerToken = token(pinLogin);
+        JsonNode before = ownerApplication(ownerToken).getBody();
+        String submittedAt = before.get("submittedAt").asText();
+        int mails = mail.messages().size();
+
+        ResponseEntity<JsonNode> saved = postProfile(ownerToken, profile());
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(saved.getBody().get("status").asText()).isEqualTo("approved");
+        JsonNode after = ownerApplication(ownerToken).getBody();
+        assertThat(after.get("name").asText()).isEqualTo("Care Pharmacy East");
+        assertThat(after.get("tagline").asText()).isEqualTo("Open early");
+        assertThat(after.get("eInvoicing").asBoolean()).isTrue();
+        assertThat(after.get("extraDetails").get(0).get("label").asText()).isEqualTo("Website");
+        assertThat(after.get("extraDetails").get(0).get("value").asText()).isEqualTo("care.example");
+        assertThat(after.get("invoicePrefix").asText()).isEqualTo("CARE");
+        assertThat(after.get("acceptOnlineOrders").asBoolean()).isTrue();
+        assertThat(after.get("submittedAt").asText()).isEqualTo(submittedAt);
+        assertThat(contentType(after, "gst")).isEqualTo("application/pdf");
+        assertThat(mail.messages()).hasSize(mails);
+        assertThat(business(ownerToken).getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode renamed = rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111130", "accountType", "pharmacy", "pin", "2468"),
+                                json()),
+                        JsonNode.class)
+                .getBody();
+        assertThat(renamed.get("account").get("displayName").asText()).isEqualTo("Care Pharmacy East");
+
+        ResponseEntity<JsonNode> staffCreated = rest.exchange(
+                "/pharmacy/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "phone",
+                                "9811111133",
+                                "displayName",
+                                "Counter",
+                                "permissions",
+                                List.of("inventory:read")),
+                        bearer(ownerToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(staffCreated.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String staffToken = token(verify("9811111133", "pharmacy", "login"));
+        ResponseEntity<JsonNode> staffUpdate = postProfile(staffToken, profile());
+        assertThat(staffUpdate.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(staffUpdate.getBody().get("detail").asText())
+                .isEqualTo("Only the pharmacy owner can update the profile");
+
+        MultiValueMap<String, Object> review = profile();
+        review.set("gstin", "29ABCDE1234F2Z5");
+        review.add("panCard", file("application/pdf"));
+        ResponseEntity<JsonNode> locked = postProfile(ownerToken, review);
+        assertThat(locked.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(locked.getBody().get("status").asText()).isEqualTo("pending_compliance");
+        JsonNode pending = ownerApplication(ownerToken).getBody();
+        assertThat(pending.get("gstin").asText()).isEqualTo("29ABCDE1234F2Z5");
+        assertThat(contentType(pending, "gst")).isEqualTo("application/pdf");
+        assertThat(contentType(pending, "pan")).isEqualTo("application/pdf");
+        assertThat(pending.get("invoicePrefix").asText()).isEqualTo("CARE");
+        assertThat(pending.get("submittedAt").asText()).isNotEqualTo(submittedAt);
+        assertThat(mail.messages()).hasSize(mails + 1);
+        assertThat(business(ownerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ResponseEntity<JsonNode> again = postProfile(ownerToken, profile());
+        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(again.getBody().get("detail").asText())
+                .isEqualTo("Profile can only be changed while the pharmacy is approved");
+
+        decision(complianceToken, pharmacyId, "compliance-decision", "approve", "ok");
+        decision(adminToken, pharmacyId, "admin-decision", "approve", "ok");
+        ResponseEntity<JsonNode> mode = rest.exchange(
+                "/auth/otp/send",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111130", "accountType", "pharmacy", "purpose", "login"), json()),
+                JsonNode.class);
+        assertThat(mode.getBody().get("mode").asText()).isEqualTo("pin");
+    }
+
     private JsonNode verify(String phone, String type, String purpose) {
         String code = send(phone, type, purpose);
         ResponseEntity<JsonNode> response = rest.exchange(
@@ -756,6 +860,40 @@ class IdentityFlowIT {
         ResponseEntity<JsonNode> response = postApplication(token, application());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         return response.getBody();
+    }
+
+    private ResponseEntity<JsonNode> postProfile(String token, MultiValueMap<String, Object> body) {
+        return rest.exchange(
+                "/pharmacy/profile",
+                HttpMethod.POST,
+                new HttpEntity<>(body, bearer(token, MediaType.MULTIPART_FORM_DATA)),
+                JsonNode.class);
+    }
+
+    private static MultiValueMap<String, Object> profile() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("name", "Care Pharmacy East");
+        body.add("tagline", "Open early");
+        body.add("email", "owner@example.com");
+        body.add("address", "12 Market Road");
+        body.add("city", "Bengaluru");
+        body.add("state", "Karnataka");
+        body.add("pincode", "560001");
+        body.add("businessTypes", "Retail Pharmacy");
+        body.add("industry", "Pharmacy & Healthcare");
+        body.add("registrationType", "Proprietorship");
+        body.add("gstin", "29ABCDE1234F1Z5");
+        body.add("pan", "ABCDE1234F");
+        body.add("drugLicenceNo", "DL-1");
+        body.add("fssaiNo", "FSSAI-1");
+        body.add("tradeLicenceNo", "TL-1");
+        body.add("pharmacistName", "Asha Rao, B.Pharm (Reg. No. 12)");
+        body.add("terms", "Goods once sold");
+        body.add("enableTds", "false");
+        body.add("enableTcs", "false");
+        body.add("eInvoicing", "true");
+        body.add("extraDetails", "[{\"label\":\"Website\",\"value\":\"care.example\"}]");
+        return body;
     }
 
     private ResponseEntity<JsonNode> postApplication(String token, MultiValueMap<String, Object> body) {

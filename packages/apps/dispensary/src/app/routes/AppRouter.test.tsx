@@ -365,6 +365,7 @@ describe("AppRouter", () => {
     renderAt("/dashboard");
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Help & Support" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {
@@ -375,6 +376,17 @@ describe("AppRouter", () => {
     renderAt("/support");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Help & Support" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Profile" })).toBeNull();
     expect(screen.queryByText("Management")).toBeNull();
+  });
+
+  it("sends pharmacy staff away from Profile", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff" },
+    });
+    renderAt("/profile");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Profile" })).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ import com.medmate.server.identity.access.Verification;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.documents.DocumentStore;
 import com.medmate.server.identity.mail.MailSender;
+import com.medmate.server.identity.pharmacy.PharmacyRules;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
 import java.time.Clock;
@@ -209,6 +210,7 @@ public class ReviewService {
             boolean looseSelling,
             boolean lowStockAlerts,
             Instant submittedAt,
+            List<PharmacyRules.ExtraDetail> extraDetails,
             List<DocumentItem> documents) {
 
         static ApplicationDetail from(PharmacyStore.ApplicationRow row, DocumentStore documents) {
@@ -244,6 +246,7 @@ public class ReviewService {
                     row.looseSelling(),
                     row.lowStockAlerts(),
                     row.submittedAt(),
+                    row.extraDetails(),
                     row.documents().stream()
                             .map(document -> new DocumentItem(
                                     document.slot(), document.contentType(), documents.url(document.objectKey())))

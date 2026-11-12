@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "@/features/authentication";
+import { profileApi } from "@/features/profile";
 import { setupApi } from "@/features/setup";
 import { supportApi } from "@/features/support";
 import { readPersistedAuth } from "@/services/storage";
@@ -11,7 +12,12 @@ export function createAppStore() {
     reducer: rootReducer,
     preloadedState: saved ? { auth: saved } : undefined,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(authApi.middleware, setupApi.middleware, supportApi.middleware),
+      getDefaultMiddleware().concat(
+        authApi.middleware,
+        setupApi.middleware,
+        supportApi.middleware,
+        profileApi.middleware,
+      ),
   });
 }
 

@@ -4,6 +4,7 @@ import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.access.AccountType;
 import com.medmate.server.identity.access.PharmacyRole;
 import com.medmate.server.identity.access.Verification;
+import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.config.MedmateIdentityProperties;
 import com.medmate.server.identity.documents.DocumentStore;
 import com.medmate.server.identity.mail.MailSender;
@@ -13,6 +14,8 @@ import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
 import java.time.Clock;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +79,58 @@ public class PharmacyApplicationService {
         return verification(actor.id());
     }
 
+    @Transactional
+    public VerificationResponse updateProfile(
+            AccountPrincipal actor, PharmacyRules.ProfileInput input, boolean removeLogo) {
+        if (actor.accountType() != AccountType.PHARMACY || actor.pharmacyRole() != PharmacyRole.OWNER) {
+            throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", "Only the pharmacy owner can update the profile");
+        }
+        if (actor.pharmacyId() == null) {
+            throw new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy was not found");
+        }
+        PharmacyStore.ApplicationRow row = pharmacies
+                .application(actor.pharmacyId())
+                .orElseThrow(() -> new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy was not found"));
+        if (row.status() != VerificationStatus.APPROVED) {
+            throw new ApiProblem(
+                    HttpStatus.CONFLICT, "Conflict", "Profile can only be changed while the pharmacy is approved");
+        }
+        Set<String> slots = new LinkedHashSet<>(pharmacies.storedSlots(row.id()));
+        if (removeLogo && !present(input.logo())) {
+            slots.remove("logo");
+        }
+        PharmacyRules.Preserved preserved = new PharmacyRules.Preserved(
+                row.pharmacyType(),
+                row.invoicePrefix(),
+                row.acceptOnlineOrders(),
+                row.selfOrderKiosk(),
+                row.looseSelling());
+        String problem = PharmacyRules.profileInvalid(input, actor.phone(), slots, preserved);
+        if (problem != null) {
+            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", problem);
+        }
+        boolean review = PharmacyRules.needsReview(
+                new PharmacyRules.StoredLicences(
+                        row.gstin(),
+                        row.pan(),
+                        row.drugLicenceNo(),
+                        row.fssaiNo(),
+                        row.tradeLicenceNo(),
+                        row.pharmacistName()),
+                input);
+        pharmacies.saveProfile(row.id(), input, review ? clock.instant() : null);
+        replaceProfileDocuments(row.id(), input);
+        if (removeLogo && !present(input.logo())) {
+            removeDocument(row.id(), "logo");
+        }
+        accounts.updateDisplayName(actor.id(), input.name().trim());
+        if (review) {
+            pharmacies.updateStatus(row.id(), VerificationStatus.PENDING_COMPLIANCE, null, null);
+            send(input.email(), received(input.name().trim()));
+        }
+        return verification(actor.id());
+    }
+
     public ReviewService.ApplicationDetail application(AccountPrincipal actor) {
         if (actor.accountType() != AccountType.PHARMACY || actor.pharmacyRole() != PharmacyRole.OWNER) {
             throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", "Only the pharmacy owner can read the application");
@@ -109,6 +164,28 @@ public class PharmacyApplicationService {
         put(pharmacyId, "trade-licence", input.tradeLicence());
         put(pharmacyId, "pharmacist-certificate", input.pharmacistCertificate());
         put(pharmacyId, "signature", input.signature());
+    }
+
+    private void replaceProfileDocuments(UUID pharmacyId, PharmacyRules.ProfileInput input) {
+        put(pharmacyId, "logo", input.logo());
+        put(pharmacyId, "gst", input.gst());
+        put(pharmacyId, "pan", input.panCard());
+        put(pharmacyId, "drug-licence", input.drugLicence());
+        put(pharmacyId, "fssai", input.fssai());
+        put(pharmacyId, "trade-licence", input.tradeLicence());
+        put(pharmacyId, "pharmacist-certificate", input.pharmacistCertificate());
+        put(pharmacyId, "signature", input.signature());
+    }
+
+    private void removeDocument(UUID pharmacyId, String slot) {
+        pharmacies.document(pharmacyId, slot).ifPresent(existing -> {
+            documents.delete(existing.objectKey());
+            pharmacies.deleteDocument(pharmacyId, slot);
+        });
+    }
+
+    private static boolean present(PharmacyRules.Upload upload) {
+        return upload != null && upload.body() != null && upload.body().length > 0;
     }
 
     private void put(UUID pharmacyId, String slot, PharmacyRules.Upload upload) {

@@ -1,5 +1,6 @@
 export const pharmacyEndpoints = {
   application: "/pharmacy/application",
+  profile: "/pharmacy/profile",
 } as const;
 
 export const authEndpoints = {
