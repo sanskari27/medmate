@@ -1,0 +1,36 @@
+meta {
+  name: Update offer
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/offers/OFR-001
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "title": "Winter Sale",
+    "active": false
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with offers:update, changes the saved fields. Sending active alone pauses or resumes the offer.
+}

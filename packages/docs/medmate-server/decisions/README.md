@@ -17,7 +17,8 @@ Architecture decisions for medmate-server.
 | [0011](0011-employee-register.md) | Employee register, shared document store, and V7 |
 | [0012](0012-distributor-directory.md) | Distributor directory, payable ledger, and V9 |
 | [0013](0013-stock-and-purchases.md) | Stock module, purchase bills, and V10 |
+| [0014](0014-pharmacy-offers.md) | Pharmacy offers, inventory name port, V11, and V12 |
 
-The next file is the next number: `0014-<slug>.md`.
+The next file is the next number: `0015-<slug>.md`.
 
 Write an ADR when the change picks a structure that later work has to live with: a new module boundary, a datastore, authentication, or a different deployable. A requirement spec records product behavior. It does not replace an ADR.

@@ -217,6 +217,40 @@ export function IconEdit(props: IconProps) {
   );
 }
 
+export function IconOffer(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h6.6a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6Z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </Svg>
+  );
+}
+
+export function IconTag(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 3h8l10 10-8 8L3 11Z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </Svg>
+  );
+}
+
+export function IconPlus(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}
+
+export function IconX(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </Svg>
+  );
+}
+
 export function IconLogout({ size = 20 }: IconProps) {
   return (
     <svg

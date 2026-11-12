@@ -1,0 +1,39 @@
+meta {
+  name: Create offer
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/offers
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "title": "Monsoon Health Sale",
+    "code": "NAMMA25",
+    "type": "pct",
+    "value": 10,
+    "scope": "all"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with offers:create, launches an offer. The server assigns OFR-001 for the first offer in that pharmacy.
+}

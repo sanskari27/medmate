@@ -80,6 +80,15 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "inventory:export", label: "Export" },
         ],
       },
+      {
+        module: "Offers",
+        actions: [
+          { key: "offers:read", label: "Read" },
+          { key: "offers:create", label: "Create" },
+          { key: "offers:update", label: "Update" },
+          { key: "offers:delete", label: "Delete" },
+        ],
+      },
     ],
   },
 ];

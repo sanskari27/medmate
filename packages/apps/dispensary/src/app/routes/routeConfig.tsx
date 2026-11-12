@@ -3,6 +3,7 @@ import {
   IconDashboard,
   IconHelp,
   IconTruck,
+  IconOffer,
   IconReceipt,
   IconStore,
   IconUser,
@@ -11,6 +12,7 @@ import {
 import { DashboardPage } from "@/features/dashboard";
 import { DistributorsPage } from "@/features/distributors";
 import { InventoryPage } from "@/features/inventory";
+import { OffersPage } from "@/features/offers";
 import { PurchasesPage } from "@/features/purchases";
 import { EmployeesPage } from "@/features/employees";
 import { InvoiceSettingsPage } from "@/features/invoice-settings";
@@ -31,12 +33,13 @@ export const appRoutes: AppRoute[] = [
     element: <DashboardPage />,
   },
   {
-    path: "/inventory",
-    label: "Inventory",
-    title: "Inventory",
-    sub: "Stock, batches and expiry",
-    icon: <IconStore size={19} />,
-    element: <InventoryPage />,
+    path: "/distributors",
+    label: "Distributors",
+    title: "Distributors",
+    sub: "Your distributor & supplier directory",
+    group: "Catalogue",
+    icon: <IconTruck size={19} />,
+    element: <DistributorsPage />,
   },
   {
     path: "/purchases",
@@ -47,13 +50,20 @@ export const appRoutes: AppRoute[] = [
     element: <PurchasesPage />,
   },
   {
-    path: "/distributors",
-    label: "Distributors",
-    title: "Distributors",
-    sub: "Your distributor & supplier directory",
-    group: "Catalogue",
-    icon: <IconTruck size={19} />,
-    element: <DistributorsPage />,
+    path: "/inventory",
+    label: "Inventory",
+    title: "Inventory",
+    sub: "Stock, batches and expiry",
+    icon: <IconStore size={19} />,
+    element: <InventoryPage />,
+  },
+  {
+    path: "/offers",
+    label: "Offers",
+    title: "Offers",
+    sub: "Discounts & promotions",
+    icon: <IconOffer size={19} />,
+    element: <OffersPage />,
   },
   {
     path: "/employees",

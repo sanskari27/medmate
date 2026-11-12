@@ -27,7 +27,11 @@ public final class PharmacyPermissions {
             "purchases:return",
             "inventory:read",
             "inventory:update",
-            "inventory:export");
+            "inventory:export",
+            "offers:read",
+            "offers:create",
+            "offers:update",
+            "offers:delete");
 
     private PharmacyPermissions() {}
 

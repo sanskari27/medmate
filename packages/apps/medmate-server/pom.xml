@@ -24,6 +24,7 @@
     <module>medmate-server-employees</module>
     <module>medmate-server-distributors</module>
     <module>medmate-server-stock</module>
+    <module>medmate-server-offers</module>
     <module>medmate-server-app</module>
   </modules>
 

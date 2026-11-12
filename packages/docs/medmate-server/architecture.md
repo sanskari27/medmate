@@ -12,6 +12,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
   medmate-server-stock/                purchase bills, returns, and inventory
+  medmate-server-offers/               pharmacy discounts for a later billing module
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -54,6 +55,10 @@ The supplier directory and its payable ledger live in `medmate-server-distributo
 ## Stock
 
 Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. The module reads medicine identity from medicine-data. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records that boundary.
+
+## Offers
+
+Pharmacy discounts live in `medmate-server-offers`. The module depends on identity for access checks and on stock for the id and name of each inventory medicine. Identity does not depend on it. Stock does not depend on it. Tables are created by `V11__offers.sql`. `V12__drop_offer_online.sql` removes the customer-app flag. An offer is stored for a later billing module. This module does not change a price. [0014](decisions/0014-pharmacy-offers.md) records that boundary.
 
 ## Not in this process
 
