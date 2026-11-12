@@ -1,0 +1,37 @@
+meta {
+  name: Update distributor
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/distributors/{{distributorCode}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "city": "Bengaluru",
+    "state": "Karnataka"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  distributors:update changes fields other than a move to Inactive. distributors:delete is required to set active to false.
+  Run Create distributor first so distributorCode is stored.
+}

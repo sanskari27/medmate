@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   IconDashboard,
   IconHelp,
+  IconTruck,
   IconReports,
   IconReceipt,
   IconSettings,
@@ -9,6 +10,7 @@ import {
   IconUsers,
 } from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
+import { DistributorsPage } from "@/features/distributors";
 import { EmployeesPage } from "@/features/employees";
 import { InvoiceSettingsPage } from "@/features/invoice-settings";
 import { ProfilePage } from "@/features/profile";
@@ -28,6 +30,15 @@ export const appRoutes: AppRoute[] = [
     sub: "Today at a glance",
     icon: <IconDashboard size={19} />,
     element: <DashboardPage />,
+  },
+  {
+    path: "/distributors",
+    label: "Distributors",
+    title: "Distributors",
+    sub: "Your distributor & supplier directory",
+    group: "Catalogue",
+    icon: <IconTruck size={19} />,
+    element: <DistributorsPage />,
   },
   {
     path: "/settings",

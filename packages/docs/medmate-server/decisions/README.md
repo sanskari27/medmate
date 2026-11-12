@@ -15,7 +15,8 @@ Architecture decisions for medmate-server.
 | [0009](0009-support-module-and-live-chat.md) | Support module, shared Flyway history, and live chat socket |
 | [0010](0010-pharmacy-staff-pin-and-permissions.md) | Pharmacy staff PIN login and the closed permission catalog |
 | [0011](0011-employee-register.md) | Employee register, shared document store, and V7 |
+| [0012](0012-distributor-directory.md) | Distributor directory, payable ledger, and V9 |
 
-The next file is the next number: `0012-<slug>.md`.
+The next file is the next number: `0013-<slug>.md`.
 
 Write an ADR when the change picks a structure that later work has to live with: a new module boundary, a datastore, authentication, or a different deployable. A requirement spec records product behavior. It does not replace an ADR.

@@ -1,0 +1,38 @@
+meta {
+  name: Record payment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/distributors/{{distributorCode}}/payments
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "amount": 1000,
+    "mode": "upi",
+    "note": "Part payment"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  distributors:pay records a payment and reduces outstanding. The amount cannot exceed what is still owed.
+  Run Create distributor first so distributorCode is stored. Set an opening balance before paying when outstanding is zero.
+}

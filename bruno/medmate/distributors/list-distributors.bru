@@ -1,0 +1,28 @@
+meta {
+  name: List distributors
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/distributors
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with distributors:read, lists this pharmacy's distributors and their ledger lines.
+}

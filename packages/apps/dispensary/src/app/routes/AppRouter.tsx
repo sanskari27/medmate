@@ -12,6 +12,7 @@ import { ProfilePage } from "@/features/profile";
 import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
 import { EmployeesPage, canOpenEmployees } from "@/features/employees";
+import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
 import {
   GuestRoute,
@@ -35,6 +36,10 @@ export function AppRouter() {
     session?.account.pharmacyRole,
     session?.account.permissions,
   );
+  const distributorsOpen = canOpenDistributors(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -48,6 +53,7 @@ export function AppRouter() {
     .filter((route) => {
       if (route.path === "/employees") return employeesOpen;
       if (route.path === "/invoice-settings") return invoiceOpen;
+      if (route.path === "/distributors") return distributorsOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
@@ -89,11 +95,16 @@ export function AppRouter() {
               (route) =>
                 !ownerPaths.has(route.path) &&
                 route.path !== "/employees" &&
-                route.path !== "/invoice-settings",
+                route.path !== "/invoice-settings" &&
+                route.path !== "/distributors",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
+          <Route
+            path="/distributors"
+            element={distributorsOpen ? <DistributorsPage /> : <Navigate to="/dashboard" replace />}
+          />
           <Route
             path="/employees"
             element={employeesOpen ? <EmployeesPage /> : <Navigate to="/dashboard" replace />}

@@ -244,6 +244,10 @@ script:post-response {
     bru.setEnvVar("employeeCode", body.employee.id);
   }
 
+  if (pathname === "/pharmacy/distributors" && status === 201 && body && body.distributor && body.distributor.id) {
+    bru.setEnvVar("distributorCode", body.distributor.id);
+  }
+
   const sessionRejected = status === 401 && body && body.detail === "Session was not accepted";
   const canRefresh = pathname !== "/auth/refresh" && pathname !== "/auth/sign-out";
   if (sessionRejected && canRefresh && bru.getEnvVar("refreshToken")) {

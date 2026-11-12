@@ -51,6 +51,21 @@ export const PERMISSION_AREAS: PermissionArea[] = [
       },
     ],
   },
+  {
+    area: "Catalogue",
+    modules: [
+      {
+        module: "Distributors",
+        actions: [
+          { key: "distributors:read", label: "Read" },
+          { key: "distributors:create", label: "Create" },
+          { key: "distributors:update", label: "Update" },
+          { key: "distributors:delete", label: "Delete" },
+          { key: "distributors:pay", label: "Pay" },
+        ],
+      },
+    ],
+  },
 ];
 
 export const PERMISSION_KEYS = PERMISSION_AREAS.flatMap((area) =>
