@@ -251,9 +251,6 @@ function ProductDialog({
     [product],
   );
   if (!product) return null;
-  const subtitle = [product.composition, product.marketer, product.form]
-    .filter(Boolean)
-    .join(" · ");
   const stock = units(product);
   const purchases = history.data?.purchases ?? [];
   const expiry = nearestExpiry(product);
