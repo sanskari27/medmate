@@ -18,7 +18,10 @@ headers {
 
 body:json {
   {
-    "permissions": ["inventory:read", "billing:create"]
+    "displayName": "Counter",
+    "permissions": ["users:read", "support:read"],
+    "pin": "2468",
+    "disabled": false
   }
 }
 
@@ -31,6 +34,7 @@ tests {
 }
 
 docs {
-  The owner replaces the permission keys for one staff account.
+  The owner replaces the name, permission keys, PIN, or disabled flag for one staff account.
+  Phone may be sent when it should change. The response does not include the PIN.
   pharmacyStaffId is stored by Create pharmacy staff. The collection script attaches the saved access token.
 }

@@ -16,3 +16,4 @@ Read `packages/docs/portals/architecture.md` before adding a screen.
 - Copy a pharmacy screen with the same element order and placement. Style with the existing Tailwind tokens.
 - Dispensary login sends `accountType: "pharmacy"`. Admin login sends `accountType: "platform"`.
 - Dev OTP comes from `GET /sms-mock/messages`, using the same phone match as the Bruno Send OTP script. Production does not show that code.
+- A pharmacy permission is an area, a module, and an action in the Manage Users dialog. Add the key to the medmate-server catalog in the same change. An action name can differ from read, create, update, and delete.

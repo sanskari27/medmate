@@ -6,4 +6,6 @@ The feature to clarify is the text that follows this command. If that text is em
 
 Follow the skill at `.cursor/skills/portal-feature/SKILL.md` exactly. Read it before asking questions or writing files.
 
+If the feature grants pharmacy staff access, the interview must name the area, the module, and each action, and the screen must add those rows to Manage Users.
+
 Do not implement the feature. Write the spec, then create the implementation plan and wait for it to be accepted.

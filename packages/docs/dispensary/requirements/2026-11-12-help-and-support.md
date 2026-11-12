@@ -2,7 +2,7 @@
 
 ## Context
 
-The dispensary shell is the pharmacy owner's console. Help & Support is the first item in a Management section. The screen follows the pharmacy support page: contact actions, frequently asked questions, and the ticket list. The pharmacy app stays untouched and is not imported. The API is [Help and support API](../../medmate-server/requirements/2026-11-12-help-and-support.md).
+The dispensary shell is the pharmacy owner's console. Help & Support is the last Management item, after Profile. The screen follows the pharmacy support page: contact actions, frequently asked questions, and the ticket list. The pharmacy app stays untouched and is not imported. The API is [Help and support API](../../medmate-server/requirements/2026-11-12-help-and-support.md).
 
 ## Scope
 
@@ -12,14 +12,14 @@ The dispensary shell is the pharmacy owner's console. Help & Support is the firs
 
 ## Non-goals
 
-- Account, Employees, Manage Users, Invoice Settings, Subscription, Refer & Earn, and Settings. Those items stay where they are.
+- Account, Employees, Invoice Settings, Subscription, Refer & Earn, and Settings. Those items stay where they are. Manage Users is the first Management item.
 - A phone card, Help centre, reply-time text, and attachments.
 - Pharmacy staff access.
 - The admin portal, the pharmacy app, and medmate-server behavior beyond calling it.
 
 ## Behavior
 
-The nav item is visible only when `pharmacyRole` is `owner`. Its group label is Management. Pharmacy staff have no item. `/support` and `/support/:caseId` send staff to `/dashboard`.
+The nav item is visible only when `pharmacyRole` is `owner`. Manage Users carries the Management heading. Profile follows it, then Help & Support. Pharmacy staff have no item. `/support` and `/support/:caseId` send staff to `/dashboard`.
 
 The header title is Help & Support and the subtitle is FAQs, tickets & contact. That header stays while a chat is open.
 

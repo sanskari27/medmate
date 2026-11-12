@@ -48,6 +48,6 @@ public final class Access {
     }
 
     public static boolean validKey(String key) {
-        return key != null && key.matches("^[a-z0-9-]+:[a-z0-9-]+$");
+        return PharmacyPermissions.valid(key);
     }
 }

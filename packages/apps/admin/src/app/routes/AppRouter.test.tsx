@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -169,8 +169,16 @@ describe("AppRouter", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Auto-fill" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify & log in" }));
     expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Reviews" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Pharmacies" })).toBeTruthy();
+    const nav = document.querySelector("[data-slot=nav]");
+    expect(nav).toBeTruthy();
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support"]);
+    const sections = [
+      ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
+    ].map((label) => label.textContent);
+    expect(sections).toEqual(["Pharmacies", "Support"]);
     expect(screen.getByText("Ada")).toBeTruthy();
     expect(screen.getByText("Platform admin")).toBeTruthy();
     expect(screen.getByText("Namma")).toBeTruthy();
@@ -273,6 +281,16 @@ describe("AppRouter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Verify & log in" }));
     expect(await screen.findByRole("button", { name: "Pharmacies" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reviews" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Support" })).toBeNull();
+    const nav = document.querySelector("[data-slot=nav]");
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names).toEqual(["Home", "Pharmacies"]);
+    const sections = [
+      ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
+    ].map((label) => label.textContent);
+    expect(sections).toEqual(["Pharmacies"]);
     expect(screen.getByText("Finance")).toBeTruthy();
   });
 
@@ -344,21 +362,29 @@ describe("AppRouter", () => {
       SESSION_STORAGE_KEY,
       JSON.stringify({ session: support, pinReset: false, portalChoice: "support" }),
     );
-    vi.stubGlobal("WebSocket", class {
-      onclose: (() => void) | null = null;
-      constructor() {}
-      send() {}
-      close() {
-        this.onclose?.();
-      }
-    });
+    vi.stubGlobal(
+      "WebSocket",
+      class {
+        onclose: (() => void) | null = null;
+        constructor() {}
+        send() {}
+        close() {
+          this.onclose?.();
+        }
+      },
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => json([])),
     );
     renderAt("/support");
-    expect(await screen.findByRole("button", { name: "Support" })).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "FAQs" })).toBeTruthy();
+    const nav = document.querySelector("[data-slot=nav]");
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names).toEqual(["Home", "Pharmacies", "Support"]);
+    expect(screen.queryByRole("button", { name: "Reviews" })).toBeNull();
   });
 
   it("clears a stored pharmacy session", async () => {

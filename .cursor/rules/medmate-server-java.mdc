@@ -12,3 +12,4 @@ alwaysApply: false
 - Errors use `ProblemDetail` through `ApiExceptionHandler`. Do not add a second error JSON shape.
 - Do not add Spring Security, JPA, Flyway, or a new starter until a requirement and an ADR call for it.
 - Format with Palantir Java Format (`make api-format`). `make api-verify` must pass.
+- Pharmacy staff permission keys live in `PharmacyPermissions`. A new action is added there and named in the requirement. Do not accept a key that is only a `module:action` pattern.

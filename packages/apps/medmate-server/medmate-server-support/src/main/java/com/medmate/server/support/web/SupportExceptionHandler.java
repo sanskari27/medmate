@@ -3,12 +3,15 @@ package com.medmate.server.support.web;
 import com.medmate.server.shared.error.ProblemResponses;
 import com.medmate.server.support.access.SupportProblem;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class SupportExceptionHandler {
 
     @ExceptionHandler(SupportProblem.class)

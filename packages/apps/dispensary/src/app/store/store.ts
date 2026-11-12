@@ -3,6 +3,7 @@ import { authApi } from "@/features/authentication";
 import { profileApi } from "@/features/profile";
 import { setupApi } from "@/features/setup";
 import { supportApi } from "@/features/support";
+import { usersApi } from "@/features/users";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -17,6 +18,7 @@ export function createAppStore() {
         setupApi.middleware,
         supportApi.middleware,
         profileApi.middleware,
+        usersApi.middleware,
       ),
   });
 }

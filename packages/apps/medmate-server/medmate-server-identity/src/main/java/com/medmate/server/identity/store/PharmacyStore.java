@@ -195,6 +195,19 @@ public class PharmacyStore {
                 .optional();
     }
 
+    public List<UUID> memberIds(UUID pharmacyId) {
+        return jdbc.sql(
+                        """
+                        SELECT a.id FROM account a
+                        JOIN pharmacy_membership m ON m.account_id = a.id
+                        WHERE m.pharmacy_id = :pharmacy
+                        ORDER BY lower(a.display_name), a.phone
+                        """)
+                .param("pharmacy", pharmacyId)
+                .query(UUID.class)
+                .list();
+    }
+
     public void addMembership(UUID accountId, UUID pharmacyId) {
         jdbc.sql("INSERT INTO pharmacy_membership (account_id, pharmacy_id) VALUES (:account, :pharmacy)")
                 .param("account", accountId)

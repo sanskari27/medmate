@@ -20,7 +20,8 @@ body:json {
   {
     "phone": "{{examplePhone}}",
     "displayName": "Counter",
-    "permissions": ["inventory:read"]
+    "pin": "1357",
+    "permissions": ["users:read"]
   }
 }
 
@@ -33,6 +34,6 @@ tests {
 }
 
 docs {
-  An approved pharmacy owner grants keys such as inventory:read inside that pharmacy.
-  A 201 response stores pharmacyStaffId. The collection script attaches the saved access token.
+  An approved pharmacy owner grants catalog keys such as users:read and sets a 4-digit PIN.
+  A 201 response stores pharmacyStaffId and does not return the PIN. The collection script attaches the saved access token.
 }

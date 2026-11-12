@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -131,6 +131,28 @@ describe("AppRouter", () => {
     expect(await screen.findByText("4-digit PIN")).toBeTruthy();
   });
 
+  it("opens the PIN step on the Staff tab when login uses a PIN", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = requestUrl(input);
+        if (url.includes("/auth/otp/send")) return json({ mode: "pin" });
+        return json({ detail: "Not found" }, 404);
+      }),
+    );
+
+    renderAt("/");
+    fireEvent.click(screen.getByRole("button", { name: "I already have an account · Log in" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Staff" }));
+    fireEvent.change(screen.getByPlaceholderText("98860 12345"), {
+      target: { value: "9876543210" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("4-digit PIN")).toBeTruthy();
+    expect(screen.queryByText("6-digit OTP")).toBeNull();
+    expect(screen.queryByText("This number is a pharmacy owner. Choose Pharmacy owner to sign in.")).toBeNull();
+  });
+
   it("redirects a signed-out visit to the login screen", () => {
     renderAt("/dashboard");
     expect(screen.getByRole("button", { name: "Get started" })).toBeTruthy();
@@ -161,7 +183,7 @@ describe("AppRouter", () => {
     expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
     expect(screen.getByText("Pharmacy owner")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
-    expect(screen.getByText("Users is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Staff & access control")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Log out" }));
     expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
   });
@@ -360,12 +382,23 @@ describe("AppRouter", () => {
     expect(sessionStorage.length).toBe(0);
   });
 
-  it("shows Help & Support to an owner under Management", () => {
+  it("shows Manage Users, Help & Support, and Profile under Management", () => {
     writeSession(session);
     renderAt("/dashboard");
+    const nav = document.querySelector("[data-slot=nav]");
+    expect(nav).toBeTruthy();
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names).toEqual([
+      "Dashboard",
+      "Settings",
+      "Reports",
+      "Manage Users",
+      "Profile",
+      "Help & Support",
+    ]);
     expect(screen.getByText("Management")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Help & Support" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {
@@ -377,7 +410,18 @@ describe("AppRouter", () => {
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Help & Support" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Profile" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
     expect(screen.queryByText("Management")).toBeNull();
+  });
+
+  it("sends pharmacy staff away from Manage Users", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff" },
+    });
+    renderAt("/users");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
   });
 
   it("sends pharmacy staff away from Profile", () => {

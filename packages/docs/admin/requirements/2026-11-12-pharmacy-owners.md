@@ -49,7 +49,7 @@ The sidebar role is the label of the choice used to sign in. That choice is kept
 
 ### List
 
-Pharmacies is a sidebar item labelled "Pharmacies". Its route is `/pharmacies`. Home, then Reviews when this account can review, then Pharmacies.
+Pharmacies is a sidebar item labelled "Pharmacies". Its route is `/pharmacies`. Home stays first. Pharmacies opens the Pharmacies section, and Reviews follows it when this account can review.
 
 The page loads `GET /pharmacy-owners`. The server orders rows. Each row shows the pharmacy name, phone, verification status, and block state. A blank name is an em dash, and that row's accessible name is the phone. Otherwise the accessible name is the pharmacy name. Status labels are Incomplete, Rejected, Compliance review, Final review, and Approved. Block states are Active, Block requested, and Blocked.
 

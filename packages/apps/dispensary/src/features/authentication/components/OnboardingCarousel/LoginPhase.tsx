@@ -85,7 +85,7 @@ export function LoginPhase({
       return;
     }
     if (result.mode === "pin") {
-      if (expectedRole !== "owner" || purpose === "signup") {
+      if (purpose === "signup") {
         setFault({
           field: "phone",
           message: "This number is a pharmacy owner. Choose Pharmacy owner to sign in.",

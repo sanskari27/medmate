@@ -7,12 +7,14 @@ import com.medmate.server.identity.access.PharmacyRole;
 import com.medmate.server.identity.access.StaffSubtype;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.phone.PhoneNumbers;
+import com.medmate.server.identity.pin.Pins;
 import com.medmate.server.identity.session.AccountCreator;
 import com.medmate.server.identity.session.AccountDirectory;
 import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +22,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,7 @@ public class StaffService {
     private final PharmacyStore pharmacies;
     private final AccountCreator creator;
     private final AccountDirectory directory;
+    private final PasswordEncoder pins;
     private final Clock clock;
 
     public StaffService(
@@ -38,11 +42,13 @@ public class StaffService {
             PharmacyStore pharmacies,
             AccountCreator creator,
             AccountDirectory directory,
+            PasswordEncoder pins,
             Clock clock) {
         this.accounts = accounts;
         this.pharmacies = pharmacies;
         this.creator = creator;
         this.directory = directory;
+        this.pins = pins;
         this.clock = clock;
     }
 
@@ -88,12 +94,26 @@ public class StaffService {
         return StaffResponse.from(directory.load(target.id()));
     }
 
+    @Transactional(readOnly = true)
+    public List<StaffResponse> listPharmacy(AccountPrincipal actor) {
+        requireApprovedOwner(actor);
+        List<StaffResponse> staff = new ArrayList<>();
+        for (UUID id : pharmacies.memberIds(actor.pharmacyId())) {
+            AccountPrincipal member = directory.load(id);
+            if (member != null && member.pharmacyRole() == PharmacyRole.STAFF) {
+                staff.add(StaffResponse.from(member));
+            }
+        }
+        return staff;
+    }
+
     @Transactional
     public StaffResponse createPharmacy(
-            AccountPrincipal actor, String rawPhone, String displayName, List<String> permissions) {
+            AccountPrincipal actor, String rawPhone, String displayName, String pin, List<String> permissions) {
         requireApprovedOwner(actor);
         String phone = phone(rawPhone);
         String name = name(displayName);
+        String normalizedPin = requirePin(pin);
         Set<String> keys = keys(permissions);
         if (accounts.findAccount(phone, AccountType.PHARMACY).isPresent()) {
             throw conflict("A pharmacy account already exists for this phone");
@@ -102,6 +122,7 @@ public class StaffService {
             IdentityStore.AccountRow created = creator.create(phone, AccountType.PHARMACY, name, clock.instant());
             pharmacies.addMembership(created.id(), actor.pharmacyId());
             accounts.replacePermissions(created.id(), keys);
+            accounts.savePin(created.id(), pins.encode(normalizedPin), clock.instant());
             return StaffResponse.from(directory.load(created.id()));
         } catch (DuplicateKeyException exception) {
             throw conflict("A pharmacy account already exists for this phone");
@@ -110,14 +131,23 @@ public class StaffService {
 
     @Transactional
     public StaffResponse updatePharmacy(
-            AccountPrincipal actor, UUID id, String displayName, List<String> permissions, Boolean disabled) {
+            AccountPrincipal actor,
+            UUID id,
+            String rawPhone,
+            String displayName,
+            String pin,
+            List<String> permissions,
+            Boolean disabled) {
         requireApprovedOwner(actor);
         AccountPrincipal target = requireType(id, AccountType.PHARMACY);
         if (target.pharmacyRole() != PharmacyRole.STAFF || !actor.pharmacyId().equals(target.pharmacyId())) {
-            throw forbidden("Pharmacy staff were not found");
+            throw new ApiProblem(HttpStatus.NOT_FOUND, "Not found", "Pharmacy staff were not found");
         }
         if (displayName != null) {
             accounts.updateDisplayName(id, name(displayName));
+        }
+        if (rawPhone != null) {
+            replacePhone(id, target.phone(), rawPhone);
         }
         if (permissions != null) {
             accounts.replacePermissions(id, keys(permissions));
@@ -125,7 +155,25 @@ public class StaffService {
         if (disabled != null) {
             accounts.setDisabled(id, disabled);
         }
+        if (pin != null) {
+            accounts.savePin(id, pins.encode(requirePin(pin)), clock.instant());
+        }
         return StaffResponse.from(directory.load(id));
+    }
+
+    private void replacePhone(UUID id, String current, String rawPhone) {
+        String next = phone(rawPhone);
+        if (next.equals(current)) {
+            return;
+        }
+        if (accounts.findAccount(next, AccountType.PHARMACY).isPresent()) {
+            throw conflict("A pharmacy account already exists for this phone");
+        }
+        try {
+            accounts.updatePhone(id, next);
+        } catch (DuplicateKeyException exception) {
+            throw conflict("A pharmacy account already exists for this phone");
+        }
     }
 
     private AccountPrincipal requireType(UUID id, AccountType type) {
@@ -157,6 +205,13 @@ public class StaffService {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Enter an Indian mobile number");
         }
         return phone;
+    }
+
+    private static String requirePin(String pin) {
+        if (!Pins.valid(pin)) {
+            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "PIN must be 4 digits");
+        }
+        return pin;
     }
 
     private static String name(String displayName) {
@@ -211,7 +266,8 @@ public class StaffService {
             UUID pharmacyId,
             List<String> subtypes,
             List<String> permissions,
-            boolean disabled) {
+            boolean disabled,
+            boolean pinSet) {
 
         static StaffResponse from(AccountPrincipal principal) {
             return new StaffResponse(
@@ -222,7 +278,8 @@ public class StaffService {
                     principal.pharmacyId(),
                     principal.subtypes().stream().map(StaffSubtype::wire).toList(),
                     List.copyOf(principal.permissions()),
-                    principal.disabled());
+                    principal.disabled(),
+                    principal.pinSet());
         }
     }
 }

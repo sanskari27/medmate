@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,20 +37,40 @@ public class StaffController {
                 Current.require(authentication), id, request.displayName(), request.subtypes(), request.disabled());
     }
 
+    @GetMapping("/pharmacy/staff")
+    public List<StaffService.StaffResponse> listPharmacy(Authentication authentication) {
+        return staff.listPharmacy(Current.require(authentication));
+    }
+
     @PostMapping("/pharmacy/staff")
     @ResponseStatus(HttpStatus.CREATED)
     public StaffService.StaffResponse createPharmacy(Authentication authentication, @RequestBody StaffRequest request) {
         return staff.createPharmacy(
-                Current.require(authentication), request.phone(), request.displayName(), request.permissions());
+                Current.require(authentication),
+                request.phone(),
+                request.displayName(),
+                request.pin(),
+                request.permissions());
     }
 
     @PatchMapping("/pharmacy/staff/{id}")
     public StaffService.StaffResponse updatePharmacy(
             Authentication authentication, @PathVariable UUID id, @RequestBody StaffRequest request) {
         return staff.updatePharmacy(
-                Current.require(authentication), id, request.displayName(), request.permissions(), request.disabled());
+                Current.require(authentication),
+                id,
+                request.phone(),
+                request.displayName(),
+                request.pin(),
+                request.permissions(),
+                request.disabled());
     }
 
     public record StaffRequest(
-            String phone, String displayName, List<String> subtypes, List<String> permissions, Boolean disabled) {}
+            String phone,
+            String displayName,
+            List<String> subtypes,
+            List<String> permissions,
+            Boolean disabled,
+            String pin) {}
 }

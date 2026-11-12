@@ -19,7 +19,7 @@ Platform admin and support staff handle the FAQ list and the support cases creat
 
 ## Behavior
 
-`canSupport` is true for `accountType` `admin`, and for staff whose subtypes include `support`. Other staff who open `/support` or `/support/cases/:caseId` go to `/dashboard`. The nav label is Support.
+`canSupport` is true for `accountType` `admin`, and for staff whose subtypes include `support`. Other staff who open `/support` or `/support/cases/:caseId` go to `/dashboard`. The nav label is Support. It is its own section, after Pharmacies.
 
 `/support` stacks two sections. FAQs come first. Each row shows the question, a published switch, edit, move up, and move down. Add FAQ asks for a question and an answer. Edit uses the same fields. The switch hides a FAQ by setting `published` false. Move up and move down send the full id order. There is no delete.
 

@@ -453,17 +453,141 @@ class IdentityFlowIT {
                                 "9811111108",
                                 "displayName",
                                 "Counter",
+                                "pin",
+                                "1357",
+                                "permissions",
+                                List.of("users:read")),
+                        bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(created.getBody().has("pin")).isFalse();
+        assertThat(created.getBody().get("pinSet").asBoolean()).isTrue();
+        assertThat(created.getBody().get("permissions").get(0).asText()).isEqualTo("users:read");
+
+        ResponseEntity<JsonNode> rejectedKey = rest.exchange(
+                "/pharmacy/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "phone",
+                                "9811111187",
+                                "displayName",
+                                "Counter",
+                                "pin",
+                                "1357",
                                 "permissions",
                                 List.of("inventory:read")),
                         bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
                 JsonNode.class);
-        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String staffToken = token(verify("9811111108", "pharmacy", "login"));
-        assertThat(permission(staffToken, "inventory:read").getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(permission(staffToken, "billing:create").getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(rejectedKey.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(rejectedKey.getBody().get("detail").asText()).isEqualTo("Permission key is invalid");
+
+        ResponseEntity<JsonNode> staffMode = rest.exchange(
+                "/auth/otp/send",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111108", "accountType", "pharmacy", "purpose", "login"), json()),
+                JsonNode.class);
+        assertThat(staffMode.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(staffMode.getBody().get("mode").asText()).isEqualTo("pin");
+        ResponseEntity<JsonNode> staffPin = rest.exchange(
+                "/auth/pin",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111108", "accountType", "pharmacy", "pin", "1357"), json()),
+                JsonNode.class);
+        assertThat(staffPin.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String staffToken = token(staffPin.getBody());
+        assertThat(permission(staffToken, "users:read").getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(permission(staffToken, "support:write").getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(ownerApplication(staffToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(ownerApplication(adminToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(business(refreshedOwner).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<JsonNode> listed = rest.exchange(
+                "/pharmacy/staff",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(listed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listed.getBody()).hasSize(1);
+        assertThat(listed.getBody().get(0).get("phone").asText()).isEqualTo("+919811111108");
+        assertThat(listed.getBody().get(0).has("pin")).isFalse();
+        assertThat(listed.getBody().findValuesAsText("phone")).doesNotContain("+919811111106");
+
+        String staffId = created.getBody().get("id").asText();
+        ResponseEntity<JsonNode> updated = rest.exchange(
+                "/pharmacy/staff/" + staffId,
+                HttpMethod.PATCH,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "displayName",
+                                "Counter Two",
+                                "phone",
+                                "9811111188",
+                                "pin",
+                                "9753",
+                                "permissions",
+                                List.of("users:read", "support:read")),
+                        bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(updated.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(updated.getBody().get("phone").asText()).isEqualTo("+919811111188");
+        assertThat(updated.getBody().has("pin")).isFalse();
+        assertThat(rest.exchange(
+                                "/auth/pin",
+                                HttpMethod.POST,
+                                new HttpEntity<>(
+                                        java.util.Map.of(
+                                                "phone", "9811111108", "accountType", "pharmacy", "pin", "1357"),
+                                        json()),
+                                JsonNode.class)
+                        .getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(rest.exchange(
+                                "/auth/pin",
+                                HttpMethod.POST,
+                                new HttpEntity<>(
+                                        java.util.Map.of(
+                                                "phone", "9811111188", "accountType", "pharmacy", "pin", "9753"),
+                                        json()),
+                                JsonNode.class)
+                        .getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<JsonNode> staffReset = rest.exchange(
+                "/auth/otp/send",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111188", "accountType", "pharmacy", "purpose", "pin_reset"),
+                        json()),
+                JsonNode.class);
+        assertThat(staffReset.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(staffReset.getBody().get("detail").asText()).isEqualTo("PIN reset is not available");
+
+        ResponseEntity<JsonNode> disabled = rest.exchange(
+                "/pharmacy/staff/" + staffId,
+                HttpMethod.PATCH,
+                new HttpEntity<>(
+                        java.util.Map.of("disabled", true), bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(disabled.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(disabled.getBody().get("disabled").asBoolean()).isTrue();
+        ResponseEntity<JsonNode> disabledPin = rest.exchange(
+                "/auth/pin",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111188", "accountType", "pharmacy", "pin", "9753"), json()),
+                JsonNode.class);
+        assertThat(disabledPin.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(disabledPin.getBody().get("detail").asText()).isEqualTo("PIN was not accepted");
+        ResponseEntity<JsonNode> stillListed = rest.exchange(
+                "/pharmacy/staff",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(stillListed.getBody()).hasSize(1);
+        assertThat(stillListed.getBody().get(0).get("disabled").asBoolean()).isTrue();
     }
 
     @Test
@@ -552,13 +676,23 @@ class IdentityFlowIT {
                                                 "9811111123",
                                                 "displayName",
                                                 "Counter",
+                                                "pin",
+                                                "1357",
                                                 "permissions",
-                                                List.of("inventory:read")),
+                                                List.of("users:read")),
                                         bearer(ownerToken, MediaType.APPLICATION_JSON)),
                                 JsonNode.class)
                         .getStatusCode())
                 .isEqualTo(HttpStatus.CREATED);
-        JsonNode staffLogin = verify("9811111123", "pharmacy", "login");
+        JsonNode staffLogin = rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111123", "accountType", "pharmacy", "pin", "1357"),
+                                json()),
+                        JsonNode.class)
+                .getBody();
+        assertThat(staffLogin.get("accessToken").asText()).isNotBlank();
         String staffToken = token(staffLogin);
         String staffRefresh = staffLogin.get("refreshToken").asText();
 
@@ -664,7 +798,7 @@ class IdentityFlowIT {
         assertThat(ownerDocument.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<JsonNode> staffCall = rest.exchange(
-                "/probe/permission/inventory:read",
+                "/probe/permission/users:read",
                 HttpMethod.GET,
                 new HttpEntity<>(bearer(staffToken, MediaType.APPLICATION_JSON)),
                 JsonNode.class);
@@ -677,9 +811,14 @@ class IdentityFlowIT {
                 JsonNode.class);
         assertThat(staffRefreshResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(staffRefreshResponse.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
-        ResponseEntity<JsonNode> staffVerify = postVerify("9811111123", "pharmacy", "login");
-        assertThat(staffVerify.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(staffVerify.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
+        ResponseEntity<JsonNode> staffSend = rest.exchange(
+                "/auth/otp/send",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111123", "accountType", "pharmacy", "purpose", "login"), json()),
+                JsonNode.class);
+        assertThat(staffSend.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(staffSend.getBody().get("mode").asText()).isEqualTo("pin");
         ResponseEntity<JsonNode> staffPin = rest.exchange(
                 "/auth/pin",
                 HttpMethod.POST,
@@ -765,12 +904,21 @@ class IdentityFlowIT {
                                 "9811111133",
                                 "displayName",
                                 "Counter",
+                                "pin",
+                                "1357",
                                 "permissions",
-                                List.of("inventory:read")),
+                                List.of("users:read")),
                         bearer(ownerToken, MediaType.APPLICATION_JSON)),
                 JsonNode.class);
         assertThat(staffCreated.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String staffToken = token(verify("9811111133", "pharmacy", "login"));
+        String staffToken = token(rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111133", "accountType", "pharmacy", "pin", "1357"),
+                                json()),
+                        JsonNode.class)
+                .getBody());
         ResponseEntity<JsonNode> staffUpdate = postProfile(staffToken, profile());
         assertThat(staffUpdate.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(staffUpdate.getBody().get("detail").asText())

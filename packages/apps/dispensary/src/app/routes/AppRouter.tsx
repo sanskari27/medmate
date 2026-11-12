@@ -10,6 +10,7 @@ import {
 import { AccountRestrictedPage, ApplicationStatusPage, SetupPage } from "@/features/setup";
 import { ProfilePage } from "@/features/profile";
 import { SupportPage } from "@/features/support";
+import { UsersPage } from "@/features/users";
 import {
   GuestRoute,
   PinRoute,
@@ -24,7 +25,7 @@ export function AppRouter() {
   const { session } = useAuthState();
   const auth = useAuthActions();
   const owner = session?.account.pharmacyRole === "owner";
-  const ownerPaths = new Set(["/support", "/profile"]);
+  const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const items = appRoutes.filter((route) => !ownerPaths.has(route.path) || owner);
   return (
     <Routes>
@@ -59,6 +60,10 @@ export function AppRouter() {
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
+          <Route
+            path="/users"
+            element={owner ? <UsersPage /> : <Navigate to="/dashboard" replace />}
+          />
           <Route
             path="/support"
             element={owner ? <SupportPage /> : <Navigate to="/dashboard" replace />}

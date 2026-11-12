@@ -41,6 +41,10 @@ Write `packages/docs/medmate-server/requirements/YYYY-MM-DD-<slug>.md`.
 
 `Tests` names the unit tests, integration tests, and Bruno request to add. A structural choice (new module, datastore, auth, or host) also names the ADR to add under `packages/docs/medmate-server/decisions/`.
 
+## Permissions
+
+When the requirement lets pharmacy staff do something, the interview names the area, the module, and each action before the spec is written. An action may use a name other than read, create, update, or delete. Each key is `module:action` and is added to `PharmacyPermissions`. Do not leave the key on the old open pattern. The spec names the catalog change. The dispensary dialog groups the same keys; the headings are not stored.
+
 ## Plan
 
 After the spec is on disk, create an implementation plan for that spec and stop. Do not edit application code, Bruno requests, or Terraform until the plan is accepted.

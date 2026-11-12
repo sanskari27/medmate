@@ -13,7 +13,8 @@ Architecture decisions for medmate-server.
 | [0007](0007-restricted-pharmacy-owner.md) | A disabled pharmacy owner may hold a limited session |
 | [0008](0008-platform-phone-sign-in.md) | Platform login resolves one admin or staff phone |
 | [0009](0009-support-module-and-live-chat.md) | Support module, shared Flyway history, and live chat socket |
+| [0010](0010-pharmacy-staff-pin-and-permissions.md) | Pharmacy staff PIN login and the closed permission catalog |
 
-The next file is the next number: `0010-<slug>.md`.
+The next file is the next number: `0011-<slug>.md`.
 
 Write an ADR when the change picks a structure that later work has to live with: a new module boundary, a datastore, authentication, or a different deployable. A requirement spec records product behavior. It does not replace an ADR.

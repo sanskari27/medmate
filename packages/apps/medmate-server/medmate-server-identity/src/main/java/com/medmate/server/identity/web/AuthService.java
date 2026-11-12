@@ -309,13 +309,20 @@ public class AuthService {
                         principal.accountType(), principal.pharmacyRole(), principal.disabled())) {
             return false;
         }
-        return principal.pharmacyRole() == PharmacyRole.OWNER
-                && principal.verificationStatus() == VerificationStatus.APPROVED
-                && principal.pinSet();
+        if (principal.verificationStatus() != VerificationStatus.APPROVED || !principal.pinSet()) {
+            return false;
+        }
+        return principal.pharmacyRole() == PharmacyRole.OWNER || principal.pharmacyRole() == PharmacyRole.STAFF;
     }
 
     private boolean pinResetAllowed(IdentityStore.AccountRow account) {
-        return account != null && !account.disabled() && pinLogin(account);
+        if (account == null || account.disabled() || account.type() != AccountType.PHARMACY) {
+            return false;
+        }
+        AccountPrincipal principal = directory.load(account);
+        return principal.pharmacyRole() == PharmacyRole.OWNER
+                && principal.verificationStatus() == VerificationStatus.APPROVED
+                && principal.pinSet();
     }
 
     private boolean restrictedStaff(AccountPrincipal principal) {

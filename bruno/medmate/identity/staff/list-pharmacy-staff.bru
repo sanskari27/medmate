@@ -1,0 +1,30 @@
+meta {
+  name: List pharmacy staff
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/staff
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved pharmacy owner lists staff in that pharmacy. The owner is not a row.
+  Each row has pinSet and does not include the PIN.
+  The collection script attaches the saved access token.
+}

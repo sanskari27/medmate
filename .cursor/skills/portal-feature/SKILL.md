@@ -48,3 +48,7 @@ The plan must:
 - Call medmate-server through the portal API client. Do not hardcode a production URL in a component.
 - Name the unit tests to add.
 - Leave the other portal, the pharmacy app, and unrelated screens unchanged.
+
+## Permissions
+
+When the feature grants pharmacy staff access, the interview names the area, the module, and each action. The screen adds those rows to the Manage Users permission dialog: area, then module, then actions. The keys come from the medmate-server catalog in the same change. An action name can differ from read, create, update, and delete. Do not invent a second list.

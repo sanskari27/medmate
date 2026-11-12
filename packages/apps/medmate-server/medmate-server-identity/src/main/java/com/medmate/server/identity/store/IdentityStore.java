@@ -85,6 +85,13 @@ public class IdentityStore {
                 .update();
     }
 
+    public void updatePhone(UUID id, String phone) {
+        jdbc.sql("UPDATE account SET phone = :phone WHERE id = :id")
+                .param("phone", phone)
+                .param("id", id)
+                .update();
+    }
+
     public void setDisabled(UUID id, boolean disabled) {
         jdbc.sql("UPDATE account SET disabled = :disabled WHERE id = :id")
                 .param("disabled", disabled)
