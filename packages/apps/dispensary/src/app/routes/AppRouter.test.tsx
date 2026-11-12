@@ -393,6 +393,7 @@ describe("AppRouter", () => {
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
     expect(names).toEqual([
+      "Billing",
       "Dashboard",
       "Distributors",
       "Purchases",
@@ -407,6 +408,7 @@ describe("AppRouter", () => {
     ]);
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByText("Catalogue")).toBeTruthy();
+    expect(screen.getByText("Counter")).toBeTruthy();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {
@@ -552,6 +554,30 @@ describe("AppRouter", () => {
     renderAt("/offers");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Offers" })).toBeNull();
+  });
+
+  it("shows Billing to staff who can read it", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["billing:read"] },
+    });
+    renderAt("/dashboard");
+    const nav = document.querySelector("[data-slot=nav]");
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names[0]).toBe("Billing");
+    expect(screen.getByText("Counter")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without billing:read away from Billing", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["billing:create"] },
+    });
+    renderAt("/billing");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
   });
 
   it("shows Rack & Locations to staff who can read it", () => {

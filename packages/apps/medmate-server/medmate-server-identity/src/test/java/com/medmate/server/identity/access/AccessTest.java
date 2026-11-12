@@ -74,7 +74,9 @@ class AccessTest {
         assertThat(Access.validKey("offers:create")).isTrue();
         assertThat(Access.validKey("offers:update")).isTrue();
         assertThat(Access.validKey("offers:delete")).isTrue();
-        assertThat(Access.validKey("billing:create")).isFalse();
+        assertThat(Access.validKey("billing:read")).isTrue();
+        assertThat(Access.validKey("billing:create")).isTrue();
+        assertThat(Access.validKey("billing:nope")).isFalse();
         assertThat(Access.validKey("Inventory:Read")).isFalse();
     }
 

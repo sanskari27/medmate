@@ -545,6 +545,7 @@ public class StockService {
     }
 
     private List<StockViews.ProductView> products(UUID pharmacyId) {
+        resolvePrescriptions(pharmacyId);
         Map<String, List<StockStore.BatchRow>> batches = new HashMap<>();
         for (StockStore.BatchRow batch : stock.batches(pharmacyId)) {
             batches.computeIfAbsent(batch.productId(), key -> new ArrayList<>()).add(batch);
@@ -554,6 +555,27 @@ public class StockService {
             products.add(productView(product, batches.getOrDefault(product.productId(), List.of())));
         }
         return products;
+    }
+
+    private void resolvePrescriptions(UUID pharmacyId) {
+        List<String> missing = new ArrayList<>();
+        for (StockStore.ProductRow product : stock.products(pharmacyId)) {
+            if (product.prescriptionRequired() == null) {
+                missing.add(product.productId());
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        MedicineCatalog.Lookup lookup;
+        try {
+            lookup = catalog.lookup(missing);
+        } catch (CatalogUnavailable exception) {
+            return;
+        }
+        for (MedicineCatalog.Snapshot snapshot : lookup.products()) {
+            stock.savePrescription(pharmacyId, snapshot.productId(), snapshot.prescriptionRequired());
+        }
     }
 
     private StockViews.ProductView product(UUID pharmacyId, String productId) {
@@ -571,7 +593,12 @@ public class StockService {
         List<StockViews.BatchView> views = new ArrayList<>();
         for (StockStore.BatchRow batch : batches) {
             views.add(new StockViews.BatchView(
-                    batch.batchNo(), batch.expiry(), batch.qty(), money(batch.rate()), money(batch.mrp())));
+                    batch.batchNo(),
+                    batch.expiry(),
+                    batch.qty(),
+                    money(batch.rate()),
+                    money(batch.mrp()),
+                    batch.gst()));
         }
         return new StockViews.ProductView(
                 product.productId(),
@@ -584,6 +611,7 @@ public class StockService {
                 product.reorderLevel(),
                 product.rack(),
                 product.rackAlt(),
+                product.prescriptionRequired(),
                 views);
     }
 

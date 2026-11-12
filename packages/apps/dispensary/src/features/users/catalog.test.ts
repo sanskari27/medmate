@@ -9,14 +9,21 @@ import {
 
 describe("staff permission catalog", () => {
   it("groups management actions and counts them", () => {
-    expect(PERMISSION_AREAS.map((area) => area.area)).toEqual(["Management", "Catalogue"]);
-    expect(PERMISSION_AREAS[0]?.modules.map((module) => module.module)).toEqual([
+    expect(PERMISSION_AREAS.map((area) => area.area)).toEqual([
+      "Counter",
+      "Management",
+      "Catalogue",
+    ]);
+    expect(PERMISSION_AREAS[0]?.modules.map((module) => module.module)).toEqual(["Billing"]);
+    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual([
       "Manage users",
       "Manage Employees",
       "Invoice Settings",
       "Help & Support",
     ]);
     expect(PERMISSION_KEYS).toEqual([
+      "billing:read",
+      "billing:create",
       "users:read",
       "users:create",
       "users:update",
@@ -49,15 +56,15 @@ describe("staff permission catalog", () => {
       "offers:update",
       "offers:delete",
     ]);
-    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual([
+    expect(PERMISSION_AREAS[2]?.modules.map((module) => module.module)).toEqual([
       "Distributors",
       "Purchases",
       "Inventory",
       "Rack & Locations",
       "Offers",
     ]);
-    expect(PERMISSION_KEYS).toHaveLength(31);
-    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 31");
+    expect(PERMISSION_KEYS).toHaveLength(33);
+    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 33");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
     expect(togglePermission(["users:read"], "users:create")).toEqual([
       "users:read",

@@ -15,6 +15,18 @@ export type PermissionArea = {
 
 export const PERMISSION_AREAS: PermissionArea[] = [
   {
+    area: "Counter",
+    modules: [
+      {
+        module: "Billing",
+        actions: [
+          { key: "billing:read", label: "Read" },
+          { key: "billing:create", label: "Charge" },
+        ],
+      },
+    ],
+  },
+  {
     area: "Management",
     modules: [
       {

@@ -179,7 +179,7 @@ class StockControllerTest {
     }
 
     private static StockStore.ProductRow product(String rack, String rackAlt) {
-        return new StockStore.ProductRow("DR100", "Crocin", null, null, null, null, null, 20, rack, rackAlt);
+        return new StockStore.ProductRow("DR100", "Crocin", null, null, null, null, null, 20, rack, rackAlt, false);
     }
 
     private static AccountAuthentication staff(String... keys) {

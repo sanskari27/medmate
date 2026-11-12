@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
@@ -80,11 +80,15 @@ describe("UsersPage", () => {
   it("lists staff without a role field and shows the management permissions", async () => {
     renderPage();
     expect(await screen.findByText("Counter")).toBeTruthy();
-    expect(screen.getByText("1 / 31")).toBeTruthy();
+    expect(screen.getByText("1 / 33")).toBeTruthy();
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByText("Reset to Cashier defaults")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Add user" }));
     expect(screen.getByRole("dialog", { name: "Add team member" })).toBeTruthy();
+    const dialog = screen.getByRole("dialog", { name: "Add team member" });
+    expect(within(dialog).getByText("Counter")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Billing Read" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Billing Charge" })).toBeTruthy();
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByText("Manage users")).toBeTruthy();
     expect(screen.getByText("Help & Support")).toBeTruthy();

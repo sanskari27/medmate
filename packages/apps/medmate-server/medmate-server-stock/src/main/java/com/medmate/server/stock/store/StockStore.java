@@ -63,9 +63,19 @@ public class StockStore {
             String type,
             int reorderLevel,
             String rack,
-            String rackAlt) {}
+            String rackAlt,
+            Boolean prescriptionRequired) {}
 
-    public record BatchRow(String productId, String batchNo, String expiry, int qty, BigDecimal rate, BigDecimal mrp) {}
+    public record BatchRow(
+            String productId, String batchNo, String expiry, int qty, BigDecimal rate, BigDecimal mrp, Integer gst) {}
+
+    public boolean lockPharmacy(UUID pharmacyId) {
+        return jdbc.sql("SELECT id FROM pharmacy WHERE id = :id FOR UPDATE")
+                .param("id", pharmacyId)
+                .query(UUID.class)
+                .optional()
+                .isPresent();
+    }
 
     public List<String> purchaseCodes(UUID pharmacyId) {
         return jdbc.sql("SELECT code FROM purchase WHERE pharmacy_id = :id")
@@ -256,7 +266,7 @@ public class StockStore {
         return jdbc.sql(
                         """
                         SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
-                               rack, rack_alt
+                               rack, rack_alt, prescription_required
                         FROM inventory_product
                         WHERE pharmacy_id = :id
                         ORDER BY name, product_id
@@ -270,7 +280,7 @@ public class StockStore {
         return jdbc.sql(
                         """
                         SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
-                               rack, rack_alt
+                               rack, rack_alt, prescription_required
                         FROM inventory_product
                         WHERE pharmacy_id = :id AND product_id = :product
                         """)
@@ -283,7 +293,7 @@ public class StockStore {
     public List<BatchRow> batches(UUID pharmacyId) {
         return jdbc.sql(
                         """
-                        SELECT product_id, batch_no, expiry, qty, rate, mrp
+                        SELECT product_id, batch_no, expiry, qty, rate, mrp, gst
                         FROM inventory_batch
                         WHERE pharmacy_id = :id
                         ORDER BY product_id, expiry, batch_no
@@ -297,15 +307,17 @@ public class StockStore {
         jdbc.sql(
                         """
                         INSERT INTO inventory_product (
-                          pharmacy_id, product_id, name, marketer, composition, form, pack, product_type, reorder_level)
-                        VALUES (:pharmacy, :product, :name, :marketer, :composition, :form, :pack, :type, 20)
+                          pharmacy_id, product_id, name, marketer, composition, form, pack, product_type,
+                          reorder_level, prescription_required)
+                        VALUES (:pharmacy, :product, :name, :marketer, :composition, :form, :pack, :type, 20, :rx)
                         ON CONFLICT (pharmacy_id, product_id) DO UPDATE SET
                           name = EXCLUDED.name,
                           marketer = EXCLUDED.marketer,
                           composition = EXCLUDED.composition,
                           form = EXCLUDED.form,
                           pack = EXCLUDED.pack,
-                          product_type = EXCLUDED.product_type
+                          product_type = EXCLUDED.product_type,
+                          prescription_required = EXCLUDED.prescription_required
                         """)
                 .param("pharmacy", pharmacyId)
                 .param("product", snapshot.productId())
@@ -315,19 +327,34 @@ public class StockStore {
                 .param("form", snapshot.form(), Types.VARCHAR)
                 .param("pack", snapshot.pack(), Types.VARCHAR)
                 .param("type", snapshot.type(), Types.VARCHAR)
+                .param("rx", snapshot.prescriptionRequired())
+                .update();
+    }
+
+    public void savePrescription(UUID pharmacyId, String productId, boolean prescriptionRequired) {
+        jdbc.sql(
+                        """
+                        UPDATE inventory_product
+                        SET prescription_required = :rx
+                        WHERE pharmacy_id = :pharmacy AND product_id = :product AND prescription_required IS NULL
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("product", productId)
+                .param("rx", prescriptionRequired)
                 .update();
     }
 
     public void addBatch(UUID pharmacyId, PurchaseRules.Line line) {
         jdbc.sql(
                         """
-                        INSERT INTO inventory_batch (pharmacy_id, product_id, batch_no, expiry, qty, rate, mrp)
-                        VALUES (:pharmacy, :product, :batch, :expiry, :qty, :rate, :mrp)
+                        INSERT INTO inventory_batch (pharmacy_id, product_id, batch_no, expiry, qty, rate, mrp, gst)
+                        VALUES (:pharmacy, :product, :batch, :expiry, :qty, :rate, :mrp, :gst)
                         ON CONFLICT (pharmacy_id, product_id, batch_no) DO UPDATE SET
                           qty = inventory_batch.qty + EXCLUDED.qty,
                           expiry = EXCLUDED.expiry,
                           rate = EXCLUDED.rate,
-                          mrp = EXCLUDED.mrp
+                          mrp = EXCLUDED.mrp,
+                          gst = EXCLUDED.gst
                         """)
                 .param("pharmacy", pharmacyId)
                 .param("product", line.productId())
@@ -336,6 +363,7 @@ public class StockStore {
                 .param("qty", line.qty() + line.freeQty())
                 .param("rate", line.rate())
                 .param("mrp", line.mrp())
+                .param("gst", line.gst())
                 .update();
     }
 
@@ -449,7 +477,8 @@ public class StockStore {
                 row.getString("product_type"),
                 row.getInt("reorder_level"),
                 row.getString("rack"),
-                row.getString("rack_alt"));
+                row.getString("rack_alt"),
+                flag(row, "prescription_required"));
     }
 
     private BatchRow batch(ResultSet row, int number) throws SQLException {
@@ -459,6 +488,17 @@ public class StockStore {
                 row.getString("expiry"),
                 row.getInt("qty"),
                 row.getBigDecimal("rate"),
-                row.getBigDecimal("mrp"));
+                row.getBigDecimal("mrp"),
+                integer(row, "gst"));
+    }
+
+    private static Boolean flag(ResultSet row, String column) throws SQLException {
+        boolean value = row.getBoolean(column);
+        return row.wasNull() ? null : value;
+    }
+
+    private static Integer integer(ResultSet row, String column) throws SQLException {
+        int value = row.getInt(column);
+        return row.wasNull() ? null : value;
     }
 }

@@ -10,6 +10,7 @@ export type InventoryBatch = {
   qty: number;
   rate: string;
   mrp: string;
+  gst?: number | null;
 };
 
 export type InventoryProduct = {
@@ -23,6 +24,7 @@ export type InventoryProduct = {
   reorderLevel: number;
   rack: string | null;
   rackAlt: string | null;
+  prescriptionRequired?: boolean | null;
   batches: InventoryBatch[];
 };
 

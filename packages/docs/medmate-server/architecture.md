@@ -12,7 +12,8 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
   medmate-server-stock/                purchase bills, returns, inventory, and rack placement
-  medmate-server-offers/               pharmacy discounts for a later billing module
+  medmate-server-offers/               pharmacy discounts applied when a bill is posted
+  medmate-server-billing/              cash sales from the counter
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -58,7 +59,11 @@ Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-se
 
 ## Offers
 
-Pharmacy discounts live in `medmate-server-offers`. The module depends on identity for access checks and on stock for the id and name of each inventory medicine. Identity does not depend on it. Stock does not depend on it. Tables are created by `V11__offers.sql`. `V12__drop_offer_online.sql` removes the customer-app flag. An offer is stored for a later billing module. This module does not change a price. [0014](decisions/0014-pharmacy-offers.md) records that boundary.
+Pharmacy discounts live in `medmate-server-offers`. The module depends on identity for access checks and on stock for the id and name of each inventory medicine. Identity does not depend on it. Stock does not depend on it. Tables are created by `V11__offers.sql`. `V12__drop_offer_online.sql` removes the customer-app flag. Billing reads the active offers and applies one winner per line. This module does not change a price. [0014](decisions/0014-pharmacy-offers.md) records that boundary.
+
+## Billing
+
+Cash sales live in `medmate-server-billing`. The module depends on identity for access checks and the invoice prefix, on stock for sellable batches and the decrement, and on offers for the active discounts. Identity does not depend on it. Stock does not depend on it. Offers do not depend on it. `V14__batch_gst_and_prescription.sql` in stock adds the prescription flag and the batch GST rate. `V15__bills.sql` creates the sale. The server recomputes the price and reduces the batch in the same transaction. [0016](decisions/0016-pharmacy-billing.md) records that boundary.
 
 ## Not in this process
 

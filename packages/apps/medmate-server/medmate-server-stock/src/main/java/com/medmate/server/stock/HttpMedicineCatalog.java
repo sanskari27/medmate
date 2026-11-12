@@ -121,7 +121,8 @@ public class HttpMedicineCatalog implements MedicineCatalog {
                 blank(text(row, "productForm")),
                 pack(row, drug),
                 blank(text(row, drug ? "medicineType" : "type")),
-                money(row.get("mrp")));
+                money(row.get("mrp")),
+                drug && row.path("prescriptionRequired").asBoolean(false));
     }
 
     private static String pack(JsonNode row, boolean drug) {

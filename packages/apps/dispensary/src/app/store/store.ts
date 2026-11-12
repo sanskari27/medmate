@@ -11,6 +11,7 @@ import { offersApi } from "@/features/offers";
 import { racksApi } from "@/features/racks";
 import { purchasesApi } from "@/features/purchases";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
+import { billingApi } from "@/features/billing";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -33,6 +34,7 @@ export function createAppStore() {
         racksApi.middleware,
         offersApi.middleware,
         invoiceSettingsApi.middleware,
+        billingApi.middleware,
       ),
   });
 }

@@ -19,7 +19,8 @@ public interface MedicineCatalog {
             String form,
             String pack,
             String type,
-            BigDecimal mrp) {}
+            BigDecimal mrp,
+            boolean prescriptionRequired) {}
 
     record Lookup(List<Snapshot> products, List<String> missing, List<String> ambiguous) {}
 }

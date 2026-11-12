@@ -48,6 +48,7 @@ public class FakeMedicineCatalog implements MedicineCatalog {
                 "Tablet",
                 "Strip",
                 "allopathy",
-                new BigDecimal("25.00"));
+                new BigDecimal("25.00"),
+                false);
     }
 }

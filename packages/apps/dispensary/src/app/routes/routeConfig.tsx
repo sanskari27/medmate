@@ -13,6 +13,7 @@ import { DashboardPage } from "@/features/dashboard";
 import { DistributorsPage } from "@/features/distributors";
 import { InventoryPage } from "@/features/inventory";
 import { OffersPage } from "@/features/offers";
+import { BillingPage } from "@/features/billing";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -25,6 +26,15 @@ import type { NavEntry } from "@/components/layout";
 export type AppRoute = NavEntry & { element: ReactNode };
 
 export const appRoutes: AppRoute[] = [
+  {
+    path: "/billing",
+    label: "Billing",
+    title: "Billing",
+    sub: "Cash counter",
+    group: "Counter",
+    icon: <IconReceipt size={19} />,
+    element: <BillingPage />,
+  },
   {
     path: "/dashboard",
     label: "Dashboard",

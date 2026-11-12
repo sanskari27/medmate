@@ -42,8 +42,61 @@ export type InvoicePaperProps = {
   logoUrl: string | null;
   stampUrl: string | null;
   pharmacy: InvoicePharmacy;
+  bill?: InvoiceSale | null;
   className?: string;
 };
+
+export type InvoiceSale = {
+  number: string;
+  soldAt: number;
+  patientName: string;
+  patientPhone: string;
+  prescribedBy: string | null;
+  billDiscount?: number;
+  lines: InvoiceLine[];
+};
+
+type PaperSale = {
+  lines: InvoiceLine[];
+  number: string;
+  soldAt: number;
+  patientName: string;
+  phone: string;
+  doctor: string;
+  address: string | null;
+  payment: string;
+  who: string;
+  billDiscount: number;
+};
+
+function paperSale(props: InvoicePaperProps, fallbackSoldAt: number): PaperSale {
+  if (!props.bill) {
+    return {
+      lines: SAMPLE_LINES,
+      number: sampleNumber(props.prefix),
+      soldAt: fallbackSoldAt,
+      patientName: SAMPLE_CUSTOMER.name,
+      phone: SAMPLE_CUSTOMER.phone,
+      doctor: SAMPLE_CUSTOMER.doctor,
+      address: SAMPLE_CUSTOMER.address,
+      payment: "UPI",
+      who: "Preview",
+      billDiscount: 0,
+    };
+  }
+  return {
+    lines: props.bill.lines,
+    number: props.bill.number,
+    soldAt: props.bill.soldAt,
+    patientName: props.bill.patientName,
+    phone: props.bill.patientPhone,
+    doctor: props.bill.prescribedBy ?? "—",
+    address: null,
+    payment: "Cash",
+    who: props.bill.patientName,
+    billDiscount: props.bill.billDiscount ?? 0,
+  };
+}
 
 export function InvoicePaper(props: InvoicePaperProps) {
   const [soldAt] = useState(() => Date.now());
@@ -52,7 +105,8 @@ export function InvoicePaper(props: InvoicePaperProps) {
 }
 
 function PageBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) {
-  const totals = computeInvoice(SAMPLE_LINES);
+  const sale = paperSale(props, soldAt);
+  const totals = computeInvoice(sale.lines, sale.billDiscount);
   const logo = props.showLogo && props.logoUrl ? props.logoUrl : null;
   const stamp = props.showStamp && props.stampUrl ? props.stampUrl : null;
   const modern = props.template === "modern";
@@ -111,10 +165,10 @@ function PageBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) 
             variant="caption"
             className={cn("text-right font-bold", modern ? "text-white" : "text-ink")}
           >
-            {sampleNumber(props.prefix)}
+            {sale.number}
           </Text>
           <Text variant="caption" className={cn("text-right", modern && "text-white/80")}>
-            {formatWhen(soldAt)}
+            {formatWhen(sale.soldAt)}
           </Text>
           <Text variant="caption" className={cn("text-right", modern && "text-white/80")}>
             Counter sale
@@ -123,16 +177,18 @@ function PageBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) 
       </Stack>
       <Box className="flex flex-1 flex-col px-4 py-4">
         <Box className="mb-3 grid grid-cols-1 gap-2 border-b border-[#e4e4e4] pb-3 sm:grid-cols-2">
-          <Meta label="Billed to:">{SAMPLE_CUSTOMER.name}</Meta>
-          <Meta label="Payment:">UPI</Meta>
-          <Meta label="Phone:">{SAMPLE_CUSTOMER.phone}</Meta>
-          <Meta label="Prescribed by:">{SAMPLE_CUSTOMER.doctor}</Meta>
-          <Text as="span" className="sm:col-span-2">
-            <Text as="span" variant="caption" className="font-bold">
-              Address:{" "}
+          <Meta label="Billed to:">{sale.patientName}</Meta>
+          <Meta label="Payment:">{sale.payment}</Meta>
+          <Meta label="Phone:">{sale.phone}</Meta>
+          <Meta label="Prescribed by:">{sale.doctor}</Meta>
+          {sale.address ? (
+            <Text as="span" className="sm:col-span-2">
+              <Text as="span" variant="caption" className="font-bold">
+                Address:{" "}
+              </Text>
+              {sale.address}
             </Text>
-            {SAMPLE_CUSTOMER.address}
-          </Text>
+          ) : null}
         </Box>
         <table className="w-full border-collapse text-[11.5px]">
           <thead>
@@ -154,8 +210,8 @@ function PageBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) 
             </tr>
           </thead>
           <tbody>
-            {SAMPLE_LINES.map((item, index) => (
-              <LineRow key={item.name} item={item} index={index} />
+            {sale.lines.map((item, index) => (
+              <LineRow key={`${item.name}-${index}`} item={item} index={index} />
             ))}
           </tbody>
         </table>
@@ -216,7 +272,8 @@ function PageBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) 
 }
 
 function ThermalBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number }) {
-  const totals = computeInvoice(SAMPLE_LINES);
+  const sale = paperSale(props, soldAt);
+  const totals = computeInvoice(sale.lines, sale.billDiscount);
   const logo = props.showLogo && props.logoUrl ? props.logoUrl : null;
   const stamp = props.showStamp && props.stampUrl ? props.stampUrl : null;
   return (
@@ -232,16 +289,16 @@ function ThermalBill({ soldAt, ...props }: InvoicePaperProps & { soldAt: number 
         {props.title}
       </Text>
       <Stack direction="row" justify="between">
-        <Text as="span">{sampleNumber(props.prefix)}</Text>
-        <Text as="span">{formatWhen(soldAt)}</Text>
+        <Text as="span">{sale.number}</Text>
+        <Text as="span">{formatWhen(sale.soldAt)}</Text>
       </Stack>
       <Stack direction="row" justify="between">
-        <Text as="span">Preview</Text>
-        <Text as="span">UPI</Text>
+        <Text as="span">{sale.who}</Text>
+        <Text as="span">{sale.payment}</Text>
       </Stack>
       <Box className="my-1 h-px w-full border-t border-dashed border-line" />
-      {SAMPLE_LINES.map((item, index) => (
-        <Stack key={item.name} gap={0} className="py-1 text-left">
+      {sale.lines.map((item, index) => (
+        <Stack key={`${item.name}-${index}`} gap={0} className="py-1 text-left">
           <Text as="span" className="font-bold">
             {index + 1}. {item.name}{" "}
             <Text as="span" variant="caption">

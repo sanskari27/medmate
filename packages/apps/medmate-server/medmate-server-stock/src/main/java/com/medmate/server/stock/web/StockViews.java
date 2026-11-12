@@ -48,7 +48,7 @@ public final class StockViews {
 
     public record PurchaseOne(DocumentView purchase) {}
 
-    public record BatchView(String batchNo, String expiry, int qty, String rate, String mrp) {}
+    public record BatchView(String batchNo, String expiry, int qty, String rate, String mrp, Integer gst) {}
 
     public record ProductView(
             String productId,
@@ -61,6 +61,7 @@ public final class StockViews {
             int reorderLevel,
             String rack,
             String rackAlt,
+            Boolean prescriptionRequired,
             List<BatchView> batches) {}
 
     public record InventoryList(List<ProductView> products) {}
