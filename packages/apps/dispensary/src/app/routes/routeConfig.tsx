@@ -3,12 +3,14 @@ import {
   IconDashboard,
   IconHelp,
   IconReports,
+  IconReceipt,
   IconSettings,
   IconUser,
   IconUsers,
 } from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
 import { EmployeesPage } from "@/features/employees";
+import { InvoiceSettingsPage } from "@/features/invoice-settings";
 import { ProfilePage } from "@/features/profile";
 import { ReportsPage } from "@/features/reports";
 import { SettingsPage } from "@/features/settings";
@@ -51,6 +53,14 @@ export const appRoutes: AppRoute[] = [
     group: "Management",
     icon: <IconUsers size={19} />,
     element: <EmployeesPage />,
+  },
+  {
+    path: "/invoice-settings",
+    label: "Invoice Settings",
+    title: "Invoice Settings",
+    sub: "Customise your GST invoice",
+    icon: <IconReceipt size={19} />,
+    element: <InvoiceSettingsPage />,
   },
   {
     path: "/users",

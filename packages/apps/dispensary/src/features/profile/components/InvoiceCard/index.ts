@@ -1,1 +1,0 @@
-export { InvoiceCard } from "./InvoiceCard";

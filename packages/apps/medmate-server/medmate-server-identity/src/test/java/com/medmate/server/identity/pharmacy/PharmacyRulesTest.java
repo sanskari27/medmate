@@ -61,10 +61,22 @@ class PharmacyRulesTest {
 
         PharmacyRules.Upload image = new PharmacyRules.Upload("image/png", new byte[] {9});
         assertThat(PharmacyRules.needsReview(stored(), profileWithSignature(image)))
-                .isTrue();
+                .isFalse();
         assertThat(PharmacyRules.needsReview(stored(), profileWithLogo(image))).isFalse();
         assertThat(PharmacyRules.needsReview(stored(), profileWithGstin("29abcde1234f1z5")))
                 .isFalse();
+    }
+
+    @Test
+    void acceptsInvoiceSettingsAndRejectsABadTemplateAccentTitleOrMissingSignature() {
+        assertThat(PharmacyRules.invoiceInvalid(invoice(), true)).isNull();
+        assertThat(PharmacyRules.invoiceInvalid(invoiceWithTemplate("slip"), true))
+                .isEqualTo("Invoice template is not recognised");
+        assertThat(PharmacyRules.invoiceInvalid(invoiceWithAccent("green"), true))
+                .isEqualTo("Accent colour is not valid");
+        assertThat(PharmacyRules.invoiceInvalid(invoiceWithTitle("T".repeat(81)), true))
+                .isEqualTo("Document title is too long");
+        assertThat(PharmacyRules.invoiceInvalid(invoice(), false)).isEqualTo("Signature is required");
     }
 
     @Test
@@ -419,5 +431,72 @@ class PharmacyRulesTest {
                 input.lowStockAlerts(),
                 input.logo(),
                 input.submittedPhone());
+    }
+
+    private static PharmacyRules.InvoiceInput invoice() {
+        return new PharmacyRules.InvoiceInput(
+                "classic",
+                "#1B3D29",
+                "TAX INVOICE",
+                "CARE",
+                "Authorised signatory",
+                "",
+                false,
+                "Goods once sold",
+                true,
+                false,
+                null,
+                null);
+    }
+
+    private static PharmacyRules.InvoiceInput invoiceWithTemplate(String template) {
+        PharmacyRules.InvoiceInput input = invoice();
+        return new PharmacyRules.InvoiceInput(
+                template,
+                input.accent(),
+                input.title(),
+                input.prefix(),
+                input.signatory(),
+                input.bankLine(),
+                input.showBank(),
+                input.terms(),
+                input.showLogo(),
+                input.showStamp(),
+                input.logo(),
+                input.signature());
+    }
+
+    private static PharmacyRules.InvoiceInput invoiceWithAccent(String accent) {
+        PharmacyRules.InvoiceInput input = invoice();
+        return new PharmacyRules.InvoiceInput(
+                input.template(),
+                accent,
+                input.title(),
+                input.prefix(),
+                input.signatory(),
+                input.bankLine(),
+                input.showBank(),
+                input.terms(),
+                input.showLogo(),
+                input.showStamp(),
+                input.logo(),
+                input.signature());
+    }
+
+    private static PharmacyRules.InvoiceInput invoiceWithTitle(String title) {
+        PharmacyRules.InvoiceInput input = invoice();
+        return new PharmacyRules.InvoiceInput(
+                input.template(),
+                input.accent(),
+                title,
+                input.prefix(),
+                input.signatory(),
+                input.bankLine(),
+                input.showBank(),
+                input.terms(),
+                input.showLogo(),
+                input.showStamp(),
+                input.logo(),
+                input.signature());
     }
 }

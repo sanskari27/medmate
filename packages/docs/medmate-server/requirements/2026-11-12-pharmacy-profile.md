@@ -2,7 +2,7 @@
 
 ## Context
 
-An approved pharmacy owner can correct the profile that was stored with the application. Licence numbers, their files, the pharmacist, and the signature are the fields compliance already checked. Changing any of them sends the pharmacy through compliance review again. Other edits stay live. This does not read the old server-core service.
+An approved pharmacy owner can correct the profile that was stored with the application. Licence numbers, their files, and the pharmacist are the fields compliance already checked on this call. Changing any of them sends the pharmacy through compliance review again. Other edits stay live. Terms and the signature are stored by [Pharmacy invoice settings](2026-11-12-pharmacy-invoice-settings.md), and this call ignores both. This does not read the old server-core service.
 
 The dispensary screen is [Profile](../../dispensary/requirements/2026-11-12-profile.md). Review decisions stay the ones in [Identity and pharmacy verification](2026-11-11-identity-and-pharmacy-verification.md).
 
@@ -30,7 +30,7 @@ Anyone else, including pharmacy staff, receives 403 with detail `Only the pharma
 
 The call does not accept invoice prefix, pharmacy type, online orders, kiosk, loose selling, or low-stock alerts. Those columns stay as stored.
 
-Required text matches onboarding: name, email, address, city, state, pincode, registration type, industry, GSTIN, PAN, drug licence number, FSSAI number, trade licence number, and pharmacist name. Patterns and file types stay the ones in `PharmacyRules`. Tagline, logo, terms, business types, and extra details may be empty. Enable TDS, Enable TCS, and e-Invoicing may be off.
+Required text matches onboarding: name, email, address, city, state, pincode, registration type, industry, GSTIN, PAN, drug licence number, FSSAI number, trade licence number, and pharmacist name. Patterns and file types stay the ones in `PharmacyRules`. Tagline, logo, business types, and extra details may be empty. Enable TDS, Enable TCS, and e-Invoicing may be off. A `terms` value and a `signature` file on this call are ignored. The stored terms and signature stay, and that signature file does not start a review.
 
 Extra details are a JSON array on the form field `extraDetails`. A missing or blank value stores `[]`. Each item has a trimmed label and value. The label is at most 80 characters, the value at most 200, and there are at most 20 rows. A row with a blank label or value is 400. More than 20 rows is 400 with detail `Too many extra details`. Invalid JSON is 400 with detail `Extra details are not valid.`
 
@@ -38,7 +38,7 @@ The column is `extra_details`, `TEXT NOT NULL DEFAULT '[]'`. `GET /pharmacy/appl
 
 `removeLogo` true deletes the stored logo when the request has no new logo file. Logo does not start a review. A required document slot that is omitted keeps the stored file.
 
-A review is required when the normalized GSTIN or PAN differs, when a trimmed drug licence number, FSSAI number, trade licence number, or pharmacist name differs, or when the request includes a new file for GST, PAN, drug licence, FSSAI, trade licence, the pharmacist certificate, or the signature. A GSTIN or PAN that differs only by case does not. Logo does not.
+A review is required when the normalized GSTIN or PAN differs, when a trimmed drug licence number, FSSAI number, trade licence number, or pharmacist name differs, or when the request includes a new file for GST, PAN, drug licence, FSSAI, trade licence, or the pharmacist certificate. A GSTIN or PAN that differs only by case does not. Logo does not. A signature file does not.
 
 Both saves write the submitted text onto the pharmacy row. There is no second copy.
 
@@ -58,7 +58,7 @@ Field and file failures stay 400 with the existing `PharmacyRules` details. Erro
 
 ## Tests
 
-- `PharmacyRulesTest` for a safe change, a licence change, a pharmacist change, a signature file, a logo file that does not review, and a cleared GSTIN.
+- `PharmacyRulesTest` for a safe change, a licence change, a pharmacist change, a signature file that does not review, a logo file that does not review, and a cleared GSTIN.
 - `IdentityFlowIT` for the safe save, the GSTIN and file change, the kept file, the staff 403, and the PIN that remains.
 - Bruno request `bruno/medmate/identity/pharmacy/update-profile.bru`.
 

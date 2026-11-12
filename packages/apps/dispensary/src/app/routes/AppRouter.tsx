@@ -12,6 +12,7 @@ import { ProfilePage } from "@/features/profile";
 import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
 import { EmployeesPage, canOpenEmployees } from "@/features/employees";
+import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
 import {
   GuestRoute,
   PinRoute,
@@ -30,11 +31,31 @@ export function AppRouter() {
     session?.account.pharmacyRole,
     session?.account.permissions,
   );
+  const invoiceOpen = canOpenInvoiceSettings(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
-  const items = appRoutes.filter((route) => {
-    if (route.path === "/employees") return employeesOpen;
-    return !ownerPaths.has(route.path) || owner;
-  });
+  const managementPaths = new Set([
+    "/employees",
+    "/invoice-settings",
+    "/users",
+    "/profile",
+    "/support",
+  ]);
+  let managementLabeled = false;
+  const items = appRoutes
+    .filter((route) => {
+      if (route.path === "/employees") return employeesOpen;
+      if (route.path === "/invoice-settings") return invoiceOpen;
+      return !ownerPaths.has(route.path) || owner;
+    })
+    .map((route) => {
+      if (!managementPaths.has(route.path)) return route;
+      if (managementLabeled) return { ...route, group: undefined };
+      managementLabeled = true;
+      return { ...route, group: "Management" };
+    });
   return (
     <Routes>
       <Route element={<GuestRoute />}>
@@ -64,13 +85,22 @@ export function AppRouter() {
           }
         >
           {items
-            .filter((route) => !ownerPaths.has(route.path) && route.path !== "/employees")
+            .filter(
+              (route) =>
+                !ownerPaths.has(route.path) &&
+                route.path !== "/employees" &&
+                route.path !== "/invoice-settings",
+            )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
           <Route
             path="/employees"
             element={employeesOpen ? <EmployeesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/invoice-settings"
+            element={invoiceOpen ? <InvoiceSettingsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/users"

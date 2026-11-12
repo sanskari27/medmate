@@ -170,9 +170,32 @@ body {
   }
 }
 
+.invoice-a4-frame {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.invoice-a4-sizer {
+  height: calc(100cqi * 297 / 210);
+  overflow: hidden;
+}
+
+.invoice-a4-fit {
+  transform-origin: top left;
+  transform: scale(calc(100cqi / 210mm));
+}
+
 @media print {
   @page {
     margin: 12mm;
+  }
+  @page invoice-a4 {
+    size: A4;
+    margin: 12mm;
+  }
+  @page invoice-thermal {
+    size: 80mm auto;
+    margin: 4mm;
   }
   body * {
     visibility: hidden !important;
@@ -180,6 +203,8 @@ body {
   .print-area,
   .print-area * {
     visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .print-area {
     position: fixed;
@@ -191,5 +216,28 @@ body {
     max-width: none;
     width: 100%;
     max-height: none;
+  }
+  .invoice-a4-sizer {
+    height: auto;
+    overflow: visible;
+  }
+  .invoice-a4-fit {
+    transform: none !important;
+  }
+  .print-area[data-template="classic"],
+  .print-area[data-template="modern"],
+  .print-area[data-template="minimal"] {
+    page: invoice-a4;
+    width: auto !important;
+    min-height: 0 !important;
+  }
+  .print-area[data-template="thermal"] {
+    page: invoice-thermal;
+    position: static !important;
+    inset: auto !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
 }

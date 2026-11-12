@@ -1,0 +1,43 @@
+meta {
+  name: Update invoice settings
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/invoice-settings
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:multipart-form {
+  template: classic
+  accent: #1B3D29
+  title: TAX INVOICE
+  prefix: CARE
+  signatory: Authorised signatory
+  bankLine:
+  showBank: false
+  terms: Goods once sold
+  showLogo: true
+  showStamp: false
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with invoice-settings:update, saves the print settings.
+  A new signature file moves the pharmacy to pending_compliance. This sample sends no file, so an authenticated caller still needs a stored signature.
+  The collection script attaches the saved access token.
+}

@@ -954,6 +954,185 @@ class IdentityFlowIT {
         assertThat(mode.getBody().get("mode").asText()).isEqualTo("pin");
     }
 
+    @Test
+    void invoiceSettingsSaveATitleAndASignatureReviewAndProfileLeavesBothUntouched() {
+        String signup = token(verify("9811111160", "pharmacy", "signup"));
+        String pharmacyId = submit(signup).get("pharmacyId").asText();
+        bootstrap("9811111161");
+        String adminToken = token(verify("9811111161", "admin", "login"));
+        String complianceToken = tokenForStaff(adminToken, "9811111162", List.of("compliance"));
+        decision(complianceToken, pharmacyId, "compliance-decision", "approve", "ok");
+        decision(adminToken, pharmacyId, "admin-decision", "approve", "ok");
+        JsonNode pinReady = verify("9811111160", "pharmacy", "login");
+        rest.exchange(
+                "/auth/pin/set",
+                HttpMethod.POST,
+                new HttpEntity<>(java.util.Map.of("pin", "9753"), bearer(token(pinReady), MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        String ownerToken = token(rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", "9811111160", "accountType", "pharmacy", "pin", "9753"),
+                                json()),
+                        JsonNode.class)
+                .getBody());
+
+        ResponseEntity<JsonNode> read = getInvoice(ownerToken);
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode settings = read.getBody();
+        assertThat(settings.get("template").asText()).isEqualTo("classic");
+        assertThat(settings.get("accent").asText()).isEqualTo("#1B3D29");
+        assertThat(settings.get("title").asText()).isEqualTo("TAX INVOICE");
+        assertThat(settings.get("prefix").asText()).isEqualTo("CARE");
+        assertThat(settings.get("signatory").asText()).isEqualTo("Authorised signatory");
+        assertThat(settings.get("bankLine").asText()).isEmpty();
+        assertThat(settings.get("showBank").asBoolean()).isFalse();
+        assertThat(settings.get("terms").asText()).isEqualTo("Goods once sold");
+        assertThat(settings.get("showLogo").asBoolean()).isTrue();
+        assertThat(settings.get("showStamp").asBoolean()).isFalse();
+        assertThat(settings.get("logo").get("contentType").asText()).isEqualTo("image/png");
+        assertThat(settings.get("signature").get("contentType").asText()).isEqualTo("image/png");
+        assertThat(settings.get("signature").get("url").asText()).contains("/documents/signature");
+        assertThat(settings.has("status")).isFalse();
+        JsonNode pharmacy = settings.get("pharmacy");
+        assertThat(pharmacy.get("name").asText()).isEqualTo("Care Pharmacy");
+        assertThat(pharmacy.get("address").asText()).isEqualTo("12 Market Road, Bengaluru, Karnataka, 560001");
+        assertThat(pharmacy.get("phone").asText()).isEqualTo("+919811111160");
+        assertThat(pharmacy.get("email").asText()).isEqualTo("owner@example.com");
+        assertThat(pharmacy.get("gstin").asText()).isEqualTo("29ABCDE1234F1Z5");
+        assertThat(pharmacy.get("drugLicenceNo").asText()).isEqualTo("DL-1");
+        assertThat(pharmacy.get("pharmacistName").asText()).isEqualTo("Asha Rao, B.Pharm (Reg. No. 12)");
+
+        MultiValueMap<String, Object> ignored = profile();
+        ignored.set("terms", "Changed on profile");
+        ignored.add("signature", bytes("image/png", new byte[] {9, 9, 9}));
+        ResponseEntity<JsonNode> profileSave = postProfile(ownerToken, ignored);
+        assertThat(profileSave.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(profileSave.getBody().get("status").asText()).isEqualTo("approved");
+        JsonNode afterProfile = ownerApplication(ownerToken).getBody();
+        assertThat(afterProfile.get("terms").asText()).isEqualTo("Goods once sold");
+        ResponseEntity<byte[]> signature = rest.exchange(
+                documentUrl(afterProfile, "signature"),
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(ownerToken, MediaType.APPLICATION_JSON)),
+                byte[].class);
+        assertThat(signature.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(signature.getBody()).containsExactly(1, 2, 3, 4);
+
+        int mails = mail.messages().size();
+        ResponseEntity<JsonNode> titled = postInvoice(ownerToken, invoice("BILL OF SUPPLY"));
+        assertThat(titled.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(titled.getBody().get("title").asText()).isEqualTo("BILL OF SUPPLY");
+        assertThat(titled.getBody().get("status").asText()).isEqualTo("approved");
+        assertThat(titled.getBody().get("pinSetupRequired").asBoolean()).isFalse();
+        assertThat(titled.getBody().has("pharmacy")).isFalse();
+        assertThat(mail.messages()).hasSize(mails);
+        JsonNode reread = getInvoice(ownerToken).getBody();
+        assertThat(reread.get("title").asText()).isEqualTo("BILL OF SUPPLY");
+        assertThat(reread.get("pharmacy").get("name").asText()).isEqualTo("Care Pharmacy East");
+        assertThat(reread.get("pharmacy").get("gstin").asText()).isEqualTo("29ABCDE1234F1Z5");
+
+        String readerToken = pharmacyStaff(ownerToken, "9811111163", "1357", List.of("invoice-settings:read"));
+        assertThat(getInvoice(readerToken).getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<JsonNode> readerUpdate = postInvoice(readerToken, invoice("INVOICE"));
+        assertThat(readerUpdate.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(readerUpdate.getBody().get("detail").asText()).isEqualTo("Invoice settings cannot be updated");
+
+        String editorToken = pharmacyStaff(ownerToken, "9811111164", "1357", List.of("invoice-settings:update"));
+        assertThat(getInvoice(editorToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ResponseEntity<JsonNode> edited = postInvoice(editorToken, invoice("CASH MEMO"));
+        assertThat(edited.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(edited.getBody().get("title").asText()).isEqualTo("CASH MEMO");
+        assertThat(edited.getBody().get("status").asText()).isEqualTo("approved");
+
+        String blockedToken = pharmacyStaff(ownerToken, "9811111165", "1357", List.of("users:read"));
+        ResponseEntity<JsonNode> blocked = getInvoice(blockedToken);
+        assertThat(blocked.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(blocked.getBody().get("detail").asText()).isEqualTo("Invoice settings cannot be read");
+
+        MultiValueMap<String, Object> review = invoice("CASH MEMO");
+        review.add("signature", bytes("image/png", new byte[] {8}));
+        ResponseEntity<JsonNode> locked = postInvoice(ownerToken, review);
+        assertThat(locked.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(locked.getBody().get("status").asText()).isEqualTo("pending_compliance");
+        assertThat(locked.getBody().get("signature").get("contentType").asText())
+                .isEqualTo("image/png");
+        assertThat(mail.messages()).hasSize(mails + 1);
+        assertThat(getInvoice(ownerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    private String pharmacyStaff(String ownerToken, String phone, String pin, List<String> permissions) {
+        ResponseEntity<JsonNode> created = rest.exchange(
+                "/pharmacy/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of(
+                                "phone", phone, "displayName", "Counter", "pin", pin, "permissions", permissions),
+                        bearer(ownerToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return token(rest.exchange(
+                        "/auth/pin",
+                        HttpMethod.POST,
+                        new HttpEntity<>(
+                                java.util.Map.of("phone", phone, "accountType", "pharmacy", "pin", pin), json()),
+                        JsonNode.class)
+                .getBody());
+    }
+
+    private ResponseEntity<JsonNode> getInvoice(String token) {
+        return rest.exchange(
+                "/pharmacy/invoice-settings",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(token, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+    }
+
+    private ResponseEntity<JsonNode> postInvoice(String token, MultiValueMap<String, Object> body) {
+        return rest.exchange(
+                "/pharmacy/invoice-settings",
+                HttpMethod.POST,
+                new HttpEntity<>(body, bearer(token, MediaType.MULTIPART_FORM_DATA)),
+                JsonNode.class);
+    }
+
+    private static MultiValueMap<String, Object> invoice(String title) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("template", "classic");
+        body.add("accent", "#1B3D29");
+        body.add("title", title);
+        body.add("prefix", "CARE");
+        body.add("signatory", "Authorised signatory");
+        body.add("bankLine", "");
+        body.add("showBank", "false");
+        body.add("terms", "Goods once sold");
+        body.add("showLogo", "true");
+        body.add("showStamp", "false");
+        return body;
+    }
+
+    private static String documentUrl(JsonNode application, String slot) {
+        for (JsonNode document : application.get("documents")) {
+            if (slot.equals(document.get("slot").asText())) {
+                return document.get("url").asText();
+            }
+        }
+        return "";
+    }
+
+    private static HttpEntity<ByteArrayResource> bytes(String contentType, byte[] body) {
+        ByteArrayResource resource = new ByteArrayResource(body) {
+            @Override
+            public String getFilename() {
+                return "upload.bin";
+            }
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType));
+        return new HttpEntity<>(resource, headers);
+    }
+
     private JsonNode verify(String phone, String type, String purpose) {
         String code = send(phone, type, purpose);
         ResponseEntity<JsonNode> response = rest.exchange(

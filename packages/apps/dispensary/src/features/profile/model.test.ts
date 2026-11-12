@@ -39,7 +39,7 @@ function saved(): ProfileForm {
 }
 
 describe("profile model", () => {
-  it("treats a tagline edit as safe and a licence, pharmacist, or signature edit as a review", () => {
+  it("treats a tagline edit as safe and a licence or pharmacist edit as a review", () => {
     const baseline = saved();
     expect(needsReview(baseline, { ...baseline, tagline: "Open early" })).toBe(false);
     expect(needsReview(baseline, { ...baseline, gstin: "29ABCDE1234F2Z5" })).toBe(true);
@@ -47,7 +47,7 @@ describe("profile model", () => {
     expect(needsReview(baseline, { ...baseline, pharmacistName: "Other Rao" })).toBe(true);
     const signature = new File([new Uint8Array([1])], "sign.png", { type: "image/png" });
     const logo = new File([new Uint8Array([1])], "logo.png", { type: "image/png" });
-    expect(needsReview(baseline, { ...baseline, files: { signature } })).toBe(true);
+    expect(needsReview(baseline, { ...baseline, files: { signature } })).toBe(false);
     expect(needsReview(baseline, { ...baseline, files: { logo } })).toBe(false);
     expect(isDirty(baseline, baseline)).toBe(false);
     expect(isDirty(baseline, { ...baseline, tagline: "Open early" })).toBe(true);
@@ -62,5 +62,7 @@ describe("profile model", () => {
     expect(body.get("tagline")).toBe("Open early");
     expect(body.get("gstin")).toBe("29ABCDE1234F1Z5");
     expect(body.has("logo")).toBe(false);
+    expect(body.has("terms")).toBe(false);
+    expect(body.has("signature")).toBe(false);
   });
 });

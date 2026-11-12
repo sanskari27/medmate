@@ -5,7 +5,6 @@ import { applicationSubmitted, problemMessage, useAuthState } from "@/features/a
 import { BusinessCard } from "../../components/BusinessCard";
 import { CategoriesCard } from "../../components/CategoriesCard";
 import { ExtraDetailsCard } from "../../components/ExtraDetailsCard";
-import { InvoiceCard } from "../../components/InvoiceCard";
 import { SaveBar } from "../../components/SaveBar";
 import { SaveConfirm } from "../../components/SaveConfirm";
 import { TaxCard } from "../../components/TaxCard";
@@ -89,7 +88,6 @@ export function ProfilePage() {
         </div>
         <div className="w-full flex flex-col gap-2">
           <TaxCard draft={draft} documents={profile.data?.documents ?? []} onChange={patch} />
-          <InvoiceCard draft={draft} documents={profile.data?.documents ?? []} onChange={patch} />
         </div>
       </div>
       <SaveBar

@@ -9,6 +9,7 @@ export {
   IconLogout,
   IconMail,
   IconMenu,
+  IconPrint,
   IconReceipt,
   IconReports,
   IconRx,

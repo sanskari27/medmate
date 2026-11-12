@@ -6,7 +6,7 @@ import { Text } from "@/components/ui/Text";
 
 const SAFE_BODY = "Your pharmacy details will be saved.";
 const REVIEW_BODY =
-  "Licence, pharmacist, or signature changes are sent for review. You will not be able to use the console until the pharmacy is approved again.";
+  "Licence or pharmacist changes are sent for review. You will not be able to use the console until the pharmacy is approved again.";
 
 export function SaveConfirm({
   review,

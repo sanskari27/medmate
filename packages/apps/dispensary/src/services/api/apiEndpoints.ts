@@ -1,6 +1,7 @@
 export const pharmacyEndpoints = {
   application: "/pharmacy/application",
   profile: "/pharmacy/profile",
+  invoiceSettings: "/pharmacy/invoice-settings",
 } as const;
 
 export const authEndpoints = {
