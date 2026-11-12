@@ -1,0 +1,31 @@
+meta {
+  name: Read sale
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/sales/INV-0001
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.sale).to.have.property("invoiceNumber");
+  });
+}
+
+docs {
+  An approved owner, or staff with sales:read, opens one invoice or return.
+}

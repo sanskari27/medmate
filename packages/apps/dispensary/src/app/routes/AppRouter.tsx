@@ -16,6 +16,7 @@ import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
 import { BillingPage, canOpenBilling } from "@/features/billing";
+import { SalesPage, canOpenSales } from "@/features/sales";
 import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
 import { RacksPage, canOpenRacks } from "@/features/racks";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
@@ -56,6 +57,7 @@ export function AppRouter() {
   const racksOpen = canOpenRacks(session?.account.pharmacyRole, session?.account.permissions);
   const offersOpen = canOpenOffers(session?.account.pharmacyRole, session?.account.permissions);
   const billingOpen = canOpenBilling(session?.account.pharmacyRole, session?.account.permissions);
+  const salesOpen = canOpenSales(session?.account.pharmacyRole, session?.account.permissions);
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -64,6 +66,8 @@ export function AppRouter() {
     "/profile",
     "/support",
   ]);
+  const counterPaths = new Set(["/billing", "/sales"]);
+  let counterLabeled = false;
   const cataloguePaths = new Set([
     "/distributors",
     "/purchases",
@@ -83,10 +87,15 @@ export function AppRouter() {
       if (route.path === "/racks") return racksOpen;
       if (route.path === "/offers") return offersOpen;
       if (route.path === "/billing") return billingOpen;
+      if (route.path === "/sales") return salesOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
       let next = route;
+      if (counterPaths.has(route.path)) {
+        next = counterLabeled ? { ...route, group: undefined } : { ...route, group: "Counter" };
+        counterLabeled = true;
+      }
       if (cataloguePaths.has(route.path)) {
         next = catalogueLabeled ? { ...route, group: undefined } : { ...route, group: "Catalogue" };
         catalogueLabeled = true;
@@ -135,7 +144,8 @@ export function AppRouter() {
                 route.path !== "/inventory" &&
                 route.path !== "/racks" &&
                 route.path !== "/offers" &&
-                route.path !== "/billing",
+                route.path !== "/billing" &&
+                route.path !== "/sales",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -163,6 +173,14 @@ export function AppRouter() {
           <Route
             path="/billing"
             element={billingOpen ? <BillingPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/sales"
+            element={salesOpen ? <SalesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/sales/:id"
+            element={salesOpen ? <SalesPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/offers"

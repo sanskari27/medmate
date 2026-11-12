@@ -1,0 +1,44 @@
+meta {
+  name: Return sale
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/sales/INV-0001/returns
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "lines": [
+      {
+        "position": 0,
+        "qty": 1
+      }
+    ]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(201);
+    expect(res.body.sale.type).to.equal("return");
+    expect(res.body.sale.id).to.equal("RET-001");
+  });
+}
+
+docs {
+  An approved owner, or staff with sales:return, returns units from one invoice. The server recomputes the refund and puts the units back on the batch.
+}

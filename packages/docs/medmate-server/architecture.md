@@ -63,7 +63,7 @@ Pharmacy discounts live in `medmate-server-offers`. The module depends on identi
 
 ## Billing
 
-Cash sales live in `medmate-server-billing`. The module depends on identity for access checks and the invoice prefix, on stock for sellable batches and the decrement, and on offers for the active discounts. Identity does not depend on it. Stock does not depend on it. Offers do not depend on it. `V14__batch_gst_and_prescription.sql` in stock adds the prescription flag and the batch GST rate. `V15__bills.sql` creates the sale. The server recomputes the price and reduces the batch in the same transaction. [0016](decisions/0016-pharmacy-billing.md) records that boundary.
+Cash sales live in `medmate-server-billing`. The module depends on identity for access checks and the invoice prefix, on stock for sellable batches and the quantity change, and on offers for the active discounts. Identity does not depend on it. Stock does not depend on it. Offers do not depend on it. `V14__batch_gst_and_prescription.sql` in stock adds the prescription flag and the batch GST rate. `V15__bills.sql` creates the sale. `V16__bill_extra_discount.sql` stores the bill-level extra. `V17__sale_returns.sql` stores a partial return and the quantity already returned on each bill line. `POST /pharmacy/bills` recomputes the price and reduces the batch in the same transaction. `GET /pharmacy/sales` lists invoices and returns. `GET /pharmacy/sales/{id}` reads one document. `POST /pharmacy/sales/{invoiceNumber}/returns` recomputes the refund and increases the batch through `CounterStock.increment`. [0016](decisions/0016-pharmacy-billing.md) records the sale boundary. [0017](decisions/0017-pharmacy-sale-returns.md) records the return boundary.
 
 ## Not in this process
 

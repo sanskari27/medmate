@@ -367,6 +367,20 @@ public class StockStore {
                 .update();
     }
 
+    public int restoreBatch(UUID pharmacyId, String productId, String batchNo, int units) {
+        return jdbc.sql(
+                        """
+                        UPDATE inventory_batch
+                        SET qty = qty + :units
+                        WHERE pharmacy_id = :pharmacy AND product_id = :product AND batch_no = :batch
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("product", productId)
+                .param("batch", batchNo)
+                .param("units", units)
+                .update();
+    }
+
     public int reduceBatch(UUID pharmacyId, String productId, String batchNo, int units) {
         return jdbc.sql(
                         """

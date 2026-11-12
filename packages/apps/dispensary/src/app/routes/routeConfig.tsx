@@ -14,6 +14,7 @@ import { DistributorsPage } from "@/features/distributors";
 import { InventoryPage } from "@/features/inventory";
 import { OffersPage } from "@/features/offers";
 import { BillingPage } from "@/features/billing";
+import { SalesPage } from "@/features/sales";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -34,6 +35,14 @@ export const appRoutes: AppRoute[] = [
     group: "Counter",
     icon: <IconReceipt size={19} />,
     element: <BillingPage />,
+  },
+  {
+    path: "/sales",
+    label: "Sales",
+    title: "Sales",
+    sub: "Every sale, day one to date",
+    icon: <IconReceipt size={19} />,
+    element: <SalesPage />,
   },
   {
     path: "/dashboard",

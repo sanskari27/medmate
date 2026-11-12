@@ -54,4 +54,9 @@ public class JdbcCounterStock implements CounterStock {
     public boolean decrement(UUID pharmacyId, String productId, String batchNo, int qty) {
         return stock.reduceBatch(pharmacyId, productId, batchNo, qty) == 1;
     }
+
+    @Override
+    public boolean increment(UUID pharmacyId, String productId, String batchNo, int qty) {
+        return stock.restoreBatch(pharmacyId, productId, batchNo, qty) == 1;
+    }
 }

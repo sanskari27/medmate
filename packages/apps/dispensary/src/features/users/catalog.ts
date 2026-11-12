@@ -24,6 +24,13 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "billing:create", label: "Charge" },
         ],
       },
+      {
+        module: "Sales",
+        actions: [
+          { key: "sales:read", label: "Read" },
+          { key: "sales:return", label: "Return" },
+        ],
+      },
     ],
   },
   {

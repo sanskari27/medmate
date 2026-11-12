@@ -12,6 +12,8 @@ public interface CounterStock {
 
     boolean decrement(UUID pharmacyId, String productId, String batchNo, int qty);
 
+    boolean increment(UUID pharmacyId, String productId, String batchNo, int qty);
+
     record Batch(
             String productId,
             String name,

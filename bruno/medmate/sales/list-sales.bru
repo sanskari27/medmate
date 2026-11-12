@@ -1,0 +1,32 @@
+meta {
+  name: List sales
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/sales
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("sales");
+    expect(res.body).to.have.property("stats");
+  });
+}
+
+docs {
+  An approved owner, or staff with sales:read, lists invoices and returns for this pharmacy.
+}

@@ -37,7 +37,9 @@ public final class PharmacyPermissions {
             "offers:update",
             "offers:delete",
             "billing:read",
-            "billing:create");
+            "billing:create",
+            "sales:read",
+            "sales:return");
 
     private PharmacyPermissions() {}
 

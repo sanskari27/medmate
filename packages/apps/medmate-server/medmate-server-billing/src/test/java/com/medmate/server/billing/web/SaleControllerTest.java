@@ -1,0 +1,85 @@
+package com.medmate.server.billing.web;
+
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.medmate.server.billing.store.BillStore;
+import com.medmate.server.identity.access.AccountAuthentication;
+import com.medmate.server.identity.access.AccountPrincipal;
+import com.medmate.server.identity.access.AccountType;
+import com.medmate.server.identity.access.PharmacyRole;
+import com.medmate.server.identity.access.VerificationStatus;
+import com.medmate.server.shared.error.ApiExceptionHandler;
+import com.medmate.server.stock.CounterStock;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+class SaleControllerTest {
+
+    private static final UUID PHARMACY = UUID.fromString("00000000-0000-4000-8000-000000000010");
+
+    private final BillStore store = Mockito.mock(BillStore.class);
+    private final CounterStock stock = Mockito.mock(CounterStock.class);
+    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SaleController(new SaleService(store, stock)))
+            .setControllerAdvice(new ApiExceptionHandler())
+            .build();
+
+    @Test
+    void returnAloneCannotList() throws Exception {
+        mvc.perform(get("/pharmacy/sales").principal(staff("sales:return")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Sales cannot be read"));
+        verify(store, never()).bills(PHARMACY);
+    }
+
+    @Test
+    void readCannotReturn() throws Exception {
+        mvc.perform(post("/pharmacy/sales/INV-0001/returns")
+                        .principal(staff("sales:read"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"lines\":[{\"position\":0,\"qty\":1}]}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Sales cannot be returned"));
+        verify(stock, never()).lockPharmacy(PHARMACY);
+    }
+
+    @Test
+    void returnReachesThePharmacy() throws Exception {
+        when(stock.lockPharmacy(PHARMACY)).thenReturn(false);
+        mvc.perform(post("/pharmacy/sales/INV-0001/returns")
+                        .principal(staff("sales:return"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"lines\":[{\"position\":0,\"qty\":1}]}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Pharmacy was not found"));
+        verify(store, never()).bill(PHARMACY, "INV-0001", true);
+    }
+
+    private static AccountAuthentication staff(String... keys) {
+        AccountPrincipal principal = new AccountPrincipal(
+                UUID.randomUUID(),
+                "919800000000",
+                AccountType.PHARMACY,
+                "Ada",
+                false,
+                PHARMACY,
+                PharmacyRole.STAFF,
+                VerificationStatus.APPROVED,
+                null,
+                null,
+                Set.of(),
+                Set.of(keys),
+                true);
+        return new AccountAuthentication(principal);
+    }
+}
