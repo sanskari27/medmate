@@ -1,6 +1,6 @@
 import { corsHeaders, isAllowedOrigin } from "./cors.js";
-import { parseLimit, parseSearchText } from "./query.js";
-import type { Catalog } from "./types.js";
+import { parseLimit, parseProductIds, parseSearchText } from "./query.js";
+import type { Catalog, DrugDetail, FmcgDetail } from "./types.js";
 
 export type HttpResult = {
   status: number;
@@ -60,6 +60,23 @@ export async function handleHttp(
       catalog.searchFmcg(query, limit),
     ]);
     return json(200, { drug, fmcg }, allow);
+  }
+
+  if (url.pathname === "/api/products" && url.searchParams.has("ids")) {
+    const ids = parseProductIds(url.searchParams.get("ids"));
+    if (!Array.isArray(ids)) {
+      return json(400, { error: { code: "BAD_REQUEST", message: ids.error } }, allow);
+    }
+    const drug: DrugDetail[] = [];
+    const fmcg: FmcgDetail[] = [];
+    const missing: string[] = [];
+    for (const id of ids) {
+      const [foundDrug, foundFmcg] = await Promise.all([catalog.findDrug(id), catalog.findFmcg(id)]);
+      if (!foundDrug && !foundFmcg) missing.push(id);
+      if (foundDrug) drug.push(foundDrug);
+      if (foundFmcg) fmcg.push(foundFmcg);
+    }
+    return json(200, { drug, fmcg, missing }, allow);
   }
 
   const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)$/);

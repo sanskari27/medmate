@@ -205,6 +205,22 @@ curl -sS "https://medicine-data.nammamedmate.com/api/products/DR100"
 }
 ```
 
+## Find many ids
+
+`GET /api/products?ids=DR100,OTC1` reads 1 to 200 ids in one request. Commas separate the ids. Blank pieces and repeated ids are ignored. The order of the first occurrence is kept.
+
+The response is the same `{ "drug", "fmcg" }` shape, plus `missing` for ids found in neither catalog. An id that exists is `200` even when other ids are missing. A single-id miss stays `404` on `/api/products/{productId}`.
+
+```bash
+curl -sS "https://medicine-data.nammamedmate.com/api/products?ids=DR100,does-not-exist"
+```
+
+```json
+{ "drug": [], "fmcg": [], "missing": ["does-not-exist"] }
+```
+
+An empty `ids` value, or more than 200 ids, is `400` with message `ids must contain 1 to 200 product ids`.
+
 An unknown id is `404` with both lists empty:
 
 ```bash

@@ -1,0 +1,41 @@
+meta {
+  name: Return purchase
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/purchases/PUR-001/returns
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "lines": [
+      {
+        "position": 0,
+        "qty": 1,
+        "freeQty": 0
+      }
+    ]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with purchases:return, returns billed and free units from one purchase. Outstanding may go below zero.
+}

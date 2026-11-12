@@ -1,0 +1,28 @@
+meta {
+  name: Read purchase
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/purchases/PUR-001
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with purchases:read, reads one purchase or return. Another pharmacy receives 404.
+}

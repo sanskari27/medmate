@@ -11,6 +11,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-support/              FAQs, support cases, and the live chat socket
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
+  medmate-server-stock/                purchase bills, returns, and inventory
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -48,7 +49,11 @@ The personnel register lives in `medmate-server-employees`. The module depends o
 
 ## Distributors
 
-The supplier directory and its payable ledger live in `medmate-server-distributors`. The module depends on identity for access checks. Identity does not depend on it. Tables are created by `V9__distributors.sql`. Outstanding is the opening balance plus purchase bills, minus payments and returns. This module records payments. Later purchase and return features post lines into the same ledger. [0012](decisions/0012-distributor-directory.md) records that boundary.
+The supplier directory and its payable ledger live in `medmate-server-distributors`. The module depends on identity for access checks. Identity does not depend on it. Tables are created by `V9__distributors.sql`. Outstanding is the opening balance plus purchase bills, minus payments and returns. This module records payments. Purchase bills and returns are posted into this ledger by the stock module. A return can take outstanding below zero. A payment still cannot exceed it. [0012](decisions/0012-distributor-directory.md) records that boundary.
+
+## Stock
+
+Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. The module reads medicine identity from medicine-data. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records that boundary.
 
 ## Not in this process
 

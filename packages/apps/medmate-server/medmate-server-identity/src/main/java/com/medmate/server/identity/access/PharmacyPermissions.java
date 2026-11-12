@@ -21,7 +21,13 @@ public final class PharmacyPermissions {
             "distributors:create",
             "distributors:update",
             "distributors:delete",
-            "distributors:pay");
+            "distributors:pay",
+            "purchases:read",
+            "purchases:create",
+            "purchases:return",
+            "inventory:read",
+            "inventory:update",
+            "inventory:export");
 
     private PharmacyPermissions() {}
 

@@ -22,6 +22,10 @@ spring:
     problemdetails:
       enabled: true
 
+medmate:
+  medicine-data:
+    base-url: https://medicine-data.nammamedmate.com
+
 logging:
   pattern:
     level: "%5p [requestId=%X{requestId:-}]"

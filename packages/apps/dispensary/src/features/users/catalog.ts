@@ -64,6 +64,22 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "distributors:pay", label: "Pay" },
         ],
       },
+      {
+        module: "Purchases",
+        actions: [
+          { key: "purchases:read", label: "Read" },
+          { key: "purchases:create", label: "Create" },
+          { key: "purchases:return", label: "Return" },
+        ],
+      },
+      {
+        module: "Inventory",
+        actions: [
+          { key: "inventory:read", label: "Read" },
+          { key: "inventory:update", label: "Update" },
+          { key: "inventory:export", label: "Export" },
+        ],
+      },
     ],
   },
 ];

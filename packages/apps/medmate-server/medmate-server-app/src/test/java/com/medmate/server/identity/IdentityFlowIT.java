@@ -476,7 +476,7 @@ class IdentityFlowIT {
                                 "pin",
                                 "1357",
                                 "permissions",
-                                List.of("inventory:read")),
+                                List.of("billing:create")),
                         bearer(refreshedOwner, MediaType.APPLICATION_JSON)),
                 JsonNode.class);
         assertThat(rejectedKey.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

@@ -22,6 +22,7 @@ import {
   filterDistributors,
   inr,
   payload,
+  outstandingTone,
   totalOutstanding,
   type Distributor,
   type DistributorDraft,
@@ -90,6 +91,7 @@ export function DistributorsPage() {
           label="Total outstanding"
           value={inr(totalOutstanding(distributors))}
           hint="payable to distributors"
+          valueClass={outstandingTone(totalOutstanding(distributors))}
         />
         <Stat
           label="On credit terms"
@@ -182,7 +184,7 @@ export function DistributorsPage() {
                     {distributor.paymentTerms || "—"}
                   </td>
                   <td
-                    className={`border-t border-line px-3.5 py-3 text-right font-bold ${distributor.outstanding > 0 ? "text-[#b4232a]" : "text-mid"}`}
+                    className={`border-t border-line px-3.5 py-3 text-right font-bold ${outstandingTone(distributor.outstanding)}`}
                   >
                     {inr(distributor.outstanding)}
                   </td>
@@ -267,11 +269,21 @@ export function DistributorsPage() {
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
+function Stat({
+  label,
+  value,
+  hint,
+  valueClass = "text-dark",
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  valueClass?: string;
+}) {
   return (
     <Box className="rounded-md border border-line bg-paper p-4 shadow-sm">
       <Text className="text-[12px] font-bold tracking-[0.04em] text-muted uppercase">{label}</Text>
-      <Text className="mt-1 font-display text-[22px] font-extrabold text-dark">{value}</Text>
+      <Text className={`mt-1 font-display text-[22px] font-extrabold ${valueClass}`}>{value}</Text>
       <Text className="mt-1 text-[12px] text-muted">{hint}</Text>
     </Box>
   );

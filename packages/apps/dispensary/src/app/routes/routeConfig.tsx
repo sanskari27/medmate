@@ -3,19 +3,18 @@ import {
   IconDashboard,
   IconHelp,
   IconTruck,
-  IconReports,
   IconReceipt,
-  IconSettings,
+  IconStore,
   IconUser,
   IconUsers,
 } from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
 import { DistributorsPage } from "@/features/distributors";
+import { InventoryPage } from "@/features/inventory";
+import { PurchasesPage } from "@/features/purchases";
 import { EmployeesPage } from "@/features/employees";
 import { InvoiceSettingsPage } from "@/features/invoice-settings";
 import { ProfilePage } from "@/features/profile";
-import { ReportsPage } from "@/features/reports";
-import { SettingsPage } from "@/features/settings";
 import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
 import type { NavEntry } from "@/components/layout";
@@ -41,20 +40,20 @@ export const appRoutes: AppRoute[] = [
     element: <DistributorsPage />,
   },
   {
-    path: "/settings",
-    label: "Settings",
-    title: "Settings",
-    sub: "Pharmacy profile & licences",
-    icon: <IconSettings size={19} />,
-    element: <SettingsPage />,
+    path: "/purchases",
+    label: "Purchases",
+    title: "Purchases",
+    sub: "Distributor bills and returns",
+    icon: <IconReceipt size={19} />,
+    element: <PurchasesPage />,
   },
   {
-    path: "/reports",
-    label: "Reports",
-    title: "Reports",
-    sub: "Sales & GST summary",
-    icon: <IconReports size={19} />,
-    element: <ReportsPage />,
+    path: "/inventory",
+    label: "Inventory",
+    title: "Inventory",
+    sub: "Stock, batches and expiry",
+    icon: <IconStore size={19} />,
+    element: <InventoryPage />,
   },
   {
     path: "/employees",

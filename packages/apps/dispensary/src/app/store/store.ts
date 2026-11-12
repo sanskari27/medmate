@@ -6,6 +6,8 @@ import { supportApi } from "@/features/support";
 import { usersApi } from "@/features/users";
 import { employeesApi } from "@/features/employees";
 import { distributorsApi } from "@/features/distributors";
+import { inventoryApi } from "@/features/inventory";
+import { purchasesApi } from "@/features/purchases";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
@@ -24,6 +26,8 @@ export function createAppStore() {
         usersApi.middleware,
         employeesApi.middleware,
         distributorsApi.middleware,
+        purchasesApi.middleware,
+        inventoryApi.middleware,
         invoiceSettingsApi.middleware,
       ),
   });

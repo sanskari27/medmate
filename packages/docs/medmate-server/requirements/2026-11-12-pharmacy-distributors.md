@@ -44,7 +44,7 @@ Create requires a trimmed name and a trimmed phone. The phone is not checked as 
 
 An omitted field on update stays as stored. A present blank optional text clears it. After any ledger line exists, a different `openingBalance` is refused with `Opening balance is locked`. Sending the same opening balance is allowed.
 
-A payment body is `amount`, `mode`, and an optional `note`. The amount is a whole number of rupees, at least 1, and at most the current outstanding. The mode is `cash`, `upi`, `card`, or `bank_transfer`. The line is recorded at the server's current instant. A payment that would pass the outstanding stores nothing. The same cap applies to a return line accepted by the domain rule. A purchase line increases outstanding and has no upper cap. Create responds 201. Reads, update, and pay respond 200. Pay returns the distributor.
+A payment body is `amount`, `mode`, and an optional `note`. The amount is a whole number of rupees, at least 1, and at most the current outstanding. The mode is `cash`, `upi`, `card`, or `bank_transfer`. The line is recorded at the server's current instant. A payment that would pass the outstanding stores nothing. A non-positive outstanding accepts no payment. A return line may be larger than the current outstanding and can take it below zero. A purchase line increases outstanding and has no upper cap. Create responds 201. Reads, update, and pay respond 200. Pay returns the distributor. Purchase and return lines are posted by [Pharmacy purchases and inventory](2026-11-12-pharmacy-purchases-and-inventory.md).
 
 | Status | Detail |
 | --- | --- |
@@ -59,7 +59,6 @@ A payment body is `amount`, `mode`, and an optional `note`. The amount is a whol
 | 400 | `Payment must be at least 1` |
 | 400 | `Payment is more than the outstanding` |
 | 400 | `Payment mode is not recognised` |
-| 400 | `Return is more than the outstanding` |
 | 403 | `Distributors cannot be read` |
 | 403 | `Distributors cannot be created` |
 | 403 | `Distributors cannot be updated` |
@@ -70,13 +69,13 @@ A payment body is `amount`, `mode`, and an optional `note`. The amount is a whol
 ## Acceptance criteria
 
 - The first two distributors in a pharmacy are `DST-001` and `DST-002`. A staff member with `distributors:read` can list them and cannot create one.
-- A stored purchase line increases outstanding. A payment reduces it and cannot exceed what is still owed.
+- A stored purchase line increases outstanding. A payment reduces it and cannot exceed what is still owed. A return can take outstanding below zero.
 - After any ledger line, a different opening balance is refused and the stored opening balance stays.
 - Another pharmacy's list does not include the distributor, and that pharmacy's read of the code is 404.
 
 ## Tests
 
-- `DistributorRulesTest` for GSTIN, terms, the inactive gate, the opening-balance lock after any line, a purchase that increases outstanding, a return that decreases it, and a payment that would pass the balance.
+- `DistributorRulesTest` for GSTIN, terms, the inactive gate, the opening-balance lock after any line, a purchase that increases outstanding, a return that can pass the current outstanding, and a payment that would pass the balance.
 - `DistributorControllerTest` for the five permission gates.
 - `DistributorIT` for `DST-001` then `DST-002`, pharmacy isolation, a payment reducing outstanding, a stored purchase line increasing it, and a locked opening balance.
 - Bruno: `distributors/list-distributors.bru`, `distributors/create-distributor.bru`, `distributors/update-distributor.bru`, and `distributors/record-payment.bru`.

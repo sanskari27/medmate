@@ -60,7 +60,13 @@ class AccessTest {
         assertThat(Access.validKey("distributors:update")).isTrue();
         assertThat(Access.validKey("distributors:delete")).isTrue();
         assertThat(Access.validKey("distributors:pay")).isTrue();
-        assertThat(Access.validKey("inventory:read")).isFalse();
+        assertThat(Access.validKey("purchases:read")).isTrue();
+        assertThat(Access.validKey("purchases:create")).isTrue();
+        assertThat(Access.validKey("purchases:return")).isTrue();
+        assertThat(Access.validKey("inventory:read")).isTrue();
+        assertThat(Access.validKey("inventory:update")).isTrue();
+        assertThat(Access.validKey("inventory:export")).isTrue();
+        assertThat(Access.validKey("billing:create")).isFalse();
         assertThat(Access.validKey("Inventory:Read")).isFalse();
     }
 

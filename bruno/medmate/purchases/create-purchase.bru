@@ -1,0 +1,49 @@
+meta {
+  name: Create purchase
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/purchases
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "distributorId": "DST-001",
+    "invoiceNo": "INV-100",
+    "invoiceDate": "2026-11-12",
+    "lines": [
+      {
+        "productId": "DR100",
+        "batchNo": "BATCH1",
+        "expiry": "2027-06",
+        "qty": 2,
+        "freeQty": 0,
+        "rate": 10.50,
+        "mrp": 18.00,
+        "gst": 12
+      }
+    ]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with purchases:create, posts a credit bill. The server assigns PUR-001 for the first purchase in that pharmacy and writes a distributor ledger line when the rounded amount is at least one rupee.
+}

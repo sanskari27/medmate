@@ -207,6 +207,12 @@ export function creditCount(rows: Distributor[]): number {
   return rows.filter((row) => row.paymentTerms.toLowerCase().includes("credit")).length;
 }
 
+export function outstandingTone(amount: number): string {
+  if (amount > 0) return "text-[#b4232a]";
+  if (amount < 0) return "text-green";
+  return "text-dark";
+}
+
 export function inr(amount: number): string {
   return "₹" + Math.round(amount).toLocaleString("en-IN");
 }

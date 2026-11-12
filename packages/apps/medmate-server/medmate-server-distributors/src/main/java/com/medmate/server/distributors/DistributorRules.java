@@ -102,9 +102,6 @@ public final class DistributorRules {
         if ("payment".equals(type) && amount > owed) {
             return "Payment is more than the outstanding";
         }
-        if ("return".equals(type) && amount > owed) {
-            return "Return is more than the outstanding";
-        }
         return null;
     }
 

@@ -1,0 +1,35 @@
+meta {
+  name: Update reorder
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/inventory/DR100
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "reorderLevel": 10
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with inventory:update, changes only the reorder level.
+}

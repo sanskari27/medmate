@@ -80,7 +80,7 @@ describe("UsersPage", () => {
   it("lists staff without a role field and shows the management permissions", async () => {
     renderPage();
     expect(await screen.findByText("Counter")).toBeTruthy();
-    expect(screen.getByText("1 / 17")).toBeTruthy();
+    expect(screen.getByText("1 / 23")).toBeTruthy();
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByText("Reset to Cashier defaults")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Add user" }));
@@ -95,6 +95,8 @@ describe("UsersPage", () => {
     expect(screen.getByRole("checkbox", { name: "Invoice Settings Update" })).toBeTruthy();
     expect(screen.getByText("Catalogue")).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "Distributors Pay" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Purchases Return" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Inventory Export" })).toBeTruthy();
     expect(screen.queryByLabelText(/role/i)).toBeNull();
   });
 

@@ -395,8 +395,8 @@ describe("AppRouter", () => {
     expect(names).toEqual([
       "Dashboard",
       "Distributors",
-      "Settings",
-      "Reports",
+      "Purchases",
+      "Inventory",
       "Employees",
       "Invoice Settings",
       "Manage Users",
@@ -490,6 +490,46 @@ describe("AppRouter", () => {
     renderAt("/distributors");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Distributors" })).toBeNull();
+  });
+
+  it("shows Purchases to staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["purchases:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Purchases" })).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without purchases:read away from Purchases", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["purchases:create"] },
+    });
+    renderAt("/purchases");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Purchases" })).toBeNull();
+  });
+
+  it("shows Inventory to staff who can read it", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["inventory:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Inventory" })).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without inventory:read away from Inventory", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["inventory:update"] },
+    });
+    renderAt("/inventory");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Inventory" })).toBeNull();
   });
 
   it("sends pharmacy staff without employees:read away from Employees", () => {

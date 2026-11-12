@@ -193,6 +193,44 @@ describe("search", () => {
   });
 });
 
+describe("find many ids", () => {
+  it("returns found rows and the ids that are in neither catalog", async () => {
+    const calls: { id?: string }[] = [];
+    const result = await handleHttp(
+      { method: "GET", url: "/api/products?ids=DR1,missing,fmcg-only,DR1" },
+      catalog(calls),
+    );
+    assert.equal(result.status, 200);
+    const body = result.body as { drug: DrugDetail[]; fmcg: FmcgDetail[]; missing: string[] };
+    assert.deepEqual(
+      body.drug.map((row) => row.productId),
+      ["DR1"],
+    );
+    assert.deepEqual(
+      body.fmcg.map((row) => row.productId),
+      ["DR2"],
+    );
+    assert.deepEqual(body.missing, ["missing"]);
+    assert.deepEqual(
+      calls.map((call) => call.id),
+      ["DR1", "DR1", "missing", "missing", "fmcg-only", "fmcg-only"],
+    );
+  });
+
+  it("rejects an empty id list and a list past 200", async () => {
+    const empty = await handleHttp({ method: "GET", url: "/api/products?ids=" }, catalog([]));
+    assert.equal(empty.status, 400);
+    assert.deepEqual(empty.body, {
+      error: { code: "BAD_REQUEST", message: "ids must contain 1 to 200 product ids" },
+    });
+    const tooMany = await handleHttp(
+      { method: "GET", url: `/api/products?ids=${Array.from({ length: 201 }, (_, index) => `DR${index}`).join(",")}` },
+      catalog([]),
+    );
+    assert.equal(tooMany.status, 400);
+  });
+});
+
 describe("find by id", () => {
   it("returns the full drug record and an empty fmcg list", async () => {
     const result = await handleHttp({ method: "GET", url: "/api/products/DR1" }, catalog([]));

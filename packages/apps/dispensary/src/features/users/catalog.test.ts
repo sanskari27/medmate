@@ -34,9 +34,20 @@ describe("staff permission catalog", () => {
       "distributors:update",
       "distributors:delete",
       "distributors:pay",
+      "purchases:read",
+      "purchases:create",
+      "purchases:return",
+      "inventory:read",
+      "inventory:update",
+      "inventory:export",
     ]);
-    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual(["Distributors"]);
-    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("2 / 17");
+    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual([
+      "Distributors",
+      "Purchases",
+      "Inventory",
+    ]);
+    expect(PERMISSION_KEYS).toHaveLength(23);
+    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 23");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
     expect(togglePermission(["users:read"], "users:create")).toEqual([
       "users:read",

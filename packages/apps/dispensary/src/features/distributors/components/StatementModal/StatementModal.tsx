@@ -80,7 +80,13 @@ export function StatementModal({
             <Figure
               label="Outstanding"
               value={inr(distributor.outstanding)}
-              owed={distributor.outstanding > 0}
+              tone={
+                distributor.outstanding > 0
+                  ? "text-[#b4232a]"
+                  : distributor.outstanding < 0
+                    ? "text-green"
+                    : "text-dark"
+              }
             />
           </Box>
           <Box className="overflow-hidden rounded-md border border-line">
@@ -178,15 +184,19 @@ export function StatementModal({
   );
 }
 
-function Figure({ label, value, owed = false }: { label: string; value: string; owed?: boolean }) {
+function Figure({
+  label,
+  value,
+  tone = "text-dark",
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
   return (
     <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2">
       <Text className="text-[12.5px] text-muted">{label}</Text>
-      <Text
-        className={`mt-px block font-display text-[15px] font-bold ${owed ? "text-[#b4232a]" : "text-dark"}`}
-      >
-        {value}
-      </Text>
+      <Text className={`mt-px block font-display text-[15px] font-bold ${tone}`}>{value}</Text>
     </Box>
   );
 }

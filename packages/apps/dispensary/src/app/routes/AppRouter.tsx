@@ -13,6 +13,8 @@ import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
 import { EmployeesPage, canOpenEmployees } from "@/features/employees";
 import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
+import { InventoryPage, canOpenInventory } from "@/features/inventory";
+import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
 import {
   GuestRoute,
@@ -40,6 +42,14 @@ export function AppRouter() {
     session?.account.pharmacyRole,
     session?.account.permissions,
   );
+  const purchasesOpen = canOpenPurchases(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  );
+  const inventoryOpen = canOpenInventory(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -48,19 +58,28 @@ export function AppRouter() {
     "/profile",
     "/support",
   ]);
+  const cataloguePaths = new Set(["/distributors", "/purchases", "/inventory"]);
+  let catalogueLabeled = false;
   let managementLabeled = false;
   const items = appRoutes
     .filter((route) => {
       if (route.path === "/employees") return employeesOpen;
       if (route.path === "/invoice-settings") return invoiceOpen;
       if (route.path === "/distributors") return distributorsOpen;
+      if (route.path === "/purchases") return purchasesOpen;
+      if (route.path === "/inventory") return inventoryOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
-      if (!managementPaths.has(route.path)) return route;
-      if (managementLabeled) return { ...route, group: undefined };
+      let next = route;
+      if (cataloguePaths.has(route.path)) {
+        next = catalogueLabeled ? { ...route, group: undefined } : { ...route, group: "Catalogue" };
+        catalogueLabeled = true;
+      }
+      if (!managementPaths.has(route.path)) return next;
+      if (managementLabeled) return { ...next, group: undefined };
       managementLabeled = true;
-      return { ...route, group: "Management" };
+      return { ...next, group: "Management" };
     });
   return (
     <Routes>
@@ -96,7 +115,9 @@ export function AppRouter() {
                 !ownerPaths.has(route.path) &&
                 route.path !== "/employees" &&
                 route.path !== "/invoice-settings" &&
-                route.path !== "/distributors",
+                route.path !== "/distributors" &&
+                route.path !== "/purchases" &&
+                route.path !== "/inventory",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -104,6 +125,18 @@ export function AppRouter() {
           <Route
             path="/distributors"
             element={distributorsOpen ? <DistributorsPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/purchases"
+            element={purchasesOpen ? <PurchasesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/purchases/:id"
+            element={purchasesOpen ? <PurchasesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/inventory"
+            element={inventoryOpen ? <InventoryPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/employees"

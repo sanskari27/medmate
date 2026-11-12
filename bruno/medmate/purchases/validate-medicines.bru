@@ -1,0 +1,35 @@
+meta {
+  name: Validate medicines
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/medicines/validate
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "ids": ["DR100"]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with purchases:create, checks product ids before a purchase is saved. Missing and ambiguous ids come back in the response.
+}

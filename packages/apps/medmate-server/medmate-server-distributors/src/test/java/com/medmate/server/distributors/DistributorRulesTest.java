@@ -96,7 +96,14 @@ class DistributorRulesTest {
                                 new DistributorRules.Line("return", 500))))
                 .isEqualTo(12500);
         assertThat(DistributorRules.reject("payment", 13001, 13000)).isEqualTo("Payment is more than the outstanding");
-        assertThat(DistributorRules.reject("return", 13001, 13000)).isEqualTo("Return is more than the outstanding");
+        assertThat(DistributorRules.reject("return", 13001, 13000)).isNull();
+        assertThat(DistributorRules.outstanding(
+                        10000,
+                        List.of(
+                                new DistributorRules.Line("purchase", 5000),
+                                new DistributorRules.Line("payment", 2000),
+                                new DistributorRules.Line("return", 13001))))
+                .isEqualTo(-1);
         assertThat(DistributorRules.reject("payment", 0, 13000)).isEqualTo("Payment must be at least 1");
 
         DistributorRules.Values current = new DistributorRules.Values(
