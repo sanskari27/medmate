@@ -7,6 +7,7 @@ import { Text } from "@/components/ui/Text";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { PurchaseForm } from "../../components/PurchaseForm";
 import { ReceiptDialog } from "../../components/ReceiptDialog";
+import { ReturnDialog } from "../../components/ReturnDialog";
 import { draftFromCsv, parsePurchaseCsv } from "../../csv";
 import {
   inr,
@@ -39,11 +40,19 @@ export function PurchasesPage() {
   const [issues, setIssues] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
+  const [returnFor, setReturnFor] = useState<string | null>(null);
   const openedNew = useRef(false);
   const documents = list.data?.purchases ?? [];
   const stats = list.data?.stats;
   const selectedId = params.id ?? opened;
   const selected = documents.find((row) => row.id === selectedId) ?? null;
+  const returning = Boolean(selected && returnFor === selected.id);
+
+  function closeReceipt() {
+    setReturnFor(null);
+    setOpened(null);
+    if (params.id) navigate("/purchases");
+  }
 
   useEffect(() => {
     if (searchParams.get("new") === "1" && access.create && !openedNew.current) {
@@ -183,22 +192,32 @@ export function PurchasesPage() {
           onSave={(draft) => void save(draft)}
         />
       ) : null}
-      {selected ? (
+      {selected && !returning ? (
         <ReceiptDialog
           document={selected}
           canCreateReturn={access.returnBill}
+          onClose={closeReceipt}
+          onCreateReturn={() => {
+            setError(null);
+            setReturnFor(selected.id);
+          }}
+        />
+      ) : null}
+      {selected && returning ? (
+        <ReturnDialog
+          document={selected}
           saving={returnState.isLoading}
           error={error}
           onClose={() => {
-            setOpened(null);
-            if (params.id) navigate("/purchases");
+            setError(null);
+            setReturnFor(null);
           }}
           onReturn={async (lines) => {
             setError(null);
             const result = await createReturn({ id: selected.id, body: { lines } });
             if ("error" in result)
               setError(problemMessage(result.error, "Could not save this return"));
-            else setOpened(null);
+            else closeReceipt();
           }}
         />
       ) : null}

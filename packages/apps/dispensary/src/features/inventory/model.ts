@@ -68,8 +68,30 @@ export function isOut(product: InventoryProduct): boolean {
 }
 
 export function isLow(product: InventoryProduct): boolean {
-  const quantity = units(product);
-  return quantity > 0 && quantity <= product.reorderLevel;
+  return units(product) > 0 && Math.round(cost(product)) < 1000;
+}
+
+export function tableComposition(composition: string | null): string | null {
+  if (!composition) return composition;
+  return composition.slice(0, 50);
+}
+
+export type ExpiryTone = "rose" | "gold" | "gray";
+
+export function expiryTone(expiry: string, today = new Date()): ExpiryTone {
+  const index = monthIndex(expiry);
+  const current = monthIndex(kolkata(today));
+  if (!Number.isFinite(index) || !Number.isFinite(current)) return "gray";
+  if (index < current) return "rose";
+  if (index <= current + 4) return "gold";
+  return "gray";
+}
+
+export function expiryLabel(expiry: string, today = new Date()): string {
+  const tone = expiryTone(expiry, today);
+  if (tone === "rose") return `${expiry} · exp`;
+  if (tone === "gold") return `${expiry} · ${monthIndex(expiry) - monthIndex(kolkata(today))}mo`;
+  return expiry;
 }
 
 export function isExpiring(product: InventoryProduct, today = new Date()): boolean {

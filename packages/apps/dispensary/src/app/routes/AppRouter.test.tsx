@@ -394,9 +394,9 @@ describe("AppRouter", () => {
       .map((button) => button.textContent?.trim());
     expect(names).toEqual([
       "Dashboard",
-      "Distributors",
-      "Purchases",
       "Inventory",
+      "Purchases",
+      "Distributors",
       "Employees",
       "Invoice Settings",
       "Manage Users",

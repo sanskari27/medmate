@@ -212,4 +212,30 @@ NOPE,B2,2027-06,1,0,5,10,99
     expect(screen.getByRole("dialog", { name: "PUR-001 receipt" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Create return" })).toBeNull();
   });
+
+  it("opens a return dialog prefilled from the purchase", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "PUR-001" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create return" }));
+    expect(screen.getByRole("dialog", { name: "Create return" })).toBeTruthy();
+    expect(screen.queryByRole("dialog", { name: "PUR-001 receipt" })).toBeNull();
+    expect((screen.getByLabelText("Distributor") as HTMLInputElement).value).toBe(
+      "Bengaluru Pharma",
+    );
+    expect((screen.getByLabelText("Invoice number") as HTMLInputElement).value).toBe("INV-1");
+    expect((screen.getByLabelText("Invoice date") as HTMLInputElement).value).toBe("2026-11-01");
+    expect(screen.getByRole("columnheader", { name: "Batch" })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "Return qty" })).toBeTruthy();
+    expect(screen.getByText("B1")).toBeTruthy();
+    expect(screen.getByText("2027-06")).toBeTruthy();
+    expect(screen.getByText("₹10.50")).toBeTruthy();
+    expect((screen.getByLabelText("Return billed Crocin Advance") as HTMLInputElement).value).toBe(
+      "2",
+    );
+    expect((screen.getByLabelText("Return free Crocin Advance") as HTMLInputElement).value).toBe(
+      "0",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("dialog", { name: "PUR-001 receipt" })).toBeTruthy();
+  });
 });

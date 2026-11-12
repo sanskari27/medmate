@@ -3,15 +3,20 @@ package com.medmate.server.stock;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriBuilder;
 
 @Component
 @Profile({"local", "prod"})
@@ -20,9 +25,13 @@ public class HttpMedicineCatalog implements MedicineCatalog {
     private final RestClient http;
     private final ObjectMapper json;
 
+    @Autowired
     public HttpMedicineCatalog(@Value("${medmate.medicine-data.base-url}") String baseUrl, ObjectMapper json) {
-        String root = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        this.http = RestClient.builder().baseUrl(root).build();
+        this(client(baseUrl), json);
+    }
+
+    HttpMedicineCatalog(RestClient http, ObjectMapper json) {
+        this.http = http;
         this.json = json;
     }
 
@@ -37,7 +46,9 @@ public class HttpMedicineCatalog implements MedicineCatalog {
 
     @Override
     public Lookup lookup(List<String> ids) {
-        JsonNode body = get("/api/products?ids=" + encode(String.join(",", ids)));
+        JsonNode body = get((builder) -> builder.path("/api/products")
+                .queryParam("ids", String.join(",", ids))
+                .build());
         List<Snapshot> products = new ArrayList<>();
         List<String> ambiguous = new ArrayList<>();
         for (String id : ids) {
@@ -60,9 +71,22 @@ public class HttpMedicineCatalog implements MedicineCatalog {
         return new Lookup(products, missing, ambiguous);
     }
 
+    private static RestClient client(String baseUrl) {
+        String root = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return RestClient.builder().baseUrl(root).build();
+    }
+
     private JsonNode get(String path) {
+        return read(() -> http.get().uri(path).retrieve().body(String.class));
+    }
+
+    private JsonNode get(Function<UriBuilder, URI> uri) {
+        return read(() -> http.get().uri(uri).retrieve().body(String.class));
+    }
+
+    private JsonNode read(Supplier<String> request) {
         try {
-            String raw = http.get().uri(path).retrieve().body(String.class);
+            String raw = request.get();
             if (raw == null || raw.isBlank()) {
                 throw new CatalogUnavailable();
             }

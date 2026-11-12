@@ -1,15 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
+import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
-import { problemMessage, useAuthState } from "@/features/authentication";
+import { useAuthState } from "@/features/authentication";
 import { useListPurchasesQuery } from "@/features/purchases";
+import { cn } from "@/utils/className";
 import {
   cost,
   expiringCost,
+  expiryLabel,
+  expiryTone,
   inr,
   inventoryAccess,
   inventoryCsv,
@@ -19,11 +23,25 @@ import {
   matches,
   nearestExpiry,
   retail,
+  tableComposition,
   units,
+  type ExpiryTone,
   type InventoryFilter,
   type InventoryProduct,
 } from "../../model";
-import { useListInventoryQuery, useUpdateReorderMutation } from "../../inventory.api";
+import { useListInventoryQuery } from "../../inventory.api";
+
+const headCell =
+  "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
+const bodyCell = "border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-ink-2";
+const footCell =
+  "border-t-2 border-line-2 bg-wash-2 px-3.5 py-[11px] text-[13px] font-extrabold text-ink-2";
+const sectionLabel = "mb-2 text-[11px] font-extrabold tracking-[0.08em] text-faint uppercase";
+const pillTone: Record<ExpiryTone, string> = {
+  rose: "bg-rose-bg text-rose",
+  gold: "bg-amber-bg text-gold-d",
+  gray: "bg-gray-pill text-muted",
+};
 
 const FILTERS: { id: InventoryFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -37,7 +55,6 @@ export function InventoryPage() {
   const { session } = useAuthState();
   const access = inventoryAccess(session?.account.pharmacyRole, session?.account.permissions);
   const list = useListInventoryQuery();
-  const [updateReorder, updateState] = useUpdateReorderMutation();
   const [filter, setFilter] = useState<InventoryFilter>("all");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -109,58 +126,88 @@ export function InventoryPage() {
           onChange={(event) => setQuery(event.target.value)}
         />
       </Box>
-      <table className="w-full border-separate border-spacing-0 text-[13.5px]">
-        <thead>
-          <tr>
-            {["Product", "Type", "Batches", "Expiry", "Stock", "MRP", "Value"].map((heading) => (
-              <th
-                key={heading}
-                className="bg-wash-2 px-3 py-2 text-left text-[11px] font-bold text-muted uppercase"
-              >
-                {heading}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {visible.map((product) => {
-            const shown = product.batches.filter((batch) => batch.qty > 0);
-            return (
-              <tr key={product.productId}>
-                <td className="border-t border-line px-3 py-2">
-                  <Button
-                    type="button"
-                    variant="link"
+      <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
+        <Box className="overflow-x-auto">
+          <table className="w-full border-separate border-spacing-0 text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
+            <thead>
+              <tr>
+                {["Product", "Type", "Batches", "Expiry", "Stock", "MRP", "Value"].map(
+                  (heading, index) => (
+                    <th
+                      key={heading}
+                      className={cn(headCell, index >= 2 && heading !== "Expiry" && "text-right")}
+                    >
+                      {heading}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((product) => {
+                const shown = product.batches.filter((batch) => batch.qty > 0);
+                const expiry = nearestExpiry(product);
+                const subtitle = [tableComposition(product.composition), product.marketer]
+                  .filter(Boolean)
+                  .join(" · ");
+                return (
+                  <tr
+                    key={product.productId}
+                    className="cursor-pointer transition-colors duration-100 hover:bg-wash-2"
                     onClick={() => setSelected(product.productId)}
                   >
-                    {product.name}
-                  </Button>
-                </td>
-                <td className="border-t border-line px-3 py-2">{product.type}</td>
-                <td className="border-t border-line px-3 py-2">{shown.length}</td>
-                <td className="border-t border-line px-3 py-2">{nearestExpiry(product) ?? "—"}</td>
-                <td className="border-t border-line px-3 py-2">{units(product)}</td>
-                <td className="border-t border-line px-3 py-2">
-                  {shown[0] ? inr(Number(shown[0].mrp)) : "—"}
-                </td>
-                <td className="border-t border-line px-3 py-2 font-bold">{inr(cost(product))}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                    <td className={bodyCell}>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-[13px] font-bold text-ink"
+                        onClick={() => setSelected(product.productId)}
+                      >
+                        {product.name}
+                      </Button>
+                      <Text className="text-[12px] leading-normal text-muted">
+                        {subtitle || "—"}
+                      </Text>
+                    </td>
+                    <td className={cn(bodyCell, "whitespace-nowrap")}>{product.type ?? "—"}</td>
+                    <td className={cn(bodyCell, "text-right font-semibold")}>{shown.length}</td>
+                    <td className={bodyCell}>{expiry ? <ExpiryPill expiry={expiry} /> : "—"}</td>
+                    <td
+                      className={cn(
+                        bodyCell,
+                        "text-right font-bold",
+                        isOut(product) && "text-rose",
+                        isLow(product) && "text-gold-d",
+                      )}
+                    >
+                      {units(product)}
+                    </td>
+                    <td className={cn(bodyCell, "text-right font-bold")}>
+                      {shown[0] ? inr(Number(shown[0].mrp)) : "—"}
+                    </td>
+                    <td className={cn(bodyCell, "text-right font-semibold")}>
+                      {inr(cost(product))}
+                    </td>
+                  </tr>
+                );
+              })}
+              {visible.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={bodyCell}>
+                    <Text className="px-3.5 py-8 text-center text-[13px] text-muted">
+                      No products match this filter.
+                    </Text>
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </Box>
+      </Box>
       {selected ? (
         <ProductDialog
           product={products.find((product) => product.productId === selected) ?? null}
-          canUpdate={access.update}
-          saving={updateState.isLoading}
           onClose={() => setSelected(null)}
-          onSave={async (reorderLevel) => {
-            const result = await updateReorder({ productId: selected, reorderLevel });
-            if ("error" in result)
-              return problemMessage(result.error, "Could not update the reorder level");
-            return null;
-          }}
         />
       ) : null}
     </Box>
@@ -189,106 +236,263 @@ function Stat({
 
 function ProductDialog({
   product,
-  canUpdate,
-  saving,
   onClose,
-  onSave,
 }: {
   product: InventoryProduct | null;
-  canUpdate: boolean;
-  saving: boolean;
   onClose: () => void;
-  onSave: (reorderLevel: number) => Promise<string | null>;
 }) {
   const navigate = useNavigate();
-  const history = useListPurchasesQuery(product?.productId, { skip: !product });
   const [tab, setTab] = useState<"details" | "batches">("details");
-  const [level, setLevel] = useState(String(product?.reorderLevel ?? ""));
-  const [error, setError] = useState<string | null>(null);
+  const history = useListPurchasesQuery(product?.productId, {
+    skip: !product || tab !== "batches",
+  });
   const batches = useMemo(
     () => (product?.batches ?? []).filter((batch) => batch.qty > 0),
     [product],
   );
   if (!product) return null;
+  const subtitle = [product.composition, product.marketer, product.form]
+    .filter(Boolean)
+    .join(" · ");
+  const stock = units(product);
+  const purchases = history.data?.purchases ?? [];
+  const expiry = nearestExpiry(product);
+  const detailRows: { label: string; value: ReactNode }[] = [
+    { label: "Marketer", value: product.marketer ?? "—" },
+    { label: "Composition", value: product.composition ?? "—" },
+    { label: "Form", value: product.form ?? "—" },
+    { label: "Pack", value: product.pack ?? "—" },
+    { label: "Type", value: product.type ?? "—" },
+    { label: "Stock", value: String(stock) },
+    { label: "Cost value", value: inr(cost(product)) },
+    { label: "Retail value", value: inr(retail(product)) },
+    { label: "Nearest expiry", value: expiry ? <ExpiryPill expiry={expiry} /> : "—" },
+  ];
   return (
-    <Box className="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+    <Box
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(13,32,21,0.5)] p-6 backdrop-blur-[3px]"
+      onClick={onClose}
+    >
       <Box
         role="dialog"
+        aria-modal="true"
         aria-label={product.name}
-        className="max-h-[90vh] w-full max-w-[720px] overflow-y-auto rounded-md border border-line bg-paper p-5"
+        className="flex max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-lg bg-paper shadow-pop"
         onClick={(event) => event.stopPropagation()}
       >
-        <Heading level={3}>{product.name}</Heading>
-        <Box className="my-3 flex gap-2">
-          <Button
-            type="button"
-            variant={tab === "details" ? "primary" : "ghost"}
-            onClick={() => setTab("details")}
-          >
-            Details
-          </Button>
-          <Button
-            type="button"
-            variant={tab === "batches" ? "primary" : "ghost"}
-            onClick={() => setTab("batches")}
-          >
-            Batches
-          </Button>
-        </Box>
-        {tab === "details" ? (
-          <Box>
-            <Text>Marketer {product.marketer ?? "—"}</Text>
-            <Text>Composition {product.composition ?? "—"}</Text>
-            <Text>Form {product.form ?? "—"}</Text>
-            <Text>Pack {product.pack ?? "—"}</Text>
-            {canUpdate ? (
-              <label className="mt-3 block">
-                <Text>Reorder level</Text>
-                <Input
-                  aria-label="Reorder level"
-                  value={level}
-                  onChange={(event) => setLevel(event.target.value)}
-                />
-                <Button
-                  type="button"
-                  className="mt-2"
-                  disabled={saving || !/^\d+$/.test(level)}
-                  onClick={() => void onSave(Number(level)).then(setError)}
-                >
-                  Save reorder level
-                </Button>
-              </label>
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          gap={3}
+          className="border-b border-line px-5 py-4"
+        >
+          <Box className="min-w-0">
+            <Heading level={3} className="text-[17px]">
+              {product.name}
+            </Heading>
+            {isOut(product) || isLow(product) ? (
+              <Text className="mt-1  flex w-fit rounded-full bg-rose-bg px-[9px] py-[3px] text-[11px] font-bold text-rose">
+                {isOut(product) ? "Out of stock — reorder now" : "Low stock — value under ₹1,000"}
+              </Text>
             ) : null}
           </Box>
-        ) : (
-          <Box>
-            {batches.map((batch) => (
-              <Text key={batch.batchNo}>
-                {batch.batchNo} · {batch.expiry} · {batch.qty} · {inr(Number(batch.rate))} ·{" "}
-                {inr(Number(batch.mrp))}
-              </Text>
-            ))}
-          </Box>
-        )}
-        <Heading level={4} className="mt-4">
-          Purchase history
-        </Heading>
-        {(history.data?.purchases ?? []).map((row) => (
-          <Button
-            key={row.id}
-            type="button"
-            variant="link"
-            onClick={() => navigate(`/purchases/${row.id}`)}
-          >
-            {row.id}
+          <Button type="button" variant="ghost" size="sm" aria-label="Close" onClick={onClose}>
+            ×
           </Button>
-        ))}
-        {error ? <Text className="mt-2 text-rose">{error}</Text> : null}
-        <Button type="button" variant="ghost" className="mt-4" aria-label="Close" onClick={onClose}>
-          Close
-        </Button>
+        </Stack>
+        <Box className="overflow-y-auto px-5 py-5">
+          <Box className="mb-4 inline-flex gap-1 rounded-sm border border-line bg-wash-2 p-0.5">
+            <Button
+              type="button"
+              size="sm"
+              variant={tab === "details" ? "primary" : "ghost"}
+              className={tab === "details" ? undefined : "border-transparent bg-transparent"}
+              onClick={() => setTab("details")}
+            >
+              Details
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={tab === "batches" ? "primary" : "ghost"}
+              className={tab === "batches" ? undefined : "border-transparent bg-transparent"}
+              onClick={() => setTab("batches")}
+            >
+              Batches
+            </Button>
+          </Box>
+          {tab === "details" ? (
+            <Box>
+              <Text className={sectionLabel}>Product details</Text>
+              <DataTable headings={["Detail", "Value"]} alignRight={[false, false]}>
+                {detailRows.map(({ label, value }) => (
+                  <tr key={label} className="transition-colors duration-100 hover:bg-wash-2">
+                    <td className={cn(bodyCell, "w-[180px] font-semibold text-muted")}>{label}</td>
+                    <td className={cn(bodyCell, "font-semibold text-ink")}>{value}</td>
+                  </tr>
+                ))}
+              </DataTable>
+            </Box>
+          ) : (
+            <Box>
+              <Text className={sectionLabel}>Batches · stock & expiry</Text>
+              <DataTable
+                headings={["Batch", "Expiry", "Qty", "Rate", "MRP", "Value"]}
+                alignRight={[false, false, true, true, true, true]}
+                footer={
+                  batches.length > 0 ? (
+                    <tr>
+                      <td colSpan={2} className={footCell}>
+                        Total
+                      </td>
+                      <td className={cn(footCell, "text-right tabular-nums")}>{stock}</td>
+                      <td className={footCell} />
+                      <td className={footCell} />
+                      <td className={cn(footCell, "text-right tabular-nums")}>
+                        {inr(cost(product))}
+                      </td>
+                    </tr>
+                  ) : null
+                }
+              >
+                {batches.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className={bodyCell}>
+                      <Text className="px-3.5 py-3.5 text-center text-[13px] text-muted">
+                        No stock.
+                      </Text>
+                    </td>
+                  </tr>
+                ) : (
+                  batches.map((batch) => (
+                    <tr
+                      key={batch.batchNo}
+                      className="transition-colors duration-100 hover:bg-wash-2"
+                    >
+                      <td className={cn(bodyCell, "font-mono font-bold text-ink")}>
+                        {batch.batchNo || "—"}
+                      </td>
+                      <td className={bodyCell}>
+                        <ExpiryPill expiry={batch.expiry} />
+                      </td>
+                      <td className={cn(bodyCell, "text-right font-bold tabular-nums")}>
+                        {batch.qty}
+                      </td>
+                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                        {inr(Number(batch.rate))}
+                      </td>
+                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                        {inr(Number(batch.mrp))}
+                      </td>
+                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                        {inr(Number(batch.rate) * batch.qty)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </DataTable>
+              <Text className={cn(sectionLabel, "mt-5")}>Purchase history</Text>
+              <DataTable
+                headings={["Document", "Type", "Invoice", "Date", "Total"]}
+                alignRight={[false, false, false, false, true]}
+              >
+                {history.isLoading ? (
+                  <tr>
+                    <td colSpan={5} className={bodyCell}>
+                      <Text className="px-3.5 py-3.5 text-center text-[13px] text-muted">
+                        Loading purchases
+                      </Text>
+                    </td>
+                  </tr>
+                ) : purchases.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className={bodyCell}>
+                      <Text className="px-3.5 py-3.5 text-center text-[13px] text-muted">
+                        No purchases recorded.
+                      </Text>
+                    </td>
+                  </tr>
+                ) : (
+                  purchases.map((row) => (
+                    <tr key={row.id} className="transition-colors duration-100 hover:bg-wash-2">
+                      <td className={bodyCell}>
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="font-mono text-[12.5px] font-bold"
+                          onClick={() => navigate(`/purchases/${row.id}`)}
+                        >
+                          {row.id}
+                        </Button>
+                      </td>
+                      <td className={cn(bodyCell, "font-semibold capitalize")}>{row.type}</td>
+                      <td className={bodyCell}>{row.invoiceNo || "—"}</td>
+                      <td className={cn(bodyCell, "whitespace-nowrap")}>
+                        {row.invoiceDate || "—"}
+                      </td>
+                      <td className={cn(bodyCell, "text-right font-bold tabular-nums")}>
+                        {inr(Number(row.total))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </DataTable>
+            </Box>
+          )}
+        </Box>
+        <Stack direction="row" justify="end" className="border-t border-line px-5 py-3.5">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Close
+          </Button>
+        </Stack>
       </Box>
     </Box>
+  );
+}
+
+function DataTable({
+  headings,
+  alignRight,
+  footer,
+  children,
+}: {
+  headings: string[];
+  alignRight: boolean[];
+  footer?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
+      <Box className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-0 [&_tbody_tr:last-child_td]:border-b-0">
+          <thead>
+            <tr>
+              {headings.map((heading, index) => (
+                <th key={heading} className={cn(headCell, alignRight[index] && "text-right")}>
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+          {footer ? <tfoot>{footer}</tfoot> : null}
+        </table>
+      </Box>
+    </Box>
+  );
+}
+
+function ExpiryPill({ expiry }: { expiry: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap",
+        pillTone[expiryTone(expiry)],
+      )}
+    >
+      {expiryLabel(expiry)}
+    </span>
   );
 }
 

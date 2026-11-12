@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
-import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { canReturn, formatWhen, inr2, type PurchaseDocument, typeLabel } from "../../model";
@@ -10,42 +8,15 @@ import { canReturn, formatWhen, inr2, type PurchaseDocument, typeLabel } from ".
 export function ReceiptDialog({
   document,
   canCreateReturn,
-  saving,
-  error,
   onClose,
-  onReturn,
+  onCreateReturn,
 }: {
   document: PurchaseDocument;
   canCreateReturn: boolean;
-  saving: boolean;
-  error: string | null;
   onClose: () => void;
-  onReturn: (lines: { position: number; qty: number; freeQty: number }[]) => void;
+  onCreateReturn: () => void;
 }) {
-  const [returning, setReturning] = useState(false);
-  const [qty, setQty] = useState<Record<number, string>>({});
-  const [free, setFree] = useState<Record<number, string>>({});
   const showReturn = document.type === "purchase" && canCreateReturn && canReturn(document);
-
-  function withinCap(line: PurchaseDocument["lines"][number]): boolean {
-    const billed = Number(qty[line.position] || "0");
-    const freeQty = Number(free[line.position] || "0");
-    if (!Number.isInteger(billed) || !Number.isInteger(freeQty) || billed < 0 || freeQty < 0)
-      return false;
-    return (
-      billed <= line.qty - line.returnedQty &&
-      freeQty <= line.freeQty - line.returnedFree &&
-      billed + freeQty <= line.onHand
-    );
-  }
-
-  const lines = document.lines.map((line) => ({
-    position: line.position,
-    qty: Number(qty[line.position] || "0"),
-    freeQty: Number(free[line.position] || "0"),
-  }));
-  const anyUnit = lines.some((line) => line.qty + line.freeQty > 0);
-  const allValid = document.lines.every(withinCap);
 
   return (
     <Box className="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4" onClick={onClose}>
@@ -101,38 +72,11 @@ export function ReceiptDialog({
         <Text className="mt-3 font-bold">
           Bill total ({document.units} units stocked) {inr2(document.total)}
         </Text>
-        {showReturn && !returning ? (
-          <Button type="button" className="mt-4" onClick={() => setReturning(true)}>
+        {showReturn ? (
+          <Button type="button" className="mt-4" onClick={onCreateReturn}>
             Create return
           </Button>
         ) : null}
-        {returning ? (
-          <Box className="mt-4">
-            {document.lines.map((line) => (
-              <Stack key={line.position} direction="row" className="mb-2 items-center gap-2">
-                <Text className="min-w-40">{line.name}</Text>
-                <Input
-                  aria-label={`Return billed ${line.name}`}
-                  value={qty[line.position] ?? ""}
-                  onChange={(event) => setQty({ ...qty, [line.position]: event.target.value })}
-                />
-                <Input
-                  aria-label={`Return free ${line.name}`}
-                  value={free[line.position] ?? ""}
-                  onChange={(event) => setFree({ ...free, [line.position]: event.target.value })}
-                />
-              </Stack>
-            ))}
-            <Button
-              type="button"
-              disabled={!anyUnit || !allValid || saving}
-              onClick={() => onReturn(lines.filter((line) => line.qty + line.freeQty > 0))}
-            >
-              Save return
-            </Button>
-          </Box>
-        ) : null}
-        {error ? <Text className="mt-3 text-[12.5px] font-bold text-rose">{error}</Text> : null}
       </Box>
     </Box>
   );
