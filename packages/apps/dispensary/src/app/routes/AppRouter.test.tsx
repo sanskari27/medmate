@@ -396,6 +396,7 @@ describe("AppRouter", () => {
       "Dashboard",
       "Settings",
       "Reports",
+      "Employees",
       "Manage Users",
       "Profile",
       "Help & Support",
@@ -424,6 +425,27 @@ describe("AppRouter", () => {
     renderAt("/users");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
+  });
+
+  it("shows Employees to staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["employees:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Employees" })).toBeTruthy();
+    expect(screen.getByText("Management")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
+  });
+
+  it("sends pharmacy staff without employees:read away from Employees", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["employees:create"] },
+    });
+    renderAt("/employees");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Employees" })).toBeNull();
   });
 
   it("sends pharmacy staff away from Profile", () => {

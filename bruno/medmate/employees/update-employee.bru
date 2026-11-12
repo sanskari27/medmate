@@ -1,0 +1,37 @@
+meta {
+  name: Update employee
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/employees/{{employeeCode}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "department": "Dispensing",
+    "salary": 25000
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  employees:update changes fields other than a move to Inactive. employees:delete is required to set status to inactive.
+  Run Create employee first so employeeCode is stored.
+}

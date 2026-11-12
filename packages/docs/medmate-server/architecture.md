@@ -9,6 +9,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-shared/               request ids and ProblemDetail
   medmate-server-identity/             accounts, sessions, pharmacy verification
   medmate-server-support/              FAQs, support cases, and the live chat socket
+  medmate-server-employees/            pharmacy personnel register
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -39,6 +40,10 @@ Accounts, sessions, and pharmacy verification live in `medmate-server-identity`.
 ## Support
 
 FAQs and support cases live in `medmate-server-support`. The module depends on identity for access checks and for pharmacy and account names. Identity does not depend on it. Tables are created by `V5__support.sql` in the single Flyway history. Live chat is a raw WebSocket at `/support/stream` on this process. The handshake is open, and the first frame carries the access token. Case writes stay on HTTP. [0009](decisions/0009-support-module-and-live-chat.md) records that boundary.
+
+## Employees
+
+The personnel register lives in `medmate-server-employees`. The module depends on identity for access checks, the pharmacy workplace, and the document store. Identity does not depend on it. Tables are created by `V7__employees.sql`. Photos and documents use the same private prefix as pharmacy licences, under `employee-documents/`. [0011](decisions/0011-employee-register.md) records that boundary.
 
 ## Not in this process
 

@@ -240,6 +240,10 @@ script:post-response {
     }
   }
 
+  if (pathname === "/pharmacy/employees" && status === 201 && body && body.employee && body.employee.id) {
+    bru.setEnvVar("employeeCode", body.employee.id);
+  }
+
   const sessionRejected = status === 401 && body && body.detail === "Session was not accepted";
   const canRefresh = pathname !== "/auth/refresh" && pathname !== "/auth/sign-out";
   if (sessionRejected && canRefresh && bru.getEnvVar("refreshToken")) {
