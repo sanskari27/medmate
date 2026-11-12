@@ -4,10 +4,12 @@ COPY pom.xml .
 COPY medmate-server-shared/pom.xml medmate-server-shared/pom.xml
 COPY medmate-server-identity/pom.xml medmate-server-identity/pom.xml
 COPY medmate-server-support/pom.xml medmate-server-support/pom.xml
+COPY medmate-server-employees/pom.xml medmate-server-employees/pom.xml
 COPY medmate-server-app/pom.xml medmate-server-app/pom.xml
 COPY medmate-server-shared/src medmate-server-shared/src
 COPY medmate-server-identity/src medmate-server-identity/src
 COPY medmate-server-support/src medmate-server-support/src
+COPY medmate-server-employees/src medmate-server-employees/src
 COPY medmate-server-app/src medmate-server-app/src
 RUN mvn -q -DskipTests package
 

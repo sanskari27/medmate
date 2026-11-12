@@ -8,6 +8,7 @@ import {
   IconUsers,
 } from "@/components/ui/Icon";
 import { DashboardPage } from "@/features/dashboard";
+import { EmployeesPage } from "@/features/employees";
 import { ProfilePage } from "@/features/profile";
 import { ReportsPage } from "@/features/reports";
 import { SettingsPage } from "@/features/settings";
@@ -43,11 +44,19 @@ export const appRoutes: AppRoute[] = [
     element: <ReportsPage />,
   },
   {
+    path: "/employees",
+    label: "Employees",
+    title: "Employees",
+    sub: "Team records, payroll & bank details",
+    group: "Management",
+    icon: <IconUsers size={19} />,
+    element: <EmployeesPage />,
+  },
+  {
     path: "/users",
     label: "Manage Users",
     title: "Manage Users",
     sub: "Staff & access",
-    group: "Management",
     icon: <IconUsers size={19} />,
     element: <UsersPage />,
   },

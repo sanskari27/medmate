@@ -4,6 +4,7 @@ import { profileApi } from "@/features/profile";
 import { setupApi } from "@/features/setup";
 import { supportApi } from "@/features/support";
 import { usersApi } from "@/features/users";
+import { employeesApi } from "@/features/employees";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -12,4 +13,5 @@ export const rootReducer = combineReducers({
   [supportApi.reducerPath]: supportApi.reducer,
   [profileApi.reducerPath]: profileApi.reducer,
   [usersApi.reducerPath]: usersApi.reducer,
+  [employeesApi.reducerPath]: employeesApi.reducer,
 });

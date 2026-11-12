@@ -27,6 +27,15 @@ export const PERMISSION_AREAS: PermissionArea[] = [
         ],
       },
       {
+        module: "Manage Employees",
+        actions: [
+          { key: "employees:read", label: "Read" },
+          { key: "employees:create", label: "Create" },
+          { key: "employees:update", label: "Update" },
+          { key: "employees:delete", label: "Delete" },
+        ],
+      },
+      {
         module: "Help & Support",
         actions: [
           { key: "support:read", label: "Read" },

@@ -11,6 +11,7 @@ import { AccountRestrictedPage, ApplicationStatusPage, SetupPage } from "@/featu
 import { ProfilePage } from "@/features/profile";
 import { SupportPage } from "@/features/support";
 import { UsersPage } from "@/features/users";
+import { EmployeesPage, canOpenEmployees } from "@/features/employees";
 import {
   GuestRoute,
   PinRoute,
@@ -25,8 +26,15 @@ export function AppRouter() {
   const { session } = useAuthState();
   const auth = useAuthActions();
   const owner = session?.account.pharmacyRole === "owner";
+  const employeesOpen = canOpenEmployees(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
-  const items = appRoutes.filter((route) => !ownerPaths.has(route.path) || owner);
+  const items = appRoutes.filter((route) => {
+    if (route.path === "/employees") return employeesOpen;
+    return !ownerPaths.has(route.path) || owner;
+  });
   return (
     <Routes>
       <Route element={<GuestRoute />}>
@@ -56,10 +64,14 @@ export function AppRouter() {
           }
         >
           {items
-            .filter((route) => !ownerPaths.has(route.path))
+            .filter((route) => !ownerPaths.has(route.path) && route.path !== "/employees")
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
+          <Route
+            path="/employees"
+            element={employeesOpen ? <EmployeesPage /> : <Navigate to="/dashboard" replace />}
+          />
           <Route
             path="/users"
             element={owner ? <UsersPage /> : <Navigate to="/dashboard" replace />}

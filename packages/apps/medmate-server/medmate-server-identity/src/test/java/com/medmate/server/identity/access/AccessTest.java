@@ -41,8 +41,18 @@ class AccessTest {
                 .isTrue();
         assertThat(pharmacy(PharmacyRole.STAFF, VerificationStatus.APPROVED, Set.of("users:read"), "support:write"))
                 .isFalse();
+        assertThat(pharmacy(
+                        PharmacyRole.STAFF, VerificationStatus.APPROVED, Set.of("employees:read"), "employees:read"))
+                .isTrue();
+        assertThat(pharmacy(
+                        PharmacyRole.STAFF, VerificationStatus.APPROVED, Set.of("employees:read"), "employees:delete"))
+                .isFalse();
         assertThat(Access.validKey("users:read")).isTrue();
         assertThat(Access.validKey("support:write")).isTrue();
+        assertThat(Access.validKey("employees:read")).isTrue();
+        assertThat(Access.validKey("employees:create")).isTrue();
+        assertThat(Access.validKey("employees:update")).isTrue();
+        assertThat(Access.validKey("employees:delete")).isTrue();
         assertThat(Access.validKey("inventory:read")).isFalse();
         assertThat(Access.validKey("Inventory:Read")).isFalse();
     }
