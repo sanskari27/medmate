@@ -36,6 +36,13 @@ export const PERMISSION_AREAS: PermissionArea[] = [
         ],
       },
       {
+        module: "Invoice Settings",
+        actions: [
+          { key: "invoice-settings:read", label: "Read" },
+          { key: "invoice-settings:update", label: "Update" },
+        ],
+      },
+      {
         module: "Help & Support",
         actions: [
           { key: "support:read", label: "Read" },

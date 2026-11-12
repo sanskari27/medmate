@@ -301,7 +301,6 @@ public class PharmacyStore {
                           enable_tcs = :tcs,
                           e_invoicing = :einvoice,
                           pharmacist_name = :pharmacist,
-                          terms = :terms,
                           extra_details = :extra
                         WHERE id = :id
                         """)
@@ -325,8 +324,108 @@ public class PharmacyStore {
                 .param("tcs", Boolean.TRUE.equals(input.enableTcs()))
                 .param("einvoice", Boolean.TRUE.equals(input.eInvoicing()))
                 .param("pharmacist", input.pharmacistName().trim())
-                .param("terms", blankToNull(input.terms()))
                 .param("extra", extraDetails(input.extraDetails()))
+                .update();
+        if (submittedAt != null) {
+            jdbc.sql("UPDATE pharmacy SET submitted_at = :submitted WHERE id = :id")
+                    .param("id", id)
+                    .param("submitted", Timestamp.from(submittedAt))
+                    .update();
+        }
+    }
+
+    public record InvoiceRow(
+            String template,
+            String accent,
+            String title,
+            String prefix,
+            String signatory,
+            String bankLine,
+            boolean showBank,
+            String terms,
+            boolean showLogo,
+            boolean showStamp,
+            String name,
+            String email,
+            VerificationStatus status,
+            String rejectionStage,
+            String rejectionComment,
+            String address,
+            String city,
+            String state,
+            String pincode,
+            String phone,
+            String gstin,
+            String drugLicenceNo,
+            String pharmacistName) {}
+
+    public Optional<InvoiceRow> invoiceSettings(UUID id) {
+        return jdbc.sql(
+                        """
+                        SELECT p.invoice_template, p.invoice_accent, p.invoice_title, p.invoice_prefix,
+                          p.invoice_signatory, p.invoice_bank_line, p.invoice_show_bank, p.terms,
+                          p.invoice_show_logo, p.invoice_show_stamp, p.name, p.email, p.verification_status,
+                          p.rejection_stage, p.rejection_comment, p.address, p.city, p.state, p.pincode, a.phone,
+                          p.gstin, p.drug_licence_no, p.pharmacist_name
+                        FROM pharmacy p
+                        JOIN account a ON a.id = p.owner_account_id
+                        WHERE p.id = :id
+                        """)
+                .param("id", id)
+                .query((rs, row) -> new InvoiceRow(
+                        rs.getString("invoice_template"),
+                        rs.getString("invoice_accent"),
+                        rs.getString("invoice_title"),
+                        rs.getString("invoice_prefix"),
+                        rs.getString("invoice_signatory"),
+                        rs.getString("invoice_bank_line"),
+                        rs.getBoolean("invoice_show_bank"),
+                        rs.getString("terms"),
+                        rs.getBoolean("invoice_show_logo"),
+                        rs.getBoolean("invoice_show_stamp"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        VerificationStatus.parse(rs.getString("verification_status")),
+                        rs.getString("rejection_stage"),
+                        rs.getString("rejection_comment"),
+                        rs.getString("address"),
+                        rs.getString("city"),
+                        rs.getString("state"),
+                        rs.getString("pincode"),
+                        rs.getString("phone"),
+                        rs.getString("gstin"),
+                        rs.getString("drug_licence_no"),
+                        rs.getString("pharmacist_name")))
+                .optional();
+    }
+
+    public void saveInvoiceSettings(UUID id, PharmacyRules.InvoiceInput input, Instant submittedAt) {
+        jdbc.sql(
+                        """
+                        UPDATE pharmacy SET
+                          invoice_template = :template,
+                          invoice_accent = :accent,
+                          invoice_title = :title,
+                          invoice_prefix = :prefix,
+                          invoice_signatory = :signatory,
+                          invoice_bank_line = :bank,
+                          invoice_show_bank = :showBank,
+                          terms = :terms,
+                          invoice_show_logo = :showLogo,
+                          invoice_show_stamp = :showStamp
+                        WHERE id = :id
+                        """)
+                .param("id", id)
+                .param("template", input.template())
+                .param("accent", input.accent().trim())
+                .param("title", input.title().trim())
+                .param("prefix", input.prefix().trim())
+                .param("signatory", input.signatory().trim())
+                .param("bank", input.bankLine() == null ? "" : input.bankLine().trim())
+                .param("showBank", input.showBank())
+                .param("terms", blankToNull(input.terms()))
+                .param("showLogo", input.showLogo())
+                .param("showStamp", input.showStamp())
                 .update();
         if (submittedAt != null) {
             jdbc.sql("UPDATE pharmacy SET submitted_at = :submitted WHERE id = :id")

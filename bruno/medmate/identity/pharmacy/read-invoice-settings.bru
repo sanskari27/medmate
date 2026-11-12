@@ -1,0 +1,56 @@
+meta {
+  name: Read invoice settings
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/invoice-settings
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.template).to.be.a("string");
+    expect(body.accent).to.be.a("string");
+    expect(body.title).to.be.a("string");
+    expect(body.prefix).to.be.a("string");
+    expect(body.signatory).to.be.a("string");
+    expect(body.bankLine).to.be.a("string");
+    expect(body.showBank).to.be.a("boolean");
+    expect(body.terms).to.be.a("string");
+    expect(body.showLogo).to.be.a("boolean");
+    expect(body.showStamp).to.be.a("boolean");
+    expect(body).to.not.have.property("status");
+    expect(body.pharmacy.name).to.be.a("string");
+    expect(body.pharmacy.address).to.be.a("string");
+    expect(body.pharmacy.phone).to.be.a("string");
+    expect(body.pharmacy.email).to.be.a("string");
+    expect(body.pharmacy.gstin).to.be.a("string");
+    expect(body.pharmacy.drugLicenceNo).to.be.a("string");
+    expect(body.pharmacy.pharmacistName).to.be.a("string");
+    ["logo", "signature"].forEach(function(slot) {
+      if (body[slot] === null) return;
+      expect(body[slot].contentType).to.be.a("string");
+      expect(body[slot].url).to.be.a("string");
+      expect(body[slot]).to.not.have.property("objectKey");
+    });
+  });
+}
+
+docs {
+  An approved owner, or staff with invoice-settings:read, reads the print settings.
+  The collection script attaches the saved access token.
+}

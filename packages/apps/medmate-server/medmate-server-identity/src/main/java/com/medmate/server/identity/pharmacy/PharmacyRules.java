@@ -212,8 +212,71 @@ public final class PharmacyRules {
                 || uploaded(input.drugLicence())
                 || uploaded(input.fssai())
                 || uploaded(input.tradeLicence())
-                || uploaded(input.pharmacistCertificate())
-                || uploaded(input.signature());
+                || uploaded(input.pharmacistCertificate());
+    }
+
+    public static final Set<String> INVOICE_TEMPLATES = Set.of("classic", "modern", "minimal", "thermal");
+
+    public record InvoiceInput(
+            String template,
+            String accent,
+            String title,
+            String prefix,
+            String signatory,
+            String bankLine,
+            Boolean showBank,
+            String terms,
+            Boolean showLogo,
+            Boolean showStamp,
+            Upload logo,
+            Upload signature) {}
+
+    public static String invoiceInvalid(InvoiceInput input, boolean signatureStored) {
+        if (input.template() == null || !INVOICE_TEMPLATES.contains(input.template())) {
+            return "Invoice template is not recognised";
+        }
+        if (input.accent() == null || !input.accent().trim().matches("^#[0-9A-Fa-f]{6}$")) {
+            return "Accent colour is not valid";
+        }
+        if (blank(input.title())) {
+            return "Document title is required";
+        }
+        if (input.title().trim().length() > 80) {
+            return "Document title is too long";
+        }
+        if (input.prefix() == null || !input.prefix().trim().matches("^[A-Za-z0-9-]{1,16}$")) {
+            return "Invoice prefix is required";
+        }
+        if (blank(input.signatory())) {
+            return "Signatory label is required";
+        }
+        if (input.signatory().trim().length() > 80) {
+            return "Signatory label is too long";
+        }
+        if (input.bankLine() != null && input.bankLine().trim().length() > 160) {
+            return "Bank details are too long";
+        }
+        if (input.showLogo() == null) {
+            return "Show logo is required";
+        }
+        if (input.showStamp() == null) {
+            return "Show stamp is required";
+        }
+        if (input.showBank() == null) {
+            return "Print bank details is required";
+        }
+        if (input.terms() != null && input.terms().trim().length() > 4000) {
+            return "Terms are too long";
+        }
+        String logo = file(input.logo(), "Logo", false, true, false);
+        if (logo != null) {
+            return logo;
+        }
+        return file(input.signature(), "Signature", true, true, signatureStored);
+    }
+
+    public static boolean signatureReplaced(InvoiceInput input) {
+        return uploaded(input.signature());
     }
 
     public static String invalid(ApplicationInput input, String accountPhone) {
@@ -360,8 +423,8 @@ public final class PharmacyRules {
                 input.pharmacistName(),
                 input.pharmacistCertificate(),
                 preserved.invoicePrefix(),
-                input.signature(),
-                input.terms(),
+                null,
+                null,
                 preserved.acceptOnlineOrders(),
                 preserved.selfOrderKiosk(),
                 input.eInvoicing(),

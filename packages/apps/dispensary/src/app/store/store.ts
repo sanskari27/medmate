@@ -5,6 +5,7 @@ import { setupApi } from "@/features/setup";
 import { supportApi } from "@/features/support";
 import { usersApi } from "@/features/users";
 import { employeesApi } from "@/features/employees";
+import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -21,6 +22,7 @@ export function createAppStore() {
         profileApi.middleware,
         usersApi.middleware,
         employeesApi.middleware,
+        invoiceSettingsApi.middleware,
       ),
   });
 }

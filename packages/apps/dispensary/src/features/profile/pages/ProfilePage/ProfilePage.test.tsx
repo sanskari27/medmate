@@ -126,6 +126,8 @@ describe("ProfilePage", () => {
     expect(screen.queryByText("Online store")).toBeNull();
     expect(screen.queryByText("Distributors")).toBeNull();
     expect(screen.queryByText("Store setup wizard")).toBeNull();
+    expect(screen.queryByText("Terms & Conditions")).toBeNull();
+    expect(screen.queryByLabelText("Signature")).toBeNull();
     expect(
       (screen.getByRole("button", { name: "Save changes" }) as HTMLButtonElement).disabled,
     ).toBe(true);
@@ -157,7 +159,7 @@ describe("ProfilePage", () => {
     const dialog = screen.getByRole("dialog", { name: "Save changes?" });
     expect(
       within(dialog).getByText(
-        "Licence, pharmacist, or signature changes are sent for review. You will not be able to use the console until the pharmacy is approved again.",
+        "Licence or pharmacist changes are sent for review. You will not be able to use the console until the pharmacy is approved again.",
       ),
     ).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));

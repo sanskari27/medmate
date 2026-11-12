@@ -397,6 +397,7 @@ describe("AppRouter", () => {
       "Settings",
       "Reports",
       "Employees",
+      "Invoice Settings",
       "Manage Users",
       "Profile",
       "Help & Support",
@@ -435,7 +436,37 @@ describe("AppRouter", () => {
     renderAt("/dashboard");
     expect(screen.getByRole("button", { name: "Employees" })).toBeTruthy();
     expect(screen.getByText("Management")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Invoice Settings" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
+  });
+
+  it("shows Invoice Settings to staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        permissions: ["invoice-settings:read"],
+      },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Invoice Settings" })).toBeTruthy();
+    expect(screen.getByText("Management")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
+  });
+
+  it("sends pharmacy staff without invoice-settings:read away from Invoice Settings", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        permissions: ["invoice-settings:update"],
+      },
+    });
+    renderAt("/invoice-settings");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Invoice Settings" })).toBeNull();
   });
 
   it("sends pharmacy staff without employees:read away from Employees", () => {

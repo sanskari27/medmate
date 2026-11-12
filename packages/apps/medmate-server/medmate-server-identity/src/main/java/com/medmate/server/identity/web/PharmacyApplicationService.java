@@ -174,7 +174,6 @@ public class PharmacyApplicationService {
         put(pharmacyId, "fssai", input.fssai());
         put(pharmacyId, "trade-licence", input.tradeLicence());
         put(pharmacyId, "pharmacist-certificate", input.pharmacistCertificate());
-        put(pharmacyId, "signature", input.signature());
     }
 
     private void removeDocument(UUID pharmacyId, String slot) {

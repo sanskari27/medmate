@@ -20,7 +20,6 @@ const REVIEW_SLOTS: DocumentSlot[] = [
   "fssai",
   "trade-licence",
   "pharmacist-certificate",
-  "signature",
 ];
 
 const FILE_PARTS: Record<DocumentSlot, string> = {
@@ -89,7 +88,6 @@ export type ProfileForm = {
   enableTcs: boolean;
   eInvoicing: boolean;
   pharmacistName: string;
-  terms: string;
   extraDetails: ExtraDetail[];
   removeLogo: boolean;
   files: Partial<Record<DocumentSlot, File | undefined>>;
@@ -128,7 +126,6 @@ export function formFromApplication(application: ProfileApplication): ProfileFor
     enableTcs: application.enableTcs,
     eInvoicing: application.eInvoicing,
     pharmacistName: text(application.pharmacistName),
-    terms: text(application.terms),
     extraDetails: (application.extraDetails ?? []).map((detail) => ({ ...detail })),
     removeLogo: false,
     files: {},
@@ -177,7 +174,6 @@ export function toFormData(draft: ProfileForm): FormData {
   body.set("enableTcs", String(draft.enableTcs));
   body.set("eInvoicing", String(draft.eInvoicing));
   body.set("pharmacistName", draft.pharmacistName.trim());
-  body.set("terms", draft.terms.trim());
   body.set(
     "extraDetails",
     JSON.stringify(
@@ -188,6 +184,7 @@ export function toFormData(draft: ProfileForm): FormData {
   );
   body.set("removeLogo", String(draft.removeLogo && !(draft.files.logo instanceof File)));
   for (const slot of DOCUMENT_SLOTS) {
+    if (slot === "signature") continue;
     const file = draft.files[slot];
     if (file instanceof File) body.set(FILE_PARTS[slot], file);
   }
@@ -215,7 +212,6 @@ function snapshot(form: ProfileForm) {
     enableTcs: form.enableTcs,
     eInvoicing: form.eInvoicing,
     pharmacistName: form.pharmacistName,
-    terms: form.terms,
     extraDetails: form.extraDetails,
   };
 }
