@@ -95,7 +95,10 @@ afterEach(() => {
 describe("SupportCasePage", () => {
   it("keeps the transcript read-only for a platform admin", async () => {
     vi.stubGlobal("WebSocket", Socket);
-    vi.stubGlobal("fetch", vi.fn(async () => json(detail)));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json(detail)),
+    );
     renderPage();
     expect(await screen.findByText("One line is wrong.")).toBeTruthy();
     expect(screen.getByText(/Unassigned/)).toBeTruthy();

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Account, AccountType } from "@/types";
-import { accountRoleLabel, canHandleSupportCases, canReview, canSupport, canUseAdminPortal } from "./portalAccount";
+import {
+  accountRoleLabel,
+  canHandleSupportCases,
+  canReview,
+  canSupport,
+  canUseAdminPortal,
+} from "./portalAccount";
 
 function account(type: AccountType, subtypes: string[] = []): Account {
   return {

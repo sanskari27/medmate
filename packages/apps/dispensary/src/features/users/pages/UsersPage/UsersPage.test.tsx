@@ -46,9 +46,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function renderPage(
-  onCall?: (request: Request) => Promise<Response> | Response,
-) {
+function renderPage(onCall?: (request: Request) => Promise<Response> | Response) {
   writeSession(session);
   let rows = [member];
   vi.stubGlobal(

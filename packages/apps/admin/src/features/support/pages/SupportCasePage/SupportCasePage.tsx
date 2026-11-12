@@ -65,7 +65,9 @@ export function SupportCasePage() {
         <Stack className="mt-4 gap-3">
           {(item.messages ?? []).map((message) => (
             <Box key={message.id} className="rounded-sm bg-wash px-3 py-2">
-              <Text className="text-[12px] font-bold text-ink-2">{message.authorName || "Support"}</Text>
+              <Text className="text-[12px] font-bold text-ink-2">
+                {message.authorName || "Support"}
+              </Text>
               <Text className="text-[13.5px] text-ink">{message.body}</Text>
             </Box>
           ))}

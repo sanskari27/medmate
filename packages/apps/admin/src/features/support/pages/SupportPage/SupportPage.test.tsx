@@ -101,8 +101,10 @@ describe("SupportPage", () => {
       "fetch",
       vi.fn(async (input: RequestInfo, init?: RequestInit) => {
         const url = requestUrl(input);
-        if (init?.method === "POST" && url.endsWith("/support/faqs")) {
-          const body = JSON.parse(String(init.body)) as { question: string; answer: string };
+        const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+        const raw = init?.body ?? (input instanceof Request ? await input.clone().text() : "");
+        if (method === "POST" && url.endsWith("/support/faqs")) {
+          const body = JSON.parse(String(raw)) as { question: string; answer: string };
           listed.push({
             id: "faq-2",
             question: body.question,
@@ -112,7 +114,7 @@ describe("SupportPage", () => {
           });
           return json(listed[listed.length - 1]);
         }
-        if (init?.method === "PATCH") {
+        if (method === "PATCH") {
           listed[0] = { ...listed[0], published: !listed[0].published };
           return json(listed[0]);
         }
@@ -129,7 +131,9 @@ describe("SupportPage", () => {
     expect(screen.queryByRole("button", { name: "Pick up" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Add FAQ" }));
     expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText("Question"), { target: { value: "Can I export sales?" } });
+    fireEvent.change(screen.getByLabelText("Question"), {
+      target: { value: "Can I export sales?" },
+    });
     fireEvent.change(screen.getByLabelText("Answer"), { target: { value: "Yes, from Reports." } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Can I export sales?")).toBeTruthy();
@@ -137,7 +141,9 @@ describe("SupportPage", () => {
       screen.getByRole("switch", { name: "Hide How do I add a new medicine to inventory?" }),
     );
     expect(
-      await screen.findByRole("switch", { name: "Publish How do I add a new medicine to inventory?" }),
+      await screen.findByRole("switch", {
+        name: "Publish How do I add a new medicine to inventory?",
+      }),
     ).toBeTruthy();
   });
 

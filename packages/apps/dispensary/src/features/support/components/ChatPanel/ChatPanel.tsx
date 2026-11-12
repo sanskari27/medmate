@@ -156,7 +156,12 @@ export function ChatPanel({ caseId, onClose }: { caseId: string; onClose: () => 
               </Button>
             </div>
             <div className="mt-2 flex ">
-              <Button variant="ghost" size="md"  className="w-full" onClick={() => void resolveCase(item.id)}>
+              <Button
+                variant="ghost"
+                size="md"
+                className="w-full"
+                onClick={() => void resolveCase(item.id)}
+              >
                 Mark resolved
               </Button>
             </div>

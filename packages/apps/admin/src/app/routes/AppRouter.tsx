@@ -65,7 +65,10 @@ export function AppRouter() {
             path="/reviews/:pharmacyId"
             element={review ? <ReviewDetailPage /> : <Navigate to="/dashboard" replace />}
           />
-          <Route path="/support" element={support ? <SupportPage /> : <Navigate to="/dashboard" replace />} />
+          <Route
+            path="/support"
+            element={support ? <SupportPage /> : <Navigate to="/dashboard" replace />}
+          />
           <Route
             path="/support/cases/:caseId"
             element={support ? <SupportCasePage /> : <Navigate to="/dashboard" replace />}

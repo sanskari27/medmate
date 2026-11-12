@@ -150,7 +150,9 @@ describe("AppRouter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("4-digit PIN")).toBeTruthy();
     expect(screen.queryByText("6-digit OTP")).toBeNull();
-    expect(screen.queryByText("This number is a pharmacy owner. Choose Pharmacy owner to sign in.")).toBeNull();
+    expect(
+      screen.queryByText("This number is a pharmacy owner. Choose Pharmacy owner to sign in."),
+    ).toBeNull();
   });
 
   it("redirects a signed-out visit to the login screen", () => {

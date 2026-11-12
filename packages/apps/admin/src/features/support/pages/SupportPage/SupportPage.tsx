@@ -82,7 +82,12 @@ export function SupportPage() {
               <Button variant="ghost" size="sm" onClick={() => setEditing(faq)}>
                 Edit
               </Button>
-              <Button variant="ghost" size="sm" disabled={index === 0} onClick={() => void move(index, -1)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={index === 0}
+                onClick={() => void move(index, -1)}
+              >
                 Move up
               </Button>
               <Button
@@ -150,7 +155,10 @@ function CaseRow({ item }: { item: SupportCase }) {
         </Text>
       </span>
       <span className="flex flex-wrap items-center gap-2 sm:justify-end">
-        <Text as="span" className="rounded-full bg-wash px-2.5 py-1 text-[11px] font-bold text-dark uppercase">
+        <Text
+          as="span"
+          className="rounded-full bg-wash px-2.5 py-1 text-[11px] font-bold text-dark uppercase"
+        >
           {statusLabel(item.status)}
         </Text>
         <Text as="span" variant="muted">

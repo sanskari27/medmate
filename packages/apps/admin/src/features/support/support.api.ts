@@ -23,7 +23,10 @@ export const supportApi = createApi({
       query: (body) => ({ url: "/support/faqs", method: "POST", body }),
       invalidatesTags: ["Faq"],
     }),
-    updateFaq: build.mutation<Faq, { id: string; question: string; answer: string; published: boolean }>({
+    updateFaq: build.mutation<
+      Faq,
+      { id: string; question: string; answer: string; published: boolean }
+    >({
       query: ({ id, ...body }) => ({ url: `/support/faqs/${id}`, method: "PATCH", body }),
       invalidatesTags: ["Faq"],
     }),

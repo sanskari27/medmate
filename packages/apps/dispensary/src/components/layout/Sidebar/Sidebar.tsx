@@ -85,25 +85,25 @@ export function Sidebar({
                 </Text>
               ) : null}
               <Button
-              variant="ghost"
-              aria-current={active ? "page" : undefined}
-              onClick={() => onNavigate(item.path)}
-              className={cn(
-                "relative h-auto w-full justify-start gap-[11px] rounded-sm border-0 bg-transparent px-3 py-2 text-left text-[13px] font-semibold text-[#ffffffa8] shadow-none hover:bg-[#ffffff12] hover:text-white active:translate-y-0",
-                active &&
-                  "bg-[#ffffff1a] font-bold text-white before:absolute before:top-1/2 before:-left-3 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-mint before:content-['']",
-              )}
-            >
-              <Box
+                variant="ghost"
+                aria-current={active ? "page" : undefined}
+                onClick={() => onNavigate(item.path)}
                 className={cn(
-                  "grid h-5 w-5 shrink-0 place-items-center",
-                  active ? "opacity-100" : "opacity-80",
+                  "relative h-auto w-full justify-start gap-[11px] rounded-sm border-0 bg-transparent px-3 py-2 text-left text-[13px] font-semibold text-[#ffffffa8] shadow-none hover:bg-[#ffffff12] hover:text-white active:translate-y-0",
+                  active &&
+                    "bg-[#ffffff1a] font-bold text-white before:absolute before:top-1/2 before:-left-3 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-mint before:content-['']",
                 )}
               >
-                {item.icon}
-              </Box>
-              {item.label}
-            </Button>
+                <Box
+                  className={cn(
+                    "grid h-5 w-5 shrink-0 place-items-center",
+                    active ? "opacity-100" : "opacity-80",
+                  )}
+                >
+                  {item.icon}
+                </Box>
+                {item.label}
+              </Button>
             </span>
           );
         })}

@@ -15,7 +15,10 @@ export const usersApi = createApi({
       query: (body) => ({ url: "/pharmacy/staff", method: "POST", body }),
       invalidatesTags: ["Staff"],
     }),
-    updateStaff: build.mutation<StaffMember, { id: string; body: Partial<StaffDraft> & { disabled?: boolean } }>({
+    updateStaff: build.mutation<
+      StaffMember,
+      { id: string; body: Partial<StaffDraft> & { disabled?: boolean } }
+    >({
       query: ({ id, body }) => ({ url: `/pharmacy/staff/${id}`, method: "PATCH", body }),
       invalidatesTags: ["Staff"],
     }),

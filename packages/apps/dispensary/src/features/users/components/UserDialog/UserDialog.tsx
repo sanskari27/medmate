@@ -149,7 +149,12 @@ export function UserDialog({
                   >
                     Select all
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setPermissions([])}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPermissions([])}
+                  >
                     Clear
                   </Button>
                   <Text className="text-[12.5px] font-bold text-mid">
@@ -164,7 +169,9 @@ export function UserDialog({
                     <Box className="grid gap-3 sm:grid-cols-2">
                       {area.modules.map((module) => (
                         <Box key={module.module} className="rounded-md border border-line p-3">
-                          <Text className="mb-2 text-[13px] font-bold text-ink">{module.module}</Text>
+                          <Text className="mb-2 text-[13px] font-bold text-ink">
+                            {module.module}
+                          </Text>
                           <Stack className="gap-1.5">
                             {module.actions.map((action) => {
                               const checked = permissions.includes(action.key);
@@ -178,7 +185,9 @@ export function UserDialog({
                                     aria-label={`${module.module} ${action.label}`}
                                     checked={checked}
                                     onChange={() =>
-                                      setPermissions((current) => togglePermission(current, action.key))
+                                      setPermissions((current) =>
+                                        togglePermission(current, action.key),
+                                      )
                                     }
                                   />
                                   {action.label}

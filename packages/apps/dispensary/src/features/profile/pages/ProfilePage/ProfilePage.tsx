@@ -90,7 +90,6 @@ export function ProfilePage() {
         <div className="w-full flex flex-col gap-2">
           <TaxCard draft={draft} documents={profile.data?.documents ?? []} onChange={patch} />
           <InvoiceCard draft={draft} documents={profile.data?.documents ?? []} onChange={patch} />
-
         </div>
       </div>
       <SaveBar

@@ -24,7 +24,10 @@ describe("staff permission catalog", () => {
     ]);
     expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("2 / 6");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
-    expect(togglePermission(["users:read"], "users:create")).toEqual(["users:read", "users:create"]);
+    expect(togglePermission(["users:read"], "users:create")).toEqual([
+      "users:read",
+      "users:create",
+    ]);
     expect(nationalPhone("+919876543210")).toBe("9876543210");
   });
 });
