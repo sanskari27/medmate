@@ -16,7 +16,12 @@ public final class PharmacyPermissions {
             "employees:update",
             "employees:delete",
             "invoice-settings:read",
-            "invoice-settings:update");
+            "invoice-settings:update",
+            "distributors:read",
+            "distributors:create",
+            "distributors:update",
+            "distributors:delete",
+            "distributors:pay");
 
     private PharmacyPermissions() {}
 

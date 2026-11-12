@@ -1,0 +1,38 @@
+meta {
+  name: Create distributor
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/distributors
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "Bengaluru Pharma Distributors",
+    "phone": "{{examplePhone}}",
+    "paymentTerms": "30 days credit"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with distributors:create, adds a firm. The server assigns DST-001 for the first distributor in that pharmacy.
+  A 201 response stores distributorCode from distributor.id.
+}

@@ -394,6 +394,7 @@ describe("AppRouter", () => {
       .map((button) => button.textContent?.trim());
     expect(names).toEqual([
       "Dashboard",
+      "Distributors",
       "Settings",
       "Reports",
       "Employees",
@@ -403,6 +404,7 @@ describe("AppRouter", () => {
       "Help & Support",
     ]);
     expect(screen.getByText("Management")).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {
@@ -467,6 +469,27 @@ describe("AppRouter", () => {
     renderAt("/invoice-settings");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Invoice Settings" })).toBeNull();
+  });
+
+  it("shows Distributors to staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["distributors:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Distributors" })).toBeTruthy();
+    expect(screen.getByText("Catalogue")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
+  });
+
+  it("sends pharmacy staff without distributors:read away from Distributors", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["distributors:create"] },
+    });
+    renderAt("/distributors");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Distributors" })).toBeNull();
   });
 
   it("sends pharmacy staff without employees:read away from Employees", () => {

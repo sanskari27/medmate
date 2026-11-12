@@ -22,6 +22,7 @@
     <module>medmate-server-identity</module>
     <module>medmate-server-support</module>
     <module>medmate-server-employees</module>
+    <module>medmate-server-distributors</module>
     <module>medmate-server-app</module>
   </modules>
 

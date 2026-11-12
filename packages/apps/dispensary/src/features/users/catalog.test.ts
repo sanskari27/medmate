@@ -9,7 +9,7 @@ import {
 
 describe("staff permission catalog", () => {
   it("groups management actions and counts them", () => {
-    expect(PERMISSION_AREAS.map((area) => area.area)).toEqual(["Management"]);
+    expect(PERMISSION_AREAS.map((area) => area.area)).toEqual(["Management", "Catalogue"]);
     expect(PERMISSION_AREAS[0]?.modules.map((module) => module.module)).toEqual([
       "Manage users",
       "Manage Employees",
@@ -29,8 +29,14 @@ describe("staff permission catalog", () => {
       "invoice-settings:update",
       "support:read",
       "support:write",
+      "distributors:read",
+      "distributors:create",
+      "distributors:update",
+      "distributors:delete",
+      "distributors:pay",
     ]);
-    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("2 / 12");
+    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual(["Distributors"]);
+    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("2 / 17");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
     expect(togglePermission(["users:read"], "users:create")).toEqual([
       "users:read",

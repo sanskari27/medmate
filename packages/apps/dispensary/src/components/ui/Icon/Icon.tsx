@@ -189,6 +189,34 @@ export function IconMenu(props: IconProps) {
   );
 }
 
+export function IconTruck(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="2" y="7" width="12" height="8" rx="1" />
+      <path d="M14 10h4l3 3v2h-7" />
+      <circle cx="6.5" cy="17.5" r="1.5" />
+      <circle cx="17.5" cy="17.5" r="1.5" />
+    </Svg>
+  );
+}
+
+export function IconPhone(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M7 3h4l1 4-2 1a12 12 0 0 0 6 6l1-2 4 1v4a2 2 0 0 1-2 2A16 16 0 0 1 5 7a2 2 0 0 1 2-2Z" />
+    </Svg>
+  );
+}
+
+export function IconEdit(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20h4l11-11-4-4L4 16v4Z" />
+      <path d="M13 7l4 4" />
+    </Svg>
+  );
+}
+
 export function IconLogout({ size = 20 }: IconProps) {
   return (
     <svg

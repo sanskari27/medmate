@@ -10,6 +10,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-identity/             accounts, sessions, pharmacy verification
   medmate-server-support/              FAQs, support cases, and the live chat socket
   medmate-server-employees/            pharmacy personnel register
+  medmate-server-distributors/         pharmacy distributor directory and ledger
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -44,6 +45,10 @@ FAQs and support cases live in `medmate-server-support`. The module depends on i
 ## Employees
 
 The personnel register lives in `medmate-server-employees`. The module depends on identity for access checks, the pharmacy workplace, and the document store. Identity does not depend on it. Tables are created by `V7__employees.sql`. Photos and documents use the same private prefix as pharmacy licences, under `employee-documents/`. [0011](decisions/0011-employee-register.md) records that boundary.
+
+## Distributors
+
+The supplier directory and its payable ledger live in `medmate-server-distributors`. The module depends on identity for access checks. Identity does not depend on it. Tables are created by `V9__distributors.sql`. Outstanding is the opening balance plus purchase bills, minus payments and returns. This module records payments. Later purchase and return features post lines into the same ledger. [0012](decisions/0012-distributor-directory.md) records that boundary.
 
 ## Not in this process
 
