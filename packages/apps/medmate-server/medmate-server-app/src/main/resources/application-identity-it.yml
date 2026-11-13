@@ -10,6 +10,7 @@ medmate:
   admin-bootstrap-token: test-bootstrap
   sms:
     base-url: ""
+    api-key: ""
   mail:
     mode: recording
     from: "Medmate <noreply@nammamedmate.com>"

@@ -1,5 +1,6 @@
 package com.medmate.server.identity.sms;
 
+import com.medmate.server.identity.otp.OtpPurpose;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.context.annotation.Profile;
@@ -12,7 +13,7 @@ public class RecordingSmsSender implements SmsSender {
     private final CopyOnWriteArrayList<Message> messages = new CopyOnWriteArrayList<>();
 
     @Override
-    public void send(String phone, String code) {
+    public void send(String phone, String code, OtpPurpose purpose) {
         messages.add(new Message(phone, code));
     }
 

@@ -48,7 +48,7 @@ Disabled accounts cannot sign in.
 
 ### OTP, session, and PIN
 
-OTP is 6 digits, expires after 5 minutes, and allows 5 checks. A new code for the same phone, account type, and purpose replaces the previous one. The code is stored hashed. Purposes are `login`, `signup`, and `pin_reset`.
+OTP is 6 digits, expires after 10 minutes, and allows 5 checks. A new code for the same phone, account type, and purpose replaces the previous one. The code is stored hashed. Purposes are `login`, `signup`, and `pin_reset`.
 
 `POST /auth/otp/send` with `{ phone, accountType, purpose }` returns `{ "mode": "otp" }` or `{ "mode": "pin" }`.
 
@@ -58,7 +58,7 @@ OTP is 6 digits, expires after 5 minutes, and allows 5 checks. A new code for th
 - `signup` for an existing pharmacy account returns 409 and does not send a code.
 - `pin_reset` sends a code only when that pharmacy owner is approved and already has a PIN. Otherwise it is a bad request.
 
-The server POSTs `{ "phone", "code" }` to `{sms-base-url}/messages`. Local development points that URL at the mock on port 8090. Tests use an in-memory sender. Production uses the configured URL and does not use Amazon SNS. A delivery failure is 503 and does not leave a usable code.
+Local development POSTs `{ "phone", "code" }` to `{sms-base-url}/messages`, which points at the mock on port 8090. Tests use an in-memory sender. Production, when `MEDMATE_SMS_API_KEY` is set, sends the approved Telinfy SMS for that purpose: `login` uses template `1777179371662098726`, `signup` uses `1777179371651147672`, and `pin_reset` uses `1777179371668989529`. The sender is `MEDMTE`. The message is the approved body with the code in place of `{{1}}`, and the number is the 10 digits after `+91`. A delivery failure is 503 and does not leave a usable code.
 
 `POST /auth/otp/verify` with `{ phone, accountType, purpose, code }` returns a session when the code matches. A missing code, a wrong code, an expired code, and a code with too many checks are 401. The client cannot tell a missing account from a wrong code on login verify.
 
@@ -169,7 +169,7 @@ Mail uses Resend. The API key is `RESEND_API_KEY`, supplied from `/medmate-repo/
 
 `.github/workflows/medmate-admin.yml` is `workflow_dispatch` with a phone input. It assumes the infra AWS role, reads `/medmate-repo/medmate-server/admin_bootstrap_token`, and POSTs to `https://api.nammamedmate.com/auth/admin-bootstrap`.
 
-JWT signing uses `MEDMATE_JWT_SECRET` from `/medmate-repo/medmate-server/jwt_secret`. The SMS base URL comes from `/medmate-repo/medmate-server/sms_base_url`.
+JWT signing uses `MEDMATE_JWT_SECRET` from `/medmate-repo/medmate-server/jwt_secret`. The SMS base URL comes from `/medmate-repo/medmate-server/sms_base_url`. The Telinfy API key is `MEDMATE_SMS_API_KEY` from `/medmate-repo/medmate-server/sms_api_key`.
 
 ### Errors
 

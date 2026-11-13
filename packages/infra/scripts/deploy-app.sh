@@ -110,6 +110,7 @@ append_parameter resend_api_key RESEND_API_KEY
 append_parameter jwt_secret MEDMATE_JWT_SECRET
 append_parameter admin_bootstrap_token MEDMATE_ADMIN_BOOTSTRAP_TOKEN
 append_parameter sms_base_url MEDMATE_SMS_BASE_URL
+append_parameter sms_api_key MEDMATE_SMS_API_KEY
 chmod 600 "$ENV_FILE"
 
 docker network create medmate >/dev/null 2>&1 || true

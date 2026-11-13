@@ -8,7 +8,7 @@ import java.time.Instant;
 public final class OtpMachine {
 
     public static final int MAX_ATTEMPTS = 5;
-    public static final Duration TTL = Duration.ofMinutes(5);
+    public static final Duration TTL = Duration.ofMinutes(10);
 
     public enum Verdict {
         OK,

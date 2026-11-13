@@ -7,7 +7,7 @@ public record MedmateIdentityProperties(Jwt jwt, String adminBootstrapToken, Sms
 
     public record Jwt(String secret, long accessSeconds, long refreshSeconds) {}
 
-    public record Sms(String baseUrl) {}
+    public record Sms(String baseUrl, String apiKey) {}
 
     public record Mail(String mode, String from, String resendApiKey) {}
 

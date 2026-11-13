@@ -229,7 +229,7 @@ public class AuthService {
         Instant now = clock.instant();
         accounts.upsertOtp(phone, type, purpose, OtpMachine.issue(Secrets.sha256(code), now));
         try {
-            sms.send(phone, code);
+            sms.send(phone, code, purpose);
         } catch (RuntimeException exception) {
             accounts.deleteOtp(phone, type, purpose);
             log.warn("OTP delivery failed for {}", phone);

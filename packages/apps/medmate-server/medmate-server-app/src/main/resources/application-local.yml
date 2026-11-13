@@ -14,6 +14,7 @@ medmate:
   admin-bootstrap-token: local-bootstrap
   sms:
     base-url: http://127.0.0.1:8090
+    api-key: ""
   mail:
     mode: recording
     from: "Medmate <noreply@nammamedmate.com>"

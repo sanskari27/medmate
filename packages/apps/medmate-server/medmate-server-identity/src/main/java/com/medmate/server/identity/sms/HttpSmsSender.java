@@ -1,5 +1,6 @@
 package com.medmate.server.identity.sms;
 
+import com.medmate.server.identity.otp.OtpPurpose;
 import org.springframework.web.client.RestClient;
 
 public final class HttpSmsSender implements SmsSender {
@@ -12,7 +13,7 @@ public final class HttpSmsSender implements SmsSender {
     }
 
     @Override
-    public void send(String phone, String code) {
+    public void send(String phone, String code, OtpPurpose purpose) {
         client.post().uri("/messages").body(new Message(phone, code)).retrieve().toBodilessEntity();
     }
 

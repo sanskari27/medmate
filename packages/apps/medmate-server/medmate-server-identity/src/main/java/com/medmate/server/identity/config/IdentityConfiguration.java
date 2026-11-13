@@ -13,6 +13,7 @@ import com.medmate.server.identity.session.AccountDirectory;
 import com.medmate.server.identity.sms.HttpSmsSender;
 import com.medmate.server.identity.sms.RecordingSmsSender;
 import com.medmate.server.identity.sms.SmsSender;
+import com.medmate.server.identity.sms.TelinfySmsSender;
 import com.medmate.server.shared.error.ProblemResponses;
 import java.time.Clock;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -57,6 +58,10 @@ public class IdentityConfiguration {
     @Bean
     @Primary
     SmsSender smsSender(MedmateIdentityProperties properties, RecordingSmsSender recording) {
+        String apiKey = properties.sms() == null ? "" : properties.sms().apiKey();
+        if (apiKey != null && !apiKey.isBlank()) {
+            return new TelinfySmsSender(apiKey);
+        }
         String baseUrl = properties.sms() == null ? "" : properties.sms().baseUrl();
         if (baseUrl == null || baseUrl.isBlank()) {
             return recording;

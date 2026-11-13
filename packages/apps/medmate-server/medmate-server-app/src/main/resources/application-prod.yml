@@ -19,6 +19,7 @@ medmate:
   admin-bootstrap-token: ${MEDMATE_ADMIN_BOOTSTRAP_TOKEN}
   sms:
     base-url: ${MEDMATE_SMS_BASE_URL:}
+    api-key: ${MEDMATE_SMS_API_KEY:}
   mail:
     mode: resend
     from: "Medmate <noreply@nammamedmate.com>"
