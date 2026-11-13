@@ -9,6 +9,7 @@ COPY medmate-server-distributors/pom.xml medmate-server-distributors/pom.xml
 COPY medmate-server-stock/pom.xml medmate-server-stock/pom.xml
 COPY medmate-server-offers/pom.xml medmate-server-offers/pom.xml
 COPY medmate-server-billing/pom.xml medmate-server-billing/pom.xml
+COPY medmate-server-crm/pom.xml medmate-server-crm/pom.xml
 COPY medmate-server-app/pom.xml medmate-server-app/pom.xml
 COPY medmate-server-shared/src medmate-server-shared/src
 COPY medmate-server-identity/src medmate-server-identity/src
@@ -18,6 +19,7 @@ COPY medmate-server-distributors/src medmate-server-distributors/src
 COPY medmate-server-stock/src medmate-server-stock/src
 COPY medmate-server-offers/src medmate-server-offers/src
 COPY medmate-server-billing/src medmate-server-billing/src
+COPY medmate-server-crm/src medmate-server-crm/src
 COPY medmate-server-app/src medmate-server-app/src
 RUN mvn -q -DskipTests package
 
