@@ -1,0 +1,36 @@
+meta {
+  name: Get report
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/reports/gstr1
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.id).to.equal("gstr1");
+    expect(res.body.name).to.equal("GSTR-1 (Sales)");
+    expect(res.body).to.have.property("columns");
+    expect(res.body).to.have.property("rows");
+    expect(res.body).to.have.property("from");
+    expect(res.body).to.have.property("to");
+  });
+}
+
+docs {
+  An approved owner, or staff with reports:read, reads GSTR-1 for the current month.
+}

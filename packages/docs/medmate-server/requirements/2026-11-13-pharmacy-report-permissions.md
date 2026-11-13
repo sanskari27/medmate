@@ -17,7 +17,7 @@ The dispensary screen is [Reports hub](../../dispensary/requirements/2026-11-13-
 
 ## Behavior
 
-`PharmacyPermissions` accepts `reports:read` and `reports:export`. A key outside the catalog stays invalid. An approved owner already passes every pharmacy key. A staff member can be saved with either key. No route checks these keys. The dispensary uses `reports:read` to show the hub. `reports:export` is stored for a later download and does not open the hub.
+`PharmacyPermissions` accepts `reports:read` and `reports:export`. A key outside the catalog stays invalid. An approved owner already passes every pharmacy key. A staff member can be saved with either key. The dispensary uses `reports:read` to show the hub. `reports:export` does not open the hub. The report routes that check these keys are [Pharmacy reports](2026-11-13-pharmacy-reports.md).
 
 ## Acceptance criteria
 

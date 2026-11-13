@@ -133,8 +133,6 @@ export const REPORT_FILTERS = [
 
 export type ReportFilter = (typeof REPORT_FILTERS)[number];
 
-export const LATER_NOTE = "This report opens in a later update.";
-
 const PAYMENT_IDS = new Set([
   "cash-bank",
   "receivable-ageing",

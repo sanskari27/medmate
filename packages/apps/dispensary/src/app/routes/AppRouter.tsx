@@ -16,7 +16,7 @@ import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
 import { ExpensesPage, canOpenExpenses } from "@/features/expenses";
-import { ReportsPage, canOpenReports } from "@/features/reports";
+import { ReportPage, ReportsPage, canOpenReports } from "@/features/reports";
 import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
 import { PatientsPage, canOpenPatients } from "@/features/patients";
@@ -215,6 +215,10 @@ export function AppRouter() {
           <Route
             path="/reports"
             element={reportsOpen ? <ReportsPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/reports/:reportId"
+            element={reportsOpen ? <ReportPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/employees"

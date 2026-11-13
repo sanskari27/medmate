@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import {
@@ -15,7 +16,6 @@ import { Text } from "@/components/ui/Text";
 import { cn } from "@/utils/className";
 import {
   COLUMN_LABEL,
-  LATER_NOTE,
   REPORT_COLUMNS,
   REPORT_FILTERS,
   columnReports,
@@ -36,23 +36,10 @@ const COLUMN_ICON: Record<ReportCat, ReactNode> = {
 export function ReportsPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ReportFilter | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
   const shown = matchingReports(query, filter);
 
-  function keep(nextQuery: string, nextFilter: ReportFilter | null, id: string | null) {
-    if (!id) return null;
-    return matchingReports(nextQuery, nextFilter).some((report) => report.id === id) ? id : null;
-  }
-
-  function changeQuery(value: string) {
-    setQuery(value);
-    setOpenId((id) => keep(value, filter, id));
-  }
-
   function chooseFilter(next: ReportFilter) {
-    const value = filter === next ? null : next;
-    setFilter(value);
-    setOpenId((id) => keep(query, value, id));
+    setFilter((current) => (current === next ? null : next));
   }
 
   return (
@@ -91,7 +78,7 @@ export function ReportsPage() {
             aria-label="Find report"
             placeholder="Find report…"
             value={query}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => changeQuery(event.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
           />
         </Box>
       </Box>
@@ -104,12 +91,7 @@ export function ReportsPage() {
                 {COLUMN_ICON[cat]} {COLUMN_LABEL[cat]}
               </Box>
               {items.map((report) => (
-                <ReportCard
-                  key={report.id}
-                  report={report}
-                  noted={openId === report.id}
-                  onOpen={setOpenId}
-                />
+                <ReportCard key={report.id} report={report} />
               ))}
               {items.length === 0 ? (
                 <Text className="px-0.5 py-2 text-[12.5px] text-muted">No matches</Text>
@@ -122,31 +104,18 @@ export function ReportsPage() {
   );
 }
 
-function ReportCard({
-  report,
-  noted,
-  onOpen,
-}: {
-  report: ReportMeta;
-  noted: boolean;
-  onOpen: (id: string) => void;
-}) {
+function ReportCard({ report }: { report: ReportMeta }) {
   return (
-    <Box>
-      <Button
-        type="button"
-        variant="ghost"
-        className="h-auto w-full justify-between rounded-[7px] border-0 bg-transparent px-0.5 py-[9px] text-left text-[14px] font-normal text-ink shadow-none hover:bg-wash-2 hover:px-2 hover:text-green"
-        onClick={() => onOpen(report.id)}
-      >
-        <span>{report.name}</span>
-        {report.fav ? (
-          <span className="text-[15px] text-gold">
-            <IconStar size={13} />
-          </span>
-        ) : null}
-      </Button>
-      {noted ? <Text className="px-0.5 text-[12.5px] text-muted">{LATER_NOTE}</Text> : null}
-    </Box>
+    <Link
+      to={`/reports/${report.id}`}
+      className="flex h-auto w-full items-center justify-between rounded-[7px] px-0.5 py-[9px] text-left text-[14px] font-normal text-ink hover:bg-wash-2 hover:px-2 hover:text-green"
+    >
+      <span>{report.name}</span>
+      {report.fav ? (
+        <span className="text-[15px] text-gold">
+          <IconStar size={13} />
+        </span>
+      ) : null}
+    </Link>
   );
 }

@@ -28,6 +28,7 @@
     <module>medmate-server-billing</module>
     <module>medmate-server-crm</module>
     <module>medmate-server-expenses</module>
+    <module>medmate-server-reports</module>
     <module>medmate-server-app</module>
   </modules>
 

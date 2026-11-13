@@ -16,6 +16,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-billing/              cash and credit sales from the counter
   medmate-server-crm/                  patient directory, khata, and CRM writes
   medmate-server-expenses/             pharmacy expense register
+  medmate-server-reports/              pharmacy reports read from posted rows
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -74,6 +75,10 @@ The patient directory, khata repayments, and CRM writes live in `medmate-server-
 ## Expenses
 
 The expense register lives in `medmate-server-expenses`. The module depends on identity for access checks. Identity does not depend on it. `V20__expenses.sql` stores each expense, its sequence, and the page index. Tax is computed from the GST-inclusive amount. [0019](decisions/0019-pharmacy-expenses.md) records that boundary.
+
+## Reports
+
+The 23 pharmacy reports live in `medmate-server-reports`. The module depends on identity for access checks and reads posted bills, purchases, stock, offers, expenses, repayments, and distributor payments through JDBC. It does not write those tables and it does not depend on the modules that own them. There is no reports table. `GET /pharmacy/reports/{id}` requires `reports:read`. `GET /pharmacy/reports/{id}/export` requires `reports:export` and returns CSV. [0020](decisions/0020-pharmacy-reports.md) records that boundary.
 
 ## Not in this process
 

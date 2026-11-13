@@ -1,0 +1,32 @@
+meta {
+  name: Export report
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/reports/gstr1/export
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: text/csv
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.headers["content-type"]).to.include("text/csv");
+    expect(res.body).to.include("GST slab");
+  });
+}
+
+docs {
+  An approved owner, or staff with reports:export, downloads the report as CSV.
+}

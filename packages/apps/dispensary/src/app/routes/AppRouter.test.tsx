@@ -724,6 +724,16 @@ describe("AppRouter", () => {
     expect(screen.queryByRole("button", { name: "Reports" })).toBeNull();
   });
 
+  it("sends pharmacy staff without reports:read away from a report", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["reports:export"] },
+    });
+    renderAt("/reports/gstr1");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reports" })).toBeNull();
+  });
+
   it("sends pharmacy staff away from Profile", () => {
     writeSession({
       ...session,
