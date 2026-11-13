@@ -16,6 +16,7 @@ import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
 import { ExpensesPage, canOpenExpenses } from "@/features/expenses";
+import { ReportsPage, canOpenReports } from "@/features/reports";
 import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
 import { PatientsPage, canOpenPatients } from "@/features/patients";
@@ -59,6 +60,7 @@ export function AppRouter() {
   const racksOpen = canOpenRacks(session?.account.pharmacyRole, session?.account.permissions);
   const offersOpen = canOpenOffers(session?.account.pharmacyRole, session?.account.permissions);
   const expensesOpen = canOpenExpenses(session?.account.pharmacyRole, session?.account.permissions);
+  const reportsOpen = canOpenReports(session?.account.pharmacyRole, session?.account.permissions);
   const billingOpen = canOpenBilling(session?.account.pharmacyRole, session?.account.permissions);
   const salesOpen = canOpenSales(session?.account.pharmacyRole, session?.account.permissions);
   const patientsOpen = canOpenPatients(session?.account.pharmacyRole, session?.account.permissions);
@@ -80,7 +82,7 @@ export function AppRouter() {
     "/offers",
   ]);
   let catalogueLabeled = false;
-  const businessPaths = new Set(["/expenses"]);
+  const businessPaths = new Set(["/expenses", "/reports"]);
   let businessLabeled = false;
   let managementLabeled = false;
   const items = appRoutes
@@ -93,6 +95,7 @@ export function AppRouter() {
       if (route.path === "/racks") return racksOpen;
       if (route.path === "/offers") return offersOpen;
       if (route.path === "/expenses") return expensesOpen;
+      if (route.path === "/reports") return reportsOpen;
       if (route.path === "/billing") return billingOpen;
       if (route.path === "/sales") return salesOpen;
       if (route.path === "/patients") return patientsOpen;
@@ -157,6 +160,7 @@ export function AppRouter() {
                 route.path !== "/racks" &&
                 route.path !== "/offers" &&
                 route.path !== "/expenses" &&
+                route.path !== "/reports" &&
                 route.path !== "/billing" &&
                 route.path !== "/sales" &&
                 route.path !== "/patients",
@@ -207,6 +211,10 @@ export function AppRouter() {
           <Route
             path="/expenses"
             element={expensesOpen ? <ExpensesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/reports"
+            element={reportsOpen ? <ReportsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/employees"

@@ -136,6 +136,13 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "expenses:create", label: "Create" },
         ],
       },
+      {
+        module: "Reports",
+        actions: [
+          { key: "reports:read", label: "Read" },
+          { key: "reports:export", label: "Export" },
+        ],
+      },
     ],
   },
 ];

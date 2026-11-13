@@ -279,6 +279,51 @@ export function IconWhatsApp(props: IconProps) {
   );
 }
 
+export function IconSearch(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </Svg>
+  );
+}
+
+export function IconBox(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M21 8 12 3 3 8v8l9 5 9-5Z" />
+      <path d="m3 8 9 5 9-5M12 13v8" />
+    </Svg>
+  );
+}
+
+export function IconDoc(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 2h8l4 4v16H6Z" />
+      <path d="M14 2v4h4" />
+      <path d="M9 12h6M9 16h6" />
+    </Svg>
+  );
+}
+
+export function IconStar(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9Z" />
+    </Svg>
+  );
+}
+
+export function IconSparkle(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v6M12 15v6M3 12h6M15 12h6" />
+      <path d="m6.5 6.5 3 3M14.5 14.5l3 3M17.5 6.5l-3 3M9.5 14.5l-3 3" />
+    </Svg>
+  );
+}
+
 export function IconCash(props: IconProps) {
   return (
     <Svg {...props}>
