@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  IconCash,
   IconDashboard,
   IconHelp,
   IconTruck,
@@ -13,6 +14,7 @@ import { DashboardPage } from "@/features/dashboard";
 import { DistributorsPage } from "@/features/distributors";
 import { InventoryPage } from "@/features/inventory";
 import { OffersPage } from "@/features/offers";
+import { ExpensesPage } from "@/features/expenses";
 import { BillingPage } from "@/features/billing";
 import { SalesPage } from "@/features/sales";
 import { PatientsPage } from "@/features/patients";
@@ -101,6 +103,14 @@ export const appRoutes: AppRoute[] = [
     sub: "Discounts & promotions",
     icon: <IconOffer size={19} />,
     element: <OffersPage />,
+  },
+  {
+    path: "/expenses",
+    label: "Expenses",
+    title: "Expenses",
+    sub: "Track business spend & categories",
+    icon: <IconCash size={19} />,
+    element: <ExpensesPage />,
   },
   {
     path: "/employees",

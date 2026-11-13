@@ -126,6 +126,18 @@ export const PERMISSION_AREAS: PermissionArea[] = [
       },
     ],
   },
+  {
+    area: "Business",
+    modules: [
+      {
+        module: "Expenses",
+        actions: [
+          { key: "expenses:read", label: "Read" },
+          { key: "expenses:create", label: "Create" },
+        ],
+      },
+    ],
+  },
 ];
 
 export const PERMISSION_KEYS = PERMISSION_AREAS.flatMap((area) =>

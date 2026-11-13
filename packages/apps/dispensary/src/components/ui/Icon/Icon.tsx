@@ -279,6 +279,16 @@ export function IconWhatsApp(props: IconProps) {
   );
 }
 
+export function IconCash(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 9v6M18 9v6" />
+    </Svg>
+  );
+}
+
 export function IconLogout({ size = 20 }: IconProps) {
   return (
     <svg

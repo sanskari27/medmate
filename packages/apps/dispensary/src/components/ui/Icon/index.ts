@@ -1,5 +1,6 @@
 export {
   IconArrowRight,
+  IconCash,
   IconChart,
   IconCredit,
   IconHistory,

@@ -1,0 +1,35 @@
+meta {
+  name: List expenses
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/expenses?page=1&size=25
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("expenses");
+    expect(res.body).to.have.property("summary");
+    expect(res.body).to.have.property("categories");
+    expect(res.body.page).to.equal(1);
+    expect(res.body.size).to.equal(25);
+  });
+}
+
+docs {
+  An approved owner, or staff with expenses:read, lists this pharmacy's expenses.
+}

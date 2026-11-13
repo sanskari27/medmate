@@ -41,7 +41,9 @@ public final class PharmacyPermissions {
             "sales:read",
             "sales:return",
             "patients:read",
-            "patients:update");
+            "patients:update",
+            "expenses:read",
+            "expenses:create");
 
     private PharmacyPermissions() {}
 

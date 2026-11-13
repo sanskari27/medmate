@@ -15,6 +15,7 @@ import { EmployeesPage, canOpenEmployees } from "@/features/employees";
 import { DistributorsPage, canOpenDistributors } from "@/features/distributors";
 import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
+import { ExpensesPage, canOpenExpenses } from "@/features/expenses";
 import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
 import { PatientsPage, canOpenPatients } from "@/features/patients";
@@ -57,6 +58,7 @@ export function AppRouter() {
   );
   const racksOpen = canOpenRacks(session?.account.pharmacyRole, session?.account.permissions);
   const offersOpen = canOpenOffers(session?.account.pharmacyRole, session?.account.permissions);
+  const expensesOpen = canOpenExpenses(session?.account.pharmacyRole, session?.account.permissions);
   const billingOpen = canOpenBilling(session?.account.pharmacyRole, session?.account.permissions);
   const salesOpen = canOpenSales(session?.account.pharmacyRole, session?.account.permissions);
   const patientsOpen = canOpenPatients(session?.account.pharmacyRole, session?.account.permissions);
@@ -78,6 +80,8 @@ export function AppRouter() {
     "/offers",
   ]);
   let catalogueLabeled = false;
+  const businessPaths = new Set(["/expenses"]);
+  let businessLabeled = false;
   let managementLabeled = false;
   const items = appRoutes
     .filter((route) => {
@@ -88,6 +92,7 @@ export function AppRouter() {
       if (route.path === "/inventory") return inventoryOpen;
       if (route.path === "/racks") return racksOpen;
       if (route.path === "/offers") return offersOpen;
+      if (route.path === "/expenses") return expensesOpen;
       if (route.path === "/billing") return billingOpen;
       if (route.path === "/sales") return salesOpen;
       if (route.path === "/patients") return patientsOpen;
@@ -102,6 +107,10 @@ export function AppRouter() {
       if (cataloguePaths.has(route.path)) {
         next = catalogueLabeled ? { ...route, group: undefined } : { ...route, group: "Catalogue" };
         catalogueLabeled = true;
+      }
+      if (businessPaths.has(route.path)) {
+        next = businessLabeled ? { ...route, group: undefined } : { ...route, group: "Business" };
+        businessLabeled = true;
       }
       if (!managementPaths.has(route.path)) return next;
       if (managementLabeled) return { ...next, group: undefined };
@@ -147,6 +156,7 @@ export function AppRouter() {
                 route.path !== "/inventory" &&
                 route.path !== "/racks" &&
                 route.path !== "/offers" &&
+                route.path !== "/expenses" &&
                 route.path !== "/billing" &&
                 route.path !== "/sales" &&
                 route.path !== "/patients",
@@ -193,6 +203,10 @@ export function AppRouter() {
           <Route
             path="/offers"
             element={offersOpen ? <OffersPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/expenses"
+            element={expensesOpen ? <ExpensesPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/employees"

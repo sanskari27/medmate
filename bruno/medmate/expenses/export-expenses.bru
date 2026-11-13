@@ -1,0 +1,32 @@
+meta {
+  name: Export expenses
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/expenses/export
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("expenses");
+    expect(res.body).to.not.have.property("page");
+  });
+}
+
+docs {
+  An approved owner, or staff with expenses:read, downloads every expense matching the filter.
+}

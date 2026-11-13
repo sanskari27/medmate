@@ -1,0 +1,43 @@
+meta {
+  name: Create expense
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/expenses
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "spentOn": "2026-01-15",
+    "party": "Landlord",
+    "category": "Rent Expense",
+    "paymentMode": "cash",
+    "amount": "118.00",
+    "gst": 18,
+    "note": "January rent"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 400, 403]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  An approved owner, or staff with expenses:create, records an expense. The first number for a pharmacy is EXP-1001.
+}

@@ -14,6 +14,7 @@ import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { billingApi, billingReducer } from "@/features/billing";
 import { salesApi } from "@/features/sales";
 import { patientsApi } from "@/features/patients";
+import { expensesApi } from "@/features/expenses";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -33,4 +34,5 @@ export const rootReducer = combineReducers({
   [billingApi.reducerPath]: billingApi.reducer,
   [salesApi.reducerPath]: salesApi.reducer,
   [patientsApi.reducerPath]: patientsApi.reducer,
+  [expensesApi.reducerPath]: expensesApi.reducer,
 });

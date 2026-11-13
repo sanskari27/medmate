@@ -402,6 +402,7 @@ describe("AppRouter", () => {
       "Inventory",
       "Rack & Locations",
       "Offers",
+      "Expenses",
       "Employees",
       "Invoice Settings",
       "Manage Users",
@@ -410,6 +411,7 @@ describe("AppRouter", () => {
     ]);
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByText("Catalogue")).toBeTruthy();
+    expect(screen.getByText("Business")).toBeTruthy();
     expect(screen.getByText("Counter")).toBeTruthy();
   });
 
@@ -678,6 +680,26 @@ describe("AppRouter", () => {
     renderAt("/employees");
     expect(screen.getByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Employees" })).toBeNull();
+  });
+
+  it("shows Expenses to staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["expenses:read"] },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Expenses" })).toBeTruthy();
+    expect(screen.getByText("Business")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without expenses:read away from Expenses", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["expenses:create"] },
+    });
+    renderAt("/expenses");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Expenses" })).toBeNull();
   });
 
   it("sends pharmacy staff away from Profile", () => {
