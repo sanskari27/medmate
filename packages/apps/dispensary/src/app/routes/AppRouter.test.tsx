@@ -182,7 +182,7 @@ describe("AppRouter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(await screen.findByRole("button", { name: "Auto-fill" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify & log in" }));
-    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(await screen.findByText("Loading dashboard")).toBeTruthy();
     expect(screen.getByText("Pharmacy owner")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
     expect(screen.getByText("Staff & access control")).toBeTruthy();
@@ -220,7 +220,7 @@ describe("AppRouter", () => {
     expect(
       await screen.findByText("This number is a staff account. Choose Staff to sign in."),
     ).toBeTruthy();
-    expect(screen.queryByText("This page is not built yet.")).toBeNull();
+    expect(screen.queryByText("Loading dashboard")).toBeNull();
   });
 
   it("signs up with a mobile number and no role selector", () => {
@@ -276,7 +276,7 @@ describe("AppRouter", () => {
     writeSession({ ...session, account: { ...session.account, verificationStatus: "incomplete" } });
     renderAt("/dashboard");
     expect(await screen.findByText("Let's set up your pharmacy")).toBeTruthy();
-    expect(screen.queryByText("This page is not built yet.")).toBeNull();
+    expect(screen.queryByText("Loading dashboard")).toBeNull();
   });
 
   it("opens setup when the application was rejected", async () => {
@@ -336,7 +336,7 @@ describe("AppRouter", () => {
     expect(screen.getAllByText("Compliance is reviewing this application.").length).toBeGreaterThan(
       0,
     );
-    expect(screen.queryByText("This page is not built yet.")).toBeNull();
+    expect(screen.queryByText("Loading dashboard")).toBeNull();
   });
 
   it("sends a disabled owner to the restricted screen", () => {
@@ -352,7 +352,7 @@ describe("AppRouter", () => {
     renderAt("/dashboard");
     expect(screen.getByRole("heading", { name: "Your account is restricted." })).toBeTruthy();
     expect(screen.getByText("Contact us to get it unblocked.")).toBeTruthy();
-    expect(screen.queryByText("This page is not built yet.")).toBeNull();
+    expect(screen.queryByText("Loading dashboard")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Set a PIN" })).toBeNull();
   });
 
@@ -380,7 +380,7 @@ describe("AppRouter", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Auto-fill" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify & log in" }));
     expect(await screen.findByText("This pharmacy is restricted.")).toBeTruthy();
-    expect(screen.queryByText("This page is not built yet.")).toBeNull();
+    expect(screen.queryByText("Loading dashboard")).toBeNull();
     expect(sessionStorage.length).toBe(0);
   });
 
@@ -393,10 +393,10 @@ describe("AppRouter", () => {
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
     expect(names).toEqual([
+      "Dashboard",
       "Billing",
       "Sales",
       "CRM - Patients",
-      "Dashboard",
       "Distributors",
       "Purchases",
       "Inventory",
@@ -422,7 +422,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff" },
     });
     renderAt("/support");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Help & Support" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Profile" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
@@ -435,7 +435,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff" },
     });
     renderAt("/users");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Manage Users" })).toBeNull();
   });
 
@@ -476,7 +476,7 @@ describe("AppRouter", () => {
       },
     });
     renderAt("/invoice-settings");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Invoice Settings" })).toBeNull();
   });
 
@@ -497,7 +497,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["distributors:create"] },
     });
     renderAt("/distributors");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Distributors" })).toBeNull();
   });
 
@@ -517,7 +517,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["purchases:create"] },
     });
     renderAt("/purchases");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Purchases" })).toBeNull();
   });
 
@@ -537,7 +537,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["inventory:update"] },
     });
     renderAt("/inventory");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Inventory" })).toBeNull();
   });
 
@@ -557,7 +557,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["offers:create"] },
     });
     renderAt("/offers");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Offers" })).toBeNull();
   });
 
@@ -571,7 +571,8 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names[0]).toBe("Billing");
+    expect(names[0]).toBe("Dashboard");
+    expect(names[1]).toBe("Billing");
     expect(screen.getByText("Counter")).toBeTruthy();
   });
 
@@ -585,7 +586,8 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names[0]).toBe("Sales");
+    expect(names[0]).toBe("Dashboard");
+    expect(names[1]).toBe("Sales");
     expect(screen.getByText("Counter")).toBeTruthy();
   });
 
@@ -599,7 +601,8 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names[0]).toBe("CRM - Patients");
+    expect(names[0]).toBe("Dashboard");
+    expect(names[1]).toBe("CRM - Patients");
     expect(screen.getByText("Counter")).toBeTruthy();
   });
 
@@ -609,7 +612,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["patients:update"] },
     });
     renderAt("/patients");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "CRM - Patients" })).toBeNull();
   });
 
@@ -619,7 +622,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["sales:return"] },
     });
     renderAt("/sales");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Sales" })).toBeNull();
   });
 
@@ -629,7 +632,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["billing:create"] },
     });
     renderAt("/billing");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
   });
 
@@ -649,7 +652,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:create"] },
     });
     renderAt("/racks");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Rack & Locations" })).toBeNull();
   });
 
@@ -669,7 +672,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["racks:create"] },
     });
     renderAt("/racks");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Rack & Locations" })).toBeNull();
   });
 
@@ -679,7 +682,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["employees:create"] },
     });
     renderAt("/employees");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Employees" })).toBeNull();
   });
 
@@ -699,7 +702,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["expenses:create"] },
     });
     renderAt("/expenses");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Expenses" })).toBeNull();
   });
 
@@ -720,7 +723,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["reports:export"] },
     });
     renderAt("/reports");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reports" })).toBeNull();
   });
 
@@ -730,7 +733,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff", permissions: ["reports:export"] },
     });
     renderAt("/reports/gstr1");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reports" })).toBeNull();
   });
 
@@ -740,7 +743,7 @@ describe("AppRouter", () => {
       account: { ...session.account, pharmacyRole: "staff" },
     });
     renderAt("/profile");
-    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Profile" })).toBeNull();
   });
 });

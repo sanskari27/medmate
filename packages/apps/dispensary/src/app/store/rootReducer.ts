@@ -16,6 +16,7 @@ import { salesApi } from "@/features/sales";
 import { patientsApi } from "@/features/patients";
 import { expensesApi } from "@/features/expenses";
 import { reportsApi } from "@/features/reports";
+import { dashboardApi } from "@/features/dashboard";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -37,4 +38,5 @@ export const rootReducer = combineReducers({
   [patientsApi.reducerPath]: patientsApi.reducer,
   [expensesApi.reducerPath]: expensesApi.reducer,
   [reportsApi.reducerPath]: reportsApi.reducer,
+  [dashboardApi.reducerPath]: dashboardApi.reducer,
 });

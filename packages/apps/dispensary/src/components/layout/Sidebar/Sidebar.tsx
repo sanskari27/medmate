@@ -108,7 +108,7 @@ export function Sidebar({
           );
         })}
       </Stack>
-      <Stack className="border-t border-white/[0.09] px-3.5 pt-3.5 pb-4">
+      <Stack className="border-t border-white/[0.09] px-3.5 pt-3.5 pb-1">
         <Stack direction="row" align="center" className="gap-2.5">
           <Box className="grid h-[34px] w-[34px] place-items-center rounded-[10px] bg-mint font-display text-[14px] font-extrabold text-deep">
             {initial}

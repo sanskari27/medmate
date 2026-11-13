@@ -33,6 +33,14 @@ export type AppRoute = NavEntry & { element: ReactNode };
 
 export const appRoutes: AppRoute[] = [
   {
+    path: "/dashboard",
+    label: "Dashboard",
+    title: "Dashboard",
+    sub: "Today at a glance",
+    icon: <IconDashboard size={19} />,
+    element: <DashboardPage />,
+  },
+  {
     path: "/billing",
     label: "Billing",
     title: "Billing",
@@ -56,14 +64,6 @@ export const appRoutes: AppRoute[] = [
     sub: "Customers and khata",
     icon: <IconUsers size={19} />,
     element: <PatientsPage />,
-  },
-  {
-    path: "/dashboard",
-    label: "Dashboard",
-    title: "Dashboard",
-    sub: "Today at a glance",
-    icon: <IconDashboard size={19} />,
-    element: <DashboardPage />,
   },
   {
     path: "/distributors",

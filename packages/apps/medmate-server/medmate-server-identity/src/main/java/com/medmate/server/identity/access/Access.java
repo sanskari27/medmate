@@ -47,6 +47,22 @@ public final class Access {
         return role == PharmacyRole.STAFF && permissions != null && permissions.contains(key);
     }
 
+    public static boolean pharmacyMember(
+            AccountType type,
+            boolean disabled,
+            PharmacyRole role,
+            UUID accountPharmacyId,
+            UUID targetPharmacyId,
+            VerificationStatus status) {
+        if (disabled || type != AccountType.PHARMACY || status != VerificationStatus.APPROVED) {
+            return false;
+        }
+        if (accountPharmacyId == null || !accountPharmacyId.equals(targetPharmacyId) || role == null) {
+            return false;
+        }
+        return role == PharmacyRole.OWNER || role == PharmacyRole.STAFF;
+    }
+
     public static boolean validKey(String key) {
         return PharmacyPermissions.valid(key);
     }

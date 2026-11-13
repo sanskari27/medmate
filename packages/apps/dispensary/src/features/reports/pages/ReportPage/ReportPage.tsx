@@ -7,6 +7,7 @@ import { DateFields } from "@/components/ui/DateFields";
 import { FilterField } from "@/components/ui/FilterField";
 import { Input } from "@/components/ui/Input";
 import { PageBar } from "@/components/ui/PageBar";
+import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/utils/className";
 import { problemMessage, useAuthState } from "@/features/authentication";

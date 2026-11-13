@@ -16,6 +16,7 @@ import { salesApi } from "@/features/sales";
 import { patientsApi } from "@/features/patients";
 import { expensesApi } from "@/features/expenses";
 import { reportsApi } from "@/features/reports";
+import { dashboardApi } from "@/features/dashboard";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -43,6 +44,7 @@ export function createAppStore() {
         patientsApi.middleware,
         expensesApi.middleware,
         reportsApi.middleware,
+        dashboardApi.middleware,
       ),
   });
 }

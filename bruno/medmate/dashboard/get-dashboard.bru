@@ -1,0 +1,45 @@
+meta {
+  name: Get dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/dashboard?range=7d
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.range).to.equal("7d");
+    expect(res.body).to.have.property("today");
+    expect(res.body).to.have.property("month");
+    expect(res.body).to.have.property("dues");
+    expect(res.body).to.have.property("stock");
+    expect(res.body).to.have.property("recent");
+    expect(res.body).to.have.property("window");
+    expect(res.body.today).to.have.property("netSales");
+    expect(res.body.today).to.have.property("returns");
+    expect(res.body.month).to.have.property("purchases");
+    expect(res.body.month).to.have.property("expenses");
+    expect(res.body.stock).to.have.property("cost");
+    expect(res.body.stock).to.have.property("retail");
+    expect(res.body.window).to.have.property("margin");
+    expect(res.body.window.buckets).to.have.length(7);
+  });
+}
+
+docs {
+  An approved owner or staff member reads the 7-day dashboard. No permission key is required.
+}
