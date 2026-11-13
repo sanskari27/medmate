@@ -80,7 +80,10 @@ export function LeadDetailPage() {
       </Stack>
       <div className="grid gap-3 rounded-lg border border-line bg-paper px-4 py-4 sm:grid-cols-2">
         {fields(lead).map(([label, value]) => (
-          <div key={label} className={label === "Message" || label === "Notes" ? "sm:col-span-2" : ""}>
+          <div
+            key={label}
+            className={label === "Message" || label === "Notes" ? "sm:col-span-2" : ""}
+          >
             <Text as="span" variant="muted" className="block">
               {label}
             </Text>

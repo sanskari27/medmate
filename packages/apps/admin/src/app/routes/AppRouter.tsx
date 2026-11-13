@@ -54,7 +54,10 @@ export function AppRouter() {
           }
         >
           {items
-            .filter((route) => route.path !== "/reviews" && route.path !== "/support" && route.path !== "/leads")
+            .filter(
+              (route) =>
+                route.path !== "/reviews" && route.path !== "/support" && route.path !== "/leads",
+            )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
@@ -74,7 +77,10 @@ export function AppRouter() {
             path="/support/cases/:caseId"
             element={support ? <SupportCasePage /> : <Navigate to="/dashboard" replace />}
           />
-          <Route path="/leads" element={support ? <LeadsPage /> : <Navigate to="/dashboard" replace />} />
+          <Route
+            path="/leads"
+            element={support ? <LeadsPage /> : <Navigate to="/dashboard" replace />}
+          />
           <Route
             path="/leads/:leadId"
             element={support ? <LeadDetailPage /> : <Navigate to="/dashboard" replace />}
