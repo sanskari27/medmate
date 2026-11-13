@@ -45,6 +45,10 @@ export default defineConfig({
           if (accept.includes("text/html")) return "/index.html";
         },
       },
+      "/api": {
+        target: "http://127.0.0.1:8080",
+        changeOrigin: true,
+      },
       "/sms-mock": {
         target: "http://127.0.0.1:8090",
         changeOrigin: true,

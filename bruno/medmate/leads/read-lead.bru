@@ -1,0 +1,32 @@
+meta {
+  name: Read lead
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/leads/{{leadId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("admin or support reads one lead", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.lead.id).to.equal(bru.getEnvVar("leadId"));
+    expect(res.body.lead.message).to.equal("Need help");
+  });
+}
+
+docs {
+  Run Create lead first so leadId is set. The response includes every stored field.
+}

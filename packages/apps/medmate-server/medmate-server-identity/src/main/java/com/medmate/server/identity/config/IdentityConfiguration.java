@@ -115,7 +115,8 @@ public class IdentityConfiguration {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/**", "/auth/**", "/support/stream")
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                                "/actuator/**", "/auth/**", "/support/stream", "/api/v1/leads", "/api/v1/leads/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

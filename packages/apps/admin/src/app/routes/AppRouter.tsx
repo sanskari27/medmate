@@ -11,6 +11,7 @@ import {
   useAuthActions,
   useAuthState,
 } from "@/features/authentication";
+import { LeadDetailPage, LeadsPage } from "@/features/leads";
 import { PharmacyDetailPage } from "@/features/pharmacies";
 import { ReviewDetailPage, ReviewsPage } from "@/features/reviews";
 import { SupportCasePage, SupportPage } from "@/features/support";
@@ -53,7 +54,7 @@ export function AppRouter() {
           }
         >
           {items
-            .filter((route) => route.path !== "/reviews" && route.path !== "/support")
+            .filter((route) => route.path !== "/reviews" && route.path !== "/support" && route.path !== "/leads")
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
@@ -72,6 +73,11 @@ export function AppRouter() {
           <Route
             path="/support/cases/:caseId"
             element={support ? <SupportCasePage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route path="/leads" element={support ? <LeadsPage /> : <Navigate to="/dashboard" replace />} />
+          <Route
+            path="/leads/:leadId"
+            element={support ? <LeadDetailPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route path="/pharmacies/:pharmacyId" element={<PharmacyDetailPage />} />
         </Route>

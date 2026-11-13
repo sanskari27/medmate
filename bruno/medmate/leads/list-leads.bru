@@ -1,0 +1,35 @@
+meta {
+  name: List leads
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/leads?page=1&size=25
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("admin or support lists leads", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.leads).to.be.an("array");
+    expect(res.body.page).to.equal(1);
+    expect(res.body.size).to.equal(25);
+    expect(res.body.total).to.be.a("number");
+  });
+}
+
+docs {
+  Platform admin and staff:support see every site. Rows are newest first.
+}

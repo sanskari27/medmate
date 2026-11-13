@@ -1,0 +1,38 @@
+meta {
+  name: Update lead status
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/leads/{{leadId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "status": "contacted"
+  }
+}
+
+tests {
+  test("admin or support marks the lead contacted", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.lead.status).to.equal("contacted");
+  });
+}
+
+docs {
+  Status moves between new and contacted. There is no reply and no delete.
+}

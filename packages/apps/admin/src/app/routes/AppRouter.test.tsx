@@ -174,11 +174,11 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support"]);
+    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support", "Leads"]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
     ].map((label) => label.textContent);
-    expect(sections).toEqual(["Pharmacies", "Support"]);
+    expect(sections).toEqual(["Pharmacies", "Support", "Leads"]);
     expect(screen.getByText("Ada")).toBeTruthy();
     expect(screen.getByText("Platform admin")).toBeTruthy();
     expect(screen.getByText("Namma")).toBeTruthy();
@@ -351,6 +351,21 @@ describe("AppRouter", () => {
     renderAt("/support");
     expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Support" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
+  });
+
+  it("sends finance staff away from Leads", async () => {
+    const finance: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["finance"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
+    );
+    renderAt("/leads");
+    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
   });
 
   it("shows Support to support staff", async () => {
@@ -383,7 +398,7 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names).toEqual(["Home", "Pharmacies", "Support"]);
+    expect(names).toEqual(["Home", "Pharmacies", "Support", "Leads"]);
     expect(screen.queryByRole("button", { name: "Reviews" })).toBeNull();
   });
 

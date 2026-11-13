@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import type { NavEntry } from "@/components/layout";
-import { IconCheck, IconDashboard, IconHelp, IconStore } from "@/components/ui/Icon";
+import { IconCheck, IconDashboard, IconGlobe, IconHelp, IconStore } from "@/components/ui/Icon";
 import type { Account } from "@/types";
 import { canReview, canSupport } from "@/features/authentication";
 import { DashboardPage } from "@/features/dashboard";
+import { LeadsPage } from "@/features/leads";
 import { PharmaciesPage } from "@/features/pharmacies";
 import { ReviewsPage } from "@/features/reviews";
 import { SupportPage } from "@/features/support";
@@ -45,12 +46,21 @@ export const appRoutes: AppRoute[] = [
     icon: <IconHelp size={19} />,
     element: <SupportPage />,
   },
+  {
+    path: "/leads",
+    label: "Leads",
+    title: "Leads",
+    sub: "Website forms",
+    group: "Leads",
+    icon: <IconGlobe size={19} />,
+    element: <LeadsPage />,
+  },
 ];
 
 export function navRoutes(account: Account | null | undefined): AppRoute[] {
   return appRoutes.filter((route) => {
     if (route.path === "/reviews") return canReview(account);
-    if (route.path === "/support") return canSupport(account);
+    if (route.path === "/support" || route.path === "/leads") return canSupport(account);
     return true;
   });
 }

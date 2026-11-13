@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from "react";
 import Link from "@/components/link";
 import { PlanSelect } from "@/features/plans/plan-select";
 import { Breadcrumbs, Container, Faq, Heading, Icon, JsonLd } from "@/components/ui";
@@ -5,6 +6,7 @@ import { POSTS } from "@/content/blog";
 import { ZONES } from "@/content/areas";
 import { COMPARE, COMPARE_COLS, DEVICES, ECOSYSTEM, FAQS, HERO_CHECKS, PILLARS, PLANS, STEPS, TOOLKIT, type Cell } from "@/content/partner";
 import { SITE_URL, pageMeta } from "@/lib/site";
+import { postLead } from "@/lib/leads";
 
 export const meta = {
   ...pageMeta({
@@ -31,6 +33,35 @@ function Mark({ v }: { v: Cell }) {
 
 export default function PharmacyPartner() {
   const posts = POSTS.filter((p) => p.topic === "pharmacies");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(false);
+
+  async function send(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setPending(true);
+    setError(false);
+    try {
+      await postLead({
+        site: "medmatepharmacy",
+        type: "pharmacy-partner",
+        name: String(data.get("owner") ?? "").trim(),
+        phone: String(data.get("phone") ?? "").trim(),
+        pharmacyName: String(data.get("pharmacy") ?? "").trim(),
+        area: String(data.get("area") ?? "").trim(),
+        city: String(data.get("city") ?? "").trim(),
+        plan: String(data.get("plan") ?? "").trim(),
+        preferredTime: String(data.get("demo") ?? "").trim(),
+        consent: data.get("consent") === "on",
+        companyWebsite: String(data.get("company-website") ?? ""),
+      });
+      window.location.assign("/pharmacy-partner/thanks");
+    } catch {
+      setPending(false);
+      setError(true);
+    }
+  }
+
   return (
     <main>
       {/* Hero */}
@@ -241,9 +272,7 @@ export default function PharmacyPartner() {
               {["Free to start: first 3 months free", "Live in about 7 days, data migrated for you", "No setup fee, no lock-in"].map((t) => <li key={t} className="flex items-center gap-2"><Icon name="check" size={16} className="text-green" />{t}</li>)}
             </ul>
           </div>
-          {/* Netlify Forms collects submissions on the live site (Netlify → Forms). It does not submit on the local dev server. */}
-          <form name="pharmacy-partner" method="POST" action="https://medmateindia.netlify.app/" target="netlify-partner" onSubmit={() => window.setTimeout(() => window.location.assign("/pharmacy-partner/thanks"), 600)} data-netlify="true" netlify-honeypot="company-website" data-waitlist className="grid gap-4 sm:grid-cols-2">
-            <input type="hidden" name="form-name" value="pharmacy-partner" />
+          <form name="pharmacy-partner" onSubmit={send} data-waitlist className="grid gap-4 sm:grid-cols-2">
             <p className="hidden"><label>Leave this empty <input name="company-website" tabIndex={-1} autoComplete="off" /></label></p>
             <label className="flex flex-col gap-1.5 sm:col-span-2"><span className="d-caption font-semibold text-ink-2">Pharmacy name</span><input name="pharmacy" required minLength={3} placeholder="Sri Sai Medicals" className={field} /></label>
             <label className="flex flex-col gap-1.5"><span className="d-caption font-semibold text-ink-2">Owner’s name</span><input name="owner" required autoComplete="name" className={field} /></label>
@@ -262,9 +291,9 @@ export default function PharmacyPartner() {
               </select>
             </label>
             <label className="flex items-start gap-2.5 sm:col-span-2"><input type="checkbox" name="consent" required className="mt-1 size-4 accent-[var(--color-green)]" /><span className="d-caption text-ink-2">I agree that MedMate may contact me on WhatsApp or by phone about a demo. See the <a href="/privacy" className="font-semibold text-green-700 underline">privacy notice</a>.</span></label>
-            <button type="submit" className="press d-btn h-12 rounded-xl bg-green px-5 text-white hover:bg-green-700 sm:col-span-2">Book my free demo</button>
+            {error ? <p className="d-caption text-red sm:col-span-2" role="alert">Something went wrong. Try again.</p> : null}
+            <button type="submit" disabled={pending} className="press d-btn h-12 rounded-xl bg-green px-5 text-white hover:bg-green-700 sm:col-span-2">{pending ? "Sending…" : "Book my free demo"}</button>
           </form>
-          <iframe name="netlify-partner" title="" hidden />
         </section>
 
         {/* FAQ */}

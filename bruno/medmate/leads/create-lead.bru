@@ -1,0 +1,44 @@
+meta {
+  name: Create lead
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/leads
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "site": "nammamedmate",
+    "type": "contact",
+    "name": "Ada",
+    "email": "ada@example.com",
+    "subject": "Order issue",
+    "message": "Need help",
+    "companyWebsite": ""
+  }
+}
+
+tests {
+  test("a public contact is stored", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.body.lead.site).to.equal("nammamedmate");
+    expect(res.body.lead.type).to.equal("contact");
+    expect(res.body.lead.status).to.equal("new");
+    expect(res.body.lead.name).to.equal("Ada");
+    bru.setEnvVar("leadId", res.body.lead.id);
+  });
+}
+
+docs {
+  Anyone can post a website form. A filled companyWebsite is dropped and returns 204.
+}

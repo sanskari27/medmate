@@ -18,6 +18,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-expenses/             pharmacy expense register
   medmate-server-reports/              pharmacy reports read from posted rows
   medmate-server-dashboard/            pharmacy dashboard read from posted rows
+  medmate-server-leads/                public website forms for the admin inbox
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -27,7 +28,7 @@ A feature module depends on `medmate-server-shared`. It may depend on identity f
 
 ## Request path
 
-Caddy routes `api.nammamedmate.com` to the container port 8080. Browser calls are allowed from `https://nammamedmate.com`, any `https` host under that zone, and local `http://localhost` or `http://127.0.0.1` ports. Any other origin is rejected on the preflight. `RequestIdFilter` keeps a safe `X-Request-Id`, stores it on the request, and puts it in the log context. Unexpected failures become `ProblemDetail` JSON. Framework errors that already carry an HTTP status, including unknown paths, are left alone.
+Caddy routes `api.nammamedmate.com` to the container port 8080. Browser calls are allowed from `https://nammamedmate.com`, `https://medmatepharmacy.com`, any `https` host under those zones, and local `http://localhost` or `http://127.0.0.1` ports. Any other origin is rejected on the preflight. `RequestIdFilter` keeps a safe `X-Request-Id`, stores it on the request, and puts it in the log context. Unexpected failures become `ProblemDetail` JSON. Framework errors that already carry an HTTP status, including unknown paths, are left alone.
 
 ## Health
 
@@ -84,6 +85,10 @@ The 23 pharmacy reports live in `medmate-server-reports`. The module depends on 
 ## Dashboard
 
 The pharmacy dashboard lives in `medmate-server-dashboard`. The module depends on identity for a membership check and on reports for the posted-row snapshot. It does not write those tables and it does not require a permission key. There is no dashboard table. `GET /pharmacy/dashboard` is open to an approved owner and to approved staff. [0021](decisions/0021-pharmacy-dashboard.md) records that boundary.
+
+## Leads
+
+Public website forms live in `medmate-server-leads`. The module depends on identity for the admin and `staff:support` check. Identity does not depend on it. `V21__website_leads.sql` stores each submission. `POST /api/v1/leads` is anonymous. List, read, and status stay on that same prefix and are not pharmacy routes. [0022](decisions/0022-website-leads.md) records that boundary.
 
 ## Not in this process
 

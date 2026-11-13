@@ -34,6 +34,21 @@ class ApiCorsTest {
     }
 
     @Test
+    void allowsThePharmacySite() throws Exception {
+        mvc.perform(options("/api/v1/leads")
+                        .header("Origin", "https://medmatepharmacy.com")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://medmatepharmacy.com"));
+        mvc.perform(options("/api/v1/leads")
+                        .header("Origin", "https://www.medmatepharmacy.com")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://www.medmatepharmacy.com"));
+    }
+
+    @Test
     void rejectsAForeignOrigin() throws Exception {
         mvc.perform(options("/auth/otp/send")
                         .header("Origin", "https://evil.example")

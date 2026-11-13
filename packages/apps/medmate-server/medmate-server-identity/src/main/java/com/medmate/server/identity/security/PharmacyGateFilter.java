@@ -39,6 +39,9 @@ public class PharmacyGateFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/") || path.startsWith("/actuator/")) {
             return true;
         }
+        if (path.equals("/api/v1/leads") || path.startsWith("/api/v1/leads/")) {
+            return true;
+        }
         if ("GET".equals(method) && "/pharmacy/verification".equals(path)) {
             return true;
         }

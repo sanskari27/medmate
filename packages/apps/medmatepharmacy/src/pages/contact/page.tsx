@@ -1,4 +1,6 @@
+import { useState, type FormEvent } from "react";
 import { Breadcrumbs, Container, Heading, Icon } from "@/components/ui";
+import { postLead } from "@/lib/leads";
 import { CIN, COMPANY, GRIEVANCE_OFFICER, REGISTERED_OFFICE, SITE_URL, SUPPORT, pageMeta } from "@/lib/site";
 
 export const meta = pageMeta({
@@ -10,6 +12,8 @@ export const meta = pageMeta({
 const field = "h-12 w-full rounded-xl border-[1.5px] border-line-2 bg-surface px-3.5 text-[16px] outline-none placeholder:text-faint focus:border-green focus:ring-[3px] focus:ring-mint-200";
 
 export default function Contact() {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(false);
   const officer = GRIEVANCE_OFFICER.name ? GRIEVANCE_OFFICER : null;
   const company: [string, string][] = [
     ["Legal name", COMPANY],
@@ -18,6 +22,31 @@ export default function Contact() {
     ...(SUPPORT.email ? [["Customer support email", SUPPORT.email] as [string, string]] : []),
     ...(SUPPORT.phone ? [["Customer support phone", SUPPORT.phone] as [string, string]] : []),
   ];
+
+  async function send(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setPending(true);
+    setError(false);
+    try {
+      await postLead({
+        site: "medmatepharmacy",
+        type: "contact",
+        subject: String(data.get("topic") ?? ""),
+        name: String(data.get("name") ?? "").trim(),
+        phone: String(data.get("phone") ?? "").trim(),
+        email: String(data.get("email") ?? "").trim(),
+        message: String(data.get("message") ?? "").trim(),
+        consent: data.get("consent") === "on",
+        companyWebsite: String(data.get("company-website") ?? ""),
+      });
+      window.location.assign("/contact/thanks");
+    } catch {
+      setPending(false);
+      setError(true);
+    }
+  }
+
   return (
     <main>
       <section className="border-b border-line bg-mint-50">
@@ -57,8 +86,7 @@ export default function Contact() {
 
         <section aria-labelledby="form-h" className="flex flex-col gap-4 rounded-3xl border border-line p-4 shadow-sh2 sm:rounded-[28px] sm:p-6 md:p-8">
           <h2 id="form-h" className="d-h3">Write to us</h2>
-          <form name="contact" method="POST" action="https://medmateindia.netlify.app/" target="netlify-contact" onSubmit={() => window.setTimeout(() => window.location.assign("/contact/thanks"), 600)} data-netlify="true" netlify-honeypot="company-website" className="grid gap-4 sm:grid-cols-2">
-            <input type="hidden" name="form-name" value="contact" />
+          <form name="contact" onSubmit={send} className="grid gap-4 sm:grid-cols-2">
             <p className="hidden"><label>Leave this empty <input name="company-website" tabIndex={-1} autoComplete="off" /></label></p>
             <label className="flex flex-col gap-1.5 sm:col-span-2"><span className="d-caption font-semibold text-ink-2">Topic</span>
               <select name="topic" required defaultValue="" className={field}>
@@ -76,9 +104,9 @@ export default function Contact() {
             <label className="flex flex-col gap-1.5 sm:col-span-2"><span className="d-caption font-semibold text-ink-2">Your message</span><textarea name="message" required rows={5} maxLength={2000} className="w-full rounded-xl border-[1.5px] border-line-2 bg-surface p-3.5 text-[16px] outline-none focus:border-green focus:ring-[3px] focus:ring-mint-200" /></label>
             <p className="d-caption text-muted sm:col-span-2">Please do not send prescriptions or medical reports here.</p>
             <label className="flex items-start gap-2.5 sm:col-span-2"><input type="checkbox" name="consent" required className="mt-1 size-4 accent-[var(--color-green)]" /><span className="d-caption text-ink-2">MedMate may use these details to reply to me. I have read the <a href="/privacy" className="font-semibold text-green-700 underline">privacy notice</a>.</span></label>
-            <button type="submit" className="press d-btn h-12 rounded-xl bg-green px-5 text-white hover:bg-green-700 sm:col-span-2">Send</button>
+            {error ? <p className="d-caption text-red sm:col-span-2" role="alert">Something went wrong. Try again.</p> : null}
+            <button type="submit" disabled={pending} className="press d-btn h-12 rounded-xl bg-green px-5 text-white hover:bg-green-700 sm:col-span-2">{pending ? "Sending…" : "Send"}</button>
           </form>
-          <iframe name="netlify-contact" title="" hidden />
         </section>
       </Container>
     </main>

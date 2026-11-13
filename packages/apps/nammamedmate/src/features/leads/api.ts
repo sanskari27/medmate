@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/lib/site";
 export type LeadType = "demo" | "early-access" | "contact";
 
 export type LeadPayload = {
+  site: "nammamedmate";
   type: LeadType;
   name: string;
   phone: string;
@@ -35,12 +36,12 @@ const emptyLead = {
 
 export function leadPayload(
   type: LeadType,
-  fields: Partial<Omit<LeadPayload, "type">>,
+  fields: Partial<Omit<LeadPayload, "type" | "site">>,
 ): LeadPayload {
-  return { ...emptyLead, ...fields, type };
+  return { ...emptyLead, ...fields, type, site: "nammamedmate" };
 }
 
-/** Posts a lead to the future admin API. A filled honeypot is dropped. */
+/** Posts a lead to medmate-server. A filled honeypot is dropped. */
 export async function submitLead(payload: LeadPayload): Promise<void> {
   if (payload.companyWebsite.trim()) return;
 
