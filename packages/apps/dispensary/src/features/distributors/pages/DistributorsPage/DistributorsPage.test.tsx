@@ -238,7 +238,7 @@ describe("DistributorsPage", () => {
     expect((within(dialog).getByLabelText("Page") as HTMLInputElement).value).toBe("1");
     fireEvent.change(within(dialog).getByLabelText("Amount"), { target: { value: "1" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
-    expect((await within(dialog).findByLabelText("Page") as HTMLInputElement).value).toBe("2");
+    expect(((await within(dialog).findByLabelText("Page")) as HTMLInputElement).value).toBe("2");
   });
 
   it("hides the record form when staff cannot pay", async () => {

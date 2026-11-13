@@ -191,7 +191,9 @@ export function SalesPage() {
                     )}
                   </td>
                   <td className="border-t border-line px-3.5 py-[11px]">{payLabel(row.payMode)}</td>
-                  <td className="border-t border-line px-3.5 py-[11px]">{saleDate(row.recordedAt)}</td>
+                  <td className="border-t border-line px-3.5 py-[11px]">
+                    {saleDate(row.recordedAt)}
+                  </td>
                   <td className="border-t border-line px-3.5 py-[11px] text-right tabular-nums">
                     {row.items}
                   </td>

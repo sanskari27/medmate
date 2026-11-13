@@ -233,9 +233,7 @@ describe("SalesPage", () => {
     expect(screen.getByLabelText("To")).toHaveProperty("value", "2025-05-13");
     await waitFor(() => {
       expect(
-        requested.some(
-          (url) => url.includes("q=9886012345") && url.includes("from=2025-05-13"),
-        ),
+        requested.some((url) => url.includes("q=9886012345") && url.includes("from=2025-05-13")),
       ).toBe(true);
     });
   });

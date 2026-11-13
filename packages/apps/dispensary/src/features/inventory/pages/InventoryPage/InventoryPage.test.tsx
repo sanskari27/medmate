@@ -186,9 +186,7 @@ describe("InventoryPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Low stock" }));
     await waitFor(() => {
-      expect(
-        requested.some((url) => url.includes("filter=low") && !url.includes("q=")),
-      ).toBe(true);
+      expect(requested.some((url) => url.includes("filter=low") && !url.includes("q="))).toBe(true);
     });
     expect(await screen.findByRole("button", { name: "Crocin Advance" })).toBeTruthy();
     expect(await screen.findByRole("button", { name: "Costly Strip" })).toBeTruthy();

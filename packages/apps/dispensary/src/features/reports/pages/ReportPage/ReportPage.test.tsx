@@ -109,7 +109,9 @@ describe("ReportPage", () => {
     renderAt("/reports/low-stock", ["reports:read"], low);
     expect(await screen.findByText("As of today")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "This month" })).toBeNull();
-    await waitFor(() => expect(screen.getByText("No items at or below reorder level.")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("No items at or below reorder level.")).toBeTruthy(),
+    );
   });
 
   it("says an unknown report is not available", () => {

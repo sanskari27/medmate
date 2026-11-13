@@ -2,7 +2,10 @@ export function canOpenReports(role: string | null | undefined, permissions: str
   return role === "owner" || (permissions ?? []).includes("reports:read");
 }
 
-export function canExportReports(role: string | null | undefined, permissions: string[] | undefined) {
+export function canExportReports(
+  role: string | null | undefined,
+  permissions: string[] | undefined,
+) {
   return role === "owner" || (permissions ?? []).includes("reports:export");
 }
 
@@ -15,7 +18,8 @@ export const SNAPSHOT_REPORTS = new Set([
   "party-outstanding",
 ]);
 
-export type ReportPreset = "today" | "month" | "year" | "prev-year" | "fy" | "prev-fy" | "custom" | "all";
+export type ReportPreset =
+  "today" | "month" | "year" | "prev-year" | "fy" | "prev-fy" | "custom" | "all";
 
 export const REPORT_PRESETS: { key: ReportPreset; label: string }[] = [
   { key: "today", label: "Today" },
