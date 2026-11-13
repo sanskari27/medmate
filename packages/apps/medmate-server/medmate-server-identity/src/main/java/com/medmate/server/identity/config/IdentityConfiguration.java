@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -109,7 +110,8 @@ public class IdentityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, PharmacyGateFilter pharmacyGate)
             throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        http.cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

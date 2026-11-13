@@ -27,7 +27,7 @@ A feature module depends on `medmate-server-shared`. It may depend on identity f
 
 ## Request path
 
-Caddy routes `api.nammamedmate.com` to the container port 8080. `RequestIdFilter` keeps a safe `X-Request-Id`, stores it on the request, and puts it in the log context. Unexpected failures become `ProblemDetail` JSON. Framework errors that already carry an HTTP status, including unknown paths, are left alone.
+Caddy routes `api.nammamedmate.com` to the container port 8080. Browser calls are allowed from `https://nammamedmate.com`, any `https` host under that zone, and local `http://localhost` or `http://127.0.0.1` ports. Any other origin is rejected on the preflight. `RequestIdFilter` keeps a safe `X-Request-Id`, stores it on the request, and puts it in the log context. Unexpected failures become `ProblemDetail` JSON. Framework errors that already carry an HTTP status, including unknown paths, are left alone.
 
 ## Health
 
