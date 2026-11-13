@@ -52,6 +52,7 @@ export type InvoiceSale = {
   patientName: string;
   patientPhone: string;
   prescribedBy: string | null;
+  payMode?: string | null;
   billDiscount?: number;
   lines: InvoiceLine[];
 };
@@ -68,6 +69,13 @@ type PaperSale = {
   who: string;
   billDiscount: number;
 };
+
+function paymentLabel(mode: string | null | undefined) {
+  if (mode === "credit") return "Credit";
+  if (mode === "upi") return "UPI";
+  if (mode === "card") return "Card";
+  return "Cash";
+}
 
 function paperSale(props: InvoicePaperProps, fallbackSoldAt: number): PaperSale {
   if (!props.bill) {
@@ -92,7 +100,7 @@ function paperSale(props: InvoicePaperProps, fallbackSoldAt: number): PaperSale 
     phone: props.bill.patientPhone,
     doctor: props.bill.prescribedBy ?? "—",
     address: null,
-    payment: "Cash",
+    payment: paymentLabel(props.bill.payMode),
     who: props.bill.patientName,
     billDiscount: props.bill.billDiscount ?? 0,
   };

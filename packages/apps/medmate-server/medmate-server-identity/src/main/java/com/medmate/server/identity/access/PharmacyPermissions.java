@@ -39,7 +39,9 @@ public final class PharmacyPermissions {
             "billing:read",
             "billing:create",
             "sales:read",
-            "sales:return");
+            "sales:return",
+            "patients:read",
+            "patients:update");
 
     private PharmacyPermissions() {}
 

@@ -1,0 +1,38 @@
+meta {
+  name: Log reminder
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/patients/9886012345/reminders
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "kind": "followup",
+    "channel": "whatsapp"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 403, 404]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  Staff with patients:update log a reminder. The server does not send the message.
+}

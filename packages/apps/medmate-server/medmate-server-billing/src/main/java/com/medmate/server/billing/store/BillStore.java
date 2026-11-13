@@ -58,7 +58,8 @@ public class BillStore {
             BigDecimal payable,
             String extraType,
             BigDecimal extraValue,
-            BigDecimal extraAmount) {
+            BigDecimal extraAmount,
+            String payMode) {
         jdbc.sql(
                         """
                         INSERT INTO bill (
@@ -66,7 +67,7 @@ public class BillStore {
                           pay_mode, sold_at, subtotal, discount, payable, extra_type, extra_value, extra_amount)
                         VALUES (
                           :pharmacy, :number, :name, :phone, :doctor, :prescription,
-                          'cash', :sold, :subtotal, :discount, :payable, :extraType, :extraValue, :extraAmount)
+                          :payMode, :sold, :subtotal, :discount, :payable, :extraType, :extraValue, :extraAmount)
                         """)
                 .param("pharmacy", pharmacyId)
                 .param("number", number)
@@ -74,6 +75,7 @@ public class BillStore {
                 .param("phone", patientPhone)
                 .param("doctor", prescribedBy, Types.VARCHAR)
                 .param("prescription", prescriptionNumber, Types.VARCHAR)
+                .param("payMode", payMode)
                 .param("sold", Timestamp.from(soldAt))
                 .param("subtotal", subtotal)
                 .param("discount", discount)
@@ -221,6 +223,7 @@ public class BillStore {
             String type,
             String invoiceNumber,
             String patientName,
+            String patientPhone,
             Instant recordedAt,
             int items,
             BigDecimal amount) {}
@@ -236,7 +239,7 @@ public class BillStore {
                 .query(Integer.class)
                 .single();
         List<SaleListRow> rows = jdbc.sql(
-                        "SELECT id, type, invoice_number, patient_name, recorded_at, items, amount FROM ("
+                        "SELECT id, type, invoice_number, patient_name, patient_phone, recorded_at, items, amount FROM ("
                                 + saleUnion()
                                 + ") rows "
                                 + saleMatch()
@@ -337,14 +340,14 @@ public class BillStore {
     private static String saleUnion() {
         return """
                 SELECT b.number AS id, 'sale' AS type, b.number AS invoice_number, b.patient_name,
-                       b.sold_at AS recorded_at,
+                       b.patient_phone, b.sold_at AS recorded_at,
                        COALESCE((SELECT SUM(qty) FROM bill_line l
                                  WHERE l.pharmacy_id = b.pharmacy_id AND l.bill_number = b.number), 0) AS items,
                        b.payable AS amount
                 FROM bill b
                 WHERE b.pharmacy_id = :pharmacy
                 UNION ALL
-                SELECT r.code, 'return', r.bill_number, b.patient_name, r.recorded_at,
+                SELECT r.code, 'return', r.bill_number, b.patient_name, b.patient_phone, r.recorded_at,
                        COALESCE((SELECT SUM(qty) FROM sale_return_line l
                                  WHERE l.pharmacy_id = r.pharmacy_id AND l.return_code = r.code), 0),
                        r.amount
@@ -361,6 +364,7 @@ public class BillStore {
                   OR lower(id) LIKE :pattern ESCAPE '\\'
                   OR lower(invoice_number) LIKE :pattern ESCAPE '\\'
                   OR lower(patient_name) LIKE :pattern ESCAPE '\\'
+                  OR lower(patient_phone) LIKE :pattern ESCAPE '\\'
                   OR lower(type) LIKE :pattern ESCAPE '\\'
                 )
                 """;
@@ -372,6 +376,7 @@ public class BillStore {
                 row.getString("type"),
                 row.getString("invoice_number"),
                 row.getString("patient_name"),
+                row.getString("patient_phone"),
                 row.getTimestamp("recorded_at").toInstant(),
                 row.getInt("items"),
                 row.getBigDecimal("amount"));

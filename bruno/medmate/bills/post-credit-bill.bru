@@ -1,0 +1,49 @@
+meta {
+  name: Post credit bill
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/bills
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "patientName": "Ada",
+    "patientPhone": "9886012345",
+    "payMode": "credit",
+    "lines": [
+      {
+        "productId": "med-a",
+        "batchNo": "B1",
+        "qty": 1
+      }
+    ]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 404, 409]).to.include(res.getStatus());
+    if (res.getStatus() === 201) {
+      expect(res.body.bill.payMode).to.equal("credit");
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with billing:create, posts a named customer on credit. The batch still drops.
+}

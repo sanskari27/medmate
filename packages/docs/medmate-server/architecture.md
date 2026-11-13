@@ -13,7 +13,8 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-distributors/         pharmacy distributor directory and ledger
   medmate-server-stock/                purchase bills, returns, inventory, and rack placement
   medmate-server-offers/               pharmacy discounts applied when a bill is posted
-  medmate-server-billing/              cash sales from the counter
+  medmate-server-billing/              cash and credit sales from the counter
+  medmate-server-crm/                  patient directory, khata, and CRM writes
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -63,7 +64,11 @@ Pharmacy discounts live in `medmate-server-offers`. The module depends on identi
 
 ## Billing
 
-Cash sales live in `medmate-server-billing`. The module depends on identity for access checks and the invoice prefix, on stock for sellable batches and the quantity change, and on offers for the active discounts. Identity does not depend on it. Stock does not depend on it. Offers do not depend on it. `V14__batch_gst_and_prescription.sql` in stock adds the prescription flag and the batch GST rate. `V15__bills.sql` creates the sale. `V16__bill_extra_discount.sql` stores the bill-level extra. `V17__sale_returns.sql` stores a partial return and the quantity already returned on each bill line. `POST /pharmacy/bills` recomputes the price and reduces the batch in the same transaction. `GET /pharmacy/sales` lists invoices and returns. `GET /pharmacy/sales/{id}` reads one document. `POST /pharmacy/sales/{invoiceNumber}/returns` recomputes the refund and increases the batch through `CounterStock.increment`. [0016](decisions/0016-pharmacy-billing.md) records the sale boundary. [0017](decisions/0017-pharmacy-sale-returns.md) records the return boundary.
+Cash and credit sales live in `medmate-server-billing`. The module depends on identity for access checks and the invoice prefix, on stock for sellable batches and the quantity change, and on offers for the active discounts. Identity does not depend on it. Stock does not depend on it. Offers do not depend on it. `V14__batch_gst_and_prescription.sql` in stock adds the prescription flag and the batch GST rate. `V15__bills.sql` creates the sale. `V16__bill_extra_discount.sql` stores the bill-level extra. `V17__sale_returns.sql` stores a partial return and the quantity already returned on each bill line. `POST /pharmacy/bills` recomputes the price and reduces the batch in the same transaction. A bill is `cash` or `credit`. `GET /pharmacy/sales` lists invoices and returns. `GET /pharmacy/sales/{id}` reads one document. `POST /pharmacy/sales/{invoiceNumber}/returns` recomputes the refund and increases the batch through `CounterStock.increment`. Billing exposes `PatientBills` for the CRM module and does not depend on it. [0016](decisions/0016-pharmacy-billing.md) records the sale boundary. [0017](decisions/0017-pharmacy-sale-returns.md) records the return boundary.
+
+## CRM
+
+The patient directory, khata repayments, and CRM writes live in `medmate-server-crm`. The module depends on identity for access checks and on billing to read posted bills and return refunds. Identity does not depend on it. Billing does not depend on it. A patient is the phone on a bill, not a stored person. `V19__crm.sql` stores the profile, repayments, reminders, redemptions, campaigns, and feedback, and allows `pay_mode` `credit`. Outstanding is computed from credit bills, return refunds, and repayments. [0018](decisions/0018-pharmacy-crm.md) records that boundary.
 
 ## Not in this process
 

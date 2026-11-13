@@ -13,6 +13,7 @@ import { purchasesApi } from "@/features/purchases";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { billingApi } from "@/features/billing";
 import { salesApi } from "@/features/sales";
+import { patientsApi } from "@/features/patients";
 import { readPersistedAuth } from "@/services/storage";
 import { rootReducer } from "./rootReducer";
 
@@ -37,6 +38,7 @@ export function createAppStore() {
         invoiceSettingsApi.middleware,
         billingApi.middleware,
         salesApi.middleware,
+        patientsApi.middleware,
       ),
   });
 }

@@ -9,7 +9,7 @@ export type BillPayload = {
   patientPhone: string;
   prescribedBy: string;
   prescriptionNumber: string;
-  payMode: "cash";
+  payMode: "cash" | "credit";
   discount: Discount;
   lines: { productId: string; batchNo: string; qty: number; discount: Discount }[];
 };

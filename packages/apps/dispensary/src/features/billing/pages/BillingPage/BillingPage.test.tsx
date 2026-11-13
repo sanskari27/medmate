@@ -133,7 +133,11 @@ function renderPage(permissions: string[]) {
       const url = String(input instanceof Request ? input.url : input);
       requested.push(url);
       const method = input instanceof Request ? input.method : (init?.method ?? "GET");
-      if (url.includes("/pharmacy/bills") && method === "POST") return json(posted, 201);
+      if (url.includes("/pharmacy/bills") && method === "POST") {
+        const payload =
+          input instanceof Request ? ((await input.clone().json()) as { payMode?: string }) : {};
+        return json({ bill: { ...posted.bill, payMode: payload.payMode ?? "cash" } }, 201);
+      }
       if (url.includes("/pharmacy/inventory")) return json(inventory);
       if (url.includes("/pharmacy/offers")) return json(offers);
       if (url.includes("/pharmacy/invoice-settings")) return json(settings);
@@ -221,5 +225,23 @@ describe("BillingPage", () => {
     const paper = document.querySelector(".print-area");
     expect(paper?.textContent).toContain("INV-0001");
     expect(screen.getByRole("button", { name: "New bill" })).toBeTruthy();
+  });
+
+  it("posts a credit bill and labels the invoice on khata", async () => {
+    renderPage(["billing:read", "billing:create"]);
+    const scan = await screen.findByLabelText("Scan or search");
+    fireEvent.change(scan, { target: { value: "med-a" } });
+    expect(await screen.findByText(/Crocin Advance/)).toBeTruthy();
+    fireEvent.keyDown(scan, { key: "Enter" });
+    fireEvent.change(screen.getByLabelText("Batch for Crocin Advance"), {
+      target: { value: "B1" },
+    });
+    fireEvent.change(screen.getByLabelText("Patient name"), { target: { value: "Ada" } });
+    fireEvent.change(screen.getByLabelText("Phone"), { target: { value: "9886012345" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Credit" }));
+    expect((screen.getByRole("radio", { name: "Credit" }) as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Charge" }));
+    expect(await screen.findByRole("dialog", { name: "Invoice INV-0001 · on khata" })).toBeTruthy();
+    expect(document.querySelector(".print-area")?.textContent).toContain("Credit");
   });
 });

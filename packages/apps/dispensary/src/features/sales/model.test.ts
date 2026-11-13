@@ -51,5 +51,8 @@ describe("sale search", () => {
     expect(filterSales(rows, "RET-001").map((row) => row.id)).toEqual(["RET-001"]);
     expect(filterSales(rows, "sale").map((row) => row.id)).toEqual(["INV-0001"]);
     expect(filterSales(rows, "nobody")).toEqual([]);
+    expect(
+      filterSales([{ ...rows[0], patientPhone: "9886012345" }], "9886012345").map((row) => row.id),
+    ).toEqual(["INV-0001"]);
   });
 });

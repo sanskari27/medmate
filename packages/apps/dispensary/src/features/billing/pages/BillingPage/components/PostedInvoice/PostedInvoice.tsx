@@ -21,6 +21,7 @@ export function PostedInvoice({
     patientName: posted.patientName,
     patientPhone: posted.patientPhone,
     prescribedBy: posted.prescribedBy,
+    payMode: posted.payMode,
     billDiscount: Number(posted.extraAmount ?? 0),
     lines: posted.lines.map((line) => ({
       name: line.name,
@@ -46,7 +47,7 @@ export function PostedInvoice({
     <Box
       role="dialog"
       aria-modal="true"
-      aria-label="Invoice"
+      aria-label={posted.payMode === "credit" ? `Invoice ${posted.number} · on khata` : "Invoice"}
       data-posted-bill=""
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4"
     >
@@ -58,7 +59,9 @@ export function PostedInvoice({
           className="shrink-0 border-b border-line bg-dark px-3 py-2 text-white print:hidden"
         >
           <Text as="span" className="text-[13px] font-bold text-white">
-            Invoice {posted.number}
+            {posted.payMode === "credit"
+              ? `Invoice ${posted.number} · on khata`
+              : `Invoice ${posted.number}`}
           </Text>
           <Stack direction="row" gap={2}>
             <Button type="button" variant="secondary" onClick={() => window.print()}>

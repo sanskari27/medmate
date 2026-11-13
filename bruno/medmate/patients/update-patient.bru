@@ -1,0 +1,38 @@
+meta {
+  name: Update patient
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/patients/9886012345
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "note": "Morning dose",
+    "consent": true
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([200, 403, 404]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  Staff with patients:update save the profile. patients:read cannot.
+}

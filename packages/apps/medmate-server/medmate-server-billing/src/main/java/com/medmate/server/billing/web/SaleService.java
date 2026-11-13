@@ -49,6 +49,7 @@ public class SaleService {
                     row.type(),
                     row.invoiceNumber(),
                     row.patientName(),
+                    row.patientPhone(),
                     row.recordedAt(),
                     row.items(),
                     money(row.amount()).toPlainString()));

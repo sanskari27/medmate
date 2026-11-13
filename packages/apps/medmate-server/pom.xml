@@ -26,6 +26,7 @@
     <module>medmate-server-stock</module>
     <module>medmate-server-offers</module>
     <module>medmate-server-billing</module>
+    <module>medmate-server-crm</module>
     <module>medmate-server-app</module>
   </modules>
 

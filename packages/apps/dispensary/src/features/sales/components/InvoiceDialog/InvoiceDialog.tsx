@@ -109,6 +109,7 @@ function toPaper(sale: SaleDocument): InvoiceSale {
     patientName: sale.patientName,
     patientPhone: sale.patientPhone,
     prescribedBy: sale.prescribedBy,
+    payMode: sale.payMode,
     billDiscount: Number(sale.extraAmount ?? 0),
     lines: sale.lines.map((line) => ({
       name: line.name,

@@ -76,7 +76,8 @@ public class BillService {
                 priced.payable(),
                 priced.extraType(),
                 priced.extraValue(),
-                priced.extraAmount());
+                priced.extraAmount(),
+                prepared.request().payMode());
         int position = 0;
         List<BillViews.LineView> lines = new ArrayList<>();
         for (BillRules.PricedLine line : priced.lines()) {
@@ -90,7 +91,7 @@ public class BillService {
                 prepared.request().patientPhone(),
                 priced.prescribedBy(),
                 priced.prescriptionNumber(),
-                "cash",
+                prepared.request().payMode(),
                 soldAt,
                 money(priced.subtotal()),
                 money(priced.discount()),

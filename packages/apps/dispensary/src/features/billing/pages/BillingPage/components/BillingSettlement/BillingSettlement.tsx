@@ -29,6 +29,8 @@ export function BillingSettlement({
   onDiscountValue,
   onCash,
   onCharge,
+  payMode,
+  onPayMode,
 }: {
   patientName: string;
   patientPhone: string;
@@ -51,6 +53,8 @@ export function BillingSettlement({
   onDiscountValue: (value: number) => void;
   onCash: (value: string) => void;
   onCharge: () => void;
+  payMode: "cash" | "credit";
+  onPayMode: (mode: "cash" | "credit") => void;
 }) {
   return (
     <Box className="shrink-0 rounded-md border border-line bg-paper p-2 shadow-sm">
@@ -118,12 +122,23 @@ export function BillingSettlement({
             Settlement
           </Text>
           <Stack direction="row" gap={1} className="rounded-sm bg-canvas p-0.5">
-            <PayOption label="Cash" checked />
+            <PayOption
+              label="Cash"
+              selected={payMode === "cash"}
+              onSelect={() => onPayMode("cash")}
+            />
             <PayOption label="UPI" />
             <PayOption label="Card" />
+            <PayOption
+              label="Credit"
+              selected={payMode === "credit"}
+              onSelect={() => onPayMode("credit")}
+            />
           </Stack>
           <Text as="span" className="text-[10px] text-muted">
-            Cash is collected at the counter. UPI and card are not taken on this bill.
+            {payMode === "credit"
+              ? "On the customer's khata. Settled later."
+              : "Cash is collected at the counter. UPI and card are not taken on this bill."}
           </Text>
           <Box className="grid grid-cols-2 gap-1.5">
             <Field id="bill-extra" label="Bill discount">
@@ -167,7 +182,7 @@ export function BillingSettlement({
             </Field>
             <Readout label="Change to return" value={rupee(change)} strong />
             <Readout label="Balance due" value={rupee(balance)} />
-            <Readout label="Pay mode" value="Cash" />
+            <Readout label="Pay mode" value={payMode === "credit" ? "Credit" : "Cash"} />
           </Box>
         </Box>
 
@@ -282,18 +297,27 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-function PayOption({ label, checked }: { label: string; checked?: boolean }) {
+function PayOption({
+  label,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
+  const enabled = Boolean(onSelect);
   return (
     <label
-      className={`flex-1 cursor-pointer rounded-xs px-2 py-1 text-center text-[12px] font-semibold ${checked ? "bg-dark text-white" : "text-faint"}`}
+      className={`flex-1 rounded-xs px-2 py-1 text-center text-[12px] font-semibold ${selected ? "bg-dark text-white" : "text-faint"} ${enabled ? "cursor-pointer" : ""}`}
     >
       <input
         type="radio"
         name="pay"
         value={label.toLowerCase()}
-        checked={checked === true}
-        disabled={checked !== true}
-        onChange={() => undefined}
+        checked={selected === true}
+        disabled={!enabled}
+        onChange={() => onSelect?.()}
         className="sr-only"
       />
       {label}

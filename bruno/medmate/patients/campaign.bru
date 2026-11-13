@@ -1,0 +1,42 @@
+meta {
+  name: Save campaign
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/crm/campaigns
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "segment": "all",
+    "channel": "whatsapp",
+    "message": "Visit us this week."
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 403]).to.include(res.getStatus());
+    if (res.getStatus() === 201) {
+      expect(res.body.campaign.reach).to.be.a("number");
+    }
+  });
+}
+
+docs {
+  Staff with patients:update save a campaign. The server does not send it.
+}

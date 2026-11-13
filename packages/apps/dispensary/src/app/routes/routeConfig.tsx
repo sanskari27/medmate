@@ -15,6 +15,7 @@ import { InventoryPage } from "@/features/inventory";
 import { OffersPage } from "@/features/offers";
 import { BillingPage } from "@/features/billing";
 import { SalesPage } from "@/features/sales";
+import { PatientsPage } from "@/features/patients";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -43,6 +44,14 @@ export const appRoutes: AppRoute[] = [
     sub: "Every sale, day one to date",
     icon: <IconReceipt size={19} />,
     element: <SalesPage />,
+  },
+  {
+    path: "/patients",
+    label: "CRM - Patients",
+    title: "CRM - Patients",
+    sub: "Customers and khata",
+    icon: <IconUsers size={19} />,
+    element: <PatientsPage />,
   },
   {
     path: "/dashboard",

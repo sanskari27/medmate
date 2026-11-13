@@ -163,7 +163,7 @@ function json(body: unknown, status = 200) {
 
 const requested: string[] = [];
 
-function renderPage(permissions: string[]) {
+function renderPage(permissions: string[], path = "/") {
   writeSession({ ...session, account: { ...session.account, permissions } });
   vi.stubGlobal(
     "fetch",
@@ -179,7 +179,7 @@ function renderPage(permissions: string[]) {
   );
   return render(
     <Provider store={createAppStore()}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[path]}>
         <SalesPage />
       </MemoryRouter>
     </Provider>,
@@ -205,6 +205,14 @@ describe("SalesPage", () => {
     expect(await screen.findByRole("dialog", { name: "Invoice" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Return" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Print" })).toBeTruthy();
+  });
+
+  it("opens with the patient number already in the search", async () => {
+    renderPage(["sales:read"], "/sales?q=9886012345");
+    expect(await screen.findByLabelText("Search sales")).toHaveProperty("value", "9886012345");
+    await waitFor(() => {
+      expect(requested.some((url) => url.includes("q=9886012345"))).toBe(true);
+    });
   });
 
   it("hides Return without sales:return", async () => {

@@ -1,0 +1,33 @@
+meta {
+  name: Read patient
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/patients/9886012345
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([200, 404]).to.include(res.getStatus());
+    if (res.getStatus() === 200) {
+      expect(res.body.patient.phone).to.equal("9886012345");
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with patients:read, opens one patient. An unknown phone is 404.
+}

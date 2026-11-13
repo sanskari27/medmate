@@ -29,7 +29,8 @@ public final class BillRules {
             String prescribedBy,
             String prescriptionNumber,
             Adjustment discount,
-            List<RequestLine> lines) {}
+            List<RequestLine> lines,
+            String payMode) {}
 
     public record Prepared(Request request, String problem) {
 
@@ -100,8 +101,11 @@ public final class BillRules {
             return Prepared.problem("Phone is not valid");
         }
         String payMode = text(body, "payMode");
-        if (!"cash".equals(payMode)) {
+        if (!"cash".equals(payMode) && !"credit".equals(payMode)) {
             return Prepared.problem("Payment type is not available");
+        }
+        if ("credit".equals(payMode) && ("Walk-in".equals(name) || "Kiosk (self-order)".equals(name))) {
+            return Prepared.problem("Credit needs a customer name");
         }
         JsonNode lines = body.get("lines");
         if (lines == null || !lines.isArray() || lines.isEmpty()) {
@@ -136,7 +140,13 @@ public final class BillRules {
         }
         return new Prepared(
                 new Request(
-                        name, phone, text(body, "prescribedBy"), text(body, "prescriptionNumber"), discount, parsed),
+                        name,
+                        phone,
+                        text(body, "prescribedBy"),
+                        text(body, "prescriptionNumber"),
+                        discount,
+                        parsed,
+                        payMode),
                 null);
     }
 

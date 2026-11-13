@@ -1,0 +1,39 @@
+meta {
+  name: Record repayment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/patients/9886012345/repayments
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "amount": 10,
+    "mode": "cash",
+    "note": "Counter"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 400, 403, 404]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  Staff with patients:update record a khata repayment. An amount above the balance is refused.
+}

@@ -395,6 +395,7 @@ describe("AppRouter", () => {
     expect(names).toEqual([
       "Billing",
       "Sales",
+      "CRM - Patients",
       "Dashboard",
       "Distributors",
       "Purchases",
@@ -583,6 +584,30 @@ describe("AppRouter", () => {
       .map((button) => button.textContent?.trim());
     expect(names[0]).toBe("Sales");
     expect(screen.getByText("Counter")).toBeTruthy();
+  });
+
+  it("shows CRM - Patients to staff who can read it", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["patients:read"] },
+    });
+    renderAt("/dashboard");
+    const nav = document.querySelector("[data-slot=nav]");
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names[0]).toBe("CRM - Patients");
+    expect(screen.getByText("Counter")).toBeTruthy();
+  });
+
+  it("sends pharmacy staff without patients:read away from CRM - Patients", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", permissions: ["patients:update"] },
+    });
+    renderAt("/patients");
+    expect(screen.getByText("This page is not built yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "CRM - Patients" })).toBeNull();
   });
 
   it("sends pharmacy staff without sales:read away from Sales", () => {

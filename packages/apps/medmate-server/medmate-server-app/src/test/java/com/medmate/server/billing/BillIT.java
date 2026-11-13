@@ -54,6 +54,25 @@ class BillIT {
     }
 
     @Test
+    void aCreditSaleDecrementsTheBatch() throws SQLException {
+        JsonNode ownerSession = verify("9822000811", "pharmacy", "signup", false);
+        String owner = token(ownerSession);
+        String pharmacyId = ownerSession.get("account").get("pharmacyId").asText();
+        approve(pharmacyId);
+        stock(pharmacyId);
+
+        JsonNode bill = created(owner, sale("Ada", "9886012345", "credit", "med-a", "B1", 1, null, null));
+        assertThat(bill.get("payMode").asText()).isEqualTo("credit");
+        assertThat(onHand(pharmacyId, "med-a", "B1")).isEqualTo(4);
+
+        ResponseEntity<JsonNode> walkIn =
+                exchange(owner, sale("Walk-in", "9886012346", "credit", "med-a", "B1", 1, null, null));
+        assertThat(walkIn.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(walkIn.getBody().get("detail").asText()).isEqualTo("Credit needs a customer name");
+        assertThat(onHand(pharmacyId, "med-a", "B1")).isEqualTo(4);
+    }
+
+    @Test
     void aCashSaleNumbersTheBillReducesStockAndRefusesTheRest() throws SQLException {
         JsonNode ownerSession = verify("9822000801", "pharmacy", "signup", false);
         String owner = token(ownerSession);

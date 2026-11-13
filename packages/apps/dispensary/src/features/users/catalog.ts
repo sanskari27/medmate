@@ -31,6 +31,13 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "sales:return", label: "Return" },
         ],
       },
+      {
+        module: "CRM · Patients",
+        actions: [
+          { key: "patients:read", label: "Read" },
+          { key: "patients:update", label: "Update" },
+        ],
+      },
     ],
   },
   {

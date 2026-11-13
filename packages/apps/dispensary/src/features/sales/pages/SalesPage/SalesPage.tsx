@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
@@ -28,8 +28,9 @@ export function SalesPage() {
   const { session } = useAuthState();
   const canReturn = canReturnSale(session?.account.pharmacyRole, session?.account.permissions);
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [page, setPage] = useState(1);
   const needle = useDebounced(query.trim());
   const list = useListSalesQuery({ page, size: 25, q: needle || undefined });

@@ -1,6 +1,8 @@
 export {
   IconArrowRight,
   IconChart,
+  IconCredit,
+  IconHistory,
   IconChat,
   IconCheck,
   IconDashboard,
@@ -24,5 +26,6 @@ export {
   IconTruck,
   IconUser,
   IconUsers,
+  IconWhatsApp,
   IconX,
 } from "./Icon";

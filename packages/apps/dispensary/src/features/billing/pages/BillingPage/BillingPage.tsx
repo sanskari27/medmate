@@ -50,6 +50,7 @@ export function BillingPage() {
   const [highlight, setHighlight] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [cashReceived, setCashReceived] = useState("");
+  const [payMode, setPayMode] = useState<"cash" | "credit">("cash");
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
   const [focusTick, setFocusTick] = useState(0);
   const scanRef = useRef<HTMLInputElement>(null);
@@ -298,7 +299,7 @@ export function BillingPage() {
         patientPhone: cart.patientPhone,
         prescribedBy: needsRx ? cart.prescribedBy.trim() : "",
         prescriptionNumber: needsRx ? cart.prescriptionNumber.trim() : "",
-        payMode: "cash",
+        payMode,
         discount: { type: cart.discountType, value: cart.discountValue },
         lines: cart.lines.map((line) => ({
           productId: line.productId,
@@ -381,6 +382,8 @@ export function BillingPage() {
         onDiscountType={(type) => dispatch(discountSet(cleanDiscount(type, cart.discountValue)))}
         onDiscountValue={(value) => dispatch(discountSet(cleanDiscount(cart.discountType, value)))}
         onCash={setCashReceived}
+        payMode={payMode}
+        onPayMode={setPayMode}
         onCharge={() => void charge()}
       />
       {cart.posted ? (

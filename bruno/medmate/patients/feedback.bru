@@ -1,0 +1,39 @@
+meta {
+  name: Save feedback
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/patients/9886012345/feedback
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "rating": 5,
+    "nps": 9,
+    "comment": "Quick billing"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 403, 404]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  Staff with patients:update save a rating for a patient.
+}

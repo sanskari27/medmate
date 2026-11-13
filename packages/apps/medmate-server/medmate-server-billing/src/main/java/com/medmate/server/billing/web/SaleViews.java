@@ -12,6 +12,7 @@ public final class SaleViews {
             String type,
             String invoiceNumber,
             String patientName,
+            String patientPhone,
             Instant recordedAt,
             int items,
             String amount) {}

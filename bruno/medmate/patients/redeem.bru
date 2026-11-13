@@ -1,0 +1,30 @@
+meta {
+  name: Redeem points
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/patients/9886012345/redemptions
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect([201, 400, 403, 404]).to.include(res.getStatus());
+  });
+}
+
+docs {
+  Staff with patients:update redeem up to 50 available points. Zero points is refused.
+}

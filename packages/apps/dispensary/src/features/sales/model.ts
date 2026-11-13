@@ -3,6 +3,7 @@ export type SaleRow = {
   type: "sale" | "return";
   invoiceNumber: string;
   patientName: string;
+  patientPhone?: string;
   recordedAt: string;
   items: number;
   amount: string;
@@ -79,8 +80,8 @@ export function filterSales(rows: SaleRow[], query: string): SaleRow[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return rows;
   return rows.filter((row) =>
-    [row.id, row.invoiceNumber, row.patientName, typeLabel(row.type)].some((value) =>
-      value.toLowerCase().includes(needle),
+    [row.id, row.invoiceNumber, row.patientName, row.patientPhone ?? "", typeLabel(row.type)].some(
+      (value) => value.toLowerCase().includes(needle),
     ),
   );
 }

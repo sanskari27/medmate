@@ -17,6 +17,7 @@ import { InventoryPage, canOpenInventory } from "@/features/inventory";
 import { OffersPage, canOpenOffers } from "@/features/offers";
 import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
+import { PatientsPage, canOpenPatients } from "@/features/patients";
 import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
 import { RacksPage, canOpenRacks } from "@/features/racks";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
@@ -58,6 +59,7 @@ export function AppRouter() {
   const offersOpen = canOpenOffers(session?.account.pharmacyRole, session?.account.permissions);
   const billingOpen = canOpenBilling(session?.account.pharmacyRole, session?.account.permissions);
   const salesOpen = canOpenSales(session?.account.pharmacyRole, session?.account.permissions);
+  const patientsOpen = canOpenPatients(session?.account.pharmacyRole, session?.account.permissions);
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -66,7 +68,7 @@ export function AppRouter() {
     "/profile",
     "/support",
   ]);
-  const counterPaths = new Set(["/billing", "/sales"]);
+  const counterPaths = new Set(["/billing", "/sales", "/patients"]);
   let counterLabeled = false;
   const cataloguePaths = new Set([
     "/distributors",
@@ -88,6 +90,7 @@ export function AppRouter() {
       if (route.path === "/offers") return offersOpen;
       if (route.path === "/billing") return billingOpen;
       if (route.path === "/sales") return salesOpen;
+      if (route.path === "/patients") return patientsOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
@@ -145,7 +148,8 @@ export function AppRouter() {
                 route.path !== "/racks" &&
                 route.path !== "/offers" &&
                 route.path !== "/billing" &&
-                route.path !== "/sales",
+                route.path !== "/sales" &&
+                route.path !== "/patients",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -181,6 +185,10 @@ export function AppRouter() {
           <Route
             path="/sales/:id"
             element={salesOpen ? <SalesPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/patients"
+            element={patientsOpen ? <PatientsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/offers"

@@ -117,11 +117,12 @@ class BillRulesTest {
         BillRules.StockLine rx = stock("med-a", "B1", "2027-06", 5, "30.00", 12, true);
         assertThat(BillRules.price(request(), List.of(rx), List.of(), MONTH).problem())
                 .isEqualTo("Prescribed by is required");
-        BillRules.Request numbered = new BillRules.Request("Ada", "9886012345", "Dr. Rao", "", none(), List.of(line()));
+        BillRules.Request numbered =
+                new BillRules.Request("Ada", "9886012345", "Dr. Rao", "", none(), List.of(line()), "cash");
         assertThat(BillRules.price(numbered, List.of(rx), List.of(), MONTH).problem())
                 .isEqualTo("Prescription number is required");
         BillRules.Request ready =
-                new BillRules.Request("Ada", "9886012345", "Dr. Rao", "RX-9", none(), List.of(line()));
+                new BillRules.Request("Ada", "9886012345", "Dr. Rao", "RX-9", none(), List.of(line()), "cash");
         BillRules.Priced priced = BillRules.price(ready, List.of(rx), List.of(), MONTH);
         assertThat(priced.problem()).isNull();
         assertThat(priced.prescribedBy()).isEqualTo("Dr. Rao");
@@ -145,6 +146,17 @@ class BillRulesTest {
                                         "{\"patientName\":\"Ada\",\"patientPhone\":\"9886012345\",\"payMode\":\"upi\",\"lines\":[{\"productId\":\"med-a\",\"batchNo\":\"B1\",\"qty\":1}]}"))
                         .problem())
                 .isEqualTo("Payment type is not available");
+        assertThat(BillRules.prepare(
+                                JSON.readTree(
+                                        "{\"patientName\":\"Walk-in\",\"patientPhone\":\"9886012345\",\"payMode\":\"credit\",\"lines\":[{\"productId\":\"med-a\",\"batchNo\":\"B1\",\"qty\":1}]}"))
+                        .problem())
+                .isEqualTo("Credit needs a customer name");
+        assertThat(BillRules.prepare(
+                                JSON.readTree(
+                                        "{\"patientName\":\"Ada\",\"patientPhone\":\"9886012345\",\"payMode\":\"credit\",\"lines\":[{\"productId\":\"med-a\",\"batchNo\":\"B1\",\"qty\":1}]}"))
+                        .request()
+                        .payMode())
+                .isEqualTo("credit");
         assertThat(BillRules.prepare(
                                 JSON.readTree(
                                         "{\"patientName\":\"Ada\",\"patientPhone\":\"9886012345\",\"payMode\":\"cash\",\"lines\":[]}"))
@@ -195,7 +207,7 @@ class BillRulesTest {
     }
 
     private static BillRules.Request request() {
-        return new BillRules.Request("Ada", "9886012345", "", "", none(), List.of(line()));
+        return new BillRules.Request("Ada", "9886012345", "", "", none(), List.of(line()), "cash");
     }
 
     private static BillRules.RequestLine line() {
