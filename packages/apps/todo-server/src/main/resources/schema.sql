@@ -1,7 +1,0 @@
-CREATE TABLE IF NOT EXISTS todos (
-  id UUID PRIMARY KEY,
-  title VARCHAR(200) NOT NULL,
-  completed BOOLEAN NOT NULL DEFAULT FALSE,
-  attachment_key TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);

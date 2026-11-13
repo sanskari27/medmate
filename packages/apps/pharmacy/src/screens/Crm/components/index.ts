@@ -1,9 +1,0 @@
-export { Analytics } from "./Analytics";
-export { Campaigns } from "./Campaigns";
-export { FeedbackTab } from "./FeedbackTab";
-export { Loyalty } from "./Loyalty";
-export { Overview } from "./Overview";
-export { PatientModal } from "./PatientModal";
-export { Patients } from "./Patients";
-export { PtSpark } from "./PtSpark";
-export { Reminders } from "./Reminders";

@@ -39,12 +39,12 @@ terraform -chdir=packages/infra/bootstrap init
 terraform -chdir=packages/infra/bootstrap apply
 terraform -chdir=packages/infra/platform init -backend-config=backend.hcl
 terraform -chdir=packages/infra/platform apply
-terraform -chdir=packages/infra/todo-react init -backend-config=backend.hcl
-terraform -chdir=packages/infra/todo-react apply
-terraform -chdir=packages/infra/todo-server init -backend-config=backend.hcl
-terraform -chdir=packages/infra/todo-server apply
-python3 scripts/deploy_app.py todo-server
-python3 scripts/deploy_app.py todo-react
+terraform -chdir=packages/infra/dispensary init -backend-config=backend.hcl
+terraform -chdir=packages/infra/dispensary apply
+terraform -chdir=packages/infra/medmate-server init -backend-config=backend.hcl
+terraform -chdir=packages/infra/medmate-server apply
+python3 scripts/deploy_app.py medmate-server
+python3 scripts/deploy_app.py dispensary
 ```
 
 After the GitHub repository exists, apply the platform with `github_repository` set to `owner/name` and the owner and repository IDs from GitHub. Actions tokens use the immutable subject `repo:owner@id/name@id`. Store the role outputs:

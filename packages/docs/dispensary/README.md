@@ -1,6 +1,6 @@
 # dispensary
 
-`https://dispensary.nammamedmate.com` is the structured replacement for the pharmacy console. The pharmacy app and its infrastructure stay in the repo for comparison.
+`https://dispensary.nammamedmate.com` is the pharmacy console.
 
 Local development runs on port 3204 (`make dispensary`). Vite proxies `/auth` to medmate-server on port 8080 and `/sms-mock` to the SMS mock on port 8090. Start those with `make api` and `make sms-mock`.
 

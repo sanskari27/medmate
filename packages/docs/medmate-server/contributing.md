@@ -1,6 +1,6 @@
 # Contributing
 
-Work lands through a written requirement, a small change, and the quality gates. The pharmacy console still calls this host, so an unfinished route is a production failure, not a local stub.
+Work lands through a written requirement, a small change, and the quality gates. Dispensary and admin call this host, so an unfinished route is a production failure, not a local stub.
 
 ## How a change starts
 

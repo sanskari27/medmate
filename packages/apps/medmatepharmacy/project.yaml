@@ -11,4 +11,4 @@ build:
     VITE_SITE_URL: https://medmatepharmacy.com
     VITE_API_BASE_URL: https://api.nammamedmate.com
     VITE_APP_URL: https://medmatepharmacy.com
-    VITE_PHARMACY_URL: https://pharmacy.nammamedmate.com
+    VITE_PHARMACY_URL: https://dispensary.nammamedmate.com

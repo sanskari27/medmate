@@ -1,1 +1,0 @@
-export { Loyalty } from "./Loyalty";

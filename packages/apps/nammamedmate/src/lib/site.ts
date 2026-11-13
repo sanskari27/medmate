@@ -10,5 +10,5 @@ export const SUPPORT_EMAIL = "support@nammamedmate.com";
 export const config = {
   supportEmail: SUPPORT_EMAIL,
   patientAppUrl: "https://app.nammamedmate.com/",
-  pharmacyConsoleUrl: "https://pharmacy.nammamedmate.com/",
+  pharmacyConsoleUrl: "https://dispensary.nammamedmate.com/",
 } as const;

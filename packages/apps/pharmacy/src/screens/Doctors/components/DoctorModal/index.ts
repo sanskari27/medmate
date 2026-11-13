@@ -1,1 +1,0 @@
-export { DoctorModal } from "./DoctorModal";

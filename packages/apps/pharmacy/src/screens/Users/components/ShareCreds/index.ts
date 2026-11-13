@@ -1,1 +1,0 @@
-export { ShareCreds } from "./ShareCreds";

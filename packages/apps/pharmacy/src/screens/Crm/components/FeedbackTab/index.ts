@@ -1,1 +1,0 @@
-export { FeedbackTab } from "./FeedbackTab";

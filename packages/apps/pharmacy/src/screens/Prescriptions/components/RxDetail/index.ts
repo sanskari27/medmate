@@ -1,1 +1,0 @@
-export { RxDetail } from "./RxDetail";

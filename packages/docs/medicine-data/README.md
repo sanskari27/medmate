@@ -123,15 +123,15 @@ curl -sS "https://medicine-data.nammamedmate.com/api/search?q=a"
 { "error": { "code": "BAD_REQUEST", "message": "q must be 2 to 80 characters" } }
 ```
 
-A browser on the pharmacy console:
+A browser on the dispensary:
 
 ```bash
 curl -sS \
-  -H "Origin: https://pharmacy.nammamedmate.com" \
+  -H "Origin: https://dispensary.nammamedmate.com" \
   "https://medicine-data.nammamedmate.com/api/search?q=crocin"
 ```
 
-The response includes `Access-Control-Allow-Origin: https://pharmacy.nammamedmate.com`.
+The response includes `Access-Control-Allow-Origin: https://dispensary.nammamedmate.com`.
 
 An origin outside the two zones:
 

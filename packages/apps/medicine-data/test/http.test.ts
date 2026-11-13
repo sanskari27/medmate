@@ -121,13 +121,13 @@ function catalog(calls: { query?: string; limit?: number; id?: string }[]): Cata
 describe("cors", () => {
   it("allows the two zones, their subdomains, and localhost", () => {
     assert.equal(isAllowedOrigin("https://nammamedmate.com"), true);
-    assert.equal(isAllowedOrigin("https://pharmacy.nammamedmate.com"), true);
+    assert.equal(isAllowedOrigin("https://dispensary.nammamedmate.com"), true);
     assert.equal(isAllowedOrigin("https://medmatepharmacy.com"), true);
-    assert.equal(isAllowedOrigin("https://api.todo.medmatepharmacy.com"), true);
-    assert.equal(isAllowedOrigin("http://localhost:3203"), true);
+    assert.equal(isAllowedOrigin("https://api.nammamedmate.com"), true);
+    assert.equal(isAllowedOrigin("http://localhost:3204"), true);
     assert.equal(isAllowedOrigin("https://localhost"), false);
     assert.equal(isAllowedOrigin("https://evil.example"), false);
-    assert.equal(isAllowedOrigin("http://pharmacy.nammamedmate.com"), false);
+    assert.equal(isAllowedOrigin("http://dispensary.nammamedmate.com"), false);
   });
 
   it("rejects a disallowed origin before reading data", async () => {
@@ -143,11 +143,11 @@ describe("cors", () => {
 
   it("echoes an allowed origin", async () => {
     const result = await handleHttp(
-      { method: "GET", url: "/health", origin: "https://pharmacy.nammamedmate.com" },
+      { method: "GET", url: "/health", origin: "https://dispensary.nammamedmate.com" },
       catalog([]),
     );
     assert.equal(result.status, 200);
-    assert.equal(result.headers["access-control-allow-origin"], "https://pharmacy.nammamedmate.com");
+    assert.equal(result.headers["access-control-allow-origin"], "https://dispensary.nammamedmate.com");
     assert.equal(result.headers["access-control-allow-methods"], "GET, OPTIONS");
   });
 });

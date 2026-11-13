@@ -44,10 +44,10 @@ After the spec is on disk, create an implementation plan and stop.
 The plan must:
 
 - Keep the change inside one feature, and export it from that feature's `index.ts`.
-- Copy pharmacy visuals without importing `packages/apps/pharmacy`. Keep element order and placement.
+- Match an existing screen in that portal. Keep element order and placement.
 - Call medmate-server through the portal API client. Do not hardcode a production URL in a component.
 - Name the unit tests to add.
-- Leave the other portal, the pharmacy app, and unrelated screens unchanged.
+- Leave the other portal and unrelated screens unchanged.
 
 ## Permissions
 

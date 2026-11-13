@@ -1,6 +1,6 @@
 # Portal architecture
 
-Dispensary (`dispensary.nammamedmate.com`) and admin (`admin.nammamedmate.com`) are separate Vite apps. Dispensary is the structured replacement for the pharmacy console. Admin is the platform-staff shell. [Pharmacy](../../apps/pharmacy) stays in place, including its Terraform, and neither portal imports it.
+Dispensary (`dispensary.nammamedmate.com`) and admin (`admin.nammamedmate.com`) are separate Vite apps. Dispensary is the pharmacy console. Admin is the platform-staff shell. Neither portal imports the other.
 
 ## Stack
 
@@ -8,7 +8,7 @@ TypeScript, Vite, React 19, Tailwind v4, npm, Vitest, Testing Library, ESLint, a
 
 SCSS modules, pnpm, Storybook, Playwright, and Husky are not part of these apps. Styling is Tailwind on the component. The palette in each app's `src/styles/globals.css` is the pharmacy theme.
 
-Dependencies beyond the pharmacy console:
+Dependencies beyond the shared stack:
 
 - `react-hook-form`, `@hookform/resolvers`, and `zod` validate the phone, OTP, and PIN fields.
 - `eslint-plugin-boundaries` stops a feature from importing another feature, and stops shared UI from importing features.

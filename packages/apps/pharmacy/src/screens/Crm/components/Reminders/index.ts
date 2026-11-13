@@ -1,1 +1,0 @@
-export { Reminders } from "./Reminders";

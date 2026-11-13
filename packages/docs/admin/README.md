@@ -1,6 +1,6 @@
 # admin
 
-`https://admin.nammamedmate.com` is the platform-staff shell. It is a separate app from dispensary and from the pharmacy console.
+`https://admin.nammamedmate.com` is the platform-staff shell. It is a separate app from dispensary.
 
 Local development runs on port 3205 (`make admin`). Vite proxies `/auth`, `/pharmacy-applications`, `/pharmacies`, and `/pharmacy-owners` to medmate-server on port 8080 and `/sms-mock` to the SMS mock on port 8090. Start those with `make api` and `make sms-mock`.
 

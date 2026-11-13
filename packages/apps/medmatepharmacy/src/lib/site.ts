@@ -1,7 +1,7 @@
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://medmatepharmacy.com").replace(/\/$/, "");
 export const APP_URL = (import.meta.env.VITE_APP_URL || "https://medmatepharmacy.com").replace(/\/$/, "");
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
-export const PHARMACY_URL = (import.meta.env.VITE_PHARMACY_URL || (import.meta.env.PROD ? "https://pharmacy.nammamedmate.com" : "http://localhost:3000")).replace(/\/$/, "");
+export const PHARMACY_URL = (import.meta.env.VITE_PHARMACY_URL || (import.meta.env.PROD ? "https://dispensary.nammamedmate.com" : "http://localhost:3204")).replace(/\/$/, "");
 export const PLAY_URL = import.meta.env.VITE_PLAY_URL || "";
 export const IOS_URL = import.meta.env.VITE_IOS_URL || "";
 

@@ -1,1 +1,0 @@
-export { RxCard } from "./RxCard";
