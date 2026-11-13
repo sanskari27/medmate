@@ -88,8 +88,11 @@ describe("ReviewsPage", () => {
       vi.fn(async (input: RequestInfo) => {
         const url = requestUrl(input);
         urls.push(url);
-        if (url.includes("status=pending_compliance")) return json([newer]);
-        if (url.includes("status=pending_admin")) return json([older]);
+        if (url.includes("/pharmacy-applications/") && !url.includes("?"))
+          return json({ name: "Opened" });
+        if (url.includes("/pharmacy-applications") && !url.includes("status=")) {
+          return json({ applications: [older, newer], page: 1, size: 25, total: 2 });
+        }
         return json({ detail: "Not found" }, 404);
       }),
     );
@@ -101,8 +104,10 @@ describe("ReviewsPage", () => {
     expect(links[1]?.getAttribute("aria-label")).toBe("Newer Pharmacy");
     expect(screen.getByText("Final review")).toBeTruthy();
     expect(screen.getByText("Compliance review")).toBeTruthy();
-    expect(urls.some((url) => url.includes("status=pending_compliance"))).toBe(true);
-    expect(urls.some((url) => url.includes("status=pending_admin"))).toBe(true);
+    const lists = urls.filter((url) => url.includes("/pharmacy-applications"));
+    expect(lists).toHaveLength(1);
+    expect(lists[0]?.includes("status=")).toBe(false);
+    expect(screen.getByText("page 1 of 1")).toBeTruthy();
     expect(document.querySelector("time")?.getAttribute("dateTime")).toBe("2026-11-01T10:00:00Z");
 
     fireEvent.click(links[0]!);
@@ -114,7 +119,9 @@ describe("ReviewsPage", () => {
       "fetch",
       vi.fn(async (input: RequestInfo) => {
         const url = requestUrl(input);
-        if (url.includes("status=pending_")) return json([]);
+        if (url.includes("/pharmacy-applications") && !url.includes("status=")) {
+          return json({ applications: [], page: 1, size: 25, total: 0 });
+        }
         return json({ detail: "Not found" }, 404);
       }),
     );
@@ -128,10 +135,9 @@ describe("ReviewsPage", () => {
       "fetch",
       vi.fn(async (input: RequestInfo) => {
         const url = requestUrl(input);
-        if (url.includes("status=pending_compliance")) {
+        if (url.includes("/pharmacy-applications")) {
           return json({ detail: "Status is required" }, 400);
         }
-        if (url.includes("status=pending_admin")) return json([older]);
         return json({ detail: "Not found" }, 404);
       }),
     );

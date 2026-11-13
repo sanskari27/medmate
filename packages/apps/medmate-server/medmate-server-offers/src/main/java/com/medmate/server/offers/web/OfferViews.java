@@ -18,9 +18,7 @@ public final class OfferViews {
             boolean active,
             int itemCount) {}
 
-    public record ProductView(String productId, String name) {}
-
-    public record ListResponse(List<OfferView> offers, List<ProductView> products) {}
+    public record ListResponse(List<OfferView> offers) {}
 
     public record OneResponse(OfferView offer) {}
 }

@@ -28,7 +28,26 @@ public final class DistributorViews {
             boolean showInPurchases,
             List<TransactionView> transactions) {}
 
-    public record ListResponse(List<DistributorView> distributors) {}
+    public record DistributorCard(
+            String id,
+            String name,
+            String contactPerson,
+            String phone,
+            String email,
+            String gstin,
+            String drugLicenceNumber,
+            String address,
+            String city,
+            String state,
+            String paymentTerms,
+            int openingBalance,
+            int outstanding,
+            boolean active,
+            boolean showInPurchases) {}
+
+    public record ListResponse(List<DistributorCard> distributors) {}
+
+    public record PaymentList(List<TransactionView> payments, int page, int size, int total) {}
 
     public record OneResponse(DistributorView distributor) {}
 }

@@ -32,7 +32,7 @@ public class OfferService {
 
     public OfferViews.ListResponse list(AccountPrincipal actor) {
         require(actor, OfferRules.READ, "Offers cannot be read");
-        return new OfferViews.ListResponse(views(actor.pharmacyId(), offers.list(actor.pharmacyId())), products(actor));
+        return new OfferViews.ListResponse(views(actor.pharmacyId(), offers.list(actor.pharmacyId())));
     }
 
     @Transactional
@@ -101,14 +101,6 @@ public class OfferService {
                 row.productId(),
                 row.active(),
                 OfferRules.itemCount(row.scope(), present, ids.size()));
-    }
-
-    private List<OfferViews.ProductView> products(AccountPrincipal actor) {
-        List<OfferViews.ProductView> products = new ArrayList<>();
-        for (InventoryNames.NamedProduct product : names.list(actor.pharmacyId())) {
-            products.add(new OfferViews.ProductView(product.productId(), product.name()));
-        }
-        return products;
     }
 
     private Set<String> ids(UUID pharmacyId) {

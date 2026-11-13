@@ -216,6 +216,62 @@ public class BillStore {
                 .list();
     }
 
+    public record SaleListRow(
+            String id,
+            String type,
+            String invoiceNumber,
+            String patientName,
+            Instant recordedAt,
+            int items,
+            BigDecimal amount) {}
+
+    public record SalePage(List<SaleListRow> rows, int total) {}
+
+    public record SaleMonth(BigDecimal sales, int saleCount, BigDecimal returned, int returnCount) {}
+
+    public SalePage salePage(UUID pharmacyId, String pattern, int limit, int offset) {
+        int total = jdbc.sql("SELECT COUNT(*) FROM (" + saleUnion() + ") rows " + saleMatch())
+                .param("pharmacy", pharmacyId)
+                .param("pattern", pattern)
+                .query(Integer.class)
+                .single();
+        List<SaleListRow> rows = jdbc.sql(
+                        "SELECT id, type, invoice_number, patient_name, recorded_at, items, amount FROM ("
+                                + saleUnion()
+                                + ") rows "
+                                + saleMatch()
+                                + " ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset")
+                .param("pharmacy", pharmacyId)
+                .param("pattern", pattern)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query(this::saleListRow)
+                .list();
+        return new SalePage(rows, total);
+    }
+
+    public SaleMonth saleMonth(UUID pharmacyId, Instant start, Instant end) {
+        MonthPart sales = month(
+                """
+                SELECT COALESCE(SUM(payable), 0) AS amount, COUNT(*) AS counted
+                FROM bill
+                WHERE pharmacy_id = :pharmacy AND sold_at >= :start AND sold_at < :end
+                """,
+                pharmacyId,
+                start,
+                end);
+        MonthPart returned = month(
+                """
+                SELECT COALESCE(SUM(amount), 0) AS amount, COUNT(*) AS counted
+                FROM sale_return
+                WHERE pharmacy_id = :pharmacy AND recorded_at >= :start AND recorded_at < :end
+                """,
+                pharmacyId,
+                start,
+                end);
+        return new SaleMonth(sales.amount(), sales.count(), returned.amount(), returned.count());
+    }
+
     public List<ItemCount> returnItems(UUID pharmacyId) {
         return jdbc.sql(
                         """
@@ -277,6 +333,60 @@ public class BillStore {
                 .param("qty", qty)
                 .update();
     }
+
+    private static String saleUnion() {
+        return """
+                SELECT b.number AS id, 'sale' AS type, b.number AS invoice_number, b.patient_name,
+                       b.sold_at AS recorded_at,
+                       COALESCE((SELECT SUM(qty) FROM bill_line l
+                                 WHERE l.pharmacy_id = b.pharmacy_id AND l.bill_number = b.number), 0) AS items,
+                       b.payable AS amount
+                FROM bill b
+                WHERE b.pharmacy_id = :pharmacy
+                UNION ALL
+                SELECT r.code, 'return', r.bill_number, b.patient_name, r.recorded_at,
+                       COALESCE((SELECT SUM(qty) FROM sale_return_line l
+                                 WHERE l.pharmacy_id = r.pharmacy_id AND l.return_code = r.code), 0),
+                       r.amount
+                FROM sale_return r
+                JOIN bill b ON b.pharmacy_id = r.pharmacy_id AND b.number = r.bill_number
+                WHERE r.pharmacy_id = :pharmacy
+                """;
+    }
+
+    private static String saleMatch() {
+        return """
+                WHERE (
+                  CAST(:pattern AS text) = ''
+                  OR lower(id) LIKE :pattern ESCAPE '\\'
+                  OR lower(invoice_number) LIKE :pattern ESCAPE '\\'
+                  OR lower(patient_name) LIKE :pattern ESCAPE '\\'
+                  OR lower(type) LIKE :pattern ESCAPE '\\'
+                )
+                """;
+    }
+
+    private SaleListRow saleListRow(ResultSet row, int number) throws SQLException {
+        return new SaleListRow(
+                row.getString("id"),
+                row.getString("type"),
+                row.getString("invoice_number"),
+                row.getString("patient_name"),
+                row.getTimestamp("recorded_at").toInstant(),
+                row.getInt("items"),
+                row.getBigDecimal("amount"));
+    }
+
+    private MonthPart month(String sql, UUID pharmacyId, Instant start, Instant end) {
+        return jdbc.sql(sql)
+                .param("pharmacy", pharmacyId)
+                .param("start", Timestamp.from(start))
+                .param("end", Timestamp.from(end))
+                .query((row, number) -> new MonthPart(row.getBigDecimal("amount"), row.getInt("counted")))
+                .single();
+    }
+
+    private record MonthPart(BigDecimal amount, int count) {}
 
     private BillRow bill(ResultSet row, int number) throws SQLException {
         return new BillRow(

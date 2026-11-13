@@ -134,16 +134,34 @@ public class SupportStore {
                 .optional();
     }
 
-    public List<CaseRow> cases(UUID pharmacyId) {
+    public List<CaseRow> cases(UUID pharmacyId, int limit, int offset) {
         if (pharmacyId == null) {
-            return jdbc.sql(caseSql() + " ORDER BY created_at DESC, id DESC")
+            return jdbc.sql(caseSql() + " ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset")
+                    .param("limit", limit)
+                    .param("offset", offset)
                     .query(this::caseRow)
                     .list();
         }
-        return jdbc.sql(caseSql() + " WHERE pharmacy_id = :pharmacy ORDER BY created_at DESC, id DESC")
+        return jdbc.sql(
+                        caseSql()
+                                + " WHERE pharmacy_id = :pharmacy ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset")
                 .param("pharmacy", pharmacyId)
+                .param("limit", limit)
+                .param("offset", offset)
                 .query(this::caseRow)
                 .list();
+    }
+
+    public int caseCount(UUID pharmacyId) {
+        if (pharmacyId == null) {
+            return jdbc.sql("SELECT COUNT(*) FROM support_case")
+                    .query(Integer.class)
+                    .single();
+        }
+        return jdbc.sql("SELECT COUNT(*) FROM support_case WHERE pharmacy_id = :pharmacy")
+                .param("pharmacy", pharmacyId)
+                .query(Integer.class)
+                .single();
     }
 
     public boolean claim(UUID id, UUID assignee) {

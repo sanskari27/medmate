@@ -2,6 +2,7 @@ package com.medmate.server.billing.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +25,12 @@ public class SaleController {
     }
 
     @GetMapping("/pharmacy/sales")
-    public SaleViews.ListResponse list(Authentication authentication) {
-        return sales.list(Current.require(authentication));
+    public SaleViews.ListResponse list(
+            Authentication authentication,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) String q) {
+        return sales.list(Current.require(authentication), PageQuery.parse(page, size), q);
     }
 
     @GetMapping("/pharmacy/sales/{id}")

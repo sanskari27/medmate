@@ -6,8 +6,11 @@ export const pharmaciesApi = createApi({
   reducerPath: "pharmaciesApi",
   baseQuery: apiClient,
   endpoints: (build) => ({
-    listOwners: build.query<OwnerSummary[], void>({
-      query: () => ({ url: "/pharmacy-owners" }),
+    listOwners: build.query<
+      { owners: OwnerSummary[]; page: number; size: number; total: number },
+      { page: number; size: number }
+    >({
+      query: ({ page, size }) => ({ url: "/pharmacy-owners", params: { page, size } }),
     }),
     ownerDetail: build.query<OwnerDetail, string>({
       query: (id) => ({ url: `/pharmacy-owners/${id}` }),

@@ -2,6 +2,7 @@ package com.medmate.server.support.web;
 
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
@@ -40,7 +41,7 @@ public class ClosedSupportService implements SupportService {
     }
 
     @Override
-    public List<SupportViews.CaseSummary> cases(AccountPrincipal principal) {
+    public SupportViews.CaseList cases(AccountPrincipal principal, PageQuery page) {
         throw closed();
     }
 

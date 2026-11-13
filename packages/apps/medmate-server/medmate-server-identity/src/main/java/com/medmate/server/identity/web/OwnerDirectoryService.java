@@ -9,6 +9,7 @@ import com.medmate.server.identity.store.BlockStore;
 import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -38,9 +39,9 @@ public class OwnerDirectoryService {
         this.clock = clock;
     }
 
-    public List<OwnerSummary> list(AccountPrincipal actor) {
+    public OwnerList list(AccountPrincipal actor, PageQuery page) {
         requireReader(actor);
-        return pharmacies.listOwners().stream()
+        List<OwnerSummary> owners = pharmacies.listOwners(page.size(), page.offset()).stream()
                 .map(row -> new OwnerSummary(
                         row.pharmacyId(),
                         row.name(),
@@ -49,6 +50,7 @@ public class OwnerDirectoryService {
                         BlockRules.State.of(row.ownerDisabled(), row.openRequest())
                                 .wire()))
                 .toList();
+        return new OwnerList(owners, page.page(), page.size(), pharmacies.countOwners());
     }
 
     public OwnerDetail detail(AccountPrincipal actor, UUID pharmacyId) {
@@ -182,6 +184,8 @@ public class OwnerDirectoryService {
     private static ApiProblem conflict(String detail) {
         return new ApiProblem(HttpStatus.CONFLICT, "Conflict", detail);
     }
+
+    public record OwnerList(List<OwnerSummary> owners, int page, int size, int total) {}
 
     public record OwnerSummary(UUID pharmacyId, String name, String phone, String status, String blockState) {}
 

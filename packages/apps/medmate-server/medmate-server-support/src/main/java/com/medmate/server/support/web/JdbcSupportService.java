@@ -3,6 +3,7 @@ package com.medmate.server.support.web;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.session.AccountDirectory;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import com.medmate.server.support.access.SupportAccess;
 import com.medmate.server.support.access.SupportRules;
 import com.medmate.server.support.store.SupportStore;
@@ -111,12 +112,16 @@ public class JdbcSupportService implements SupportService {
     }
 
     @Override
-    public List<SupportViews.CaseSummary> cases(AccountPrincipal principal) {
+    public SupportViews.CaseList cases(AccountPrincipal principal, PageQuery page) {
         if (!SupportAccess.listCases(principal)) {
             throw forbidden();
         }
         UUID pharmacyId = SupportAccess.editFaqs(principal) ? null : principal.pharmacyId();
-        return summaries(store.cases(pharmacyId));
+        return new SupportViews.CaseList(
+                summaries(store.cases(pharmacyId, page.size(), page.offset())),
+                page.page(),
+                page.size(),
+                store.caseCount(pharmacyId));
     }
 
     @Override

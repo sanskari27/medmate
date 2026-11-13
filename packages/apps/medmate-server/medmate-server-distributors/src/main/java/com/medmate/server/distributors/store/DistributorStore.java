@@ -89,6 +89,54 @@ public class DistributorStore {
                 .list();
     }
 
+    public long outstanding(UUID pharmacyId) {
+        Long total = jdbc.sql(
+                        """
+                        SELECT COALESCE(SUM(
+                          d.opening_balance + COALESCE((
+                            SELECT SUM(CASE WHEN t.type = 'purchase' THEN t.amount ELSE -t.amount END)
+                            FROM distributor_transaction t
+                            WHERE t.pharmacy_id = d.pharmacy_id AND t.distributor_code = d.code
+                          ), 0)
+                        ), 0)
+                        FROM distributor d
+                        WHERE d.pharmacy_id = :id
+                        """)
+                .param("id", pharmacyId)
+                .query(Long.class)
+                .single();
+        return total == null ? 0 : total;
+    }
+
+    public List<TransactionRow> payments(UUID pharmacyId, String code, int limit, int offset) {
+        return jdbc.sql(
+                        """
+                        SELECT code, distributor_code, type, amount, reference, note, mode, recorded_at
+                        FROM distributor_transaction
+                        WHERE pharmacy_id = :id AND distributor_code = :code
+                        ORDER BY recorded_at, code
+                        LIMIT :limit OFFSET :offset
+                        """)
+                .param("id", pharmacyId)
+                .param("code", code)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query(this::transaction)
+                .list();
+    }
+
+    public int paymentCount(UUID pharmacyId, String code) {
+        return jdbc.sql(
+                        """
+                        SELECT COUNT(*) FROM distributor_transaction
+                        WHERE pharmacy_id = :id AND distributor_code = :code
+                        """)
+                .param("id", pharmacyId)
+                .param("code", code)
+                .query(Integer.class)
+                .single();
+    }
+
     public List<DistributorRow> list(UUID pharmacyId) {
         return jdbc.sql(select() + " WHERE pharmacy_id = :id ORDER BY CAST(SUBSTRING(code FROM 5) AS INTEGER)")
                 .param("id", pharmacyId)

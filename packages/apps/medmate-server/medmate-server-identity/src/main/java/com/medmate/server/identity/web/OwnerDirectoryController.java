@@ -1,6 +1,6 @@
 package com.medmate.server.identity.web;
 
-import java.util.List;
+import com.medmate.server.shared.web.PageQuery;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,8 +22,11 @@ public class OwnerDirectoryController {
     }
 
     @GetMapping("/pharmacy-owners")
-    public List<OwnerDirectoryService.OwnerSummary> list(Authentication authentication) {
-        return owners.list(Current.require(authentication));
+    public OwnerDirectoryService.OwnerList list(
+            Authentication authentication,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size) {
+        return owners.list(Current.require(authentication), PageQuery.parse(page, size));
     }
 
     @GetMapping("/pharmacy-owners/{id}")

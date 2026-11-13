@@ -30,6 +30,25 @@ export type InventoryProduct = {
 
 export type InventoryFilter = "all" | "low" | "out" | "expiring";
 
+export type InventorySummary = {
+  skuCount: number;
+  unitCount: number;
+  cost: string;
+  retail: string;
+  lowCount: number;
+  outCount: number;
+  expiringCount: number;
+  expiringCost: string;
+};
+
+export type InventoryList = {
+  products: InventoryProduct[];
+  summary?: InventorySummary;
+  page?: number;
+  size?: number;
+  total?: number;
+};
+
 export function canOpenInventory(
   role: string | null | undefined,
   permissions: string[] | undefined,
@@ -125,7 +144,7 @@ export function matches(
 ): boolean {
   const text = query.trim().toLowerCase();
   const haystack =
-    `${product.name} ${product.composition ?? ""} ${product.marketer ?? ""}`.toLowerCase();
+    `${product.productId} ${product.name} ${product.composition ?? ""} ${product.marketer ?? ""}`.toLowerCase();
   if (text && !haystack.includes(text)) return false;
   if (filter === "low") return isLow(product);
   if (filter === "out") return isOut(product);

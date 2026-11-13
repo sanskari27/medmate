@@ -89,6 +89,7 @@ const inventory = {
 };
 
 const locationCalls: { method: string; body: string }[] = [];
+const requested: string[] = [];
 
 function json(body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -103,6 +104,7 @@ function renderPage(permissions: string[] = ["inventory:read"]) {
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const request = input instanceof Request ? input : new Request(input, init);
+      requested.push(request.url);
       if (request.url.includes("/location")) {
         locationCalls.push({ method: request.method, body: await request.clone().text() });
         return json({ product: inventory.products[0] });
@@ -138,6 +140,7 @@ describe("InventoryPage", () => {
     cleanup();
     sessionStorage.clear();
     locationCalls.length = 0;
+    requested.length = 0;
     vi.unstubAllGlobals();
   });
 
@@ -164,6 +167,11 @@ describe("InventoryPage", () => {
     fireEvent.change(screen.getByLabelText("Search inventory"), { target: { value: "" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Low stock" }));
+    await waitFor(() => {
+      expect(requested.some((url) => url.includes("filter=low") && url.includes("page=1"))).toBe(
+        true,
+      );
+    });
     expect(screen.getByRole("button", { name: "Crocin Advance" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bulk Drops" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Costly Strip" })).toBeNull();

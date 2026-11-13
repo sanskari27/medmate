@@ -503,7 +503,11 @@ public class PharmacyStore {
             boolean ownerDisabled,
             boolean openRequest) {}
 
-    public List<OwnerListing> listOwners() {
+    public int countOwners() {
+        return jdbc.sql("SELECT COUNT(*) FROM pharmacy").query(Integer.class).single();
+    }
+
+    public List<OwnerListing> listOwners(int limit, int offset) {
         return jdbc.sql(
                         """
                         SELECT p.id, p.name, a.phone, p.verification_status, a.disabled AS owner_disabled,
@@ -516,7 +520,10 @@ public class PharmacyStore {
                         ORDER BY CASE WHEN p.name IS NULL OR btrim(p.name) = '' THEN 1 ELSE 0 END,
                           lower(p.name),
                           p.id
+                        LIMIT :limit OFFSET :offset
                         """)
+                .param("limit", limit)
+                .param("offset", offset)
                 .query((rs, row) -> new OwnerListing(
                         rs.getObject("id", UUID.class),
                         rs.getString("name"),
@@ -544,22 +551,39 @@ public class PharmacyStore {
                 .orElse(false);
     }
 
-    public List<Summary> list(VerificationStatus status) {
+    public int countApplications(List<String> statuses) {
+        return jdbc.sql(
+                        """
+                        SELECT COUNT(*)
+                        FROM pharmacy p
+                        WHERE p.verification_status IN (:statuses)
+                        """)
+                .param("statuses", statuses)
+                .query(Integer.class)
+                .single();
+    }
+
+    public List<Summary> listApplications(List<String> statuses, int limit, int offset) {
         return jdbc.sql(
                         """
                         SELECT p.id, p.name, a.phone, p.verification_status, p.submitted_at
                         FROM pharmacy p
                         JOIN account a ON a.id = p.owner_account_id
-                        WHERE p.verification_status = :status
-                        ORDER BY p.submitted_at
+                        WHERE p.verification_status IN (:statuses)
+                        ORDER BY p.submitted_at ASC NULLS LAST, p.id
+                        LIMIT :limit OFFSET :offset
                         """)
-                .param("status", status.wire())
+                .param("statuses", statuses)
+                .param("limit", limit)
+                .param("offset", offset)
                 .query((rs, row) -> new Summary(
                         rs.getObject("id", UUID.class),
                         rs.getString("name"),
                         rs.getString("phone"),
                         VerificationStatus.parse(rs.getString("verification_status")),
-                        rs.getTimestamp("submitted_at").toInstant()))
+                        rs.getTimestamp("submitted_at") == null
+                                ? null
+                                : rs.getTimestamp("submitted_at").toInstant()))
                 .list();
     }
 

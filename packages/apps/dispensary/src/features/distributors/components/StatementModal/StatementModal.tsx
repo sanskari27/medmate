@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { PageBar } from "@/components/ui/PageBar";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
@@ -23,6 +24,10 @@ export function StatementModal({
   canPay,
   saving,
   error,
+  page = 1,
+  size = 25,
+  total,
+  onPage,
   onClose,
   onPay,
 }: {
@@ -30,6 +35,10 @@ export function StatementModal({
   canPay: boolean;
   saving: boolean;
   error: string | null;
+  page?: number;
+  size?: number;
+  total?: number;
+  onPage?: (page: number) => void;
   onClose: () => void;
   onPay: (payment: PaymentPayload) => void;
 }) {
@@ -122,6 +131,12 @@ export function StatementModal({
                 </tbody>
               </table>
             </Box>
+            <PageBar
+              page={page}
+              size={size}
+              total={total ?? distributor.transactions?.length ?? 0}
+              onPage={onPage ?? (() => undefined)}
+            />
           </Box>
           {canPay ? (
             <Box className="mt-4 border-t border-line pt-4">

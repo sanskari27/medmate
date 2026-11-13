@@ -1,13 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
-import type { Offer, OfferPayload, OfferProduct } from "./model";
+import type { Offer, OfferPayload } from "./model";
 
 export const offersApi = createApi({
   reducerPath: "offersApi",
   baseQuery: apiClient,
   tagTypes: ["Offers"],
   endpoints: (build) => ({
-    listOffers: build.query<{ offers: Offer[]; products: OfferProduct[] }, void>({
+    listOffers: build.query<{ offers: Offer[] }, void>({
       query: () => ({ url: "/pharmacy/offers" }),
       providesTags: ["Offers"],
     }),

@@ -2,6 +2,7 @@ package com.medmate.server.distributors.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,6 +46,15 @@ public class DistributorController {
     public DistributorViews.OneResponse update(
             Authentication authentication, @PathVariable String code, @RequestBody JsonNode body) {
         return distributors.update(Current.require(authentication), code, body);
+    }
+
+    @GetMapping("/pharmacy/distributors/{code}/payments")
+    public DistributorViews.PaymentList payments(
+            Authentication authentication,
+            @PathVariable String code,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size) {
+        return distributors.payments(Current.require(authentication), code, PageQuery.parse(page, size));
     }
 
     @PostMapping("/pharmacy/distributors/{code}/payments")

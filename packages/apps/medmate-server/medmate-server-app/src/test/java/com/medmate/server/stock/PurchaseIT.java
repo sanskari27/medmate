@@ -160,6 +160,15 @@ class PurchaseIT {
 
         String reader = staff(owner, "9822000502", List.of("purchases:read"));
         assertThat(get("/pharmacy/purchases", reader).get("purchases")).hasSize(2);
+        JsonNode first = get("/pharmacy/purchases?page=1&size=1", reader);
+        JsonNode second = get("/pharmacy/purchases?page=2&size=1", reader);
+        assertThat(first.get("purchases")).hasSize(1);
+        assertThat(first.get("total").asInt()).isEqualTo(2);
+        assertThat(second.get("purchases")).hasSize(1);
+        assertThat(second.get("purchases").get(0).get("id").asText())
+                .isNotEqualTo(first.get("purchases").get(0).get("id").asText());
+        assertThat(second.get("stats").get("purchaseCount").asInt())
+                .isEqualTo(first.get("stats").get("purchaseCount").asInt());
         ResponseEntity<JsonNode> denied = exchange(
                 "/pharmacy/purchases",
                 reader,

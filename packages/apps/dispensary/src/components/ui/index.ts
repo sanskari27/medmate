@@ -4,5 +4,6 @@ export { Field } from "./Field";
 export { Heading } from "./Heading";
 export { Input } from "./Input";
 export { Label } from "./Label";
+export { PageBar } from "./PageBar";
 export { Stack } from "./Stack";
 export { Text } from "./Text";

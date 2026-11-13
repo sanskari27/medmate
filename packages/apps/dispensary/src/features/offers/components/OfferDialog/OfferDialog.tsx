@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
+import { inventoryApi } from "@/features/inventory";
+import { useDebounced } from "@/hooks/useDebounced";
 import {
   blankDraft,
   draftFromOffer,
   draftIsValid,
   type Offer,
   type OfferDraft,
-  type OfferProduct,
   type OfferScope,
   type OfferType,
 } from "../../model";
@@ -24,23 +25,30 @@ const selectClass =
 
 export function OfferDialog({
   offer,
-  products,
   saving,
   error,
   onClose,
   onSave,
 }: {
   offer: Offer | null;
-  products: OfferProduct[];
   saving: boolean;
   error: string | null;
   onClose: () => void;
   onSave: (draft: OfferDraft) => void;
 }) {
   const [draft, setDraft] = useState<OfferDraft>(offer ? draftFromOffer(offer) : blankDraft());
+  const [productQuery, setProductQuery] = useState("");
+  const needle = useDebounced(productQuery.trim());
+  const search = inventoryApi.useListInventoryQuery(
+    { page: 1, size: 25, q: needle },
+    { skip: draft.scope !== "product" || needle.length === 0 },
+  );
   const title = offer ? "Edit offer" : "Create offer";
   const valid = draftIsValid(draft);
-  const choices = products.map((product) => ({ value: product.productId, label: product.name }));
+  const choices = (search.data?.products ?? []).map((product) => ({
+    value: product.productId,
+    label: product.name,
+  }));
   if (draft.target && !choices.some((choice) => choice.value === draft.target)) {
     choices.unshift({ value: draft.target, label: draft.target });
   }
@@ -138,6 +146,12 @@ export function OfferDialog({
             {draft.scope === "product" ? (
               <Box className="col-span-2 flex flex-col gap-1.5 max-md:col-span-1">
                 <Label>Product</Label>
+                <Input
+                  aria-label="Search product"
+                  placeholder="Search inventory"
+                  value={productQuery}
+                  onChange={(event) => setProductQuery(event.target.value)}
+                />
                 <select
                   className={selectClass}
                   value={draft.target}

@@ -75,6 +75,7 @@ class DistributorIT {
         JsonNode list = get("/pharmacy/distributors", reader);
         assertThat(list.get("distributors")).hasSize(2);
         assertThat(list.get("distributors").get(0).get("id").asText()).isEqualTo("DST-001");
+        assertThat(list.get("distributors").get(0).has("transactions")).isFalse();
 
         ResponseEntity<JsonNode> denied = exchange(
                 "/pharmacy/distributors", reader, Map.of("name", "Nope", "phone", "9000000001"), HttpMethod.POST);
@@ -93,6 +94,10 @@ class DistributorIT {
                 HttpMethod.POST);
         assertThat(paid.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(paid.getBody().get("distributor").get("outstanding").asInt()).isEqualTo(13000);
+        JsonNode payments = get("/pharmacy/distributors/DST-001/payments", reader);
+        assertThat(payments.get("total").asInt()).isEqualTo(2);
+        assertThat(payments.get("payments").get(0).get("type").asText()).isEqualTo("purchase");
+        assertThat(payments.get("payments").get(1).get("type").asText()).isEqualTo("payment");
 
         ResponseEntity<JsonNode> locked =
                 exchange("/pharmacy/distributors/DST-001", owner, Map.of("openingBalance", 9000), HttpMethod.PATCH);

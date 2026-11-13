@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { inventoryApi, type InventoryProduct } from "@/features/inventory";
+import { useDebounced } from "@/hooks/useDebounced";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { offersApi } from "@/features/offers";
 import { Box } from "@/components/ui/Box";
@@ -23,7 +24,6 @@ import {
   chooseBatch,
   cleanDiscount,
   round2,
-  searchResults,
   setLineDiscount,
   setQuantity,
   type CartLine,
@@ -38,13 +38,15 @@ export function BillingPage() {
   const dispatch = useDispatch();
   const { session } = useAuthState();
   const cart = useSelector((state: { billing: BillingState }) => state.billing);
-  const inventory = inventoryApi.useListInventoryQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-  });
+  const [query, setQuery] = useState("");
+  const needle = useDebounced(query.trim());
+  const inventory = inventoryApi.useListInventoryQuery(
+    { page: 1, size: 8, q: needle },
+    { skip: needle.length === 0 },
+  );
   const offers = offersApi.useListOffersQuery(undefined, { refetchOnMountOrArgChange: true });
   const settings = invoiceSettingsApi.useReadInvoiceSettingsQuery();
   const [createBill, chargeState] = useCreateBillMutation();
-  const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [cashReceived, setCashReceived] = useState("");
@@ -54,9 +56,11 @@ export function BillingPage() {
   const focusTarget = useRef<{ key: string; col: string } | null>(null);
   const linesRef = useRef(cart.lines);
   linesRef.current = cart.lines;
-  const products = inventory.data?.products ?? [];
+  const seen = useRef(new Map<string, InventoryProduct>());
+  for (const item of inventory.data?.products ?? []) seen.current.set(item.productId, item);
+  const products = [...seen.current.values()];
+  const results = needle.length === 0 ? [] : (inventory.data?.products ?? []);
   const activeOffers = offers.data?.offers ?? [];
-  const results = searchResults(products, query);
   const chargeAllowed = canCharge(session?.account.pharmacyRole, session?.account.permissions);
   const needsRx = cart.lines.some((line) => {
     const product = products.find((item) => item.productId === line.productId);

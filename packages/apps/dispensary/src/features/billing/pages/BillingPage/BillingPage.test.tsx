@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
@@ -123,12 +123,15 @@ function json(body: unknown, status = 200) {
   });
 }
 
+const requested: string[] = [];
+
 function renderPage(permissions: string[]) {
   writeSession({ ...session, account: { ...session.account, permissions } });
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input instanceof Request ? input.url : input);
+      requested.push(url);
       const method = input instanceof Request ? input.method : (init?.method ?? "GET");
       if (url.includes("/pharmacy/bills") && method === "POST") return json(posted, 201);
       if (url.includes("/pharmacy/inventory")) return json(inventory);
@@ -148,14 +151,24 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   sessionStorage.clear();
+  requested.length = 0;
 });
 
 describe("BillingPage", () => {
   it("lists a composition match, requires a batch, and keeps UPI and Card disabled", async () => {
     renderPage(["billing:read", "billing:create"]);
     const scan = await screen.findByLabelText("Scan or search");
+    expect(requested.some((url) => url.includes("/pharmacy/inventory"))).toBe(false);
     fireEvent.change(scan, { target: { value: "para" } });
     expect(await screen.findByText(/Paracetamol/)).toBeTruthy();
+    await waitFor(() => {
+      expect(
+        requested.some(
+          (url) =>
+            url.includes("/pharmacy/inventory") && url.includes("size=8") && url.includes("q=para"),
+        ),
+      ).toBe(true);
+    });
     expect(screen.getByText(/med-a/)).toBeTruthy();
     expect(screen.getByRole("listbox", { name: "Matches" }).className).toContain("absolute");
     expect(screen.getByRole("table", { name: "Cart" })).toBeTruthy();
@@ -189,6 +202,7 @@ describe("BillingPage", () => {
     renderPage(["billing:read", "billing:create"]);
     const scan = await screen.findByLabelText("Scan or search");
     fireEvent.change(scan, { target: { value: "med-a" } });
+    expect(await screen.findByText(/Crocin Advance/)).toBeTruthy();
     fireEvent.keyDown(scan, { key: "Enter" });
     fireEvent.change(screen.getByLabelText("Batch for Crocin Advance"), {
       target: { value: "B1" },

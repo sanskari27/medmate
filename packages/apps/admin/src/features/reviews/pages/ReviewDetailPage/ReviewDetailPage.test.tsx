@@ -97,6 +97,9 @@ function renderDetail(account: Account, body: unknown = application) {
         posts.push({ url, body: typeof input === "string" ? "" : await input.text() });
         return json({ pharmacyId: "pharm-1", status: "pending_admin" });
       }
+      if (url.includes("/pharmacy-applications") && !url.includes("/pharmacy-applications/")) {
+        return json({ applications: [], page: 1, size: 25, total: 0 });
+      }
       if (url.includes("status=pending_")) return json([]);
       if (url.includes("/documents/gst")) {
         return json({ detail: "Document was not found" }, 404);

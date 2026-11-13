@@ -1,6 +1,7 @@
 package com.medmate.server.support.web;
 
 import com.medmate.server.identity.access.AccountPrincipal;
+import com.medmate.server.shared.web.PageQuery;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public interface SupportService {
     SupportViews.CaseDetail createCase(
             AccountPrincipal principal, String kind, String subject, String category, String details);
 
-    List<SupportViews.CaseSummary> cases(AccountPrincipal principal);
+    SupportViews.CaseList cases(AccountPrincipal principal, PageQuery page);
 
     SupportViews.CaseDetail caseDetail(AccountPrincipal principal, UUID id);
 

@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
-import type { Faq, SupportCase, SupportMessage } from "./model";
+import type { CasePage, Faq, SupportCase, SupportMessage } from "./model";
 
 export const supportApi = createApi({
   reducerPath: "supportApi",
@@ -11,8 +11,8 @@ export const supportApi = createApi({
       query: () => ({ url: "/support/faqs" }),
       providesTags: ["Faq"],
     }),
-    cases: build.query<SupportCase[], void>({
-      query: () => ({ url: "/support/cases" }),
+    cases: build.query<CasePage, { page: number; size: number }>({
+      query: ({ page, size }) => ({ url: "/support/cases", params: { page, size } }),
       providesTags: ["Case"],
     }),
     caseDetail: build.query<SupportCase, string>({

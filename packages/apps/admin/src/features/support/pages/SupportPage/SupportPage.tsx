@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
+import { PageBar } from "@/components/ui/PageBar";
 import { Field } from "@/components/ui/Field";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
@@ -8,7 +9,14 @@ import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Text } from "@/components/ui/Text";
 import { problemMessage } from "../../problemMessage";
-import { statusLabel, type Faq, type SupportCase } from "../../model";
+import {
+  caseRows,
+  caseTotal,
+  statusLabel,
+  type CasePage,
+  type Faq,
+  type SupportCase,
+} from "../../model";
 import {
   useCasesQuery,
   useCreateFaqMutation,
@@ -21,7 +29,10 @@ import { useSupportStream } from "../../useSupportStream";
 export function SupportPage() {
   useSupportStream();
   const faqs = useFaqsQuery();
-  const cases = useCasesQuery();
+  const [page, setPage] = useState(1);
+  const cases = useCasesQuery({ page, size: 25 });
+  const packet = cases.data as CasePage | SupportCase[] | undefined;
+  const tickets = caseRows(packet);
   const [createFaq] = useCreateFaqMutation();
   const [updateFaq] = useUpdateFaqMutation();
   const [reorder] = useReorderFaqsMutation();
@@ -106,10 +117,16 @@ export function SupportPage() {
         <Heading level={2} className="text-[18px]">
           Cases
         </Heading>
-        {(cases.data ?? []).length === 0 ? <Text className="text-muted">No cases yet.</Text> : null}
-        {(cases.data ?? []).map((item) => (
+        {tickets.length === 0 ? <Text className="text-muted">No cases yet.</Text> : null}
+        {tickets.map((item) => (
           <CaseRow key={item.id} item={item} />
         ))}
+        <PageBar
+          page={Array.isArray(packet) ? 1 : (packet?.page ?? page)}
+          size={Array.isArray(packet) ? 25 : (packet?.size ?? 25)}
+          total={caseTotal(packet)}
+          onPage={setPage}
+        />
       </section>
       {adding ? (
         <FaqDialog

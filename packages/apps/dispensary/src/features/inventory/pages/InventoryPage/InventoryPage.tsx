@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
+import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
+import { useDebounced } from "@/hooks/useDebounced";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { useListPurchasesQuery } from "@/features/purchases";
 import { cn } from "@/utils/className";
@@ -55,16 +57,44 @@ export function InventoryPage() {
   const navigate = useNavigate();
   const { session } = useAuthState();
   const access = inventoryAccess(session?.account.pharmacyRole, session?.account.permissions);
-  const list = useListInventoryQuery();
   const [filter, setFilter] = useState<InventoryFilter>("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
-  const products = list.data?.products ?? [];
+  const needle = useDebounced(query.trim());
+  const list = useListInventoryQuery({
+    page,
+    size: 25,
+    q: needle || undefined,
+    filter: filter === "all" ? undefined : filter,
+  });
+  const productCache = useRef<InventoryProduct[]>([]);
+  if (list.data?.products) productCache.current = list.data.products;
+  const products = list.data?.products ?? productCache.current;
   const visible = products.filter((product) => matches(product, filter, query));
-  const stockUnits = products.reduce((sum, product) => sum + units(product), 0);
-  const outCount = products.filter(isOut).length;
+  const summary = list.data?.summary;
+  const stockUnits =
+    summary?.unitCount ?? products.reduce((sum, product) => sum + units(product), 0);
+  const outCount = summary?.outCount ?? products.filter(isOut).length;
+  const skuCount = summary?.skuCount ?? products.length;
+  const costValue = summary
+    ? money(summary.cost)
+    : products.reduce((sum, product) => sum + cost(product), 0);
+  const retailValue = summary
+    ? money(summary.retail)
+    : products.reduce((sum, product) => sum + retail(product), 0);
+  const lowAndOut = summary
+    ? summary.lowCount + summary.outCount
+    : products.filter((product) => isLow(product) || isOut(product)).length;
+  const expiringCount =
+    summary?.expiringCount ?? products.filter((product) => isExpiring(product)).length;
+  const expiringValue = summary
+    ? money(summary.expiringCost)
+    : products.reduce((sum, product) => sum + expiringCost(product), 0);
 
-  if (list.isLoading) return <Text className="text-[13.5px] text-muted">Loading inventory</Text>;
+  if (list.isLoading && !list.data && productCache.current.length === 0) {
+    return <Text className="text-[13.5px] text-muted">Loading inventory</Text>;
+  }
 
   return (
     <Box className="mx-auto max-w-[1680px]">
@@ -87,26 +117,26 @@ export function InventoryPage() {
         </Box>
       </Box>
       <Box className="mb-4 grid gap-3 md:grid-cols-5">
-        <Stat label="Total SKUs" value={String(products.length)} hint={`${stockUnits} units`} />
-        <Stat
-          label="Stock value at cost"
-          value={inr(products.reduce((sum, product) => sum + cost(product), 0))}
-        />
-        <Stat
-          label="Retail value at MRP"
-          value={inr(products.reduce((sum, product) => sum + retail(product), 0))}
-        />
+        <Stat label="Total SKUs" value={String(skuCount)} hint={`${stockUnits} units`} />
+        <Stat label="Stock value at cost" value={inr(costValue)} />
+        <Stat label="Retail value at MRP" value={inr(retailValue)} />
         <Stat
           label="Low and out of stock"
-          value={String(products.filter((product) => isLow(product) || isOut(product)).length)}
+          value={String(lowAndOut)}
           hint={`${outCount} out of stock`}
-          onClick={() => setFilter("low")}
+          onClick={() => {
+            setFilter("low");
+            setPage(1);
+          }}
         />
         <Stat
           label="Expiring within 4 months"
-          value={String(products.filter((product) => isExpiring(product)).length)}
-          hint={inr(products.reduce((sum, product) => sum + expiringCost(product), 0))}
-          onClick={() => setFilter("expiring")}
+          value={String(expiringCount)}
+          hint={inr(expiringValue)}
+          onClick={() => {
+            setFilter("expiring");
+            setPage(1);
+          }}
         />
       </Box>
       <Box className="mb-3 flex flex-wrap items-center gap-2">
@@ -115,7 +145,10 @@ export function InventoryPage() {
             key={item.id}
             type="button"
             variant={filter === item.id ? "primary" : "ghost"}
-            onClick={() => setFilter(item.id)}
+            onClick={() => {
+              setFilter(item.id);
+              setPage(1);
+            }}
           >
             {item.label}
           </Button>
@@ -124,7 +157,10 @@ export function InventoryPage() {
           aria-label="Search inventory"
           placeholder="Search by name, composition, manufacturer…"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setPage(1);
+          }}
         />
       </Box>
       <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
@@ -210,6 +246,12 @@ export function InventoryPage() {
             </tbody>
           </table>
         </Box>
+        <PageBar
+          page={list.data?.page ?? page}
+          size={list.data?.size ?? 25}
+          total={list.data?.total ?? visible.length}
+          onPage={setPage}
+        />
       </Box>
       {selected ? (
         <ProductDialog
@@ -219,6 +261,11 @@ export function InventoryPage() {
       ) : null}
     </Box>
   );
+}
+
+function money(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function Stat({
@@ -256,12 +303,14 @@ export function ProductDialog({
     session?.account.pharmacyRole === "owner" ||
     (session?.account.permissions ?? []).includes("racks:update");
   const [tab, setTab] = useState<"details" | "batches">("details");
+  const [historyPage, setHistoryPage] = useState(1);
   const [rack, setRack] = useState(product?.rack ?? "");
   const [alt, setAlt] = useState(product?.rackAlt ?? "");
   const [setLocation, locationState] = useSetLocationMutation();
-  const history = useListPurchasesQuery(product?.productId, {
-    skip: !product || tab !== "batches",
-  });
+  const history = useListPurchasesQuery(
+    { productId: product?.productId, page: historyPage, size: 25 },
+    { skip: !product || tab !== "batches" },
+  );
   const batches = useMemo(
     () => (product?.batches ?? []).filter((batch) => batch.qty > 0),
     [product],
@@ -269,6 +318,7 @@ export function ProductDialog({
   useEffect(() => {
     setRack(product?.rack ?? "");
     setAlt(product?.rackAlt ?? "");
+    setHistoryPage(1);
   }, [product]);
   if (!product) return null;
   const stock = units(product);
@@ -507,6 +557,12 @@ export function ProductDialog({
                   ))
                 )}
               </DataTable>
+              <PageBar
+                page={history.data?.page ?? historyPage}
+                size={history.data?.size ?? 25}
+                total={history.data?.total ?? purchases.length}
+                onPage={setHistoryPage}
+              />
             </Box>
           )}
         </Box>

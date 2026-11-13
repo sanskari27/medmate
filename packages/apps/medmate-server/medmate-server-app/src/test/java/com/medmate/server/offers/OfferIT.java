@@ -104,8 +104,7 @@ class OfferIT {
         JsonNode list = get("/pharmacy/offers", reader);
         assertThat(list.get("offers").get(0).get("id").asText()).isEqualTo("OFR-002");
         assertThat(list.get("offers").get(1).get("id").asText()).isEqualTo("OFR-001");
-        assertThat(list.get("products").get(0).get("name").asText()).isEqualTo("Crocin Advance");
-        assertThat(list.get("products").get(1).get("name").asText()).isEqualTo("Dolo 650");
+        assertThat(list.get("products")).isNull();
 
         ResponseEntity<JsonNode> denied = exchange(
                 "/pharmacy/offers",

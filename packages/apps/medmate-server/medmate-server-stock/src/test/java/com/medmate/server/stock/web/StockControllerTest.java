@@ -1,8 +1,11 @@
 package com.medmate.server.stock.web;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,6 +21,7 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.shared.error.ApiExceptionHandler;
 import com.medmate.server.stock.MedicineCatalog;
 import com.medmate.server.stock.store.StockStore;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -68,6 +72,49 @@ class StockControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("Purchases cannot be returned"));
         verify(stock, never()).insertReturn(any(), any(), any(), any(), any(int.class));
+    }
+
+    @Test
+    void aBadPurchasePageIsRejected() throws Exception {
+        mvc.perform(get("/pharmacy/purchases").param("page", "0").principal(staff("purchases:read")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Page is not valid"));
+    }
+
+    @Test
+    void purchaseStatsStayWithThePage() throws Exception {
+        when(stock.documentPage(any(), any(), anyInt(), anyInt()))
+                .thenReturn(new StockStore.DocumentPage(List.of(), 4));
+        when(stock.monthTotals(any(), any(), any())).thenReturn(new StockStore.MonthTotals(12, 1, 0, 0));
+        when(distributors.outstanding(any())).thenReturn(9L);
+        mvc.perform(get("/pharmacy/purchases").principal(staff("purchases:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.total").value(4))
+                .andExpect(jsonPath("$.stats.purchasesThisMonth").value(12))
+                .andExpect(jsonPath("$.stats.outstanding").value(9));
+    }
+
+    @Test
+    void billingCanReadAPageOfInventory() throws Exception {
+        when(stock.inventoryPage(any(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(new StockStore.InventoryPage(List.of(), 2));
+        when(stock.inventoryTotals(any(), anyString()))
+                .thenReturn(new StockStore.InventoryTotals(
+                        2, 0, BigDecimal.ZERO, BigDecimal.ZERO, 0, 2, 0, BigDecimal.ZERO));
+        when(stock.productsIn(any(), any())).thenReturn(List.of());
+        when(stock.batchesIn(any(), any())).thenReturn(List.of());
+        mvc.perform(get("/pharmacy/inventory").param("filter", "out").principal(staff("billing:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.summary.outCount").value(2));
+    }
+
+    @Test
+    void anUnknownInventoryFilterIsRejected() throws Exception {
+        mvc.perform(get("/pharmacy/inventory").param("filter", "nope").principal(staff("inventory:read")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Filter is not valid"));
     }
 
     @Test

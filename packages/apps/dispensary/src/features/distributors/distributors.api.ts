@@ -1,6 +1,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
-import type { DistributorList, DistributorOne, DistributorPayload, PaymentPayload } from "./model";
+import type {
+  DistributorList,
+  DistributorOne,
+  DistributorPayload,
+  PaymentList,
+  PaymentPayload,
+} from "./model";
 
 export const distributorsApi = createApi({
   reducerPath: "distributorsApi",
@@ -26,6 +32,13 @@ export const distributorsApi = createApi({
       }),
       invalidatesTags: ["Distributors"],
     }),
+    listPayments: build.query<PaymentList, { code: string; page: number; size: number }>({
+      query: ({ code, page, size }) => ({
+        url: `/pharmacy/distributors/${code}/payments`,
+        params: { page, size },
+      }),
+      providesTags: ["Distributors"],
+    }),
     recordPayment: build.mutation<DistributorOne, { code: string; body: PaymentPayload }>({
       query: ({ code, body }) => ({
         url: `/pharmacy/distributors/${code}/payments`,
@@ -41,5 +54,6 @@ export const {
   useListDistributorsQuery,
   useCreateDistributorMutation,
   useUpdateDistributorMutation,
+  useListPaymentsQuery,
   useRecordPaymentMutation,
 } = distributorsApi;

@@ -2,6 +2,7 @@ package com.medmate.server.stock.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +27,11 @@ public class StockController {
 
     @GetMapping("/pharmacy/purchases")
     public StockViews.PurchaseList list(
-            Authentication authentication, @RequestParam(required = false) String productId) {
-        return stock.list(Current.require(authentication), productId);
+            Authentication authentication,
+            @RequestParam(required = false) String productId,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size) {
+        return stock.list(Current.require(authentication), productId, PageQuery.parse(page, size));
     }
 
     @GetMapping("/pharmacy/purchases/{id}")
@@ -48,8 +52,13 @@ public class StockController {
     }
 
     @GetMapping("/pharmacy/inventory")
-    public StockViews.InventoryList inventory(Authentication authentication) {
-        return stock.inventory(Current.require(authentication));
+    public StockViews.InventoryList inventory(
+            Authentication authentication,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String filter) {
+        return stock.inventory(Current.require(authentication), PageQuery.parse(page, size), q, filter);
     }
 
     @GetMapping("/pharmacy/inventory/{productId}")

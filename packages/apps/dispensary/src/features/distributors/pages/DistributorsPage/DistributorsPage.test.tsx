@@ -186,6 +186,56 @@ describe("DistributorsPage", () => {
     expect(within(dialog).getByRole("button", { name: "Record payment" })).toBeTruthy();
   });
 
+  it("opens the last payments page after a payment is recorded", async () => {
+    const lines = Array.from({ length: 26 }, (_, index) => ({
+      id: `TXN-${index}`,
+      type: "payment",
+      amount: 1,
+      reference: null,
+      note: null,
+      mode: "cash",
+      recordedAt: "2026-11-01T09:00:00Z",
+    }));
+    const apollo = { ...list.distributors[1], outstanding: 100, transactions: lines };
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "owner", permissions: [] },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input instanceof Request ? input.url : input);
+        const method = input instanceof Request ? input.method : (init?.method ?? "GET");
+        if (url.includes("/payments") && method === "POST") {
+          return json({
+            distributor: { ...apollo, transactions: [...lines, { ...lines[0], id: "TXN-NEW" }] },
+          });
+        }
+        if (url.includes("/payments")) {
+          const page = Number(new URL(url).searchParams.get("page") ?? "1");
+          return json({
+            payments: lines.slice((page - 1) * 25, page * 25),
+            page,
+            size: 25,
+            total: lines.length,
+          });
+        }
+        return json({ distributors: [apollo] });
+      }),
+    );
+    render(
+      <Provider store={createAppStore()}>
+        <DistributorsPage />
+      </Provider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Transactions Apollo Wholesale" }));
+    const dialog = screen.getByRole("dialog", { name: "Apollo Wholesale transactions" });
+    expect(within(dialog).getByText("page 1 of 2")).toBeTruthy();
+    fireEvent.change(within(dialog).getByLabelText("Amount"), { target: { value: "1" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
+    expect(await within(dialog).findByText("page 2 of 2")).toBeTruthy();
+  });
+
   it("hides the record form when staff cannot pay", async () => {
     renderPage("staff", ["distributors:read"]);
     fireEvent.click(await screen.findByRole("button", { name: "Transactions Apollo Wholesale" }));

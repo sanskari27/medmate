@@ -44,7 +44,7 @@ public final class StockViews {
     public record StatsView(
             int purchasesThisMonth, int purchaseCount, int outstanding, int returnsThisMonth, int returnCount) {}
 
-    public record PurchaseList(List<DocumentView> purchases, StatsView stats) {}
+    public record PurchaseList(List<DocumentView> purchases, StatsView stats, int page, int size, int total) {}
 
     public record PurchaseOne(DocumentView purchase) {}
 
@@ -64,7 +64,17 @@ public final class StockViews {
             Boolean prescriptionRequired,
             List<BatchView> batches) {}
 
-    public record InventoryList(List<ProductView> products) {}
+    public record InventorySummary(
+            int skuCount,
+            int unitCount,
+            String cost,
+            String retail,
+            int lowCount,
+            int outCount,
+            int expiringCount,
+            String expiringCost) {}
+
+    public record InventoryList(List<ProductView> products, InventorySummary summary, int page, int size, int total) {}
 
     public record RackList(List<String> racks, List<ProductView> products) {}
 

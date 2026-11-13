@@ -7,11 +7,10 @@ export const purchasesApi = createApi({
   baseQuery: apiClient,
   tagTypes: ["Purchases"],
   endpoints: (build) => ({
-    listPurchases: build.query<PurchaseList, string | void>({
-      query: (productId) => ({
-        url: productId
-          ? `/pharmacy/purchases?productId=${encodeURIComponent(productId)}`
-          : "/pharmacy/purchases",
+    listPurchases: build.query<PurchaseList, { productId?: string; page: number; size: number }>({
+      query: ({ productId, page, size }) => ({
+        url: "/pharmacy/purchases",
+        params: { page, size, ...(productId ? { productId } : {}) },
       }),
       providesTags: ["Purchases"],
     }),

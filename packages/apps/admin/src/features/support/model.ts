@@ -29,6 +29,23 @@ export type SupportCase = {
   messages?: SupportMessage[];
 };
 
+export type CasePage = {
+  cases: SupportCase[];
+  page: number;
+  size: number;
+  total: number;
+};
+
+export function caseRows(data: CasePage | SupportCase[] | undefined): SupportCase[] {
+  if (!data) return [];
+  return Array.isArray(data) ? data : (data.cases ?? []);
+}
+
+export function caseTotal(data: CasePage | SupportCase[] | undefined): number {
+  if (!data) return 0;
+  return Array.isArray(data) ? data.length : data.total;
+}
+
 export function statusLabel(status: SupportCase["status"]): string {
   if (status === "waiting") return "Waiting";
   if (status === "open") return "Open";

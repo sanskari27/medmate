@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { problemMessage } from "@/features/authentication";
 import { Box } from "@/components/ui/Box";
+import { PageBar } from "@/components/ui/PageBar";
 import { IconChat, IconMail } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
@@ -11,6 +12,7 @@ import { ContactCard } from "../../components/ContactCard";
 import { FaqList } from "../../components/FaqList";
 import { TicketDialog } from "../../components/TicketDialog";
 import { TicketList } from "../../components/TicketList";
+import { caseRows, caseTotal, type CasePage, type SupportCase } from "../../model";
 import { useCasesQuery, useCreateCaseMutation, useFaqsQuery } from "../../support.api";
 import { useSupportStream } from "../../useSupportStream";
 
@@ -19,7 +21,10 @@ export function SupportPage() {
   const { caseId } = useParams();
   const navigate = useNavigate();
   const faqs = useFaqsQuery();
-  const cases = useCasesQuery();
+  const [page, setPage] = useState(1);
+  const cases = useCasesQuery({ page, size: 25 });
+  const packet = cases.data as CasePage | SupportCase[] | undefined;
+  const tickets = caseRows(packet);
   const [createCase, createState] = useCreateCaseMutation();
   const [ticketOpen, setTicketOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -73,11 +78,19 @@ export function SupportPage() {
           openId={currentOpen}
           onToggle={(id) => setOpenId(currentOpen === id ? null : id)}
         />
-        <TicketList
-          items={cases.data ?? []}
-          onRaise={() => setTicketOpen(true)}
-          onOpen={(id) => navigate(`/support/${id}`)}
-        />
+        <Box>
+          <TicketList
+            items={tickets}
+            onRaise={() => setTicketOpen(true)}
+            onOpen={(id) => navigate(`/support/${id}`)}
+          />
+          <PageBar
+            page={Array.isArray(packet) ? 1 : (packet?.page ?? page)}
+            size={Array.isArray(packet) ? 25 : (packet?.size ?? 25)}
+            total={caseTotal(packet)}
+            onPage={setPage}
+          />
+        </Box>
       </Box>
       {ticketOpen ? (
         <TicketDialog

@@ -47,6 +47,25 @@ class SupportControllerTest {
     }
 
     @Test
+    void casesAreAPage() throws Exception {
+        when(support.cases(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new SupportViews.CaseList(List.of(), 1, 25, 4));
+        mvc.perform(get("/support/cases").with(owner()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cases").isArray())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(25))
+                .andExpect(jsonPath("$.total").value(4));
+    }
+
+    @Test
+    void aBadCasePageIsRejected() throws Exception {
+        mvc.perform(get("/support/cases").param("size", "0").with(owner()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Page is not valid"));
+    }
+
+    @Test
     void anOwnerReadsFaqs() throws Exception {
         when(support.faqs(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
 

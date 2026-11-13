@@ -95,6 +95,7 @@ describe("PharmaciesPage", () => {
     expect(screen.getByText("—")).toBeTruthy();
     expect(screen.getByText("Incomplete")).toBeTruthy();
     expect(screen.getByText("Blocked")).toBeTruthy();
+    expect(screen.getByText("page 1 of 1")).toBeTruthy();
   });
 
   it("says when there are no owners", async () => {

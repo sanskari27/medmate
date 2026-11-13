@@ -1,5 +1,8 @@
 package com.medmate.server.billing.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +19,8 @@ import com.medmate.server.identity.access.PharmacyRole;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.shared.error.ApiExceptionHandler;
 import com.medmate.server.stock.CounterStock;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -63,6 +68,27 @@ class SaleControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("Pharmacy was not found"));
         verify(store, never()).bill(PHARMACY, "INV-0001", true);
+    }
+
+    @Test
+    void aBadPageIsRejected() throws Exception {
+        mvc.perform(get("/pharmacy/sales").param("size", "101").principal(staff("sales:read")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Page is not valid"));
+        verify(store, never()).salePage(any(), anyString(), anyInt(), anyInt());
+    }
+
+    @Test
+    void theListKeepsWholeMonthStatsBesideThePage() throws Exception {
+        when(store.salePage(any(), anyString(), anyInt(), anyInt())).thenReturn(new BillStore.SalePage(List.of(), 30));
+        when(store.saleMonth(any(), any(), any()))
+                .thenReturn(new BillStore.SaleMonth(new BigDecimal("10.00"), 1, BigDecimal.ZERO, 0));
+        mvc.perform(get("/pharmacy/sales").param("page", "2").principal(staff("sales:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(25))
+                .andExpect(jsonPath("$.total").value(30))
+                .andExpect(jsonPath("$.stats.saleCount").value(1));
     }
 
     private static AccountAuthentication staff(String... keys) {

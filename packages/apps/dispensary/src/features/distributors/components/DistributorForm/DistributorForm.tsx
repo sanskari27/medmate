@@ -25,6 +25,7 @@ export function DistributorForm({
   access,
   saving,
   error,
+  hasLedger = false,
   onClose,
   onSave,
 }: {
@@ -32,6 +33,7 @@ export function DistributorForm({
   access: DistributorAccess;
   saving: boolean;
   error: string | null;
+  hasLedger?: boolean;
   onClose: () => void;
   onSave: (draft: DistributorDraft) => void;
 }) {
@@ -40,7 +42,9 @@ export function DistributorForm({
   );
   const [localError, setLocalError] = useState<string | null>(null);
   const locked = Boolean(distributor) && !access.update;
-  const balanceLocked = Boolean(distributor && distributor.transactions.length > 0);
+  const balanceLocked = Boolean(
+    distributor && (hasLedger || (distributor.transactions?.length ?? 0) > 0),
+  );
   const canSave = draftIsValid(form);
   const showSave = distributor
     ? access.update || (access.inactivate && !form.active && distributor.active)

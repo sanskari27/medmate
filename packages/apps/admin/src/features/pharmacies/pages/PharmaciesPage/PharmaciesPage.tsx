@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { blockLabel, rowName, statusLabel } from "../../ownerModel";
@@ -41,8 +43,22 @@ function OwnerRow({ row }: { row: OwnerSummary }) {
   );
 }
 
+type OwnerPage = { owners: OwnerSummary[]; page: number; size: number; total: number };
+
+function ownerRows(data: OwnerPage | OwnerSummary[] | undefined): OwnerSummary[] {
+  if (!data) return [];
+  return Array.isArray(data) ? data : data.owners;
+}
+
+function ownerTotal(data: OwnerPage | OwnerSummary[] | undefined): number {
+  if (!data) return 0;
+  return Array.isArray(data) ? data.length : data.total;
+}
+
 export function PharmaciesPage() {
-  const owners = useListOwnersQuery();
+  const [page, setPage] = useState(1);
+  const owners = useListOwnersQuery({ page, size: 25 });
+  const packet = owners.data as OwnerPage | OwnerSummary[] | undefined;
 
   if (owners.isError) {
     return (
@@ -55,7 +71,7 @@ export function PharmaciesPage() {
     return <Text className="text-[13.5px] text-muted">Loading pharmacies</Text>;
   }
 
-  const rows = owners.data ?? [];
+  const rows = ownerRows(packet);
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -70,6 +86,12 @@ export function PharmaciesPage() {
       {rows.map((row) => (
         <OwnerRow key={row.pharmacyId} row={row} />
       ))}
+      <PageBar
+        page={Array.isArray(packet) ? 1 : (packet?.page ?? page)}
+        size={Array.isArray(packet) ? 25 : (packet?.size ?? 25)}
+        total={ownerTotal(packet)}
+        onPage={setPage}
+      />
     </Stack>
   );
 }

@@ -276,6 +276,23 @@ public class StockStore {
                 .list();
     }
 
+    public List<ProductRow> productsIn(UUID pharmacyId, List<String> productIds) {
+        if (productIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
+                               rack, rack_alt, prescription_required
+                        FROM inventory_product
+                        WHERE pharmacy_id = :id AND product_id IN (:products)
+                        """)
+                .param("id", pharmacyId)
+                .param("products", productIds)
+                .query(this::product)
+                .list();
+    }
+
     public Optional<ProductRow> product(UUID pharmacyId, String productId) {
         return jdbc.sql(
                         """
@@ -439,6 +456,307 @@ public class StockStore {
                 .param("product", productId)
                 .param("reorder", reorderLevel)
                 .update();
+    }
+
+    public record DocumentKey(String id, String type) {}
+
+    public record DocumentPage(List<DocumentKey> keys, int total) {}
+
+    public record InventoryPage(List<ProductRow> products, int total) {}
+
+    public record InventoryTotals(
+            int skuCount,
+            long unitCount,
+            BigDecimal cost,
+            BigDecimal retail,
+            int lowCount,
+            int outCount,
+            int expiringCount,
+            BigDecimal expiringCost) {}
+
+    public record MonthTotals(int purchases, int purchaseCount, int returns, int returnCount) {}
+
+    public DocumentPage documentPage(UUID pharmacyId, String productId, int limit, int offset) {
+        String product = productId == null ? "" : productId.trim();
+        int total = jdbc.sql("SELECT COUNT(*) FROM (" + documentUnion() + ") docs")
+                .param("id", pharmacyId)
+                .param("product", product)
+                .query(Integer.class)
+                .single();
+        List<DocumentKey> keys = jdbc.sql("SELECT id, type FROM ("
+                        + documentUnion()
+                        + ") docs ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset")
+                .param("id", pharmacyId)
+                .param("product", product)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query((row, number) -> new DocumentKey(row.getString("id"), row.getString("type")))
+                .list();
+        return new DocumentPage(keys, total);
+    }
+
+    public MonthTotals monthTotals(UUID pharmacyId, Instant start, Instant end) {
+        int[] purchases = counted(
+                """
+                SELECT COALESCE(SUM(ledger_amount), 0) AS amount, COUNT(*) AS counted
+                FROM purchase
+                WHERE pharmacy_id = :id AND recorded_at >= :start AND recorded_at < :end
+                """,
+                pharmacyId,
+                start,
+                end);
+        int[] returns = counted(
+                """
+                SELECT COALESCE(SUM(ledger_amount), 0) AS amount, COUNT(*) AS counted
+                FROM purchase_return
+                WHERE pharmacy_id = :id AND recorded_at >= :start AND recorded_at < :end
+                """,
+                pharmacyId,
+                start,
+                end);
+        return new MonthTotals(purchases[0], purchases[1], returns[0], returns[1]);
+    }
+
+    public List<PurchaseRow> purchasesIn(UUID pharmacyId, List<String> codes) {
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT p.code, p.distributor_code, d.name, p.invoice_no, p.invoice_date, p.recorded_at, p.ledger_amount
+                        FROM purchase p
+                        JOIN distributor d ON d.pharmacy_id = p.pharmacy_id AND d.code = p.distributor_code
+                        WHERE p.pharmacy_id = :id AND p.code IN (:codes)
+                        """)
+                .param("id", pharmacyId)
+                .param("codes", codes)
+                .query(this::purchase)
+                .list();
+    }
+
+    public List<LineRow> linesIn(UUID pharmacyId, List<String> codes) {
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT purchase_code, position, product_id, name, batch_no, expiry, qty, free_qty, rate, mrp, gst
+                        FROM purchase_line
+                        WHERE pharmacy_id = :id AND purchase_code IN (:codes)
+                        ORDER BY purchase_code, position
+                        """)
+                .param("id", pharmacyId)
+                .param("codes", codes)
+                .query(this::line)
+                .list();
+    }
+
+    public List<ReturnRow> returnsIn(UUID pharmacyId, List<String> codes) {
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT code, purchase_code, recorded_at, ledger_amount
+                        FROM purchase_return
+                        WHERE pharmacy_id = :id AND code IN (:codes)
+                        """)
+                .param("id", pharmacyId)
+                .param("codes", codes)
+                .query(this::returnRow)
+                .list();
+    }
+
+    public List<ReturnRow> returnsForPurchases(UUID pharmacyId, List<String> codes) {
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT code, purchase_code, recorded_at, ledger_amount
+                        FROM purchase_return
+                        WHERE pharmacy_id = :id AND purchase_code IN (:codes)
+                        """)
+                .param("id", pharmacyId)
+                .param("codes", codes)
+                .query(this::returnRow)
+                .list();
+    }
+
+    public List<ReturnLineRow> returnLinesIn(UUID pharmacyId, List<String> codes) {
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT return_code, position, qty, free_qty
+                        FROM purchase_return_line
+                        WHERE pharmacy_id = :id AND return_code IN (:codes)
+                        ORDER BY return_code, position
+                        """)
+                .param("id", pharmacyId)
+                .param("codes", codes)
+                .query(this::returnLine)
+                .list();
+    }
+
+    public List<BatchRow> batchesIn(UUID pharmacyId, List<String> productIds) {
+        if (productIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT product_id, batch_no, expiry, qty, rate, mrp, gst
+                        FROM inventory_batch
+                        WHERE pharmacy_id = :id AND product_id IN (:products)
+                        ORDER BY product_id, expiry, batch_no
+                        """)
+                .param("id", pharmacyId)
+                .param("products", productIds)
+                .query(this::batch)
+                .list();
+    }
+
+    public InventoryPage inventoryPage(
+            UUID pharmacyId, String pattern, String exact, String filter, String expiryLimit, int limit, int offset) {
+        int total = jdbc.sql("SELECT COUNT(*) FROM (" + inventoryFacts(true) + ") facts " + inventoryMatch())
+                .param("id", pharmacyId)
+                .param("pattern", pattern)
+                .param("limitMonth", expiryLimit)
+                .param("filter", filter)
+                .query(Integer.class)
+                .single();
+        List<ProductRow> products = jdbc.sql(
+                        "SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level, rack, rack_alt, prescription_required FROM ("
+                                + inventoryFacts(true)
+                                + ") facts "
+                                + inventoryMatch()
+                                + " ORDER BY CASE WHEN lower(product_id) = :exact THEN 0 ELSE 1 END, name, product_id"
+                                + " LIMIT :limit OFFSET :offset")
+                .param("id", pharmacyId)
+                .param("pattern", pattern)
+                .param("exact", exact)
+                .param("limitMonth", expiryLimit)
+                .param("filter", filter)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query(this::product)
+                .list();
+        return new InventoryPage(products, total);
+    }
+
+    public InventoryTotals inventoryTotals(UUID pharmacyId, String expiryLimit) {
+        return jdbc.sql(
+                        """
+                        SELECT COUNT(*) AS sku_count,
+                               COALESCE(SUM(units), 0) AS unit_count,
+                               COALESCE(SUM(cost), 0) AS cost,
+                               COALESCE(SUM(retail), 0) AS retail,
+                               COUNT(*) FILTER (WHERE units > 0 AND ROUND(cost) < 1000) AS low_count,
+                               COUNT(*) FILTER (WHERE units = 0) AS out_count,
+                               COUNT(*) FILTER (WHERE expiring) AS expiring_count,
+                               COALESCE(SUM(expiring_cost), 0) AS expiring_cost
+                        FROM (
+                        """
+                                + inventoryFacts(false)
+                                + ") facts")
+                .param("id", pharmacyId)
+                .param("limitMonth", expiryLimit)
+                .query((row, number) -> new InventoryTotals(
+                        row.getInt("sku_count"),
+                        row.getLong("unit_count"),
+                        row.getBigDecimal("cost"),
+                        row.getBigDecimal("retail"),
+                        row.getInt("low_count"),
+                        row.getInt("out_count"),
+                        row.getInt("expiring_count"),
+                        row.getBigDecimal("expiring_cost")))
+                .single();
+    }
+
+    private static String documentUnion() {
+        return """
+                SELECT p.code AS id, 'purchase' AS type, p.recorded_at
+                FROM purchase p
+                WHERE p.pharmacy_id = :id
+                  AND (
+                    CAST(:product AS text) = ''
+                    OR EXISTS (
+                      SELECT 1 FROM purchase_line l
+                      WHERE l.pharmacy_id = p.pharmacy_id
+                        AND l.purchase_code = p.code
+                        AND l.product_id = :product
+                    )
+                  )
+                UNION ALL
+                SELECT r.code, 'return', r.recorded_at
+                FROM purchase_return r
+                WHERE r.pharmacy_id = :id
+                  AND (
+                    CAST(:product AS text) = ''
+                    OR EXISTS (
+                      SELECT 1
+                      FROM purchase_return_line rl
+                      JOIN purchase_line l
+                        ON l.pharmacy_id = rl.pharmacy_id
+                       AND l.purchase_code = r.purchase_code
+                       AND l.position = rl.position
+                      WHERE rl.pharmacy_id = r.pharmacy_id
+                        AND rl.return_code = r.code
+                        AND l.product_id = :product
+                    )
+                  )
+                """;
+    }
+
+    private static String inventoryFacts(boolean searchable) {
+        String search = searchable
+                ? """
+                  AND (
+                    CAST(:pattern AS text) = ''
+                    OR lower(p.name) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.composition, '')) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.marketer, '')) LIKE :pattern ESCAPE '\\'
+                    OR lower(p.product_id) LIKE :pattern ESCAPE '\\'
+                  )
+                """
+                : "";
+        return """
+                SELECT p.product_id, p.name, p.marketer, p.composition, p.form, p.pack, p.product_type,
+                       p.reorder_level, p.rack, p.rack_alt, p.prescription_required,
+                       COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.qty ELSE 0 END), 0) AS units,
+                       COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.rate * b.qty ELSE 0 END), 0) AS cost,
+                       COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.mrp * b.qty ELSE 0 END), 0) AS retail,
+                       COALESCE(SUM(CASE WHEN b.qty > 0 AND b.expiry <= :limitMonth THEN b.rate * b.qty ELSE 0 END), 0) AS expiring_cost,
+                       COALESCE(BOOL_OR(b.qty > 0 AND b.expiry <= :limitMonth), FALSE) AS expiring
+                FROM inventory_product p
+                LEFT JOIN inventory_batch b
+                  ON b.pharmacy_id = p.pharmacy_id AND b.product_id = p.product_id
+                WHERE p.pharmacy_id = :id
+                """
+                + search
+                + """
+                GROUP BY p.product_id, p.name, p.marketer, p.composition, p.form, p.pack, p.product_type,
+                         p.reorder_level, p.rack, p.rack_alt, p.prescription_required
+                """;
+    }
+
+    private static String inventoryMatch() {
+        return """
+                WHERE :filter = 'all'
+                   OR (:filter = 'low' AND units > 0 AND ROUND(cost) < 1000)
+                   OR (:filter = 'out' AND units = 0)
+                   OR (:filter = 'expiring' AND expiring)
+                """;
+    }
+
+    private int[] counted(String sql, UUID pharmacyId, Instant start, Instant end) {
+        return jdbc.sql(sql)
+                .param("id", pharmacyId)
+                .param("start", Timestamp.from(start))
+                .param("end", Timestamp.from(end))
+                .query((row, number) -> new int[] {row.getInt("amount"), row.getInt("counted")})
+                .single();
     }
 
     private PurchaseRow purchase(ResultSet row, int number) throws SQLException {

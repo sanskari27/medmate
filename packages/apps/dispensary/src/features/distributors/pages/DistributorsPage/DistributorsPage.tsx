@@ -12,6 +12,7 @@ import { StatementModal } from "../../components/StatementModal";
 import {
   useCreateDistributorMutation,
   useListDistributorsQuery,
+  useListPaymentsQuery,
   useRecordPaymentMutation,
   useUpdateDistributorMutation,
 } from "../../distributors.api";
@@ -39,10 +40,29 @@ export function DistributorsPage() {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Distributor | "new" | null>(null);
   const [statementId, setStatementId] = useState<string | null>(null);
+  const [paymentPage, setPaymentPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const payments = useListPaymentsQuery(
+    { code: statementId ?? "", page: paymentPage, size: 25 },
+    { skip: !statementId },
+  );
+  const editingCode = editing && editing !== "new" ? editing.id : "";
+  const editingLedger = useListPaymentsQuery(
+    { code: editingCode, page: 1, size: 1 },
+    { skip: !editingCode },
+  );
   const distributors = list.data?.distributors ?? [];
   const rows = filterDistributors(distributors, query);
   const statement = distributors.find((row) => row.id === statementId) ?? null;
+  const statementView = statement
+    ? {
+        ...statement,
+        transactions: payments.data?.payments ?? statement.transactions ?? [],
+      }
+    : null;
+  const hasLedger =
+    (editingLedger.data?.total ?? 0) > 0 ||
+    (editing !== "new" && editing ? (editing.transactions?.length ?? 0) > 0 : false);
   const saving = createState.isLoading || updateState.isLoading;
 
   async function save(draft: DistributorDraft) {
@@ -67,7 +87,10 @@ export function DistributorsPage() {
     const result = await recordPayment({ code: statement.id, body: payment });
     if ("error" in result) {
       setError(problemMessage(result.error, "Could not record the payment"));
+      return;
     }
+    const count = result.data.distributor.transactions?.length ?? (payments.data?.total ?? 0) + 1;
+    setPaymentPage(Math.max(1, Math.ceil(count / 25)));
   }
 
   if (list.isLoading) {
@@ -206,6 +229,7 @@ export function DistributorsPage() {
                         aria-label={`Transactions ${distributor.name}`}
                         onClick={() => {
                           setError(null);
+                          setPaymentPage(1);
                           setStatementId(distributor.id);
                         }}
                       >
@@ -251,16 +275,21 @@ export function DistributorsPage() {
           access={access}
           saving={saving}
           error={error}
+          hasLedger={hasLedger}
           onClose={() => setEditing(null)}
           onSave={(draft) => void save(draft)}
         />
       ) : null}
-      {statement ? (
+      {statementView ? (
         <StatementModal
-          distributor={statement}
+          distributor={statementView}
           canPay={access.pay}
           saving={payState.isLoading}
           error={error}
+          page={paymentPage}
+          size={payments.data?.size ?? 25}
+          total={payments.data?.total ?? statementView.transactions?.length ?? 0}
+          onPage={setPaymentPage}
           onClose={() => setStatementId(null)}
           onPay={(payment) => void pay(payment)}
         />

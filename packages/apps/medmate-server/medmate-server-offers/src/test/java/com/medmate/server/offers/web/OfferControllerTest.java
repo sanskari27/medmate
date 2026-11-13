@@ -3,6 +3,7 @@ package com.medmate.server.offers.web;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -18,6 +19,7 @@ import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.offers.store.OfferStore;
 import com.medmate.server.shared.error.ApiExceptionHandler;
 import com.medmate.server.stock.InventoryNames;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,16 @@ class OfferControllerTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new OfferController(new OfferService(store, names)))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
+
+    @Test
+    void theListDoesNotEmbedProducts() throws Exception {
+        when(store.list(any())).thenReturn(List.of());
+        when(names.list(any())).thenReturn(List.of());
+        mvc.perform(get("/pharmacy/offers").principal(staff("offers:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.offers").isArray())
+                .andExpect(jsonPath("$.products").doesNotExist());
+    }
 
     @Test
     void readIsRequiredToList() throws Exception {

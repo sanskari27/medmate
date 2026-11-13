@@ -1,5 +1,6 @@
 package com.medmate.server.identity.web;
 
+import com.medmate.server.shared.web.PageQuery;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
@@ -21,11 +22,12 @@ public class ReviewController {
     }
 
     @GetMapping("/pharmacy-applications")
-    public java.util.List<ReviewService.ApplicationSummary> list(
-            Authentication authentication, @RequestParam(required = false) String status) {
-        return reviews.list(Current.require(authentication), status).stream()
-                .map(ReviewService.ApplicationSummary::from)
-                .toList();
+    public ReviewService.ApplicationList list(
+            Authentication authentication,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size) {
+        return reviews.list(Current.require(authentication), status, PageQuery.parse(page, size));
     }
 
     @GetMapping("/pharmacy-applications/{id}")

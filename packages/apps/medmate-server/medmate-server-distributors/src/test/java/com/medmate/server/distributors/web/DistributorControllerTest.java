@@ -48,6 +48,34 @@ class DistributorControllerTest {
     }
 
     @Test
+    void theDirectoryOmitsTheLedger() throws Exception {
+        mvc.perform(get("/pharmacy/distributors").principal(staff("distributors:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.distributors").isArray())
+                .andExpect(jsonPath("$.distributors[0].transactions").doesNotExist());
+    }
+
+    @Test
+    void paymentsAreAPage() throws Exception {
+        when(store.paymentCount(PHARMACY, "DST-001")).thenReturn(3);
+        mvc.perform(get("/pharmacy/distributors/DST-001/payments").principal(staff("distributors:read")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payments").isArray())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(25))
+                .andExpect(jsonPath("$.total").value(3));
+    }
+
+    @Test
+    void aBadPaymentPageIsRejected() throws Exception {
+        mvc.perform(get("/pharmacy/distributors/DST-001/payments")
+                        .param("size", "101")
+                        .principal(staff("distributors:read")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Page is not valid"));
+    }
+
+    @Test
     void readIsRequiredToList() throws Exception {
         mvc.perform(get("/pharmacy/distributors").principal(staff("distributors:pay")))
                 .andExpect(status().isForbidden())

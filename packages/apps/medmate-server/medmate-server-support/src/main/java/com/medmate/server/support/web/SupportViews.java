@@ -38,4 +38,6 @@ public final class SupportViews {
             Instant createdAt,
             Instant resolvedAt,
             List<MessageView> messages) {}
+
+    public record CaseList(List<CaseSummary> cases, int page, int size, int total) {}
 }

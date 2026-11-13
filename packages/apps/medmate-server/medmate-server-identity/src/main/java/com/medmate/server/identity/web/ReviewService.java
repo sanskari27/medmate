@@ -10,6 +10,7 @@ import com.medmate.server.identity.mail.MailSender;
 import com.medmate.server.identity.pharmacy.PharmacyRules;
 import com.medmate.server.identity.store.PharmacyStore;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -39,15 +40,29 @@ public class ReviewService {
         this.clock = clock;
     }
 
-    public List<PharmacyStore.Summary> list(AccountPrincipal actor, String rawStatus) {
+    public ApplicationList list(AccountPrincipal actor, String rawStatus, PageQuery page) {
         if (!Access.platform(actor.accountType(), actor.disabled(), actor.subtypes(), "compliance")) {
             throw forbidden("Compliance review is not allowed");
+        }
+        List<String> statuses = waiting(rawStatus);
+        return new ApplicationList(
+                pharmacies.listApplications(statuses, page.size(), page.offset()).stream()
+                        .map(ApplicationSummary::from)
+                        .toList(),
+                page.page(),
+                page.size(),
+                pharmacies.countApplications(statuses));
+    }
+
+    private static List<String> waiting(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) {
+            return List.of(VerificationStatus.PENDING_COMPLIANCE.wire(), VerificationStatus.PENDING_ADMIN.wire());
         }
         VerificationStatus status = VerificationStatus.parse(rawStatus);
         if (status != VerificationStatus.PENDING_COMPLIANCE && status != VerificationStatus.PENDING_ADMIN) {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Status is required");
         }
-        return pharmacies.list(status);
+        return List.of(status.wire());
     }
 
     public ApplicationDetail detail(AccountPrincipal actor, UUID pharmacyId) {
@@ -164,6 +179,8 @@ public class ReviewService {
     }
 
     private record Mail(String subject, String text) {}
+
+    public record ApplicationList(List<ApplicationSummary> applications, int page, int size, int total) {}
 
     public record ApplicationSummary(UUID pharmacyId, String name, String phone, String status, Instant submittedAt) {
         public static ApplicationSummary from(PharmacyStore.Summary summary) {

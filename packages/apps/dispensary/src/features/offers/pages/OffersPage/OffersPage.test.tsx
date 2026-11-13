@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
@@ -92,6 +92,39 @@ describe("OffersPage", () => {
     expect(screen.getByText("10% OFF")).toBeTruthy();
     expect(screen.getByText("all products")).toBeTruthy();
     expect(screen.getByText("1 product")).toBeTruthy();
+  });
+
+  it("searches inventory when the offer targets one product", async () => {
+    const urls: string[] = [];
+    writeSession({
+      ...session,
+      account: { ...session.account, permissions: ["offers:read", "offers:create"] },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(String(input instanceof Request ? input.url : input));
+        return json({ offers: [], products: [] });
+      }),
+    );
+    render(
+      <Provider store={createAppStore()}>
+        <OffersPage />
+      </Provider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Create offer" }));
+    fireEvent.change(screen.getByLabelText("Applies to"), { target: { value: "product" } });
+    fireEvent.change(screen.getByLabelText("Search product"), { target: { value: "crocin" } });
+    await waitFor(() => {
+      expect(
+        urls.some(
+          (url) =>
+            url.includes("/pharmacy/inventory") &&
+            url.includes("size=25") &&
+            url.includes("q=crocin"),
+        ),
+      ).toBe(true);
+    });
   });
 
   it("hides create, pause, edit, and delete without those keys", async () => {

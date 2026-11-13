@@ -1,17 +1,27 @@
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
+import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
+import { useDebounced } from "@/hooks/useDebounced";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { invoiceSettingsApi } from "@/features/invoice-settings";
 import { InvoiceDialog } from "../../components/InvoiceDialog/InvoiceDialog";
 import { ReturnDialog } from "../../components/ReturnDialog/ReturnDialog";
 import { ReturnSummary } from "../../components/ReturnSummary/ReturnSummary";
-import { filterSales, inr2, saleDate, typeLabel, canReturnSale } from "../../model";
+import {
+  filterSales,
+  inr2,
+  saleDate,
+  typeLabel,
+  canReturnSale,
+  type SaleRow,
+  type SaleStats,
+} from "../../model";
 import { useCreateReturnMutation, useListSalesQuery, useReadSaleQuery } from "../../sales.api";
 
 export function SalesPage() {
@@ -19,8 +29,14 @@ export function SalesPage() {
   const canReturn = canReturnSale(session?.account.pharmacyRole, session?.account.permissions);
   const params = useParams();
   const navigate = useNavigate();
-  const list = useListSalesQuery();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const needle = useDebounced(query.trim());
+  const list = useListSalesQuery({ page, size: 25, q: needle || undefined });
+  const salesCache = useRef<SaleRow[]>([]);
+  const statsCache = useRef<SaleStats | undefined>(undefined);
+  if (list.data?.sales) salesCache.current = list.data.sales;
+  if (list.data?.stats) statsCache.current = list.data.stats;
   const [opened, setOpened] = useState<string | null>(null);
   const [returning, setReturning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +44,9 @@ export function SalesPage() {
   const detail = useReadSaleQuery(selectedId ?? "", { skip: !selectedId });
   const settings = invoiceSettingsApi.useReadInvoiceSettingsQuery(undefined, { skip: !selectedId });
   const [createReturn, returnState] = useCreateReturnMutation();
-  const rows = filterSales(list.data?.sales ?? [], query);
-  const stats = list.data?.stats;
+  const listed = list.data?.sales ?? salesCache.current;
+  const rows = filterSales(listed, query);
+  const stats = list.data?.stats ?? statsCache.current;
   const loaded = detail.data?.sale;
   const sale = selectedId && loaded?.id === selectedId ? loaded : null;
 
@@ -40,7 +57,9 @@ export function SalesPage() {
     if (params.id) navigate("/sales");
   }
 
-  if (list.isLoading) return <Text className="text-[13.5px] text-muted">Loading sales</Text>;
+  if (list.isLoading && !list.data && salesCache.current.length === 0) {
+    return <Text className="text-[13.5px] text-muted">Loading sales</Text>;
+  }
 
   return (
     <Box className="mx-auto max-w-[1680px]">
@@ -53,7 +72,10 @@ export function SalesPage() {
           aria-label="Search sales"
           placeholder="Search invoice or patient…"
           value={query}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            setQuery(event.target.value);
+            setPage(1);
+          }}
           className="max-w-[260px]"
         />
       </Stack>
@@ -116,6 +138,12 @@ export function SalesPage() {
             ))}
           </tbody>
         </table>
+        <PageBar
+          page={list.data?.page ?? page}
+          size={list.data?.size ?? 25}
+          total={list.data?.total ?? listed.length}
+          onPage={setPage}
+        />
       </Box>
       {sale?.type === "sale" && !returning ? (
         <InvoiceDialog

@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
-import { formatWhen, mergeQueues, stageLabel } from "../../reviewModel";
+import { formatWhen, stageLabel } from "../../reviewModel";
 import { problemMessage } from "../../problemMessage";
 import { useListApplicationsQuery } from "../../services/reviews.api";
 import type { ApplicationSummary } from "../../types";
@@ -42,22 +44,21 @@ function ApplicationRow({ row }: { row: ApplicationSummary }) {
 }
 
 export function ReviewsPage() {
-  const compliance = useListApplicationsQuery("pending_compliance");
-  const admin = useListApplicationsQuery("pending_admin");
-  const failure = compliance.error ?? admin.error;
+  const [page, setPage] = useState(1);
+  const list = useListApplicationsQuery({ page, size: 25 });
 
-  if (failure) {
+  if (list.isError) {
     return (
       <Text className="text-[13.5px] font-bold text-rose">
-        {problemMessage(failure, "Could not load applications")}
+        {problemMessage(list.error, "Could not load applications")}
       </Text>
     );
   }
-  if (compliance.isLoading || admin.isLoading) {
+  if (list.isLoading) {
     return <Text className="text-[13.5px] text-muted">Loading applications</Text>;
   }
 
-  const rows = mergeQueues(compliance.data ?? [], admin.data ?? []);
+  const rows = list.data?.applications ?? [];
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -72,6 +73,12 @@ export function ReviewsPage() {
       {rows.map((row) => (
         <ApplicationRow key={row.pharmacyId} row={row} />
       ))}
+      <PageBar
+        page={list.data?.page ?? page}
+        size={list.data?.size ?? 25}
+        total={list.data?.total ?? rows.length}
+        onPage={setPage}
+      />
     </Stack>
   );
 }

@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/support/cases
+  url: {{baseUrl}}/support/cases?page=1&size=25
   body: none
   auth: none
 }
@@ -22,7 +22,10 @@ tests {
       return;
     }
     expect(res.getStatus()).to.equal(200);
-    expect(res.getBody()).to.be.an("array");
+    expect(res.body.cases).to.be.an("array");
+    expect(res.body.page).to.equal(1);
+    expect(res.body.size).to.equal(25);
+    expect(res.body.total).to.be.a("number");
   });
 }
 

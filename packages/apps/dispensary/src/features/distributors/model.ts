@@ -45,7 +45,14 @@ export type Distributor = {
   outstanding: number;
   active: boolean;
   showInPurchases: boolean;
-  transactions: DistributorTransaction[];
+  transactions?: DistributorTransaction[];
+};
+
+export type PaymentList = {
+  payments: DistributorTransaction[];
+  page: number;
+  size: number;
+  total: number;
 };
 
 export type DistributorList = { distributors: Distributor[] };
@@ -250,6 +257,7 @@ export type StatementRow = {
 };
 
 export function statementRows(distributor: Distributor): StatementRow[] {
+  const lines = distributor.transactions ?? [];
   let balance = distributor.openingBalance;
   const rows: StatementRow[] = [
     {
@@ -262,7 +270,7 @@ export function statementRows(distributor: Distributor): StatementRow[] {
       balance: inr(balance),
     },
   ];
-  for (const line of distributor.transactions) {
+  for (const line of lines) {
     const increase = line.type === "purchase";
     balance += increase ? line.amount : -line.amount;
     const detail = [modeLabel(line.mode), line.note].filter(Boolean).join(" · ");
@@ -280,13 +288,14 @@ export function statementRows(distributor: Distributor): StatementRow[] {
 }
 
 export function ledgerTotals(distributor: Distributor) {
-  const purchases = distributor.transactions
+  const lines = distributor.transactions ?? [];
+  const purchases = lines
     .filter((line) => line.type === "purchase")
     .reduce((sum, line) => sum + line.amount, 0);
-  const payments = distributor.transactions
+  const payments = lines
     .filter((line) => line.type === "payment")
     .reduce((sum, line) => sum + line.amount, 0);
-  const returns = distributor.transactions
+  const returns = lines
     .filter((line) => line.type === "return")
     .reduce((sum, line) => sum + line.amount, 0);
   return { opening: distributor.openingBalance, purchases, payments, returns };

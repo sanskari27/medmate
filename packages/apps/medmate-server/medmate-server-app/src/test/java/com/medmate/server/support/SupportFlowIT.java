@@ -93,6 +93,10 @@ class SupportFlowIT {
         assertThat(created.get("messages")).hasSize(1);
         assertThat(created.get("messages").get(0).get("body").asText()).isEqualTo("One line is wrong.");
         String caseId = created.get("id").asText();
+        JsonNode cases = get("/support/cases", owner);
+        assertThat(cases.get("cases").findValuesAsText("id")).contains(caseId);
+        assertThat(cases.get("page").asInt()).isEqualTo(1);
+        assertThat(cases.get("total").asInt()).isGreaterThanOrEqualTo(1);
 
         JsonNode chat = post(
                 "/support/cases",

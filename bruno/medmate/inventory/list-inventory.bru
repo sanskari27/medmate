@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/pharmacy/inventory
+  url: {{baseUrl}}/pharmacy/inventory?page=1&size=25
   body: none
   auth: none
 }
@@ -19,7 +19,14 @@ tests {
   test("saved session is sent", function() {
     if (!bru.getEnvVar("accessToken")) {
       expect(res.getStatus()).to.equal(401);
+      return;
     }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("products");
+    expect(res.body).to.have.property("summary");
+    expect(res.body.page).to.equal(1);
+    expect(res.body.size).to.equal(25);
+    expect(res.body.total).to.be.a("number");
   });
 }
 

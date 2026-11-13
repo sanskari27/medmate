@@ -6,6 +6,7 @@ import com.medmate.server.distributors.store.DistributorStore;
 import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import com.medmate.server.stock.CatalogUnavailable;
 import com.medmate.server.stock.InventoryRules;
 import com.medmate.server.stock.MedicineCatalog;
@@ -17,7 +18,6 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,10 +45,20 @@ public class StockService {
         this.catalog = catalog;
     }
 
-    public StockViews.PurchaseList list(AccountPrincipal actor, String productId) {
+    public StockViews.PurchaseList list(AccountPrincipal actor, String productId, PageQuery page) {
         require(actor, PurchaseRules.READ, "Purchases cannot be read");
-        Books books = books(actor.pharmacyId());
-        return new StockViews.PurchaseList(documents(books, productId), stats(actor.pharmacyId(), books));
+        UUID pharmacyId = actor.pharmacyId();
+        StockStore.DocumentPage slice = stock.documentPage(pharmacyId, productId, page.size(), page.offset());
+        Books books = booksFor(pharmacyId, slice.keys());
+        List<StockViews.DocumentView> documents = new ArrayList<>();
+        for (StockStore.DocumentKey key : slice.keys()) {
+            StockViews.DocumentView view =
+                    "purchase".equals(key.type()) ? purchaseOn(books, key.id()) : returnOn(books, key.id());
+            if (view != null) {
+                documents.add(view);
+            }
+        }
+        return new StockViews.PurchaseList(documents, ledgerStats(pharmacyId), page.page(), page.size(), slice.total());
     }
 
     public StockViews.PurchaseOne one(AccountPrincipal actor, String id) {
@@ -56,9 +66,53 @@ public class StockService {
         return loaded(actor.pharmacyId(), id);
     }
 
-    public StockViews.InventoryList inventory(AccountPrincipal actor) {
-        require(actor, InventoryRules.READ, "Inventory cannot be read");
-        return new StockViews.InventoryList(products(actor.pharmacyId()));
+    public StockViews.InventoryList inventory(AccountPrincipal actor, PageQuery page, String query, String filter) {
+        requireInventory(actor);
+        UUID pharmacyId = actor.pharmacyId();
+        String selected = InventoryRules.listFilter(filter);
+        String limit = InventoryRules.expiryLimit(YearMonth.now(ZONE)).toString();
+        StockStore.InventoryPage slice = stock.inventoryPage(
+                pharmacyId,
+                PageQuery.like(query),
+                PageQuery.needle(query),
+                selected,
+                limit,
+                page.size(),
+                page.offset());
+        resolvePrescriptions(pharmacyId, slice.products());
+        Map<String, StockStore.ProductRow> fresh = new HashMap<>();
+        List<String> ids = new ArrayList<>();
+        for (StockStore.ProductRow product : slice.products()) {
+            ids.add(product.productId());
+        }
+        for (StockStore.ProductRow product : stock.productsIn(pharmacyId, ids)) {
+            fresh.put(product.productId(), product);
+        }
+        Map<String, List<StockStore.BatchRow>> batches = new HashMap<>();
+        for (StockStore.BatchRow batch : stock.batchesIn(pharmacyId, ids)) {
+            batches.computeIfAbsent(batch.productId(), key -> new ArrayList<>()).add(batch);
+        }
+        List<StockViews.ProductView> products = new ArrayList<>();
+        for (StockStore.ProductRow product : slice.products()) {
+            products.add(productView(
+                    fresh.getOrDefault(product.productId(), product),
+                    batches.getOrDefault(product.productId(), List.of())));
+        }
+        StockStore.InventoryTotals totals = stock.inventoryTotals(pharmacyId, limit);
+        return new StockViews.InventoryList(
+                products,
+                new StockViews.InventorySummary(
+                        totals.skuCount(),
+                        (int) totals.unitCount(),
+                        money(totals.cost()),
+                        money(totals.retail()),
+                        totals.lowCount(),
+                        totals.outCount(),
+                        totals.expiringCount(),
+                        money(totals.expiringCost())),
+                page.page(),
+                page.size(),
+                slice.total());
     }
 
     public StockViews.InventoryOne inventoryOne(AccountPrincipal actor, String productId) {
@@ -507,41 +561,83 @@ public class StockService {
                 onHand);
     }
 
-    private StockViews.StatsView stats(UUID pharmacyId, Books books) {
-        YearMonth month = YearMonth.now(ZONE);
-        int purchases = 0;
-        int purchaseCount = 0;
-        int returns = 0;
-        int returnCount = 0;
+    private Books booksFor(UUID pharmacyId, List<StockStore.DocumentKey> keys) {
+        if (keys.isEmpty()) {
+            return new Books(List.of(), Map.of(), List.of(), Map.of(), Map.of());
+        }
+        List<String> returnCodes = new ArrayList<>();
+        List<String> purchaseCodes = new ArrayList<>();
+        for (StockStore.DocumentKey key : keys) {
+            if ("return".equals(key.type())) {
+                returnCodes.add(key.id());
+            } else {
+                purchaseCodes.add(key.id());
+            }
+        }
+        for (StockStore.ReturnRow row : stock.returnsIn(pharmacyId, returnCodes)) {
+            if (!purchaseCodes.contains(row.purchaseCode())) {
+                purchaseCodes.add(row.purchaseCode());
+            }
+        }
+        List<StockStore.PurchaseRow> purchases = stock.purchasesIn(pharmacyId, purchaseCodes);
+        Map<String, List<StockStore.LineRow>> lines = new HashMap<>();
+        List<String> productIds = new ArrayList<>();
+        for (StockStore.LineRow line : stock.linesIn(pharmacyId, purchaseCodes)) {
+            lines.computeIfAbsent(line.purchaseCode(), key -> new ArrayList<>()).add(line);
+            if (!productIds.contains(line.productId())) {
+                productIds.add(line.productId());
+            }
+        }
+        List<StockStore.ReturnRow> returns = stock.returnsForPurchases(pharmacyId, purchaseCodes);
+        List<String> relatedReturns = new ArrayList<>();
+        for (StockStore.ReturnRow row : returns) {
+            relatedReturns.add(row.code());
+        }
+        Map<String, List<StockStore.ReturnLineRow>> returnLines = new HashMap<>();
+        for (StockStore.ReturnLineRow line : stock.returnLinesIn(pharmacyId, relatedReturns)) {
+            returnLines
+                    .computeIfAbsent(line.returnCode(), key -> new ArrayList<>())
+                    .add(line);
+        }
+        Map<String, Integer> onHand = new HashMap<>();
+        for (StockStore.BatchRow batch : stock.batchesIn(pharmacyId, productIds)) {
+            onHand.put(PurchaseRules.batchKey(batch.productId(), batch.batchNo()), batch.qty());
+        }
+        return new Books(purchases, lines, returns, returnLines, onHand);
+    }
+
+    private StockViews.DocumentView purchaseOn(Books books, String id) {
         for (StockStore.PurchaseRow purchase : books.purchases()) {
-            if (inMonth(purchase.recordedAt(), month)) {
-                purchases += purchase.ledgerAmount();
-                purchaseCount++;
+            if (purchase.code().equals(id)) {
+                return purchaseView(books, purchase);
             }
         }
+        return null;
+    }
+
+    private StockViews.DocumentView returnOn(Books books, String id) {
         for (StockStore.ReturnRow row : books.returns()) {
-            if (inMonth(row.recordedAt(), month)) {
-                returns += row.ledgerAmount();
-                returnCount++;
+            if (row.code().equals(id)) {
+                return returnView(books, row);
             }
         }
-        long outstanding = 0;
-        Map<String, List<DistributorRules.Line>> ledger = new HashMap<>();
-        for (DistributorStore.TransactionRow line : distributors.transactions(pharmacyId)) {
-            ledger.computeIfAbsent(line.distributorCode(), key -> new ArrayList<>())
-                    .add(new DistributorRules.Line(line.type(), line.amount()));
-        }
-        for (DistributorStore.DistributorRow distributor : distributors.list(pharmacyId)) {
-            outstanding += DistributorRules.outstanding(
-                    distributor.openingBalance(), ledger.getOrDefault(distributor.code(), List.of()));
-        }
+        return null;
+    }
+
+    private StockViews.StatsView ledgerStats(UUID pharmacyId) {
+        YearMonth month = YearMonth.now(ZONE);
+        Instant start = month.atDay(1).atStartOfDay(ZONE).toInstant();
+        Instant end = month.plusMonths(1).atDay(1).atStartOfDay(ZONE).toInstant();
+        StockStore.MonthTotals totals = stock.monthTotals(pharmacyId, start, end);
+        long outstanding = distributors.outstanding(pharmacyId);
         if (outstanding > Integer.MAX_VALUE) {
             outstanding = Integer.MAX_VALUE;
         }
         if (outstanding < Integer.MIN_VALUE) {
             outstanding = Integer.MIN_VALUE;
         }
-        return new StockViews.StatsView(purchases, purchaseCount, (int) outstanding, returns, returnCount);
+        return new StockViews.StatsView(
+                totals.purchases(), totals.purchaseCount(), (int) outstanding, totals.returns(), totals.returnCount());
     }
 
     private List<StockViews.ProductView> products(UUID pharmacyId) {
@@ -557,6 +653,16 @@ public class StockService {
         return products;
     }
 
+    private void resolvePrescriptions(UUID pharmacyId, List<StockStore.ProductRow> products) {
+        List<String> missing = new ArrayList<>();
+        for (StockStore.ProductRow product : products) {
+            if (product.prescriptionRequired() == null) {
+                missing.add(product.productId());
+            }
+        }
+        resolveMissing(pharmacyId, missing);
+    }
+
     private void resolvePrescriptions(UUID pharmacyId) {
         List<String> missing = new ArrayList<>();
         for (StockStore.ProductRow product : stock.products(pharmacyId)) {
@@ -564,6 +670,10 @@ public class StockService {
                 missing.add(product.productId());
             }
         }
+        resolveMissing(pharmacyId, missing);
+    }
+
+    private void resolveMissing(UUID pharmacyId, List<String> missing) {
         if (missing.isEmpty()) {
             return;
         }
@@ -659,11 +769,6 @@ public class StockService {
         return false;
     }
 
-    private static boolean inMonth(Instant recordedAt, YearMonth month) {
-        ZonedDateTime time = recordedAt.atZone(ZONE);
-        return YearMonth.from(time).equals(month);
-    }
-
     private static String money(BigDecimal value) {
         return value.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
@@ -684,6 +789,13 @@ public class StockService {
         if (!allowed(actor, key)) {
             throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", detail);
         }
+    }
+
+    private void requireInventory(AccountPrincipal actor) {
+        if (allowed(actor, InventoryRules.READ) || allowed(actor, "billing:read") || allowed(actor, "offers:read")) {
+            return;
+        }
+        throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", "Inventory cannot be read");
     }
 
     private static ApiProblem bad(String detail) {

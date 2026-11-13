@@ -54,6 +54,9 @@ export type SaleStats = {
 export type SaleList = {
   sales: SaleRow[];
   stats: SaleStats;
+  page?: number;
+  size?: number;
+  total?: number;
 };
 
 export type SaleOne = {

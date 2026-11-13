@@ -93,6 +93,16 @@ class SaleIT {
         assertThat(list.get("stats").get("returnsThisMonth").asText()).isEqualTo("24.00");
         assertThat(list.get("stats").get("returnCount").asInt()).isEqualTo(1);
         assertThat(list.get("stats").get("netThisMonth").asText()).isEqualTo("-24.00");
+        assertThat(list.get("total").asInt()).isEqualTo(2);
+        JsonNode firstPage = get(reader, "/pharmacy/sales?page=1&size=1").getBody();
+        JsonNode secondPage = get(reader, "/pharmacy/sales?page=2&size=1").getBody();
+        assertThat(firstPage.get("sales")).hasSize(1);
+        assertThat(firstPage.get("sales").get(0).get("id").asText()).isEqualTo("RET-001");
+        assertThat(secondPage.get("sales").get(0).get("id").asText()).isEqualTo("INV-0001");
+        assertThat(secondPage.get("stats").get("netThisMonth").asText())
+                .isEqualTo(firstPage.get("stats").get("netThisMonth").asText());
+        assertThat(get(reader, "/pharmacy/sales?page=3&size=1").getBody().get("sales"))
+                .isEmpty();
 
         ResponseEntity<JsonNode> over = post(
                 owner, "/pharmacy/sales/INV-0001/returns", Map.of("lines", List.of(Map.of("position", 0, "qty", 3))));

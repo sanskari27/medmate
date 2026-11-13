@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/pharmacy-owners
+  url: {{baseUrl}}/pharmacy-owners?page=1&size=25
   body: none
   auth: none
 }
@@ -23,8 +23,11 @@ tests {
     }
     expect(res.getStatus()).to.equal(200);
     const body = res.getBody();
-    expect(body).to.be.an("array");
-    body.forEach(function(row) {
+    expect(body.owners).to.be.an("array");
+    expect(body.page).to.equal(1);
+    expect(body.size).to.equal(25);
+    expect(body.total).to.be.a("number");
+    body.owners.forEach(function(row) {
       expect(row.pharmacyId).to.be.a("string");
       expect(row).to.have.property("name");
       expect(row.phone).to.be.a("string");

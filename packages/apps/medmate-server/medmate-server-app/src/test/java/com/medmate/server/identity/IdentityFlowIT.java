@@ -353,6 +353,16 @@ class IdentityFlowIT {
         JsonNode complianceRead = complianceResponse.getBody();
         assertThat(complianceRead.get("status").asText()).isEqualTo("pending_compliance");
         assertThat(complianceRead.get("name").asText()).isEqualTo("Care Pharmacy");
+        ResponseEntity<JsonNode> waiting = rest.exchange(
+                "/pharmacy-applications",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(complianceToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(waiting.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(waiting.getBody().get("applications").findValuesAsText("pharmacyId"))
+                .contains(pharmacyId);
+        assertThat(waiting.getBody().get("page").asInt()).isEqualTo(1);
+        assertThat(waiting.getBody().get("total").asInt()).isGreaterThanOrEqualTo(1);
         assertThat(decision(complianceToken, pharmacyId, "compliance-decision", "approve", "Looks complete")
                         .getBody()
                         .get("status")
@@ -702,13 +712,17 @@ class IdentityFlowIT {
 
         ResponseEntity<JsonNode> listed = owners(financeToken);
         assertThat(listed.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(listed.getBody()).hasSize(2);
-        assertThat(listed.getBody().get(0).get("name").asText()).isEqualTo("Care Pharmacy");
-        assertThat(listed.getBody().get(0).get("phone").asText()).isEqualTo("+919811111121");
-        assertThat(listed.getBody().get(0).get("status").asText()).isEqualTo("approved");
-        assertThat(listed.getBody().get(0).get("blockState").asText()).isEqualTo("clear");
-        assertThat(listed.getBody().get(1).get("name").isNull()).isTrue();
-        assertThat(listed.getBody().findValuesAsText("phone")).containsExactly("+919811111121", "+919811111122");
+        assertThat(listed.getBody().get("owners")).hasSize(2);
+        assertThat(listed.getBody().get("page").asInt()).isEqualTo(1);
+        assertThat(listed.getBody().get("total").asInt()).isEqualTo(2);
+        assertThat(listed.getBody().get("owners").get(0).get("name").asText()).isEqualTo("Care Pharmacy");
+        assertThat(listed.getBody().get("owners").get(0).get("phone").asText()).isEqualTo("+919811111121");
+        assertThat(listed.getBody().get("owners").get(0).get("status").asText()).isEqualTo("approved");
+        assertThat(listed.getBody().get("owners").get(0).get("blockState").asText())
+                .isEqualTo("clear");
+        assertThat(listed.getBody().get("owners").get(1).get("name").isNull()).isTrue();
+        assertThat(listed.getBody().get("owners").findValuesAsText("phone"))
+                .containsExactly("+919811111121", "+919811111122");
         assertThat(owners(ownerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(owners(customerToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
 
@@ -828,7 +842,12 @@ class IdentityFlowIT {
         assertThat(staffPin.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(staffPin.getBody().get("detail").asText()).isEqualTo("This pharmacy is restricted.");
 
-        String blankId = owners(financeToken).getBody().get(1).get("pharmacyId").asText();
+        String blankId = owners(financeToken)
+                .getBody()
+                .get("owners")
+                .get(1)
+                .get("pharmacyId")
+                .asText();
         assertThat(block(adminToken, blankId).getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode restrictedLogin = verify("9811111122", "pharmacy", "login");
         assertThat(restrictedLogin.get("account").get("disabled").asBoolean()).isTrue();

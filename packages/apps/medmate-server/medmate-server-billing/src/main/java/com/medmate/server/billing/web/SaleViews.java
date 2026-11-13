@@ -19,7 +19,7 @@ public final class SaleViews {
     public record Stats(
             String salesThisMonth, int saleCount, String returnsThisMonth, int returnCount, String netThisMonth) {}
 
-    public record ListResponse(List<Row> sales, Stats stats) {}
+    public record ListResponse(List<Row> sales, Stats stats, int page, int size, int total) {}
 
     public record LineView(
             int position,

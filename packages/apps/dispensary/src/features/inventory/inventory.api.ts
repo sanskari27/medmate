@@ -1,14 +1,29 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
-import type { InventoryProduct } from "./model";
+import type { InventoryList, InventoryProduct } from "./model";
+
+export type InventoryQuery = {
+  page?: number;
+  size?: number;
+  q?: string;
+  filter?: string;
+};
 
 export const inventoryApi = createApi({
   reducerPath: "inventoryApi",
   baseQuery: apiClient,
   tagTypes: ["Inventory"],
   endpoints: (build) => ({
-    listInventory: build.query<{ products: InventoryProduct[] }, void>({
-      query: () => ({ url: "/pharmacy/inventory" }),
+    listInventory: build.query<InventoryList, InventoryQuery | void>({
+      query: (args) => ({
+        url: "/pharmacy/inventory",
+        params: {
+          page: args?.page ?? 1,
+          size: args?.size ?? 25,
+          ...(args?.q ? { q: args.q } : {}),
+          ...(args?.filter ? { filter: args.filter } : {}),
+        },
+      }),
       providesTags: ["Inventory"],
     }),
     updateReorder: build.mutation<

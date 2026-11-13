@@ -19,10 +19,14 @@ tests {
   test("saved session is sent", function() {
     if (!bru.getEnvVar("accessToken")) {
       expect(res.getStatus()).to.equal(401);
+      return;
     }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("offers");
+    expect(res.body).to.not.have.property("products");
   });
 }
 
 docs {
-  An approved owner, or staff with offers:read, lists offers newest first and the inventory medicines they can target.
+  An approved owner, or staff with offers:read, lists offers newest first.
 }

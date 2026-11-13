@@ -24,6 +24,11 @@ class InventoryRulesTest {
         assertThat(InventoryRules.low(21, 20)).isFalse();
         assertThat(InventoryRules.out(0)).isTrue();
         assertThat(InventoryRules.low(0, 20)).isFalse();
+        assertThat(InventoryRules.pricedLow(1, new BigDecimal("999.49"))).isTrue();
+        assertThat(InventoryRules.pricedLow(1, new BigDecimal("999.50"))).isFalse();
+        assertThat(InventoryRules.pricedLow(0, new BigDecimal("1.00"))).isFalse();
+        assertThat(InventoryRules.listFilter(null)).isEqualTo("all");
+        assertThat(InventoryRules.listFilter("expiring")).isEqualTo("expiring");
         assertThat(InventoryRules.hasExpiring(List.of(fresh), november)).isFalse();
         assertThat(InventoryRules.hasExpiring(List.of(soon, past), november)).isTrue();
         assertThat(InventoryRules.expiryLimit(november)).isEqualTo(YearMonth.of(2027, 3));

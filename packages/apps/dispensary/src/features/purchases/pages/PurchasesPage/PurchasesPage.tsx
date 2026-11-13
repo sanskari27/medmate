@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
+import { PageBar } from "@/components/ui/PageBar";
 import { Text } from "@/components/ui/Text";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { PurchaseForm } from "../../components/PurchaseForm";
@@ -32,7 +33,8 @@ export function PurchasesPage() {
   const params = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const list = useListPurchasesQuery();
+  const [page, setPage] = useState(1);
+  const list = useListPurchasesQuery({ page, size: 25 });
   const [createPurchase, createState] = useCreatePurchaseMutation();
   const [createReturn, returnState] = useCreateReturnMutation();
   const [validate] = useValidateMedicinesMutation();
@@ -181,6 +183,12 @@ export function PurchasesPage() {
           ))}
         </tbody>
       </table>
+      <PageBar
+        page={list.data?.page ?? page}
+        size={list.data?.size ?? 25}
+        total={list.data?.total ?? documents.length}
+        onPage={setPage}
+      />
       {form ? (
         <PurchaseForm
           initial={form.lines.length > 0 ? form : undefined}

@@ -6,15 +6,14 @@ import com.medmate.server.billing.store.BillStore;
 import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import com.medmate.server.stock.CounterStock;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,56 +38,38 @@ public class SaleService {
     }
 
     @Transactional(readOnly = true)
-    public SaleViews.ListResponse list(AccountPrincipal actor) {
+    public SaleViews.ListResponse list(AccountPrincipal actor, PageQuery page, String query) {
         require(actor, SaleReturnRules.READ, "Sales cannot be read");
         UUID pharmacyId = actor.pharmacyId();
-        Map<String, Integer> billItems = counts(bills.billItems(pharmacyId));
-        Map<String, Integer> returnItems = counts(bills.returnItems(pharmacyId));
+        BillStore.SalePage slice = bills.salePage(pharmacyId, PageQuery.like(query), page.size(), page.offset());
         List<SaleViews.Row> rows = new ArrayList<>();
-        YearMonth month = YearMonth.now(ZONE);
-        BigDecimal sales = money(BigDecimal.ZERO);
-        int saleCount = 0;
-        BigDecimal returned = money(BigDecimal.ZERO);
-        int returnCount = 0;
-        for (BillStore.BillRow bill : bills.bills(pharmacyId)) {
+        for (BillStore.SaleListRow row : slice.rows()) {
             rows.add(new SaleViews.Row(
-                    bill.number(),
-                    "sale",
-                    bill.number(),
-                    bill.patientName(),
-                    bill.soldAt(),
-                    billItems.getOrDefault(bill.number(), 0),
-                    money(bill.payable()).toPlainString()));
-            if (inMonth(bill.soldAt(), month)) {
-                sales = money(sales.add(bill.payable()));
-                saleCount++;
-            }
-        }
-        for (BillStore.ReturnRow row : bills.returns(pharmacyId)) {
-            rows.add(new SaleViews.Row(
-                    row.code(),
-                    "return",
-                    row.billNumber(),
+                    row.id(),
+                    row.type(),
+                    row.invoiceNumber(),
                     row.patientName(),
                     row.recordedAt(),
-                    returnItems.getOrDefault(row.code(), 0),
+                    row.items(),
                     money(row.amount()).toPlainString()));
-            if (inMonth(row.recordedAt(), month)) {
-                returned = money(returned.add(row.amount()));
-                returnCount++;
-            }
         }
-        rows.sort(Comparator.comparing(SaleViews.Row::recordedAt)
-                .reversed()
-                .thenComparing(Comparator.comparing(SaleViews.Row::id).reversed()));
+        YearMonth month = YearMonth.now(ZONE);
+        Instant start = month.atDay(1).atStartOfDay(ZONE).toInstant();
+        Instant end = month.plusMonths(1).atDay(1).atStartOfDay(ZONE).toInstant();
+        BillStore.SaleMonth totals = bills.saleMonth(pharmacyId, start, end);
+        BigDecimal sales = money(totals.sales());
+        BigDecimal returned = money(totals.returned());
         return new SaleViews.ListResponse(
                 rows,
                 new SaleViews.Stats(
                         sales.toPlainString(),
-                        saleCount,
+                        totals.saleCount(),
                         returned.toPlainString(),
-                        returnCount,
-                        money(sales.subtract(returned)).toPlainString()));
+                        totals.returnCount(),
+                        money(sales.subtract(returned)).toPlainString()),
+                page.page(),
+                page.size(),
+                slice.total());
     }
 
     @Transactional(readOnly = true)
@@ -262,19 +243,6 @@ public class SaleService {
                 null,
                 money(row.amount()).toPlainString(),
                 views);
-    }
-
-    private static Map<String, Integer> counts(List<BillStore.ItemCount> rows) {
-        Map<String, Integer> counts = new HashMap<>();
-        for (BillStore.ItemCount row : rows) {
-            counts.put(row.code(), row.items());
-        }
-        return counts;
-    }
-
-    private static boolean inMonth(Instant recordedAt, YearMonth month) {
-        ZonedDateTime time = recordedAt.atZone(ZONE);
-        return YearMonth.from(time).equals(month);
     }
 
     private static BigDecimal money(BigDecimal value) {

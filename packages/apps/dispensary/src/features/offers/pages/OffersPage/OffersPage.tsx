@@ -33,7 +33,6 @@ export function OffersPage() {
   const [dialog, setDialog] = useState<Offer | "create" | null>(null);
   const [removing, setRemoving] = useState<Offer | null>(null);
   const offers = list.data?.offers ?? [];
-  const products = list.data?.products ?? [];
   const saving = createState.isLoading || updateState.isLoading;
   const saveError = dialog === "create" ? createState : updateState;
   const dialogError = saveError.isError
@@ -113,7 +112,6 @@ export function OffersPage() {
       {dialog ? (
         <OfferDialog
           offer={dialog === "create" ? null : dialog}
-          products={products}
           saving={saving}
           error={dialogError}
           onClose={() => setDialog(null)}

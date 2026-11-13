@@ -48,6 +48,9 @@ export type PurchaseStats = {
 export type PurchaseList = {
   purchases: PurchaseDocument[];
   stats: PurchaseStats;
+  page?: number;
+  size?: number;
+  total?: number;
 };
 
 export type PurchaseOne = { purchase: PurchaseDocument };

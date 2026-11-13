@@ -1,9 +1,11 @@
 package com.medmate.server.stock;
 
+import com.medmate.server.shared.error.ApiProblem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 
 public final class InventoryRules {
 
@@ -35,6 +37,24 @@ public final class InventoryRules {
 
     public static boolean low(int units, int reorderLevel) {
         return units > 0 && units <= reorderLevel;
+    }
+
+    public static boolean pricedLow(int units, BigDecimal cost) {
+        if (units <= 0 || cost == null) {
+            return false;
+        }
+        return cost.setScale(0, RoundingMode.HALF_UP).longValue() < 1000;
+    }
+
+    public static String listFilter(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "all";
+        }
+        String value = raw.trim();
+        if (value.equals("all") || value.equals("low") || value.equals("out") || value.equals("expiring")) {
+            return value;
+        }
+        throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Filter is not valid");
     }
 
     public static YearMonth expiryLimit(YearMonth month) {

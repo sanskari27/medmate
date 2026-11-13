@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -161,12 +161,15 @@ function json(body: unknown, status = 200) {
   });
 }
 
+const requested: string[] = [];
+
 function renderPage(permissions: string[]) {
   writeSession({ ...session, account: { ...session.account, permissions } });
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input instanceof Request ? input.url : input);
+      requested.push(url);
       if (url.includes("/pharmacy/sales/RET-001")) return json(returned);
       if (url.includes("/pharmacy/sales/INV-0001")) return json(sale);
       if (url.includes("/pharmacy/sales")) return json(list);
@@ -187,6 +190,7 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   sessionStorage.clear();
+  requested.length = 0;
 });
 
 describe("SalesPage", () => {
@@ -221,6 +225,11 @@ describe("SalesPage", () => {
     expect(screen.getByText("Return")).toBeTruthy();
     expect(screen.queryByText("Sale")).toBeNull();
     expect(screen.getByText("₹72.00")).toBeTruthy();
+    await waitFor(() => {
+      expect(requested.some((url) => url.includes("q=return") && url.includes("page=1"))).toBe(
+        true,
+      );
+    });
     fireEvent.change(screen.getByRole("textbox", { name: "Search sales" }), {
       target: { value: "nobody" },
     });
