@@ -4,6 +4,7 @@ export type SaleRow = {
   invoiceNumber: string;
   patientName: string;
   patientPhone?: string;
+  payMode?: string | null;
   recordedAt: string;
   items: number;
   amount: string;
@@ -74,6 +75,12 @@ export function canReturnSale(role: string | null | undefined, permissions: stri
 
 export function typeLabel(type: SaleRow["type"]) {
   return type === "return" ? "Return" : "Sale";
+}
+
+export function payLabel(mode: string | null | undefined) {
+  if (mode === "cash") return "Cash";
+  if (mode === "credit") return "Credit";
+  return "—";
 }
 
 export function filterSales(rows: SaleRow[], query: string): SaleRow[] {

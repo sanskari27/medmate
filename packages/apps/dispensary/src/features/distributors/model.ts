@@ -53,6 +53,9 @@ export type PaymentList = {
   page: number;
   size: number;
   total: number;
+  purchaseTotal?: number;
+  paymentTotal?: number;
+  returnTotal?: number;
 };
 
 export type DistributorList = { distributors: Distributor[] };
@@ -254,6 +257,7 @@ export type StatementRow = {
   details: string;
   amount: string;
   balance: string;
+  href?: string;
 };
 
 export function statementRows(distributor: Distributor): StatementRow[] {
@@ -282,6 +286,10 @@ export function statementRows(distributor: Distributor): StatementRow[] {
       details: detail || "—",
       amount: `${increase ? "+" : "−"}${inr(line.amount)}`,
       balance: inr(balance),
+      href:
+        (line.type === "purchase" || line.type === "return") && line.reference
+          ? `/purchases?id=${encodeURIComponent(line.reference)}`
+          : undefined,
     });
   }
   return rows;

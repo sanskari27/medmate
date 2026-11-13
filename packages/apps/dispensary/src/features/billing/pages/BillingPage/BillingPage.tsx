@@ -324,6 +324,7 @@ export function BillingPage() {
         query={query}
         highlight={highlight}
         results={results}
+        total={inventory.data?.total ?? results.length}
         scanRef={scanRef}
         onQuery={(value) => {
           setQuery(value);

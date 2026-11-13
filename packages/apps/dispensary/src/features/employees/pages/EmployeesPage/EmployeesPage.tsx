@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
@@ -165,7 +166,7 @@ export function EmployeesPage() {
         ) : null}
       </Stack>
 
-      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+      <Box className="mb-[22px] grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
         <Stat
           label="Team size"
           value={String(employees.length)}
@@ -267,7 +268,7 @@ export function EmployeesPage() {
                     {formatDayText(employee.joinedOn || "")}
                     <Text variant="caption">{employeeTenure(employee.joinedOn || "", now)}</Text>
                   </td>
-                  <td className="px-3.5 py-[11px] text-right font-extrabold">
+                  <td className="px-3.5 py-[11px] text-right font-extrabold whitespace-nowrap tabular-nums">
                     {inr(employee.salary)}
                   </td>
                   <td className="px-3.5 py-[11px]">{employee.documents.length || "—"}</td>
@@ -334,14 +335,14 @@ export function EmployeesPage() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <Stack className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
-      <Text variant="label" className="mt-3 uppercase">
+    <Stack className="min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <Text variant="label" className="mt-3 break-words uppercase">
         {label}
       </Text>
-      <Text className="font-display text-[26px] font-extrabold text-dark">{value}</Text>
-      <Text variant="caption" className="mt-auto border-t border-line pt-[9px]">
+      <FitText className="font-display text-[26px] font-extrabold text-dark">{value}</FitText>
+      <CardLine className="mt-auto border-t border-line pt-[9px] text-[11.5px] text-muted">
         {hint}
-      </Text>
+      </CardLine>
     </Stack>
   );
 }

@@ -19,6 +19,9 @@ describe("report access", () => {
     expect(reportRange("month", "2026-11-13")).toEqual({ from: "2026-11-01", to: "2026-11-30" });
     expect(reportRange("fy", "2026-11-13")).toEqual({ from: "2026-04-01", to: "2027-03-31" });
     expect(reportRange("fy", "2026-02-01")).toEqual({ from: "2025-04-01", to: "2026-03-31" });
+    expect(reportRange("prev-year", "2026-11-13")).toEqual({ from: "2025-01-01", to: "2025-12-31" });
+    expect(reportRange("prev-fy", "2026-11-13")).toEqual({ from: "2025-04-01", to: "2026-03-31" });
+    expect(reportRange("prev-fy", "2026-02-01")).toEqual({ from: "2024-04-01", to: "2025-03-31" });
     expect(reportRange("custom", "2026-11-13", "2026-01-01", "2026-01-31")).toEqual({
       from: "2026-01-01",
       to: "2026-01-31",

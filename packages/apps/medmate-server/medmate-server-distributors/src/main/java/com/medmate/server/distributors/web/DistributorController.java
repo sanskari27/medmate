@@ -2,6 +2,7 @@ package com.medmate.server.distributors.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -53,8 +54,11 @@ public class DistributorController {
             Authentication authentication,
             @PathVariable String code,
             @RequestParam(required = false) String page,
-            @RequestParam(required = false) String size) {
-        return distributors.payments(Current.require(authentication), code, PageQuery.parse(page, size));
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        return distributors.payments(
+                Current.require(authentication), code, PageQuery.parse(page, size), DayRange.parse(from, to));
     }
 
     @PostMapping("/pharmacy/distributors/{code}/payments")

@@ -1,13 +1,18 @@
 import { useState, type ChangeEvent } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { DateFields } from "@/components/ui/DateFields";
+import { CardLine, FitText } from "@/components/ui/FitText";
+import { FilterField } from "@/components/ui/FilterField";
 import { IconPlus } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { useDebounced } from "@/hooks/useDebounced";
+import { useRegisterQuery } from "@/hooks/useRegisterQuery";
 import { ExpenseDialog } from "../../components/ExpenseDialog";
 import {
   EXPENSE_PRESETS,
@@ -29,26 +34,23 @@ import {
   useListExpensesQuery,
 } from "../../expenses.api";
 
-const selectClass =
-  "h-10 rounded-sm border border-line-2 bg-paper px-3 text-[13.5px] text-ink outline-none focus:border-mid focus:shadow-focus";
-
 export function ExpensesPage() {
   const { session } = useAuthState();
   const canCreate = canCreateExpense(session?.account.pharmacyRole, session?.account.permissions);
   const today = kolkataDate(new Date());
-  const [preset, setPreset] = useState<ExpensePreset>("last-365");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const register = useRegisterQuery();
+  const stored = register.get("preset");
+  const preset: ExpensePreset = EXPENSE_PRESETS.some((item) => item.key === stored)
+    ? (stored as ExpensePreset)
+    : "last-365";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [category, setCategory] = useState("all");
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const category = register.get("category") || "all";
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const needle = useDebounced(query.trim());
-  const range = expenseRange(preset, today, customFrom, customTo);
+  const needle = useDebounced(register.q.trim());
+  const range = expenseRange(preset, today, register.from, register.to);
   const list = useListExpensesQuery({
-    page,
+    page: register.page,
     size: 25,
     from: range.from,
     to: range.to,
@@ -62,9 +64,8 @@ export function ExpensesPage() {
   const categories = list.data?.categories ?? [];
 
   function choosePreset(next: ExpensePreset) {
-    setPreset(next);
+    register.setQuery({ preset: next, from: null, to: null });
     setMenuOpen(false);
-    setPage(1);
   }
 
   async function download(kind: "csv" | "pdf") {
@@ -91,90 +92,78 @@ export function ExpensesPage() {
 
   return (
     <Box className="mx-auto max-w-[1680px]">
-      <Box className="mb-4 flex flex-wrap items-center gap-2.5">
-        <Box className="relative">
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label="Date range"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {range.label}
-          </Button>
-          {menuOpen ? (
-            <Box className="absolute top-[calc(100%+6px)] left-0 z-40 max-h-[340px] min-w-[300px] overflow-y-auto rounded-md border border-line bg-paper p-1.5 shadow-pop">
-              {EXPENSE_PRESETS.map((item) => (
-                <Button
-                  key={item.key}
-                  type="button"
-                  variant="ghost"
-                  className="h-auto w-full justify-start"
-                  onClick={() => choosePreset(item.key)}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </Box>
-          ) : null}
-        </Box>
+      <Stack direction="row" align="end" wrap className="mb-4 gap-3">
+        <FilterField label="Period">
+          <Box className="relative">
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="Date range"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {range.label}
+            </Button>
+            {menuOpen ? (
+              <Box className="absolute top-[calc(100%+6px)] left-0 z-40 max-h-[340px] min-w-[300px] overflow-y-auto rounded-md border border-line bg-paper p-1.5 shadow-pop">
+                {EXPENSE_PRESETS.map((item) => (
+                  <Button
+                    key={item.key}
+                    type="button"
+                    variant="ghost"
+                    className="h-auto w-full justify-start"
+                    onClick={() => choosePreset(item.key)}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </Box>
+            ) : null}
+          </Box>
+        </FilterField>
         {preset === "custom" ? (
-          <>
-            <Input
-              aria-label="From"
-              type="date"
-              value={customFrom || range.from}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                setCustomFrom(event.target.value);
-                setPage(1);
-              }}
-              className="w-[160px]"
-            />
-            <Input
-              aria-label="To"
-              type="date"
-              value={customTo || range.to}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                setCustomTo(event.target.value);
-                setPage(1);
-              }}
-              className="w-[160px]"
-            />
-          </>
+          <DateFields
+            from={register.from || range.from}
+            to={register.to || range.to}
+            onFrom={(value) => register.setQuery({ preset: "custom", from: value })}
+            onTo={(value) => register.setQuery({ preset: "custom", to: value })}
+          />
         ) : null}
-        <select
-          aria-label="Expense category"
-          className={selectClass}
-          value={category}
-          onChange={(event) => {
-            setCategory(event.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="all">All expense categories</option>
-          {categories.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <Box className="flex h-10 max-w-[360px] min-w-[240px] flex-1 items-center">
+        <FilterField label="Category">
+          <Select
+            aria-label="Expense category"
+            value={category}
+            onChange={(event) =>
+              register.setQuery({
+                category: event.target.value === "all" ? null : event.target.value,
+              })
+            }
+            className="min-w-[220px]"
+          >
+            <option value="all">All expense categories</option>
+            {categories.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </Select>
+        </FilterField>
+        <FilterField label="Search" className="w-[280px]">
           <Input
             aria-label="Search expenses"
             placeholder="Search expense, party…"
-            value={query}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            value={register.q}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              register.setQuery({ q: event.target.value })
+            }
           />
-        </Box>
+        </FilterField>
         <Box className="flex-1" />
         {canCreate ? (
           <Button type="button" onClick={() => setCreating(true)}>
             <IconPlus size={16} /> Create Expense
           </Button>
         ) : null}
-      </Box>
+      </Stack>
       <Box className="mb-4 flex flex-wrap gap-2.5">
         <Card label="Expenses" value={String(summary?.count ?? 0)} />
         <Card label="Total spend" value={inr(summary?.total ?? "0.00")} />
@@ -187,53 +176,55 @@ export function ExpensesPage() {
         </Text>
       ) : null}
       <Box className="overflow-hidden rounded-md border border-line bg-paper">
-        <table className="w-full border-separate border-spacing-0 text-[13px]">
-          <thead>
-            <tr>
-              {["Date", "Expense No.", "Party Name", "Category", "Payment", "Amount"].map(
-                (heading) => (
-                  <th
-                    key={heading}
-                    className="bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase"
-                  >
-                    {heading}
-                  </th>
-                ),
+        <Box className="overflow-x-auto">
+          <table className="w-full border-separate border-spacing-0 text-[13px]">
+            <thead>
+              <tr>
+                {["Date", "Expense No.", "Party Name", "Category", "Payment", "Amount"].map(
+                  (heading) => (
+                    <th
+                      key={heading}
+                      className="bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase"
+                    >
+                      {heading}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-9 text-center text-muted">
+                    <Text>No expenses match the current filter.</Text>
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => <ExpenseLine key={row.number} row={row} />)
               )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-9 text-center text-muted">
-                  <Text>No expenses match the current filter.</Text>
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => <ExpenseLine key={row.number} row={row} />)
-            )}
-          </tbody>
-          {(summary?.count ?? 0) > 0 ? (
-            <tfoot>
-              <tr>
-                <td
-                  colSpan={5}
-                  className="border-t-2 border-t-line-2 bg-wash-2 px-3.5 py-[11px] font-extrabold"
-                >
-                  Total · {summary?.count} expenses
-                </td>
-                <td className="border-t-2 border-t-line-2 bg-wash-2 px-3.5 py-[11px] text-right font-extrabold">
-                  {inr(summary?.total ?? "0.00")}
-                </td>
-              </tr>
-            </tfoot>
-          ) : null}
-        </table>
+            </tbody>
+            {(summary?.count ?? 0) > 0 ? (
+              <tfoot>
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="border-t-2 border-t-line-2 bg-wash-2 px-3.5 py-[11px] font-extrabold"
+                  >
+                    Total · {summary?.count} expenses
+                  </td>
+                  <td className="border-t-2 border-t-line-2 bg-wash-2 px-3.5 py-[11px] text-right font-extrabold whitespace-nowrap tabular-nums">
+                    {inr(summary?.total ?? "0.00")}
+                  </td>
+                </tr>
+              </tfoot>
+            ) : null}
+          </table>
+        </Box>
         <PageBar
-          page={list.data?.page ?? page}
+          page={list.data?.page ?? register.page}
           size={list.data?.size ?? 25}
           total={list.data?.total ?? 0}
-          onPage={setPage}
+          onPage={(next) => register.setQuery({ page: next })}
         />
       </Box>
       {(summary?.count ?? 0) > 0 ? (
@@ -275,11 +266,9 @@ export function ExpensesPage() {
 
 function Card({ label, value }: { label: string; value: string }) {
   return (
-    <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
-      {label}
-      <Text as="span" className="mt-px block font-display text-[15px] font-bold text-dark">
-        {value}
-      </Text>
+    <Box className="min-w-0 max-w-full overflow-hidden rounded-[10px] border border-line bg-paper px-3.5 py-2 text-[12.5px] text-muted">
+      <CardLine className="text-[12.5px] text-muted">{label}</CardLine>
+      <FitText className="mt-px font-display text-[15px] font-bold text-dark">{value}</FitText>
     </Box>
   );
 }
@@ -301,7 +290,7 @@ function ExpenseLine({ row }: { row: ExpenseRow }) {
         </Text>
       </td>
       <td className="border-t border-line px-3.5 py-[11px]">{payLabel(row.paymentMode)}</td>
-      <td className="border-t border-line px-3.5 py-[11px] text-right font-extrabold">
+      <td className="border-t border-line px-3.5 py-[11px] text-right font-extrabold whitespace-nowrap tabular-nums">
         {inr(row.amount)}
       </td>
     </tr>

@@ -1,11 +1,13 @@
 package com.medmate.server.distributors.store;
 
 import com.medmate.server.distributors.DistributorRules;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -108,33 +110,95 @@ public class DistributorStore {
         return total == null ? 0 : total;
     }
 
-    public List<TransactionRow> payments(UUID pharmacyId, String code, int limit, int offset) {
-        return jdbc.sql(
-                        """
-                        SELECT code, distributor_code, type, amount, reference, note, mode, recorded_at
-                        FROM distributor_transaction
-                        WHERE pharmacy_id = :id AND distributor_code = :code
-                        ORDER BY recorded_at, code
-                        LIMIT :limit OFFSET :offset
-                        """)
-                .param("id", pharmacyId)
-                .param("code", code)
+    public record LedgerSums(int purchases, int payments, int returns) {}
+
+    public List<TransactionRow> payments(
+            UUID pharmacyId, String code, LocalDate from, LocalDate to, int limit, int offset) {
+        return ledgerQuery(
+                        "SELECT code, distributor_code, type, amount, reference, note, mode, recorded_at FROM ("
+                                + ledgerRows()
+                                + ") ledger ORDER BY recorded_at, code LIMIT :limit OFFSET :offset",
+                        pharmacyId,
+                        code,
+                        from,
+                        to)
                 .param("limit", limit)
                 .param("offset", offset)
                 .query(this::transaction)
                 .list();
     }
 
-    public int paymentCount(UUID pharmacyId, String code) {
-        return jdbc.sql(
-                        """
-                        SELECT COUNT(*) FROM distributor_transaction
-                        WHERE pharmacy_id = :id AND distributor_code = :code
-                        """)
-                .param("id", pharmacyId)
-                .param("code", code)
+    public int paymentCount(UUID pharmacyId, String code, LocalDate from, LocalDate to) {
+        return ledgerQuery("SELECT COUNT(*) FROM (" + ledgerRows() + ") ledger", pharmacyId, code, from, to)
                 .query(Integer.class)
                 .single();
+    }
+
+    public LedgerSums ledgerSums(UUID pharmacyId, String code, LocalDate from, LocalDate to) {
+        return ledgerQuery(
+                        """
+                        SELECT COALESCE(SUM(amount) FILTER (WHERE type = 'purchase'), 0) AS purchases,
+                               COALESCE(SUM(amount) FILTER (WHERE type = 'payment'), 0) AS payments,
+                               COALESCE(SUM(amount) FILTER (WHERE type = 'return'), 0) AS returns
+                        FROM (
+                        """
+                                + ledgerRows()
+                                + ") ledger",
+                        pharmacyId,
+                        code,
+                        from,
+                        to)
+                .query((row, number) ->
+                        new LedgerSums(row.getInt("purchases"), row.getInt("payments"), row.getInt("returns")))
+                .single();
+    }
+
+    static String ledgerRows() {
+        return """
+                SELECT code, distributor_code, type, amount, reference, note, mode, recorded_at
+                FROM distributor_transaction
+                WHERE pharmacy_id = :id AND distributor_code = :code
+                  AND (CAST(:from AS date) IS NULL OR (recorded_at AT TIME ZONE 'Asia/Kolkata')::date >= CAST(:from AS date))
+                  AND (CAST(:to AS date) IS NULL OR (recorded_at AT TIME ZONE 'Asia/Kolkata')::date <= CAST(:to AS date))
+                UNION ALL
+                SELECT p.code, p.distributor_code, 'purchase', p.ledger_amount, p.code,
+                       CAST(NULL AS text), CAST(NULL AS text), p.recorded_at
+                FROM purchase p
+                WHERE p.pharmacy_id = :id AND p.distributor_code = :code
+                  AND (CAST(:from AS date) IS NULL OR p.invoice_date >= CAST(:from AS date))
+                  AND (CAST(:to AS date) IS NULL OR p.invoice_date <= CAST(:to AS date))
+                  AND NOT EXISTS (
+                    SELECT 1 FROM distributor_transaction t
+                    WHERE t.pharmacy_id = p.pharmacy_id
+                      AND t.distributor_code = p.distributor_code
+                      AND t.type = 'purchase'
+                      AND t.reference = p.code
+                  )
+                UNION ALL
+                SELECT r.code, p.distributor_code, 'return', r.ledger_amount, r.code,
+                       CAST(NULL AS text), CAST(NULL AS text), r.recorded_at
+                FROM purchase_return r
+                JOIN purchase p ON p.pharmacy_id = r.pharmacy_id AND p.code = r.purchase_code
+                WHERE r.pharmacy_id = :id AND p.distributor_code = :code
+                  AND (CAST(:from AS date) IS NULL OR (r.recorded_at AT TIME ZONE 'Asia/Kolkata')::date >= CAST(:from AS date))
+                  AND (CAST(:to AS date) IS NULL OR (r.recorded_at AT TIME ZONE 'Asia/Kolkata')::date <= CAST(:to AS date))
+                  AND NOT EXISTS (
+                    SELECT 1 FROM distributor_transaction t
+                    WHERE t.pharmacy_id = r.pharmacy_id
+                      AND t.distributor_code = p.distributor_code
+                      AND t.type = 'return'
+                      AND t.reference = r.code
+                  )
+                """;
+    }
+
+    private JdbcClient.StatementSpec ledgerQuery(
+            String sql, UUID pharmacyId, String code, LocalDate from, LocalDate to) {
+        return jdbc.sql(sql)
+                .param("id", pharmacyId)
+                .param("code", code)
+                .param("from", from == null ? null : Date.valueOf(from), Types.DATE)
+                .param("to", to == null ? null : Date.valueOf(to), Types.DATE);
     }
 
     public List<DistributorRow> list(UUID pharmacyId) {

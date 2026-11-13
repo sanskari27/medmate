@@ -6,6 +6,7 @@ import com.medmate.server.billing.store.BillStore;
 import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import com.medmate.server.stock.CounterStock;
 import java.math.BigDecimal;
@@ -38,10 +39,18 @@ public class SaleService {
     }
 
     @Transactional(readOnly = true)
-    public SaleViews.ListResponse list(AccountPrincipal actor, PageQuery page, String query) {
+    public SaleViews.ListResponse list(
+            AccountPrincipal actor, PageQuery page, String query, DayRange range, String type) {
         require(actor, SaleReturnRules.READ, "Sales cannot be read");
         UUID pharmacyId = actor.pharmacyId();
-        BillStore.SalePage slice = bills.salePage(pharmacyId, PageQuery.like(query), page.size(), page.offset());
+        BillStore.SalePage slice = bills.salePage(
+                pharmacyId,
+                PageQuery.like(query),
+                saleType(type),
+                range.from(),
+                range.to(),
+                page.size(),
+                page.offset());
         List<SaleViews.Row> rows = new ArrayList<>();
         for (BillStore.SaleListRow row : slice.rows()) {
             rows.add(new SaleViews.Row(
@@ -50,6 +59,7 @@ public class SaleService {
                     row.invoiceNumber(),
                     row.patientName(),
                     row.patientPhone(),
+                    row.payMode(),
                     row.recordedAt(),
                     row.items(),
                     money(row.amount()).toPlainString()));
@@ -260,6 +270,17 @@ public class SaleService {
                 actor.verificationStatus(),
                 actor.permissions(),
                 key);
+    }
+
+    private static String saleType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        String value = raw.trim();
+        if (value.equals("sale") || value.equals("return")) {
+            return value;
+        }
+        throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Type is not valid.");
     }
 
     private void require(AccountPrincipal actor, String key, String detail) {

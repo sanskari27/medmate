@@ -6,6 +6,7 @@ import com.medmate.server.distributors.store.DistributorStore;
 import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import com.medmate.server.stock.CatalogUnavailable;
 import com.medmate.server.stock.InventoryRules;
@@ -45,10 +46,24 @@ public class StockService {
         this.catalog = catalog;
     }
 
-    public StockViews.PurchaseList list(AccountPrincipal actor, String productId, PageQuery page) {
+    public StockViews.PurchaseList list(
+            AccountPrincipal actor,
+            String productId,
+            String query,
+            DayRange range,
+            String distributorId,
+            PageQuery page) {
         require(actor, PurchaseRules.READ, "Purchases cannot be read");
         UUID pharmacyId = actor.pharmacyId();
-        StockStore.DocumentPage slice = stock.documentPage(pharmacyId, productId, page.size(), page.offset());
+        StockStore.DocumentPage slice = stock.documentPage(
+                pharmacyId,
+                productId,
+                PageQuery.like(query),
+                distributorId == null ? "" : distributorId.trim(),
+                range.from(),
+                range.to(),
+                page.size(),
+                page.offset());
         Books books = booksFor(pharmacyId, slice.keys());
         List<StockViews.DocumentView> documents = new ArrayList<>();
         for (StockStore.DocumentKey key : slice.keys()) {
@@ -70,13 +85,16 @@ public class StockService {
         requireInventory(actor);
         UUID pharmacyId = actor.pharmacyId();
         String selected = InventoryRules.listFilter(filter);
-        String limit = InventoryRules.expiryLimit(YearMonth.now(ZONE)).toString();
+        YearMonth month = YearMonth.now(ZONE);
+        String limit = InventoryRules.expiryLimit(month).toString();
+        String current = month.toString();
         StockStore.InventoryPage slice = stock.inventoryPage(
                 pharmacyId,
                 PageQuery.like(query),
                 PageQuery.needle(query),
                 selected,
                 limit,
+                current,
                 page.size(),
                 page.offset());
         resolvePrescriptions(pharmacyId, slice.products());
@@ -98,7 +116,7 @@ public class StockService {
                     fresh.getOrDefault(product.productId(), product),
                     batches.getOrDefault(product.productId(), List.of())));
         }
-        StockStore.InventoryTotals totals = stock.inventoryTotals(pharmacyId, limit);
+        StockStore.InventoryTotals totals = stock.inventoryTotals(pharmacyId, limit, current);
         return new StockViews.InventoryList(
                 products,
                 new StockViews.InventorySummary(

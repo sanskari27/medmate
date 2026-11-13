@@ -32,10 +32,13 @@ export const distributorsApi = createApi({
       }),
       invalidatesTags: ["Distributors"],
     }),
-    listPayments: build.query<PaymentList, { code: string; page: number; size: number }>({
-      query: ({ code, page, size }) => ({
+    listPayments: build.query<
+      PaymentList,
+      { code: string; page: number; size: number; from?: string; to?: string }
+    >({
+      query: ({ code, page, size, from, to }) => ({
         url: `/pharmacy/distributors/${code}/payments`,
-        params: { page, size },
+        params: { page, size, ...(from ? { from } : {}), ...(to ? { to } : {}) },
       }),
       providesTags: ["Distributors"],
     }),

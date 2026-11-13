@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { FitText } from "@/components/ui/FitText";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import type { DiscountKind } from "../../../../model";
@@ -59,7 +61,7 @@ export function BillingSettlement({
   return (
     <Box className="shrink-0 rounded-md border border-line bg-paper p-2 shadow-sm">
       <Box className="grid items-start gap-3 lg:grid-cols-12">
-        <Box className="grid gap-1.5 border-line sm:grid-cols-2 lg:col-span-4 lg:border-r lg:pr-3">
+        <Box className="grid min-w-0 gap-1.5 border-line sm:grid-cols-2 lg:col-span-4 lg:border-r lg:pr-3">
           <Text
             as="span"
             className="sm:col-span-2 text-[10px] font-bold tracking-wide text-faint uppercase"
@@ -90,6 +92,17 @@ export function BillingSettlement({
           <Text as="span" className="text-[10px] text-muted sm:col-span-2">
             {patientPhone.length}/10 digits
             {patientName.trim() ? ` · ${patientName.trim()}` : " · Name required"}
+            {patientPhone.length === 10 ? (
+              <>
+                {" · "}
+                <Link
+                  to={`/sales?q=${encodeURIComponent(patientPhone)}`}
+                  className="font-bold text-dark"
+                >
+                  Find this phone in sales
+                </Link>
+              </>
+            ) : null}
           </Text>
           {needsRx ? (
             <>
@@ -117,7 +130,7 @@ export function BillingSettlement({
           )}
         </Box>
 
-        <Box className="grid content-start gap-1.5 border-line lg:col-span-4 lg:border-r lg:pr-3">
+        <Box className="grid min-w-0 content-start gap-1.5 border-line lg:col-span-4 lg:border-r lg:pr-3">
           <Text as="span" className="text-[10px] font-bold tracking-wide text-faint uppercase">
             Settlement
           </Text>
@@ -186,7 +199,7 @@ export function BillingSettlement({
           </Box>
         </Box>
 
-        <Box className="rounded-sm bg-canvas px-2.5 py-1.5 lg:col-span-4">
+        <Box className="min-w-0 rounded-sm bg-canvas px-2.5 py-1.5 lg:col-span-4">
           <Box className="mb-1 flex items-center justify-between">
             <Text as="span" className="text-[10px] font-bold tracking-wide text-faint uppercase">
               Bill summary
@@ -208,13 +221,13 @@ export function BillingSettlement({
             <Money label="You save" value={totals.savings} signed />
           </Box>
           <Box className="mt-1 flex items-end justify-between gap-2 border-t border-line pt-1">
-            <Box>
+            <Box className="min-w-0 flex-1">
               <Text as="span" className="block text-[10px] font-bold tracking-wide uppercase">
                 Amount payable
               </Text>
-              <Text as="span" className="font-mono text-[18px] leading-none font-extrabold">
+              <FitText className="font-mono text-[18px] leading-none font-extrabold">
                 {rupee(totals.payable)}
-              </Text>
+              </FitText>
             </Box>
             {chargeAllowed ? (
               <Button
@@ -256,32 +269,30 @@ function Money({
 }) {
   const text = signed && value > 0 ? `-${rupee(value)}` : rupee(value);
   return (
-    <Box className="flex justify-between gap-2">
-      <Text as="span" className={`text-[11px] ${muted ? "text-faint" : "text-muted"}`}>
+    <Box className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] items-baseline gap-2">
+      <Text as="span" className={`truncate text-[11px] ${muted ? "text-faint" : "text-muted"}`}>
         {label}
       </Text>
-      <Text
-        as="span"
-        className={`font-mono text-[11px] ${signed && value > 0 ? "text-dark" : "text-ink"}`}
+      <FitText
+        className={`text-right font-mono text-[11px] ${signed && value > 0 ? "text-dark" : "text-ink"}`}
       >
         {text}
-      </Text>
+      </FitText>
     </Box>
   );
 }
 
 function Readout({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <Box className="grid gap-0.5">
-      <Text as="span" className="text-[10px] font-bold tracking-wide text-faint uppercase">
+    <Box className="grid min-w-0 gap-0.5">
+      <Text as="span" className="truncate text-[10px] font-bold tracking-wide text-faint uppercase">
         {label}
       </Text>
-      <Text
-        as="span"
-        className={`flex h-6 items-center font-mono text-[11px] tabular-nums ${strong ? "font-bold text-dark" : "text-ink"}`}
+      <FitText
+        className={`h-6 font-mono text-[11px] leading-6 ${strong ? "font-bold text-dark" : "text-ink"}`}
       >
         {value}
-      </Text>
+      </FitText>
     </Box>
   );
 }

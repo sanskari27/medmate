@@ -3,7 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
 import { IconChart, IconDoc, IconPrint } from "@/components/ui/Icon";
+import { DateFields } from "@/components/ui/DateFields";
+import { FilterField } from "@/components/ui/FilterField";
 import { Input } from "@/components/ui/Input";
+import { PageBar } from "@/components/ui/PageBar";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/utils/className";
 import { problemMessage, useAuthState } from "@/features/authentication";
@@ -31,6 +34,8 @@ export function ReportPage() {
   const [preset, setPreset] = useState<ReportPreset>("month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [rowQuery, setRowQuery] = useState("");
+  const [rowPage, setRowPage] = useState(1);
   const range = snapshot ? null : reportRange(preset, today, customFrom, customTo);
   const report = useReadReportQuery(
     { id: reportId, ...(range ?? {}) },
@@ -44,7 +49,13 @@ export function ReportPage() {
 
   const body = report.data;
   const columns = body?.columns ?? [];
-  const rows = body?.rows ?? [];
+  const matched = (body?.rows ?? []).filter((row) => {
+    const needle = rowQuery.trim().toLowerCase();
+    if (!needle) return true;
+    return row.some((cell) => String(cell).toLowerCase().includes(needle));
+  });
+  const pageSize = 25;
+  const rows = matched.slice((rowPage - 1) * pageSize, rowPage * pageSize);
 
   return (
     <Box className="print-area mx-auto max-w-[1680px]">
@@ -62,9 +73,13 @@ export function ReportPage() {
                 aria-pressed={preset === item.key}
                 className={cn(
                   "h-auto rounded-xs px-2.5 py-1.5 text-[12.5px]",
-                  preset === item.key && "border-dark bg-dark text-white hover:bg-dark hover:text-white",
+                  preset === item.key &&
+                    "border-dark bg-dark text-white hover:bg-dark hover:text-white",
                 )}
-                onClick={() => setPreset(item.key)}
+                onClick={() => {
+                  setPreset(item.key);
+                  setRowPage(1);
+                }}
               >
                 {item.label}
               </Button>
@@ -77,37 +92,29 @@ export function ReportPage() {
             <Button
               type="button"
               variant="ghost"
-              disabled={!rows.length || exported.isFetching}
+              disabled={!matched.length || exported.isFetching}
               onClick={() => void download()}
             >
               <IconDoc size={14} /> Excel
             </Button>
-            <Button type="button" variant="ghost" disabled={!rows.length} onClick={() => window.print()}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={!matched.length}
+              onClick={() => window.print()}
+            >
               <IconPrint size={16} /> PDF
             </Button>
           </>
         ) : null}
       </Box>
       {preset === "custom" && !snapshot ? (
-        <Box className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
-          <Input
-            type="date"
-            aria-label="From"
-            value={customFrom}
-            onChange={(event) => setCustomFrom(event.target.value)}
-          />
-          <Input
-            type="date"
-            aria-label="To"
-            value={customTo}
-            onChange={(event) => setCustomTo(event.target.value)}
-          />
-        </Box>
+        <Stack direction="row" align="end" wrap className="mb-4 gap-3 print:hidden">
+          <DateFields from={customFrom} to={customTo} onFrom={setCustomFrom} onTo={setCustomTo} />
+        </Stack>
       ) : null}
       <Box className="mb-1.5 flex items-baseline gap-2.5">
-        <Text className="font-display text-[20px] font-extrabold" as="h2">
-          {meta.name}
-        </Text>
+        <Text className="font-display text-[20px] font-extrabold">{meta.name}</Text>
         {body ? (
           <Text
             className="inline-flex items-center gap-1 rounded-full bg-wash px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap text-mid"
@@ -120,11 +127,26 @@ export function ReportPage() {
       </Box>
       <Text className="mb-3.5 text-[13px] text-muted">
         {meta.desc}
-        {body ? ` · ${rows.length} rows` : ""}
+        {body ? ` · ${matched.length} rows` : ""}
       </Text>
+      {body ? (
+        <FilterField label="Search" className="mb-3 w-[320px] print:hidden">
+          <Input
+            aria-label="Search report rows"
+            placeholder="Search these rows…"
+            value={rowQuery}
+            onChange={(event) => {
+              setRowQuery(event.target.value);
+              setRowPage(1);
+            }}
+          />
+        </FilterField>
+      ) : null}
       {report.isLoading ? <Text className="text-[13px] text-muted">Loading report…</Text> : null}
       {report.isError ? (
-        <Text className="text-[13px] text-rose">{problemMessage(report.error, "Report could not be loaded.")}</Text>
+        <Text className="text-[13px] text-rose">
+          {problemMessage(report.error, "Report could not be loaded.")}
+        </Text>
       ) : null}
       {body ? (
         <Box className="flex flex-col rounded-md border border-line bg-paper shadow-sm">
@@ -155,6 +177,7 @@ export function ReportPage() {
                           "border-b border-line px-3.5 py-[11px] align-middle text-ink-2",
                           (columns[cellIndex]?.money || columns[cellIndex]?.num) &&
                             "text-right font-semibold text-ink tabular-nums",
+                          columns[cellIndex]?.money && "whitespace-nowrap",
                         )}
                       >
                         {reportCell(cell, columns[cellIndex]?.money === true)}
@@ -169,7 +192,11 @@ export function ReportPage() {
                         <Box className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-wash text-mid">
                           <IconChart size={30} />
                         </Box>
-                        <Text>{body.note ?? "No data for this period."}</Text>
+                        <Text>
+                          {body.rows.length > 0
+                            ? "No rows match this search."
+                            : (body.note ?? "No data for this period.")}
+                        </Text>
                       </Box>
                     </td>
                   </tr>
@@ -183,7 +210,9 @@ export function ReportPage() {
                         key={columns[index]?.key ?? index}
                         className={cn(
                           "border-t-2 border-t-line-2 bg-wash-2 px-3.5 py-[11px] font-extrabold text-ink",
-                          (columns[index]?.money || columns[index]?.num) && "text-right tabular-nums",
+                          (columns[index]?.money || columns[index]?.num) &&
+                            "text-right tabular-nums",
+                          columns[index]?.money && "whitespace-nowrap",
                         )}
                       >
                         {reportCell(cell as ReportCell, columns[index]?.money === true)}
@@ -194,6 +223,7 @@ export function ReportPage() {
               ) : null}
             </table>
           </Box>
+          <PageBar page={rowPage} size={pageSize} total={matched.length} onPage={setRowPage} />
         </Box>
       ) : null}
       {body?.note && rows.length > 0 ? (

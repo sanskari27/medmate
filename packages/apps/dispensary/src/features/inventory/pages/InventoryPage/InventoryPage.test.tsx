@@ -123,7 +123,23 @@ function renderPage(permissions: string[] = ["inventory:read"]) {
           stats: {},
         });
       }
-      return json(inventory);
+      return json({
+        ...inventory,
+        products: inventory.products.filter((product) => {
+          const parsed = new URL(request.url);
+          const q = (parsed.searchParams.get("q") ?? "").toLowerCase();
+          const selected = parsed.searchParams.get("filter") ?? "";
+          const onHand = product.batches.reduce((sum, batch) => sum + batch.qty, 0);
+          if (q) {
+            const haystack =
+              `${product.name} ${product.composition} ${product.rack ?? ""} ${product.batches.map((batch) => batch.batchNo).join(" ")}`.toLowerCase();
+            if (!haystack.includes(q)) return false;
+          }
+          if (selected === "low") return onHand <= product.reorderLevel;
+          if (selected === "out") return onHand === 0;
+          return true;
+        }),
+      });
     }),
   );
   return render(
@@ -162,20 +178,24 @@ describe("InventoryPage", () => {
     fireEvent.change(screen.getByLabelText("Search inventory"), {
       target: { value: "extra" },
     });
-    expect(screen.getByRole("button", { name: "Crocin Advance" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Bulk Drops" })).toBeNull();
+    expect(await screen.findByRole("button", { name: "Crocin Advance" })).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Bulk Drops" })).toBeNull();
+    });
     fireEvent.change(screen.getByLabelText("Search inventory"), { target: { value: "" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Low stock" }));
     await waitFor(() => {
-      expect(requested.some((url) => url.includes("filter=low") && url.includes("page=1"))).toBe(
-        true,
-      );
+      expect(
+        requested.some((url) => url.includes("filter=low") && !url.includes("q=")),
+      ).toBe(true);
     });
-    expect(screen.getByRole("button", { name: "Crocin Advance" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Bulk Drops" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Costly Strip" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Empty Bottle" })).toBeNull();
+    expect(await screen.findByRole("button", { name: "Crocin Advance" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Costly Strip" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Empty Bottle" })).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Bulk Drops" })).toBeNull();
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     fireEvent.click(screen.getByRole("button", { name: "Crocin Advance" }));
@@ -184,7 +204,7 @@ describe("InventoryPage", () => {
     expect(screen.queryByText("Purchase history")).toBeNull();
     expect(screen.queryByText("PUR-1")).toBeNull();
     expect(screen.getByText(longComposition)).toBeTruthy();
-    expect(screen.getByText("Low stock — value under ₹1,000")).toBeTruthy();
+    expect(screen.getByText("Low stock — at or under reorder")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Batches" }));
     expect(await screen.findByText("PUR-1")).toBeTruthy();
     expect(screen.getByText("Purchase history")).toBeTruthy();

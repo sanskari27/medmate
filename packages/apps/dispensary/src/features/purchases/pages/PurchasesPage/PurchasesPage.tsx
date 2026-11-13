@@ -1,10 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
+import { DateFields } from "@/components/ui/DateFields";
+import { FilterField } from "@/components/ui/FilterField";
 import { Heading } from "@/components/ui/Heading";
+import { Input } from "@/components/ui/Input";
 import { PageBar } from "@/components/ui/PageBar";
+import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
+import { useDebounced } from "@/hooks/useDebounced";
+import { useRegisterQuery } from "@/hooks/useRegisterQuery";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { PurchaseForm } from "../../components/PurchaseForm";
 import { ReceiptDialog } from "../../components/ReceiptDialog";
@@ -24,6 +31,7 @@ import {
   useCreatePurchaseMutation,
   useCreateReturnMutation,
   useListPurchasesQuery,
+  useReadPurchaseQuery,
   useValidateMedicinesMutation,
 } from "../../purchases.api";
 
@@ -31,10 +39,20 @@ export function PurchasesPage() {
   const { session } = useAuthState();
   const access = purchaseAccess(session?.account.pharmacyRole, session?.account.permissions);
   const params = useParams();
-  const [searchParams] = useSearchParams();
+  const register = useRegisterQuery();
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const list = useListPurchasesQuery({ page, size: 25 });
+  const needle = useDebounced(register.q.trim());
+  const list = useListPurchasesQuery({
+    page: register.page,
+    size: 25,
+    q: needle || undefined,
+    from: register.from || undefined,
+    to: register.to || undefined,
+    distributorId: register.get("distributorId") || undefined,
+    productId: register.get("productId") || undefined,
+  });
+  const held = useRef(list.data);
+  if (list.data) held.current = list.data;
   const [createPurchase, createState] = useCreatePurchaseMutation();
   const [createReturn, returnState] = useCreateReturnMutation();
   const [validate] = useValidateMedicinesMutation();
@@ -44,24 +62,35 @@ export function PurchasesPage() {
   const [opened, setOpened] = useState<string | null>(null);
   const [returnFor, setReturnFor] = useState<string | null>(null);
   const openedNew = useRef(false);
-  const documents = list.data?.purchases ?? [];
-  const stats = list.data?.stats;
-  const selectedId = params.id ?? opened;
-  const selected = documents.find((row) => row.id === selectedId) ?? null;
+  const shown = list.data ?? held.current;
+  const documents = shown?.purchases ?? [];
+  const stats = shown?.stats;
+  const selectedId = params.id || register.get("id") || opened;
+  const detail = useReadPurchaseQuery(selectedId ?? "", { skip: !selectedId });
+  const selected =
+    (detail.data?.purchase?.id === selectedId ? detail.data.purchase : null) ??
+    documents.find((row) => row.id === selectedId) ??
+    null;
   const returning = Boolean(selected && returnFor === selected.id);
+
+  function openPurchase(id: string) {
+    setOpened(id);
+    register.setQuery({ id }, { keepPage: true });
+  }
 
   function closeReceipt() {
     setReturnFor(null);
     setOpened(null);
+    register.setQuery({ id: null }, { keepPage: true });
     if (params.id) navigate("/purchases");
   }
 
   useEffect(() => {
-    if (searchParams.get("new") === "1" && access.create && !openedNew.current) {
+    if (register.get("new") === "1" && access.create && !openedNew.current) {
       openedNew.current = true;
       setForm({ distributorId: "", invoiceNo: "", invoiceDate: "", lines: [] });
     }
-  }, [searchParams, access.create]);
+  }, [access.create, register]);
 
   async function save(draft: PurchaseDraft) {
     setError(null);
@@ -100,7 +129,8 @@ export function PurchasesPage() {
     return kept.map((line) => draftFromCsv(line, known.get(line.productId) ?? line.productId));
   }
 
-  if (list.isLoading) return <Text className="text-[13.5px] text-muted">Loading purchases</Text>;
+  if (!shown && list.isLoading)
+    return <Text className="text-[13.5px] text-muted">Loading purchases</Text>;
 
   return (
     <Box className="mx-auto max-w-[1680px]">
@@ -121,8 +151,26 @@ export function PurchasesPage() {
           </Button>
         ) : null}
       </Box>
+      <Stack direction="row" align="end" wrap className="mb-4 gap-3">
+        <DateFields
+          from={register.from}
+          to={register.to}
+          onFrom={(value) => register.setQuery({ from: value })}
+          onTo={(value) => register.setQuery({ to: value })}
+        />
+        <FilterField label="Search" className="w-[280px]">
+          <Input
+            aria-label="Search purchases"
+            placeholder="Reference, invoice, distributor…"
+            value={register.q}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              register.setQuery({ q: event.target.value })
+            }
+          />
+        </FilterField>
+      </Stack>
       {stats ? (
-        <Box className="mb-4 grid gap-3 md:grid-cols-3">
+        <Box className="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-3">
           <Stat
             label="Purchases this month"
             value={inr(stats.purchasesThisMonth)}
@@ -140,54 +188,70 @@ export function PurchasesPage() {
           />
         </Box>
       ) : null}
-      <table className="w-full border-separate border-spacing-0 text-[13.5px]">
-        <thead>
-          <tr>
-            {[
-              "Type",
-              "Reference",
-              "Distributor",
-              "Invoice no.",
-              "Date",
-              "Items",
-              "Taxable",
-              "GST",
-              "Total",
-            ].map((heading) => (
-              <th
-                key={heading}
-                className="bg-wash-2 px-3 py-2 text-left text-[11px] font-bold text-muted uppercase"
-              >
-                {heading}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {documents.map((row) => (
-            <tr key={row.id}>
-              <td className="border-t border-line px-3 py-2">{typeLabel(row.type)}</td>
-              <td className="border-t border-line px-3 py-2">
-                <Button type="button" variant="link" onClick={() => setOpened(row.id)}>
-                  {row.id}
-                </Button>
-              </td>
-              <td className="border-t border-line px-3 py-2">{row.distributorName}</td>
-              <td className="border-t border-line px-3 py-2">{row.invoiceNo}</td>
-              <td className="border-t border-line px-3 py-2">{row.invoiceDate}</td>
-              <td className="border-t border-line px-3 py-2">{row.lines.length}</td>
-              <td className="border-t border-line px-3 py-2">{inr2(row.taxable)}</td>
-              <td className="border-t border-line px-3 py-2">{inr2(row.gst)}</td>
-              <td className="border-t border-line px-3 py-2 font-bold">{inr(row.ledgerAmount)}</td>
+      <Box className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-0 text-[13.5px]">
+          <thead>
+            <tr>
+              {[
+                "Type",
+                "Reference",
+                "Distributor",
+                "Invoice no.",
+                "Date",
+                "Items",
+                "Taxable",
+                "GST",
+                "Total",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  className={`bg-wash-2 px-3.5 py-[11px] text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase ${["Items", "Taxable", "GST", "Total"].includes(heading) ? "text-right" : "text-left"}`}
+                >
+                  {heading}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {documents.map((row) => (
+              <tr key={row.id}>
+                <td className="border-t border-line px-3.5 py-[11px]">{typeLabel(row.type)}</td>
+                <td className="border-t border-line px-3.5 py-[11px]">
+                  <Button type="button" variant="link" onClick={() => openPurchase(row.id)}>
+                    {row.id}
+                  </Button>
+                </td>
+                <td className="border-t border-line px-3.5 py-[11px]">
+                  <Button variant="link" asChild>
+                    <Link to={`/distributors?q=${encodeURIComponent(row.distributorName)}`}>
+                      {row.distributorName}
+                    </Link>
+                  </Button>
+                </td>
+                <td className="border-t border-line px-3.5 py-[11px]">{row.invoiceNo}</td>
+                <td className="border-t border-line px-3.5 py-[11px]">{row.invoiceDate}</td>
+                <td className="border-t border-line px-3.5 py-[11px] text-right tabular-nums">
+                  {row.lines.length}
+                </td>
+                <td className="border-t border-line px-3.5 py-[11px] text-right whitespace-nowrap tabular-nums">
+                  {inr2(row.taxable)}
+                </td>
+                <td className="border-t border-line px-3.5 py-[11px] text-right whitespace-nowrap tabular-nums">
+                  {inr2(row.gst)}
+                </td>
+                <td className="border-t border-line px-3.5 py-[11px] text-right font-bold whitespace-nowrap tabular-nums">
+                  {inr(row.ledgerAmount)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Box>
       <PageBar
-        page={list.data?.page ?? page}
-        size={list.data?.size ?? 25}
-        total={list.data?.total ?? documents.length}
-        onPage={setPage}
+        page={shown?.page ?? register.page}
+        size={shown?.size ?? 25}
+        total={shown?.total ?? documents.length}
+        onPage={(next) => register.setQuery({ page: next })}
       />
       {form ? (
         <PurchaseForm
@@ -245,10 +309,10 @@ function Stat({
   valueClass?: string;
 }) {
   return (
-    <Box className="rounded-md border border-line bg-paper p-4">
-      <Text className="text-[11px] font-bold text-muted uppercase">{label}</Text>
-      <Text className={`text-[22px] font-bold ${valueClass}`}>{value}</Text>
-      {hint ? <Text className="text-[12px] text-muted">{hint}</Text> : null}
+    <Box className="min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-paper p-4">
+      <CardLine className="text-[11px] font-bold text-muted uppercase">{label}</CardLine>
+      <FitText className={`text-[22px] font-bold ${valueClass}`}>{value}</FitText>
+      {hint ? <CardLine className="text-[12px] text-muted">{hint}</CardLine> : null}
     </Box>
   );
 }

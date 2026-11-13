@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
 import { writeSession } from "@/services/storage";
@@ -115,7 +116,9 @@ function renderPage(
   );
   return render(
     <Provider store={createAppStore()}>
-      <DistributorsPage />
+      <MemoryRouter>
+        <DistributorsPage />
+      </MemoryRouter>
     </Provider>,
   );
 }
@@ -225,15 +228,17 @@ describe("DistributorsPage", () => {
     );
     render(
       <Provider store={createAppStore()}>
-        <DistributorsPage />
+        <MemoryRouter>
+          <DistributorsPage />
+        </MemoryRouter>
       </Provider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Transactions Apollo Wholesale" }));
     const dialog = screen.getByRole("dialog", { name: "Apollo Wholesale transactions" });
-    expect(within(dialog).getByText("page 1 of 2")).toBeTruthy();
+    expect((within(dialog).getByLabelText("Page") as HTMLInputElement).value).toBe("1");
     fireEvent.change(within(dialog).getByLabelText("Amount"), { target: { value: "1" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
-    expect(await within(dialog).findByText("page 2 of 2")).toBeTruthy();
+    expect((await within(dialog).findByLabelText("Page") as HTMLInputElement).value).toBe("2");
   });
 
   it("hides the record form when staff cannot pay", async () => {

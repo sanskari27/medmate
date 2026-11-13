@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { problemMessage } from "@/features/authentication";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
 import { Heading } from "@/components/ui/Heading";
 import { IconPhone, IconWhatsApp, IconX } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -242,17 +243,17 @@ function Summary({
   tone?: "rose" | "green";
 }) {
   return (
-    <Box className="min-w-[140px] flex-1 rounded-[10px] border border-line bg-paper px-3.5 py-2">
-      <Text className="text-[12.5px] text-muted">{label}</Text>
-      <Text
+    <Box className="min-w-[140px] max-w-full flex-1 overflow-hidden rounded-[10px] border border-line bg-paper px-3.5 py-2">
+      <CardLine className="text-[12.5px] text-muted">{label}</CardLine>
+      <FitText
         className={cn(
-          "mt-px block text-[15px] font-bold text-dark",
+          "mt-px text-[15px] font-bold text-dark",
           tone === "rose" && "text-rose",
           tone === "green" && "text-green",
         )}
       >
         {value}
-      </Text>
+      </FitText>
     </Box>
   );
 }
@@ -298,7 +299,12 @@ function LedgerRow({ line }: { line: PatientDetail["ledger"][number] }) {
           {line.ref} · {visitDate(line.at)}
         </Text>
       </Box>
-      <Text className={cn("text-[13px] font-bold", debit ? "text-rose" : "text-green")}>
+      <Text
+        className={cn(
+          "shrink-0 text-[13px] font-bold whitespace-nowrap tabular-nums",
+          debit ? "text-rose" : "text-green",
+        )}
+      >
         {debit ? "−" : "+"}
         {rupee(line.amount)}
       </Text>

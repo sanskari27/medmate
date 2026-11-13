@@ -28,7 +28,7 @@ export type InventoryProduct = {
   batches: InventoryBatch[];
 };
 
-export type InventoryFilter = "all" | "low" | "out" | "expiring";
+export type InventoryFilter = "all" | "low" | "out" | "expiring" | "expired";
 
 export type InventorySummary = {
   skuCount: number;
@@ -98,7 +98,12 @@ export function isOut(product: InventoryProduct): boolean {
 }
 
 export function isLow(product: InventoryProduct): boolean {
-  return units(product) > 0 && Math.round(cost(product)) < 1000;
+  return units(product) > 0 && units(product) <= product.reorderLevel;
+}
+
+export function isExpired(product: InventoryProduct, today = new Date()): boolean {
+  const current = monthIndex(kolkata(today));
+  return product.batches.some((batch) => batch.qty > 0 && monthIndex(batch.expiry) < current);
 }
 
 export function tableComposition(composition: string | null): string | null {
@@ -125,14 +130,22 @@ export function expiryLabel(expiry: string, today = new Date()): string {
 }
 
 export function isExpiring(product: InventoryProduct, today = new Date()): boolean {
-  const limit = monthIndex(kolkata(today)) + 4;
-  return product.batches.some((batch) => batch.qty > 0 && monthIndex(batch.expiry) <= limit);
+  const current = monthIndex(kolkata(today));
+  const limit = current + 4;
+  return product.batches.some((batch) => {
+    const index = monthIndex(batch.expiry);
+    return batch.qty > 0 && index >= current && index <= limit;
+  });
 }
 
 export function expiringCost(product: InventoryProduct, today = new Date()): number {
-  const limit = monthIndex(kolkata(today)) + 4;
+  const current = monthIndex(kolkata(today));
+  const limit = current + 4;
   return product.batches
-    .filter((batch) => batch.qty > 0 && monthIndex(batch.expiry) <= limit)
+    .filter((batch) => {
+      const index = monthIndex(batch.expiry);
+      return batch.qty > 0 && index >= current && index <= limit;
+    })
     .reduce((sum, batch) => sum + Number(batch.rate) * batch.qty, 0);
 }
 
@@ -143,12 +156,14 @@ export function matches(
   today = new Date(),
 ): boolean {
   const text = query.trim().toLowerCase();
+  const batches = product.batches.map((batch) => batch.batchNo).join(" ");
   const haystack =
-    `${product.productId} ${product.name} ${product.composition ?? ""} ${product.marketer ?? ""}`.toLowerCase();
+    `${product.productId} ${product.name} ${product.composition ?? ""} ${product.marketer ?? ""} ${product.rack ?? ""} ${product.rackAlt ?? ""} ${batches}`.toLowerCase();
   if (text && !haystack.includes(text)) return false;
-  if (filter === "low") return isLow(product);
+  if (filter === "low") return units(product) <= product.reorderLevel;
   if (filter === "out") return isOut(product);
   if (filter === "expiring") return isExpiring(product, today);
+  if (filter === "expired") return isExpired(product, today);
   return true;
 }
 

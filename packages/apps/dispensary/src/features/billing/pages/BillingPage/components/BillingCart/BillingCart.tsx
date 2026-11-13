@@ -12,7 +12,7 @@ export const smallCell =
 
 const headCell = "px-2 py-1.5 font-bold whitespace-nowrap";
 const bodyCell = "px-2 py-1 align-middle";
-const moneyCell = `${bodyCell} text-right font-mono text-[12px] leading-4 tabular-nums`;
+const moneyCell = `${bodyCell} text-right font-mono text-[12px] leading-4 whitespace-nowrap tabular-nums`;
 
 export function BillingCart({
   lines,

@@ -7,10 +7,20 @@ export const salesApi = createApi({
   baseQuery: apiClient,
   tagTypes: ["Sales"],
   endpoints: (build) => ({
-    listSales: build.query<SaleList, { page: number; size: number; q?: string }>({
-      query: ({ page, size, q }) => ({
+    listSales: build.query<
+      SaleList,
+      { page: number; size: number; q?: string; from?: string; to?: string; type?: string }
+    >({
+      query: ({ page, size, q, from, to, type }) => ({
         url: "/pharmacy/sales",
-        params: { page, size, ...(q ? { q } : {}) },
+        params: {
+          page,
+          size,
+          ...(q ? { q } : {}),
+          ...(from ? { from } : {}),
+          ...(to ? { to } : {}),
+          ...(type ? { type } : {}),
+        },
       }),
       providesTags: ["Sales"],
     }),

@@ -51,5 +51,5 @@ export const inventoryApi = createApi({
   }),
 });
 
-export const { useListInventoryQuery, useUpdateReorderMutation, useSetLocationMutation } =
+export const { useListInventoryQuery, useLazyListInventoryQuery, useUpdateReorderMutation, useSetLocationMutation } =
   inventoryApi;

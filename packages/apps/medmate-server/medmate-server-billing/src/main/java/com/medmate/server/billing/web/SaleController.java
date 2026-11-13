@@ -2,6 +2,7 @@ package com.medmate.server.billing.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -29,8 +30,12 @@ public class SaleController {
             Authentication authentication,
             @RequestParam(required = false) String page,
             @RequestParam(required = false) String size,
-            @RequestParam(required = false) String q) {
-        return sales.list(Current.require(authentication), PageQuery.parse(page, size), q);
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String type) {
+        return sales.list(
+                Current.require(authentication), PageQuery.parse(page, size), q, DayRange.parse(from, to), type);
     }
 
     @GetMapping("/pharmacy/sales/{id}")

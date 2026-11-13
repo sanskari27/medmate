@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
 import { writeSession } from "@/services/storage";
@@ -26,6 +27,7 @@ const session: Session = {
 };
 
 const inventory = {
+  total: 125,
   products: [
     {
       productId: "med-a",
@@ -146,7 +148,9 @@ function renderPage(permissions: string[]) {
   );
   return render(
     <Provider store={createAppStore()}>
-      <BillingPage />
+      <MemoryRouter>
+        <BillingPage />
+      </MemoryRouter>
     </Provider>,
   );
 }
@@ -173,7 +177,10 @@ describe("BillingPage", () => {
         ),
       ).toBe(true);
     });
-    expect(screen.getByText(/med-a/)).toBeTruthy();
+    expect(screen.getByText("1 of 125")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See all in inventory" }).getAttribute("href")).toBe(
+      "/inventory?q=para",
+    );
     expect(screen.getByRole("listbox", { name: "Matches" }).className).toContain("absolute");
     expect(screen.getByRole("table", { name: "Cart" })).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "CGST" })).toBeTruthy();

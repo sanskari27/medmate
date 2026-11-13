@@ -7,11 +7,34 @@ export const purchasesApi = createApi({
   baseQuery: apiClient,
   tagTypes: ["Purchases"],
   endpoints: (build) => ({
-    listPurchases: build.query<PurchaseList, { productId?: string; page: number; size: number }>({
-      query: ({ productId, page, size }) => ({
+    listPurchases: build.query<
+      PurchaseList,
+      {
+        productId?: string;
+        q?: string;
+        from?: string;
+        to?: string;
+        distributorId?: string;
+        page: number;
+        size: number;
+      }
+    >({
+      query: ({ productId, q, from, to, distributorId, page, size }) => ({
         url: "/pharmacy/purchases",
-        params: { page, size, ...(productId ? { productId } : {}) },
+        params: {
+          page,
+          size,
+          ...(productId ? { productId } : {}),
+          ...(q ? { q } : {}),
+          ...(from ? { from } : {}),
+          ...(to ? { to } : {}),
+          ...(distributorId ? { distributorId } : {}),
+        },
       }),
+      providesTags: ["Purchases"],
+    }),
+    readPurchase: build.query<PurchaseOne, string>({
+      query: (id) => ({ url: `/pharmacy/purchases/${encodeURIComponent(id)}` }),
       providesTags: ["Purchases"],
     }),
     createPurchase: build.mutation<PurchaseOne, unknown>({
@@ -36,6 +59,7 @@ export const purchasesApi = createApi({
 
 export const {
   useListPurchasesQuery,
+  useReadPurchaseQuery,
   useCreatePurchaseMutation,
   useCreateReturnMutation,
   useLazySearchMedicinesQuery,

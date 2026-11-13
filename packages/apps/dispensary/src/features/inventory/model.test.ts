@@ -18,20 +18,23 @@ function product(batches: InventoryProduct["batches"], reorderLevel = 20): Inven
 }
 
 describe("inventory stock rules", () => {
-  it("marks stock under ₹1,000 as low and leaves a rounded ₹1,000", () => {
+  it("marks stock at or under the reorder level as low", () => {
     expect(
       isLow(
         product([{ batchNo: "B", expiry: "2027-03", qty: 50, rate: "10.00", mrp: "12.00" }], 5),
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isLow(product([{ batchNo: "B", expiry: "2027-03", qty: 4, rate: "300.00", mrp: "400.00" }])),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       isLow(product([{ batchNo: "B", expiry: "2027-03", qty: 1, rate: "999.49", mrp: "1.00" }])),
     ).toBe(true);
     expect(
-      isLow(product([{ batchNo: "B", expiry: "2027-03", qty: 1, rate: "999.50", mrp: "1.00" }])),
+      isLow(product([{ batchNo: "B", expiry: "2027-03", qty: 20, rate: "999.50", mrp: "1.00" }])),
+    ).toBe(true);
+    expect(
+      isLow(product([{ batchNo: "B", expiry: "2027-03", qty: 21, rate: "1.00", mrp: "1.00" }])),
     ).toBe(false);
   });
 

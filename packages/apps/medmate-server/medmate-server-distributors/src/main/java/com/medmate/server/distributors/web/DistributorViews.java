@@ -47,7 +47,14 @@ public final class DistributorViews {
 
     public record ListResponse(List<DistributorCard> distributors) {}
 
-    public record PaymentList(List<TransactionView> payments, int page, int size, int total) {}
+    public record PaymentList(
+            List<TransactionView> payments,
+            int page,
+            int size,
+            int total,
+            int purchaseTotal,
+            int paymentTotal,
+            int returnTotal) {}
 
     public record OneResponse(DistributorView distributor) {}
 }

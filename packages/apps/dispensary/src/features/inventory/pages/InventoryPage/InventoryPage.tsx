@@ -2,12 +2,15 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
+import { FilterField } from "@/components/ui/FilterField";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { PageBar } from "@/components/ui/PageBar";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { useDebounced } from "@/hooks/useDebounced";
+import { useRegisterQuery } from "@/hooks/useRegisterQuery";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { useListPurchasesQuery } from "@/features/purchases";
 import { cn } from "@/utils/className";
@@ -23,7 +26,6 @@ import {
   isLow,
   isOut,
   locationLabel,
-  matches,
   nearestExpiry,
   retail,
   tableComposition,
@@ -32,7 +34,11 @@ import {
   type InventoryFilter,
   type InventoryProduct,
 } from "../../model";
-import { useListInventoryQuery, useSetLocationMutation } from "../../inventory.api";
+import {
+  useLazyListInventoryQuery,
+  useListInventoryQuery,
+  useSetLocationMutation,
+} from "../../inventory.api";
 
 const headCell =
   "sticky top-0 z-[1] border-b border-line bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] whitespace-nowrap text-muted uppercase";
@@ -51,27 +57,32 @@ const FILTERS: { id: InventoryFilter; label: string }[] = [
   { id: "low", label: "Low stock" },
   { id: "out", label: "Out of stock" },
   { id: "expiring", label: "Expiring" },
+  { id: "expired", label: "Expired" },
 ];
+
+const FILTER_IDS: InventoryFilter[] = ["all", "low", "out", "expiring", "expired"];
 
 export function InventoryPage() {
   const navigate = useNavigate();
+  const register = useRegisterQuery();
   const { session } = useAuthState();
   const access = inventoryAccess(session?.account.pharmacyRole, session?.account.permissions);
-  const [filter, setFilter] = useState<InventoryFilter>("all");
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const stored = register.get("filter");
+  const filter: InventoryFilter = FILTER_IDS.includes(stored as InventoryFilter)
+    ? (stored as InventoryFilter)
+    : "all";
   const [selected, setSelected] = useState<string | null>(null);
-  const needle = useDebounced(query.trim());
+  const needle = useDebounced(register.q.trim());
   const list = useListInventoryQuery({
-    page,
+    page: register.page,
     size: 25,
     q: needle || undefined,
     filter: filter === "all" ? undefined : filter,
   });
+  const [loadInventory, exportState] = useLazyListInventoryQuery();
   const productCache = useRef<InventoryProduct[]>([]);
   if (list.data?.products) productCache.current = list.data.products;
   const products = list.data?.products ?? productCache.current;
-  const visible = products.filter((product) => matches(product, filter, query));
   const summary = list.data?.summary;
   const stockUnits =
     summary?.unitCount ?? products.reduce((sum, product) => sum + units(product), 0);
@@ -83,14 +94,33 @@ export function InventoryPage() {
   const retailValue = summary
     ? money(summary.retail)
     : products.reduce((sum, product) => sum + retail(product), 0);
-  const lowAndOut = summary
-    ? summary.lowCount + summary.outCount
-    : products.filter((product) => isLow(product) || isOut(product)).length;
+  const lowAndOut =
+    summary?.lowCount ??
+    products.filter((product) => units(product) <= product.reorderLevel).length;
   const expiringCount =
     summary?.expiringCount ?? products.filter((product) => isExpiring(product)).length;
   const expiringValue = summary
     ? money(summary.expiringCost)
     : products.reduce((sum, product) => sum + expiringCost(product), 0);
+
+  async function exportFiltered() {
+    const collected: InventoryProduct[] = [];
+    let pageNo = 1;
+    let total = Number.POSITIVE_INFINITY;
+    while (collected.length < total) {
+      const page = await loadInventory({
+        page: pageNo,
+        size: 100,
+        q: needle || undefined,
+        filter: filter === "all" ? undefined : filter,
+      }).unwrap();
+      collected.push(...page.products);
+      total = page.total ?? collected.length;
+      if (page.products.length === 0) break;
+      pageNo += 1;
+    }
+    download(inventoryCsv(collected));
+  }
 
   if (list.isLoading && !list.data && productCache.current.length === 0) {
     return <Text className="text-[13.5px] text-muted">Loading inventory</Text>;
@@ -105,7 +135,12 @@ export function InventoryPage() {
         </Box>
         <Box className="flex gap-2">
           {access.export ? (
-            <Button type="button" variant="ghost" onClick={() => download(inventoryCsv(visible))}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={exportState.isFetching}
+              onClick={() => void exportFiltered()}
+            >
               Export
             </Button>
           ) : null}
@@ -116,7 +151,7 @@ export function InventoryPage() {
           ) : null}
         </Box>
       </Box>
-      <Box className="mb-4 grid gap-3 md:grid-cols-5">
+      <Box className="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-3">
         <Stat label="Total SKUs" value={String(skuCount)} hint={`${stockUnits} units`} />
         <Stat label="Stock value at cost" value={inr(costValue)} />
         <Stat label="Retail value at MRP" value={inr(retailValue)} />
@@ -124,45 +159,39 @@ export function InventoryPage() {
           label="Low and out of stock"
           value={String(lowAndOut)}
           hint={`${outCount} out of stock`}
-          onClick={() => {
-            setFilter("low");
-            setPage(1);
-          }}
+          onClick={() => register.setQuery({ filter: "low" })}
         />
         <Stat
           label="Expiring within 4 months"
           value={String(expiringCount)}
           hint={inr(expiringValue)}
-          onClick={() => {
-            setFilter("expiring");
-            setPage(1);
-          }}
+          onClick={() => register.setQuery({ filter: "expiring" })}
         />
       </Box>
-      <Box className="mb-3 flex flex-wrap items-center gap-2">
-        {FILTERS.map((item) => (
-          <Button
-            key={item.id}
-            type="button"
-            variant={filter === item.id ? "primary" : "ghost"}
-            onClick={() => {
-              setFilter(item.id);
-              setPage(1);
-            }}
-          >
-            {item.label}
-          </Button>
-        ))}
-        <Input
-          aria-label="Search inventory"
-          placeholder="Search by name, composition, manufacturer…"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(1);
-          }}
-        />
-      </Box>
+      <Stack direction="row" align="end" wrap className="mb-3 gap-3">
+        <FilterField label="Stock">
+          <Stack direction="row" wrap className="gap-2">
+            {FILTERS.map((item) => (
+              <Button
+                key={item.id}
+                type="button"
+                variant={filter === item.id ? "primary" : "ghost"}
+                onClick={() => register.setQuery({ filter: item.id === "all" ? null : item.id })}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </Stack>
+        </FilterField>
+        <FilterField label="Search" className="w-[280px]">
+          <Input
+            aria-label="Search inventory"
+            placeholder="Name, batch, rack, manufacturer…"
+            value={register.q}
+            onChange={(event) => register.setQuery({ q: event.target.value })}
+          />
+        </FilterField>
+      </Stack>
       <Box className="overflow-hidden rounded-md border border-line bg-paper shadow-sm">
         <Box className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-0 text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
@@ -184,7 +213,7 @@ export function InventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((product) => {
+              {products.map((product) => {
                 const shown = product.batches.filter((batch) => batch.qty > 0);
                 const expiry = nearestExpiry(product);
                 const subtitle = [tableComposition(product.composition), product.marketer]
@@ -225,16 +254,26 @@ export function InventoryPage() {
                     >
                       {units(product)}
                     </td>
-                    <td className={cn(bodyCell, "text-right font-bold")}>
+                    <td
+                      className={cn(
+                        bodyCell,
+                        "text-right font-bold whitespace-nowrap tabular-nums",
+                      )}
+                    >
                       {shown[0] ? inr(Number(shown[0].mrp)) : "—"}
                     </td>
-                    <td className={cn(bodyCell, "text-right font-semibold")}>
+                    <td
+                      className={cn(
+                        bodyCell,
+                        "text-right font-semibold whitespace-nowrap tabular-nums",
+                      )}
+                    >
                       {inr(cost(product))}
                     </td>
                   </tr>
                 );
               })}
-              {visible.length === 0 ? (
+              {products.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={bodyCell}>
                     <Text className="px-3.5 py-8 text-center text-[13px] text-muted">
@@ -247,10 +286,10 @@ export function InventoryPage() {
           </table>
         </Box>
         <PageBar
-          page={list.data?.page ?? page}
+          page={list.data?.page ?? register.page}
           size={list.data?.size ?? 25}
-          total={list.data?.total ?? visible.length}
-          onPage={setPage}
+          total={list.data?.total ?? products.length}
+          onPage={(next) => register.setQuery({ page: next })}
         />
       </Box>
       {selected ? (
@@ -280,10 +319,13 @@ function Stat({
   onClick?: () => void;
 }) {
   return (
-    <Box className="rounded-md border border-line bg-paper p-4" onClick={onClick}>
-      <Text className="text-[11px] font-bold text-muted uppercase">{label}</Text>
-      <Text className="text-[22px] font-bold text-dark">{value}</Text>
-      {hint ? <Text className="text-[12px] text-muted">{hint}</Text> : null}
+    <Box
+      className="min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-paper p-4"
+      onClick={onClick}
+    >
+      <CardLine className="text-[11px] font-bold text-muted uppercase">{label}</CardLine>
+      <FitText className="text-[22px] font-bold text-dark">{value}</FitText>
+      {hint ? <CardLine className="text-[12px] text-muted">{hint}</CardLine> : null}
     </Box>
   );
 }
@@ -363,7 +405,7 @@ export function ProductDialog({
             </Heading>
             {isOut(product) || isLow(product) ? (
               <Text className="mt-1  flex w-fit rounded-full bg-rose-bg px-[9px] py-[3px] text-[11px] font-bold text-rose">
-                {isOut(product) ? "Out of stock — reorder now" : "Low stock — value under ₹1,000"}
+                {isOut(product) ? "Out of stock — reorder now" : "Low stock — at or under reorder"}
               </Text>
             ) : null}
           </Box>
@@ -468,7 +510,7 @@ export function ProductDialog({
                       <td className={cn(footCell, "text-right tabular-nums")}>{stock}</td>
                       <td className={footCell} />
                       <td className={footCell} />
-                      <td className={cn(footCell, "text-right tabular-nums")}>
+                      <td className={cn(footCell, "text-right whitespace-nowrap tabular-nums")}>
                         {inr(cost(product))}
                       </td>
                     </tr>
@@ -498,13 +540,28 @@ export function ProductDialog({
                       <td className={cn(bodyCell, "text-right font-bold tabular-nums")}>
                         {batch.qty}
                       </td>
-                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                      <td
+                        className={cn(
+                          bodyCell,
+                          "text-right font-semibold whitespace-nowrap tabular-nums",
+                        )}
+                      >
                         {inr(Number(batch.rate))}
                       </td>
-                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                      <td
+                        className={cn(
+                          bodyCell,
+                          "text-right font-semibold whitespace-nowrap tabular-nums",
+                        )}
+                      >
                         {inr(Number(batch.mrp))}
                       </td>
-                      <td className={cn(bodyCell, "text-right font-semibold tabular-nums")}>
+                      <td
+                        className={cn(
+                          bodyCell,
+                          "text-right font-semibold whitespace-nowrap tabular-nums",
+                        )}
+                      >
                         {inr(Number(batch.rate) * batch.qty)}
                       </td>
                     </tr>
@@ -550,7 +607,12 @@ export function ProductDialog({
                       <td className={cn(bodyCell, "whitespace-nowrap")}>
                         {row.invoiceDate || "—"}
                       </td>
-                      <td className={cn(bodyCell, "text-right font-bold tabular-nums")}>
+                      <td
+                        className={cn(
+                          bodyCell,
+                          "text-right font-bold whitespace-nowrap tabular-nums",
+                        )}
+                      >
                         {inr(Number(row.total))}
                       </td>
                     </tr>

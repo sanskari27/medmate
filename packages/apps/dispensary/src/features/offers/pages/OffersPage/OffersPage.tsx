@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { FilterField } from "@/components/ui/FilterField";
 import { Heading } from "@/components/ui/Heading";
 import { IconOffer, IconPlus, IconTag } from "@/components/ui/Icon";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { problemMessage, useAuthState } from "@/features/authentication";
@@ -32,7 +35,16 @@ export function OffersPage() {
   const [removeOffer, removeState] = useDeleteOfferMutation();
   const [dialog, setDialog] = useState<Offer | "create" | null>(null);
   const [removing, setRemoving] = useState<Offer | null>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<"all" | "active" | "paused">("all");
   const offers = list.data?.offers ?? [];
+  const needle = query.trim().toLowerCase();
+  const shown = offers.filter((offer) => {
+    if (status === "active" && !offer.active) return false;
+    if (status === "paused" && offer.active) return false;
+    if (!needle) return true;
+    return `${offer.title} ${offer.code}`.toLowerCase().includes(needle);
+  });
   const saving = createState.isLoading || updateState.isLoading;
   const saveError = dialog === "create" ? createState : updateState;
   const dialogError = saveError.isError
@@ -65,11 +77,31 @@ export function OffersPage() {
 
   return (
     <Box className="mx-auto max-w-[1680px]">
-      <Stack direction="row" align="center" className="mb-4 flex-wrap gap-2.5">
+      <Stack direction="row" align="end" wrap className="mb-4 gap-3">
         <Heading level={2} className="text-[16px]">
           Active & scheduled offers
         </Heading>
         <Box className="flex-1" />
+        <FilterField label="Search" className="w-[240px]">
+          <Input
+            aria-label="Search offers"
+            placeholder="Search title or code…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </FilterField>
+        <FilterField label="Status">
+          <Select
+            aria-label="Offer status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value as "all" | "active" | "paused")}
+            className="min-w-[140px]"
+          >
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+          </Select>
+        </FilterField>
         {access.create ? (
           <Button type="button" onClick={() => setDialog("create")}>
             <IconPlus size={16} /> Create offer
@@ -94,9 +126,12 @@ export function OffersPage() {
           </Box>
         </Box>
       ) : null}
-      {offers.length > 0 ? (
+      {offers.length > 0 && shown.length === 0 ? (
+        <Text className="text-[13.5px] text-muted">No offers match this filter.</Text>
+      ) : null}
+      {shown.length > 0 ? (
         <Box className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] gap-4">
-          {offers.map((offer) => (
+          {shown.map((offer) => (
             <OfferCard
               key={offer.id}
               offer={offer}

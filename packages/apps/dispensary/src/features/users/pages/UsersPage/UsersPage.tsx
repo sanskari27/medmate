@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
 import { Heading } from "@/components/ui/Heading";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
@@ -55,7 +56,7 @@ export function UsersPage() {
 
   return (
     <Box className="mx-auto max-w-[1680px]">
-      <Box className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
+      <Box className="mb-[22px] grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
         <StatCard label="Team members" value={String(rows.length)} hint={`${active} active`} />
         <StatCard label="Login enabled" value={String(withPin)} hint="have a PIN" />
       </Box>
@@ -163,10 +164,12 @@ export function UsersPage() {
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <Box className="rounded-md border border-line bg-paper p-4 shadow-sm">
-      <Text className="text-[11px] font-bold tracking-[0.08em] text-muted uppercase">{label}</Text>
-      <Text className="mt-1 font-display text-[26px] font-extrabold text-ink">{value}</Text>
-      <Text className="text-[12px] text-muted">{hint}</Text>
+    <Box className="min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-paper p-4 shadow-sm">
+      <CardLine className="text-[11px] font-bold tracking-[0.08em] text-muted uppercase">
+        {label}
+      </CardLine>
+      <FitText className="mt-1 font-display text-[26px] font-extrabold text-ink">{value}</FitText>
+      <CardLine className="text-[12px] text-muted">{hint}</CardLine>
     </Box>
   );
 }

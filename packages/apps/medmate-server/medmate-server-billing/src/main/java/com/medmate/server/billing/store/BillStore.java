@@ -3,11 +3,13 @@ package com.medmate.server.billing.store;
 import com.medmate.server.billing.BillRules;
 import com.medmate.server.billing.SaleReturnRules;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -224,6 +226,7 @@ public class BillStore {
             String invoiceNumber,
             String patientName,
             String patientPhone,
+            String payMode,
             Instant recordedAt,
             int items,
             BigDecimal amount) {}
@@ -232,25 +235,34 @@ public class BillStore {
 
     public record SaleMonth(BigDecimal sales, int saleCount, BigDecimal returned, int returnCount) {}
 
-    public SalePage salePage(UUID pharmacyId, String pattern, int limit, int offset) {
-        int total = jdbc.sql("SELECT COUNT(*) FROM (" + saleUnion() + ") rows " + saleMatch())
-                .param("pharmacy", pharmacyId)
-                .param("pattern", pattern)
+    public SalePage salePage(
+            UUID pharmacyId, String pattern, String type, LocalDate from, LocalDate to, int limit, int offset) {
+        String counted = "SELECT COUNT(*) FROM (" + saleUnion() + ") rows " + saleMatch();
+        int total = saleQuery(counted, pharmacyId, pattern, type, from, to)
                 .query(Integer.class)
                 .single();
-        List<SaleListRow> rows = jdbc.sql(
-                        "SELECT id, type, invoice_number, patient_name, patient_phone, recorded_at, items, amount FROM ("
-                                + saleUnion()
-                                + ") rows "
-                                + saleMatch()
-                                + " ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset")
-                .param("pharmacy", pharmacyId)
-                .param("pattern", pattern)
+        String listed =
+                "SELECT id, type, invoice_number, patient_name, patient_phone, pay_mode, recorded_at, items, amount FROM ("
+                        + saleUnion()
+                        + ") rows "
+                        + saleMatch()
+                        + " ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset";
+        List<SaleListRow> rows = saleQuery(listed, pharmacyId, pattern, type, from, to)
                 .param("limit", limit)
                 .param("offset", offset)
                 .query(this::saleListRow)
                 .list();
         return new SalePage(rows, total);
+    }
+
+    private JdbcClient.StatementSpec saleQuery(
+            String sql, UUID pharmacyId, String pattern, String type, LocalDate from, LocalDate to) {
+        return jdbc.sql(sql)
+                .param("pharmacy", pharmacyId)
+                .param("pattern", pattern)
+                .param("type", type == null ? "" : type)
+                .param("from", from == null ? null : Date.valueOf(from), Types.DATE)
+                .param("to", to == null ? null : Date.valueOf(to), Types.DATE);
     }
 
     public SaleMonth saleMonth(UUID pharmacyId, Instant start, Instant end) {
@@ -340,14 +352,14 @@ public class BillStore {
     private static String saleUnion() {
         return """
                 SELECT b.number AS id, 'sale' AS type, b.number AS invoice_number, b.patient_name,
-                       b.patient_phone, b.sold_at AS recorded_at,
+                       b.patient_phone, b.pay_mode, b.sold_at AS recorded_at,
                        COALESCE((SELECT SUM(qty) FROM bill_line l
                                  WHERE l.pharmacy_id = b.pharmacy_id AND l.bill_number = b.number), 0) AS items,
                        b.payable AS amount
                 FROM bill b
                 WHERE b.pharmacy_id = :pharmacy
                 UNION ALL
-                SELECT r.code, 'return', r.bill_number, b.patient_name, b.patient_phone, r.recorded_at,
+                SELECT r.code, 'return', r.bill_number, b.patient_name, b.patient_phone, b.pay_mode, r.recorded_at,
                        COALESCE((SELECT SUM(qty) FROM sale_return_line l
                                  WHERE l.pharmacy_id = r.pharmacy_id AND l.return_code = r.code), 0),
                        r.amount
@@ -357,7 +369,7 @@ public class BillStore {
                 """;
     }
 
-    private static String saleMatch() {
+    static String saleMatch() {
         return """
                 WHERE (
                   CAST(:pattern AS text) = ''
@@ -366,7 +378,20 @@ public class BillStore {
                   OR lower(patient_name) LIKE :pattern ESCAPE '\\'
                   OR lower(patient_phone) LIKE :pattern ESCAPE '\\'
                   OR lower(type) LIKE :pattern ESCAPE '\\'
+                  OR EXISTS (
+                    SELECT 1 FROM bill_line l
+                    WHERE l.pharmacy_id = :pharmacy
+                      AND l.bill_number = CASE WHEN type = 'sale' THEN id ELSE invoice_number END
+                      AND (
+                        lower(l.name) LIKE :pattern ESCAPE '\\'
+                        OR lower(l.product_id) LIKE :pattern ESCAPE '\\'
+                        OR lower(l.batch_no) LIKE :pattern ESCAPE '\\'
+                      )
+                  )
                 )
+                AND (CAST(:type AS text) = '' OR type = :type)
+                AND (CAST(:from AS date) IS NULL OR (recorded_at AT TIME ZONE 'Asia/Kolkata')::date >= CAST(:from AS date))
+                AND (CAST(:to AS date) IS NULL OR (recorded_at AT TIME ZONE 'Asia/Kolkata')::date <= CAST(:to AS date))
                 """;
     }
 
@@ -377,6 +402,7 @@ public class BillStore {
                 row.getString("invoice_number"),
                 row.getString("patient_name"),
                 row.getString("patient_phone"),
+                row.getString("pay_mode"),
                 row.getTimestamp("recorded_at").toInstant(),
                 row.getInt("items"),
                 row.getBigDecimal("amount"));

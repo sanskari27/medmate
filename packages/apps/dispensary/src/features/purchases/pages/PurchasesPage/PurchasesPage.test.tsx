@@ -83,6 +83,7 @@ function json(body: unknown, status = 200) {
 function renderPage(
   role: Session["account"]["pharmacyRole"] = "owner",
   permissions: string[] = [],
+  path = "/purchases",
 ) {
   writeSession({ ...session, account: { ...session.account, pharmacyRole: role, permissions } });
   vi.stubGlobal(
@@ -124,13 +125,16 @@ function renderPage(
           signal?.addEventListener("abort", abort, { once: true });
         });
       }
+      if (url.includes("/pharmacy/purchases/")) {
+        return json({ purchase: purchases.purchases[0] });
+      }
       if (url.includes("/pharmacy/distributors")) return json({ distributors: [] });
       return json(purchases);
     }),
   );
   return render(
     <Provider store={createAppStore()}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[path]}>
         <PurchasesPage />
       </MemoryRouter>
     </Provider>,
@@ -204,6 +208,13 @@ NOPE,B2,2027-06,1,0,5,10,99
     });
     expect(searches).toHaveLength(2);
     expect(searches[1]?.url).toContain("q=cro");
+  });
+
+  it("reopens a purchase from the URL", async () => {
+    renderPage("owner", [], "/purchases?q=INV-1&from=2025-05-13&id=PUR-001");
+    expect(await screen.findByLabelText("Search purchases")).toHaveProperty("value", "INV-1");
+    expect(screen.getByLabelText("From")).toHaveProperty("value", "2025-05-13");
+    expect(await screen.findByRole("dialog", { name: "PUR-001 receipt" })).toBeTruthy();
   });
 
   it("hides Create return without purchases:return", async () => {

@@ -64,6 +64,7 @@ export const EXPENSE_PRESETS = [
   { key: "this-fy", label: "Current Fiscal Year" },
   { key: "prev-fy", label: "Previous Fiscal Year" },
   { key: "last-365", label: "Last 365 Days" },
+  { key: "all", label: "All" },
   { key: "custom", label: "Custom" },
 ] as const;
 
@@ -161,6 +162,8 @@ export function expenseRange(preset: ExpensePreset, today: string, customFrom = 
       return fiscal((month >= 4 ? year : year - 1) - 1, label);
     case "last-365":
       return { from: shift(today, -364), to: today, label };
+    case "all":
+      return { from: "2000-01-01", to: today, label };
     case "custom": {
       const from = customFrom || shift(today, -29);
       const to = customTo || today;

@@ -423,7 +423,7 @@ export function PurchaseForm({
                         </select>
                       </td>
                       <td
-                        className={`${cell} text-right text-[12.5px] font-bold text-dark tabular-nums`}
+                        className={`${cell} text-right text-[12.5px] font-bold whitespace-nowrap text-dark tabular-nums`}
                       >
                         {amount == null ? "—" : inr2(amount)}
                       </td>
@@ -464,19 +464,22 @@ export function PurchaseForm({
             <Text as="span" className="text-[13px] text-muted">
               {summary.units} units
             </Text>
-            <Text as="span" className="text-[13px] text-muted">
+            <Text as="span" className="text-[13px] whitespace-nowrap text-muted">
               Taxable{" "}
-              <Text as="span" className="font-bold text-ink">
+              <Text as="span" className="font-bold whitespace-nowrap text-ink tabular-nums">
                 {inr2(summary.taxable)}
               </Text>
             </Text>
-            <Text as="span" className="text-[13px] text-muted">
+            <Text as="span" className="text-[13px] whitespace-nowrap text-muted">
               GST{" "}
-              <Text as="span" className="font-bold text-ink">
+              <Text as="span" className="font-bold whitespace-nowrap text-ink tabular-nums">
                 {inr2(summary.gst)}
               </Text>
             </Text>
-            <Text as="span" className="text-[18px] font-bold text-dark">
+            <Text
+              as="span"
+              className="text-[18px] font-bold whitespace-nowrap text-dark tabular-nums"
+            >
               Bill {inr2(summary.taxable + summary.gst)}
             </Text>
             <Button type="button" variant="ghost" onClick={onClose}>

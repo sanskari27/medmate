@@ -476,23 +476,59 @@ public class StockStore {
 
     public record MonthTotals(int purchases, int purchaseCount, int returns, int returnCount) {}
 
-    public DocumentPage documentPage(UUID pharmacyId, String productId, int limit, int offset) {
+    public DocumentPage documentPage(
+            UUID pharmacyId,
+            String productId,
+            String pattern,
+            String distributorId,
+            LocalDate from,
+            LocalDate to,
+            int limit,
+            int offset) {
         String product = productId == null ? "" : productId.trim();
-        int total = jdbc.sql("SELECT COUNT(*) FROM (" + documentUnion() + ") docs")
-                .param("id", pharmacyId)
-                .param("product", product)
+        String distributor = distributorId == null ? "" : distributorId.trim();
+        int total = documentQuery(
+                        "SELECT COUNT(*) FROM (" + documentUnion() + ") docs",
+                        pharmacyId,
+                        product,
+                        pattern,
+                        distributor,
+                        from,
+                        to)
                 .query(Integer.class)
                 .single();
-        List<DocumentKey> keys = jdbc.sql("SELECT id, type FROM ("
-                        + documentUnion()
-                        + ") docs ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset")
-                .param("id", pharmacyId)
-                .param("product", product)
+        List<DocumentKey> keys = documentQuery(
+                        "SELECT id, type FROM ("
+                                + documentUnion()
+                                + ") docs ORDER BY recorded_at DESC, id DESC LIMIT :limit OFFSET :offset",
+                        pharmacyId,
+                        product,
+                        pattern,
+                        distributor,
+                        from,
+                        to)
                 .param("limit", limit)
                 .param("offset", offset)
                 .query((row, number) -> new DocumentKey(row.getString("id"), row.getString("type")))
                 .list();
         return new DocumentPage(keys, total);
+    }
+
+    private JdbcClient.StatementSpec documentQuery(
+            String sql,
+            UUID pharmacyId,
+            String product,
+            String pattern,
+            String distributor,
+            LocalDate from,
+            LocalDate to) {
+        return jdbc.sql(sql)
+                .param("id", pharmacyId)
+                .param("product", product)
+                .param("pattern", pattern == null ? "" : pattern)
+                .param("distributor", distributor)
+                .param("from", from == null ? null : Date.valueOf(from), Types.DATE)
+                .param("to", to == null ? null : Date.valueOf(to), Types.DATE);
     }
 
     public MonthTotals monthTotals(UUID pharmacyId, Instant start, Instant end) {
@@ -618,11 +654,19 @@ public class StockStore {
     }
 
     public InventoryPage inventoryPage(
-            UUID pharmacyId, String pattern, String exact, String filter, String expiryLimit, int limit, int offset) {
+            UUID pharmacyId,
+            String pattern,
+            String exact,
+            String filter,
+            String expiryLimit,
+            String currentMonth,
+            int limit,
+            int offset) {
         int total = jdbc.sql("SELECT COUNT(*) FROM (" + inventoryFacts(true) + ") facts " + inventoryMatch())
                 .param("id", pharmacyId)
                 .param("pattern", pattern)
                 .param("limitMonth", expiryLimit)
+                .param("currentMonth", currentMonth)
                 .param("filter", filter)
                 .query(Integer.class)
                 .single();
@@ -637,6 +681,7 @@ public class StockStore {
                 .param("pattern", pattern)
                 .param("exact", exact)
                 .param("limitMonth", expiryLimit)
+                .param("currentMonth", currentMonth)
                 .param("filter", filter)
                 .param("limit", limit)
                 .param("offset", offset)
@@ -645,14 +690,14 @@ public class StockStore {
         return new InventoryPage(products, total);
     }
 
-    public InventoryTotals inventoryTotals(UUID pharmacyId, String expiryLimit) {
+    public InventoryTotals inventoryTotals(UUID pharmacyId, String expiryLimit, String currentMonth) {
         return jdbc.sql(
                         """
                         SELECT COUNT(*) AS sku_count,
                                COALESCE(SUM(units), 0) AS unit_count,
                                COALESCE(SUM(cost), 0) AS cost,
                                COALESCE(SUM(retail), 0) AS retail,
-                               COUNT(*) FILTER (WHERE units > 0 AND ROUND(cost) < 1000) AS low_count,
+                               COUNT(*) FILTER (WHERE units <= reorder_level) AS low_count,
                                COUNT(*) FILTER (WHERE units = 0) AS out_count,
                                COUNT(*) FILTER (WHERE expiring) AS expiring_count,
                                COALESCE(SUM(expiring_cost), 0) AS expiring_cost
@@ -662,6 +707,7 @@ public class StockStore {
                                 + ") facts")
                 .param("id", pharmacyId)
                 .param("limitMonth", expiryLimit)
+                .param("currentMonth", currentMonth)
                 .query((row, number) -> new InventoryTotals(
                         row.getInt("sku_count"),
                         row.getLong("unit_count"),
@@ -674,10 +720,11 @@ public class StockStore {
                 .single();
     }
 
-    private static String documentUnion() {
+    static String documentUnion() {
         return """
                 SELECT p.code AS id, 'purchase' AS type, p.recorded_at
                 FROM purchase p
+                JOIN distributor d ON d.pharmacy_id = p.pharmacy_id AND d.code = p.distributor_code
                 WHERE p.pharmacy_id = :id
                   AND (
                     CAST(:product AS text) = ''
@@ -688,9 +735,20 @@ public class StockStore {
                         AND l.product_id = :product
                     )
                   )
+                  AND (CAST(:distributor AS text) = '' OR p.distributor_code = :distributor)
+                  AND (CAST(:from AS date) IS NULL OR p.invoice_date >= CAST(:from AS date))
+                  AND (CAST(:to AS date) IS NULL OR p.invoice_date <= CAST(:to AS date))
+                  AND (
+                    CAST(:pattern AS text) = ''
+                    OR lower(p.code) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.invoice_no, '')) LIKE :pattern ESCAPE '\\'
+                    OR lower(d.name) LIKE :pattern ESCAPE '\\'
+                  )
                 UNION ALL
                 SELECT r.code, 'return', r.recorded_at
                 FROM purchase_return r
+                JOIN purchase p ON p.pharmacy_id = r.pharmacy_id AND p.code = r.purchase_code
+                JOIN distributor d ON d.pharmacy_id = p.pharmacy_id AND d.code = p.distributor_code
                 WHERE r.pharmacy_id = :id
                   AND (
                     CAST(:product AS text) = ''
@@ -706,10 +764,19 @@ public class StockStore {
                         AND l.product_id = :product
                     )
                   )
+                  AND (CAST(:distributor AS text) = '' OR p.distributor_code = :distributor)
+                  AND (CAST(:from AS date) IS NULL OR (r.recorded_at AT TIME ZONE 'Asia/Kolkata')::date >= CAST(:from AS date))
+                  AND (CAST(:to AS date) IS NULL OR (r.recorded_at AT TIME ZONE 'Asia/Kolkata')::date <= CAST(:to AS date))
+                  AND (
+                    CAST(:pattern AS text) = ''
+                    OR lower(r.code) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.invoice_no, '')) LIKE :pattern ESCAPE '\\'
+                    OR lower(d.name) LIKE :pattern ESCAPE '\\'
+                  )
                 """;
     }
 
-    private static String inventoryFacts(boolean searchable) {
+    static String inventoryFacts(boolean searchable) {
         String search = searchable
                 ? """
                   AND (
@@ -718,6 +785,14 @@ public class StockStore {
                     OR lower(COALESCE(p.composition, '')) LIKE :pattern ESCAPE '\\'
                     OR lower(COALESCE(p.marketer, '')) LIKE :pattern ESCAPE '\\'
                     OR lower(p.product_id) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.rack, '')) LIKE :pattern ESCAPE '\\'
+                    OR lower(COALESCE(p.rack_alt, '')) LIKE :pattern ESCAPE '\\'
+                    OR EXISTS (
+                      SELECT 1 FROM inventory_batch found
+                      WHERE found.pharmacy_id = p.pharmacy_id
+                        AND found.product_id = p.product_id
+                        AND lower(found.batch_no) LIKE :pattern ESCAPE '\\'
+                    )
                   )
                 """
                 : "";
@@ -727,8 +802,9 @@ public class StockStore {
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.qty ELSE 0 END), 0) AS units,
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.rate * b.qty ELSE 0 END), 0) AS cost,
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.mrp * b.qty ELSE 0 END), 0) AS retail,
-                       COALESCE(SUM(CASE WHEN b.qty > 0 AND b.expiry <= :limitMonth THEN b.rate * b.qty ELSE 0 END), 0) AS expiring_cost,
-                       COALESCE(BOOL_OR(b.qty > 0 AND b.expiry <= :limitMonth), FALSE) AS expiring
+                       COALESCE(SUM(CASE WHEN b.qty > 0 AND b.expiry >= :currentMonth AND b.expiry <= :limitMonth THEN b.rate * b.qty ELSE 0 END), 0) AS expiring_cost,
+                       COALESCE(BOOL_OR(b.qty > 0 AND b.expiry >= :currentMonth AND b.expiry <= :limitMonth), FALSE) AS expiring,
+                       COALESCE(BOOL_OR(b.qty > 0 AND b.expiry <> '' AND b.expiry < :currentMonth), FALSE) AS expired
                 FROM inventory_product p
                 LEFT JOIN inventory_batch b
                   ON b.pharmacy_id = p.pharmacy_id AND b.product_id = p.product_id
@@ -741,12 +817,13 @@ public class StockStore {
                 """;
     }
 
-    private static String inventoryMatch() {
+    static String inventoryMatch() {
         return """
                 WHERE :filter = 'all'
-                   OR (:filter = 'low' AND units > 0 AND ROUND(cost) < 1000)
+                   OR (:filter = 'low' AND units <= reorder_level)
                    OR (:filter = 'out' AND units = 0)
                    OR (:filter = 'expiring' AND expiring)
+                   OR (:filter = 'expired' AND expired)
                 """;
     }
 

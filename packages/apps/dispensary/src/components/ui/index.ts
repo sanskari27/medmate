@@ -1,9 +1,12 @@
 export { Box } from "./Box";
 export { Button } from "./Button";
+export { CardLine, FitText } from "./FitText";
 export { Field } from "./Field";
+export { FilterField } from "./FilterField";
 export { Heading } from "./Heading";
 export { Input } from "./Input";
 export { Label } from "./Label";
 export { PageBar } from "./PageBar";
+export { Select } from "./Select";
 export { Stack } from "./Stack";
 export { Text } from "./Text";

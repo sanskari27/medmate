@@ -3,6 +3,9 @@ package com.medmate.server.stock.web;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +25,7 @@ import com.medmate.server.shared.error.ApiExceptionHandler;
 import com.medmate.server.stock.MedicineCatalog;
 import com.medmate.server.stock.store.StockStore;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -83,7 +87,15 @@ class StockControllerTest {
 
     @Test
     void purchaseStatsStayWithThePage() throws Exception {
-        when(stock.documentPage(any(), any(), anyInt(), anyInt()))
+        when(stock.documentPage(
+                        any(),
+                        any(),
+                        anyString(),
+                        anyString(),
+                        nullable(LocalDate.class),
+                        nullable(LocalDate.class),
+                        anyInt(),
+                        anyInt()))
                 .thenReturn(new StockStore.DocumentPage(List.of(), 4));
         when(stock.monthTotals(any(), any(), any())).thenReturn(new StockStore.MonthTotals(12, 1, 0, 0));
         when(distributors.outstanding(any())).thenReturn(9L);
@@ -96,10 +108,42 @@ class StockControllerTest {
     }
 
     @Test
+    void aPurchaseInvoiceSearchReachesTheStore() throws Exception {
+        when(stock.documentPage(
+                        any(),
+                        any(),
+                        anyString(),
+                        anyString(),
+                        nullable(LocalDate.class),
+                        nullable(LocalDate.class),
+                        anyInt(),
+                        anyInt()))
+                .thenReturn(new StockStore.DocumentPage(List.of(), 1));
+        when(stock.monthTotals(any(), any(), any())).thenReturn(new StockStore.MonthTotals(0, 0, 0, 0));
+        when(distributors.outstanding(any())).thenReturn(0L);
+        mvc.perform(get("/pharmacy/purchases")
+                        .param("q", "H00-00")
+                        .param("from", "2025-05-13")
+                        .principal(staff("purchases:read")))
+                .andExpect(status().isOk());
+        verify(stock)
+                .documentPage(
+                        eq(PHARMACY),
+                        isNull(),
+                        eq("%h00-00%"),
+                        eq(""),
+                        eq(LocalDate.parse("2025-05-13")),
+                        isNull(),
+                        eq(25),
+                        eq(0));
+    }
+
+    @Test
     void billingCanReadAPageOfInventory() throws Exception {
-        when(stock.inventoryPage(any(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt()))
+        when(stock.inventoryPage(
+                        any(), anyString(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt()))
                 .thenReturn(new StockStore.InventoryPage(List.of(), 2));
-        when(stock.inventoryTotals(any(), anyString()))
+        when(stock.inventoryTotals(any(), anyString(), anyString()))
                 .thenReturn(new StockStore.InventoryTotals(
                         2, 0, BigDecimal.ZERO, BigDecimal.ZERO, 0, 2, 0, BigDecimal.ZERO));
         when(stock.productsIn(any(), any())).thenReturn(List.of());

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { KeyboardEvent, RefObject } from "react";
 import type { InventoryProduct } from "@/features/inventory";
 import { Box } from "@/components/ui/Box";
@@ -9,6 +10,7 @@ export function BillingSearch({
   query,
   highlight,
   results,
+  total,
   scanRef,
   onQuery,
   onKeyDown,
@@ -18,6 +20,7 @@ export function BillingSearch({
   query: string;
   highlight: number;
   results: InventoryProduct[];
+  total: number;
   scanRef: RefObject<HTMLInputElement | null>;
   onQuery: (value: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -76,8 +79,19 @@ export function BillingSearch({
           className="absolute top-full right-0 left-0 z-20 mt-1 max-h-64 overflow-auto rounded-md border border-line bg-paper shadow-pop"
         >
           <Box className="sticky top-0 flex items-center justify-between border-b border-line bg-canvas px-2.5 py-1 text-[10px] font-bold tracking-wide text-faint uppercase">
-            <span>Matches</span>
-            <span>↑↓ move · Enter add · Esc close</span>
+            <span>
+              {results.length} of {total}
+            </span>
+            {total > results.length ? (
+              <Link
+                to={`/inventory?q=${encodeURIComponent(query)}`}
+                className="font-bold text-dark normal-case"
+              >
+                See all in inventory
+              </Link>
+            ) : (
+              <span>↑↓ move · Enter add · Esc close</span>
+            )}
           </Box>
           {results.map((product, index) => {
             const hint = hintBatch(product);
@@ -100,7 +114,7 @@ export function BillingSearch({
                 <Text as="span" className="truncate text-[13px] font-bold">
                   {product.name}
                 </Text>
-                <Text as="span" className="font-mono text-[12px] tabular-nums">
+                <Text as="span" className="font-mono text-[12px] whitespace-nowrap tabular-nums">
                   {hint ? rupee(Number(hint.mrp)) : "—"}
                 </Text>
                 <Text as="span" className="col-span-2 truncate text-[11px] text-muted">

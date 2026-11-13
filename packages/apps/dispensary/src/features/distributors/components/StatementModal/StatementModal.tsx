@@ -1,6 +1,9 @@
 import { useState, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
+import { DateFields } from "@/components/ui/DateFields";
 import { PageBar } from "@/components/ui/PageBar";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
@@ -27,6 +30,12 @@ export function StatementModal({
   page = 1,
   size = 25,
   total,
+  purchaseTotal,
+  paymentTotal,
+  returnTotal,
+  from = "",
+  to = "",
+  onRange,
   onPage,
   onClose,
   onPay,
@@ -38,6 +47,12 @@ export function StatementModal({
   page?: number;
   size?: number;
   total?: number;
+  purchaseTotal?: number;
+  paymentTotal?: number;
+  returnTotal?: number;
+  from?: string;
+  to?: string;
+  onRange?: (from: string, to: string) => void;
   onPage?: (page: number) => void;
   onClose: () => void;
   onPay: (payment: PaymentPayload) => void;
@@ -45,7 +60,13 @@ export function StatementModal({
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<PaymentMode>("cash");
   const [note, setNote] = useState("");
-  const totals = ledgerTotals(distributor);
+  const pageTotals = ledgerTotals(distributor);
+  const totals = {
+    opening: pageTotals.opening,
+    purchases: purchaseTotal ?? pageTotals.purchases,
+    payments: paymentTotal ?? pageTotals.payments,
+    returns: returnTotal ?? pageTotals.returns,
+  };
   const rows = statementRows(distributor);
   const parsed = Number(amount);
   const payable =
@@ -81,7 +102,15 @@ export function StatementModal({
           </Button>
         </Stack>
         <Box className="overflow-y-auto px-5 py-4">
-          <Box className="mb-4 grid grid-cols-2 gap-2.5 md:grid-cols-5">
+          <Stack direction="row" align="end" wrap className="mb-4 gap-3">
+            <DateFields
+              from={from}
+              to={to}
+              onFrom={(value) => onRange?.(value, to)}
+              onTo={(value) => onRange?.(from, value)}
+            />
+          </Stack>
+          <Box className="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,140px),1fr))] gap-2.5">
             <Figure label="Opening" value={inr(totals.opening)} />
             <Figure label="Purchases" value={inr(totals.purchases)} />
             <Figure label="Payments" value={inr(totals.payments)} />
@@ -121,11 +150,21 @@ export function StatementModal({
                       <td className="border-t border-line px-3.5 py-3 text-muted">{row.when}</td>
                       <td className="border-t border-line px-3.5 py-3 font-semibold">{row.type}</td>
                       <td className="border-t border-line px-3.5 py-3 font-mono text-[12px]">
-                        {row.reference}
+                        {row.href ? (
+                          <Button variant="link" asChild>
+                            <Link to={row.href}>{row.reference}</Link>
+                          </Button>
+                        ) : (
+                          row.reference
+                        )}
                       </td>
                       <td className="border-t border-line px-3.5 py-3 text-muted">{row.details}</td>
-                      <td className="border-t border-line px-3.5 py-3 font-bold">{row.amount}</td>
-                      <td className="border-t border-line px-3.5 py-3 font-bold">{row.balance}</td>
+                      <td className="border-t border-line px-3.5 py-3 text-right font-bold whitespace-nowrap tabular-nums">
+                        {row.amount}
+                      </td>
+                      <td className="border-t border-line px-3.5 py-3 text-right font-bold whitespace-nowrap tabular-nums">
+                        {row.balance}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -209,9 +248,9 @@ function Figure({
   tone?: string;
 }) {
   return (
-    <Box className="rounded-[10px] border border-line bg-paper px-3.5 py-2">
-      <Text className="text-[12.5px] text-muted">{label}</Text>
-      <Text className={`mt-px block font-display text-[15px] font-bold ${tone}`}>{value}</Text>
+    <Box className="min-w-0 max-w-full overflow-hidden rounded-[10px] border border-line bg-paper px-3.5 py-2">
+      <CardLine className="text-[12.5px] text-muted">{label}</CardLine>
+      <FitText className={`mt-px font-display text-[15px] font-bold ${tone}`}>{value}</FitText>
     </Box>
   );
 }

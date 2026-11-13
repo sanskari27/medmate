@@ -6,6 +6,7 @@ import com.medmate.server.distributors.store.DistributorStore;
 import com.medmate.server.identity.access.Access;
 import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -37,17 +38,24 @@ public class DistributorService {
         return new DistributorViews.ListResponse(cards);
     }
 
-    public DistributorViews.PaymentList payments(AccountPrincipal actor, String code, PageQuery page) {
+    public DistributorViews.PaymentList payments(AccountPrincipal actor, String code, PageQuery page, DayRange range) {
         require(actor, DistributorRules.READ, "Distributors cannot be read");
         distributors.find(actor.pharmacyId(), code).orElseThrow(DistributorService::missing);
         List<DistributorViews.TransactionView> payments = new ArrayList<>();
         for (DistributorStore.TransactionRow row :
-                distributors.payments(actor.pharmacyId(), code, page.size(), page.offset())) {
+                distributors.payments(actor.pharmacyId(), code, range.from(), range.to(), page.size(), page.offset())) {
             payments.add(new DistributorViews.TransactionView(
                     row.code(), row.type(), row.amount(), row.reference(), row.note(), row.mode(), row.recordedAt()));
         }
+        DistributorStore.LedgerSums sums = distributors.ledgerSums(actor.pharmacyId(), code, range.from(), range.to());
         return new DistributorViews.PaymentList(
-                payments, page.page(), page.size(), distributors.paymentCount(actor.pharmacyId(), code));
+                payments,
+                page.page(),
+                page.size(),
+                distributors.paymentCount(actor.pharmacyId(), code, range.from(), range.to()),
+                sums.purchases(),
+                sums.payments(),
+                sums.returns());
     }
 
     public DistributorViews.OneResponse one(AccountPrincipal actor, String code) {

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
 import { writeSession } from "@/services/storage";
@@ -83,7 +84,9 @@ function renderPage(permissions: string[], body: ExpenseList = empty) {
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
   render(
     <Provider store={createAppStore()}>
-      <ExpensesPage />
+      <MemoryRouter>
+        <ExpensesPage />
+      </MemoryRouter>
     </Provider>,
   );
   return requested;

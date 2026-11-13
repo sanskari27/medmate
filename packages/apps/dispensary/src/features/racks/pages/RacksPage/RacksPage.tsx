@@ -3,6 +3,7 @@ import { ProductDialog } from "@/features/inventory";
 import { problemMessage, useAuthState } from "@/features/authentication";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
+import { CardLine, FitText } from "@/components/ui/FitText";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import { IconPrint, IconReports, IconStore } from "@/components/ui/Icon";
@@ -61,7 +62,7 @@ export function RacksPage() {
 
   return (
     <Box className="mx-auto max-w-[1680px]">
-      <Box className="mb-[22px] grid gap-4 md:grid-cols-4">
+      <Box className="mb-[22px] grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,168px),1fr))] gap-4">
         <Stat label="Racks created" value={String(groups.length)} hint="cupboards & shelves" />
         <Stat label="Racks / zones" value={String(zones.size)} hint="in use" />
         <Stat
@@ -191,12 +192,16 @@ export function RacksPage() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <Box className="rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
-      <Text className="text-[11px] font-bold tracking-[0.05em] text-muted uppercase">{label}</Text>
-      <Text className="mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark">
+    <Box className="min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-paper px-[18px] py-4 shadow-sm">
+      <CardLine className="text-[11px] font-bold tracking-[0.05em] text-muted uppercase">
+        {label}
+      </CardLine>
+      <FitText className="mt-[3px] font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark">
         {value}
-      </Text>
-      <Text className="mt-auto border-t border-line pt-[9px] text-[12px] text-muted">{hint}</Text>
+      </FitText>
+      <CardLine className="mt-auto border-t border-line pt-[9px] text-[12px] text-muted">
+        {hint}
+      </CardLine>
     </Box>
   );
 }

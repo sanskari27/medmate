@@ -2,6 +2,7 @@ package com.medmate.server.stock.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.medmate.server.identity.web.Current;
+import com.medmate.server.shared.web.DayRange;
 import com.medmate.server.shared.web.PageQuery;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,19 @@ public class StockController {
     public StockViews.PurchaseList list(
             Authentication authentication,
             @RequestParam(required = false) String productId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String distributorId,
             @RequestParam(required = false) String page,
             @RequestParam(required = false) String size) {
-        return stock.list(Current.require(authentication), productId, PageQuery.parse(page, size));
+        return stock.list(
+                Current.require(authentication),
+                productId,
+                q,
+                DayRange.parse(from, to),
+                distributorId,
+                PageQuery.parse(page, size));
     }
 
     @GetMapping("/pharmacy/purchases/{id}")

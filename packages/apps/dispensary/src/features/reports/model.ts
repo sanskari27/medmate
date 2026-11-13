@@ -15,13 +15,15 @@ export const SNAPSHOT_REPORTS = new Set([
   "party-outstanding",
 ]);
 
-export type ReportPreset = "today" | "month" | "year" | "fy" | "custom" | "all";
+export type ReportPreset = "today" | "month" | "year" | "prev-year" | "fy" | "prev-fy" | "custom" | "all";
 
 export const REPORT_PRESETS: { key: ReportPreset; label: string }[] = [
   { key: "today", label: "Today" },
   { key: "month", label: "This month" },
   { key: "year", label: "This year" },
+  { key: "prev-year", label: "Previous year" },
   { key: "fy", label: "This FY" },
+  { key: "prev-fy", label: "Previous FY" },
   { key: "custom", label: "Custom" },
   { key: "all", label: "All" },
 ];
@@ -70,8 +72,13 @@ export function reportRange(
     return { from: iso(year, month, 1), to: iso(year, month, lastDay(year, month)) };
   }
   if (preset === "year") return { from: iso(year, 1, 1), to: iso(year, 12, 31) };
+  if (preset === "prev-year") return { from: iso(year - 1, 1, 1), to: iso(year - 1, 12, 31) };
   if (preset === "fy") {
     const startYear = month >= 4 ? year : year - 1;
+    return { from: iso(startYear, 4, 1), to: iso(startYear + 1, 3, 31) };
+  }
+  if (preset === "prev-fy") {
+    const startYear = (month >= 4 ? year : year - 1) - 1;
     return { from: iso(startYear, 4, 1), to: iso(startYear + 1, 3, 31) };
   }
   if (preset === "all") return { from: "2000-01-01", to: today };

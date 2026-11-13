@@ -99,7 +99,9 @@ export function ReturnDialog({
                         }
                       />
                     </td>
-                    <td className={cn(bodyCell, "text-right tabular-nums")}>{inr2(line.amount)}</td>
+                    <td className={cn(bodyCell, "text-right whitespace-nowrap tabular-nums")}>
+                      {inr2(line.amount)}
+                    </td>
                   </tr>
                 );
               })}

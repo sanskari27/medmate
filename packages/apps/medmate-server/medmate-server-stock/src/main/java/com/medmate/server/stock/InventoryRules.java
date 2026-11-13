@@ -51,7 +51,11 @@ public final class InventoryRules {
             return "all";
         }
         String value = raw.trim();
-        if (value.equals("all") || value.equals("low") || value.equals("out") || value.equals("expiring")) {
+        if (value.equals("all")
+                || value.equals("low")
+                || value.equals("out")
+                || value.equals("expiring")
+                || value.equals("expired")) {
             return value;
         }
         throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Filter is not valid");
@@ -71,8 +75,11 @@ public final class InventoryRules {
         }
         YearMonth limit = expiryLimit(month);
         for (Batch batch : batches) {
-            if (batch != null && batch.qty() > 0 && !yearMonth(batch.expiry()).isAfter(limit)) {
-                return true;
+            if (batch != null && batch.qty() > 0) {
+                YearMonth expiry = yearMonth(batch.expiry());
+                if (!expiry.isBefore(month) && !expiry.isAfter(limit)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -113,8 +120,11 @@ public final class InventoryRules {
             if (batch == null || batch.qty() <= 0 || batch.rate() == null) {
                 continue;
             }
-            if (expiringOnly && yearMonth(batch.expiry()).isAfter(limit)) {
-                continue;
+            if (expiringOnly) {
+                YearMonth expiry = yearMonth(batch.expiry());
+                if (expiry.isBefore(month) || expiry.isAfter(limit)) {
+                    continue;
+                }
             }
             total = total.add(batch.rate().multiply(BigDecimal.valueOf(batch.qty())));
         }

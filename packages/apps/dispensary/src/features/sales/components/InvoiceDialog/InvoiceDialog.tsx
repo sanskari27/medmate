@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { InvoicePaper, invoiceSettingsApi, type InvoiceSale } from "@/features/invoice-settings";
 import { Box } from "@/components/ui/Box";
 import { Button } from "@/components/ui/Button";
@@ -79,6 +80,15 @@ export function InvoiceDialog({
               Close
             </Button>
           </Stack>
+        </Stack>
+        <Stack direction="row" wrap className="gap-2 border-b border-line px-3 py-2 print:hidden">
+          {sale.lines.map((line) => (
+            <Button key={line.position} variant="link" asChild>
+              <Link to={`/inventory?q=${encodeURIComponent(line.productId || line.name)}`}>
+                {line.name}
+              </Link>
+            </Button>
+          ))}
         </Stack>
         <Box className="min-h-0 flex-1 overflow-auto bg-canvas p-3">
           {sheet ? (
