@@ -33,6 +33,8 @@ public class CatalogConfiguration {
         Flyway.configure()
                 .dataSource(catalogDataSource)
                 .locations("classpath:db/catalog")
+                .baselineOnMigrate(true)
+                .baselineVersion("0")
                 .load()
                 .migrate();
         return new JdbcCatalogStore(catalogDataSource);
