@@ -1,0 +1,1 @@
+export { WardsPage } from "./WardsPage";

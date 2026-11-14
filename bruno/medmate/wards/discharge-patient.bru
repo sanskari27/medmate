@@ -1,0 +1,36 @@
+meta {
+  name: Discharge patient
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/admissions/{{admissionId}}/discharge
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "payMode": "cash"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with wards:discharge, settles the ward charge and frees the bed.
+  payMode is cash, upi, card, or insurance when the amount is above zero.
+}

@@ -1,0 +1,37 @@
+meta {
+  name: Update ward
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/wards/{{wardId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "dailyRate": "1200.00",
+    "underMaintenance": true,
+    "maintenanceNote": "Deep clean"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with wards:update, changes the rate and maintenance.
+}

@@ -51,7 +51,13 @@ public final class PharmacyPermissions {
             "doctors:update",
             "departments:read",
             "departments:create",
-            "departments:update");
+            "departments:update",
+            "wards:read",
+            "wards:create",
+            "wards:update",
+            "wards:admit",
+            "wards:transfer",
+            "wards:discharge");
 
     private PharmacyPermissions() {}
 

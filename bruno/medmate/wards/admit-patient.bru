@@ -1,0 +1,45 @@
+meta {
+  name: Admit patient
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/admissions
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "Asha Rao",
+    "uhid": "UHID-100401",
+    "phone": "9845012345",
+    "age": 42,
+    "gender": "Female",
+    "wardId": "{{wardId}}",
+    "bed": "ORT-1",
+    "doctor": "Dr. Iyer",
+    "diagnosis": "Fracture",
+    "payerType": "self"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with wards:admit, admits a patient onto a free bed.
+  A 201 response stores admissionId from admission.id. This does not create a CRM patient.
+}

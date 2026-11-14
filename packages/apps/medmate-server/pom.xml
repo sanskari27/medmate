@@ -32,6 +32,7 @@
     <module>medmate-server-dashboard</module>
     <module>medmate-server-leads</module>
     <module>medmate-server-departments</module>
+    <module>medmate-server-wards</module>
     <module>medmate-server-doctors</module>
     <module>medmate-server-oversight</module>
     <module>medmate-server-app</module>

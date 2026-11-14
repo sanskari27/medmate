@@ -80,7 +80,7 @@ describe("UsersPage", () => {
   it("lists staff without a role field and shows the management permissions", async () => {
     renderPage();
     expect(await screen.findByText("Counter")).toBeTruthy();
-    expect(screen.getByText("1 / 47")).toBeTruthy();
+    expect(screen.getByText("1 / 53")).toBeTruthy();
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByText("Reset to Cashier defaults")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Add user" }));
@@ -102,6 +102,13 @@ describe("UsersPage", () => {
     expect(screen.getByRole("checkbox", { name: "Departments Read" })).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "Departments Create" })).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "Departments Update" })).toBeTruthy();
+    expect(within(dialog).getByText("Wards")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Read" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Create" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Update" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Admit" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Transfer" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Wards Discharge" })).toBeTruthy();
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByText("Manage users")).toBeTruthy();
     expect(screen.getByText("Help & Support")).toBeTruthy();

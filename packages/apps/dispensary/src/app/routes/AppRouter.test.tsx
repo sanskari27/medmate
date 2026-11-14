@@ -430,7 +430,8 @@ describe("AppRouter", () => {
       .map((button) => button.textContent?.trim());
     expect(names.indexOf("Doctors")).toBe(names.indexOf("CRM - Patients") + 1);
     expect(names.indexOf("Departments")).toBe(names.indexOf("Doctors") + 1);
-    expect(names.indexOf("Distributors")).toBe(names.indexOf("Departments") + 1);
+    expect(names.indexOf("IPD · Wards")).toBe(names.indexOf("Departments") + 1);
+    expect(names.indexOf("Distributors")).toBe(names.indexOf("IPD · Wards") + 1);
     expect(screen.getByText("Hospital")).toBeTruthy();
   });
 
@@ -488,6 +489,36 @@ describe("AppRouter", () => {
     renderAt("/dashboard");
     expect(screen.getByRole("button", { name: "Departments" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Doctors" })).toBeNull();
+  });
+
+  it("sends hospital staff without wards:read away from IPD wards", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        pharmacyType: "hospital",
+        permissions: ["departments:read"],
+      },
+    });
+    renderAt("/wards");
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "IPD · Wards" })).toBeNull();
+  });
+
+  it("shows IPD wards to hospital staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        pharmacyType: "hospital",
+        permissions: ["wards:read"],
+      },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "IPD · Wards" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Departments" })).toBeNull();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {

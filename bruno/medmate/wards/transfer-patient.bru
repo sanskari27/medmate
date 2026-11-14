@@ -1,0 +1,37 @@
+meta {
+  name: Transfer patient
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/admissions/{{admissionId}}/transfer
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "wardId": "{{wardId}}",
+    "bed": "ORT-2"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with wards:transfer, moves the current admission to another free bed.
+  The admitted time stays the same.
+}

@@ -22,6 +22,7 @@ import { SalesPage } from "@/features/sales";
 import { PatientsPage } from "@/features/patients";
 import { DoctorsPage } from "@/features/doctors";
 import { DepartmentsPage } from "@/features/departments";
+import { WardsPage } from "@/features/wards";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -83,6 +84,14 @@ export const appRoutes: AppRoute[] = [
     sub: "Names, codes and hierarchy",
     icon: <IconUsers size={19} />,
     element: <DepartmentsPage />,
+  },
+  {
+    path: "/wards",
+    label: "IPD · Wards",
+    title: "IPD · Wards",
+    sub: "In-patient wards, beds & dispensing",
+    icon: <IconStore size={19} />,
+    element: <WardsPage />,
   },
   {
     path: "/distributors",

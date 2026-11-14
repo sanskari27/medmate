@@ -7,6 +7,7 @@ import { usersApi } from "@/features/users";
 import { employeesApi } from "@/features/employees";
 import { doctorsApi } from "@/features/doctors";
 import { departmentsApi } from "@/features/departments";
+import { wardsApi } from "@/features/wards";
 import { distributorsApi } from "@/features/distributors";
 import { inventoryApi } from "@/features/inventory";
 import { offersApi } from "@/features/offers";
@@ -30,6 +31,7 @@ export const rootReducer = combineReducers({
   [employeesApi.reducerPath]: employeesApi.reducer,
   [doctorsApi.reducerPath]: doctorsApi.reducer,
   [departmentsApi.reducerPath]: departmentsApi.reducer,
+  [wardsApi.reducerPath]: wardsApi.reducer,
   [distributorsApi.reducerPath]: distributorsApi.reducer,
   [purchasesApi.reducerPath]: purchasesApi.reducer,
   [inventoryApi.reducerPath]: inventoryApi.reducer,

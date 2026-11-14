@@ -21,6 +21,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-leads/                public website forms for the admin inbox
   medmate-server-doctors/              hospital doctor directory
   medmate-server-departments/          hospital department tree
+  medmate-server-wards/                hospital wards, beds, and admissions
   medmate-server-oversight/            admin pharmacy fleet and activity reads
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
@@ -100,6 +101,10 @@ The hospital doctor directory lives in `medmate-server-doctors`. The module depe
 ## Departments
 
 The hospital department tree lives in `medmate-server-departments`. The module depends on identity for access checks and the pharmacy type. Identity does not depend on it. Doctors depends on it. Departments does not depend on doctors. Tables are created by `V23__departments.sql`. A route refuses a pharmacy whose type is not `hospital`. [0025](decisions/0025-hospital-departments.md) records that boundary.
+
+## Wards
+
+The hospital ward board lives in `medmate-server-wards`. The module depends on identity for access checks and the pharmacy type. Identity does not depend on it. It does not depend on doctors, departments, CRM, or billing. Tables are created by `V26__ward_capacity.sql`. `V25__wards.sql` stays as the migration that was already applied. A bed is a label from the ward code and the bed count. The ward charge is the current daily rate of the ward the patient is in, times days admitted, and it is stored when the patient is discharged. A route refuses a pharmacy whose type is not `hospital`. [0026](decisions/0026-hospital-wards.md) records that boundary.
 
 ## Leads
 

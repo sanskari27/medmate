@@ -170,6 +170,90 @@ body {
   }
 }
 
+.scroll-hint {
+  --surface: var(--color-canvas);
+  overflow: auto;
+  container-type: scroll-state;
+  background: var(--surface);
+}
+
+.scroll-hint::before,
+.scroll-hint::after {
+  content: "";
+  display: block;
+  position: sticky;
+  block-size: 0.75rem;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.scroll-hint::before {
+  inset-block-start: 0;
+  margin-block-end: -0.75rem;
+  background: radial-gradient(farthest-side at 50% 0, rgb(13 32 21 / 0.14), transparent);
+}
+
+.scroll-hint::after {
+  inset-block-end: 0;
+  margin-block-start: -0.75rem;
+  background: radial-gradient(farthest-side at 50% 100%, rgb(13 32 21 / 0.14), transparent);
+}
+
+@container scroll-state(scrollable: block-start) {
+  .scroll-hint::before {
+    opacity: 1;
+  }
+}
+
+@container scroll-state(scrollable: block-end) {
+  .scroll-hint::after {
+    opacity: 1;
+  }
+}
+
+@supports not (container-type: scroll-state) {
+  .scroll-hint::before,
+  .scroll-hint::after {
+    animation: show-scroll-shadow linear both;
+    animation-timeline: scroll();
+  }
+
+  .scroll-hint::before {
+    animation-range: 0 2rem;
+  }
+
+  .scroll-hint::after {
+    animation-direction: reverse;
+    animation-range: calc(100% - 2rem) 100%;
+  }
+}
+
+@keyframes show-scroll-shadow {
+  to {
+    opacity: 1;
+  }
+}
+
+@supports not ((container-type: scroll-state) or (animation-timeline: scroll())) {
+  .scroll-hint {
+    background:
+      linear-gradient(var(--surface) 30%, transparent) top / 100% 2.5rem no-repeat local,
+      linear-gradient(transparent, var(--surface) 70%) bottom / 100% 2.5rem no-repeat local,
+      radial-gradient(farthest-side at 50% 0, rgb(13 32 21 / 0.14), transparent) top / 100% 0.75rem
+        no-repeat,
+      radial-gradient(farthest-side at 50% 100%, rgb(13 32 21 / 0.14), transparent) bottom / 100%
+        0.75rem no-repeat,
+      var(--surface);
+  }
+
+  .scroll-hint::before,
+  .scroll-hint::after {
+    content: none;
+  }
+}
+
 .invoice-a4-frame {
   container-type: inline-size;
   width: 100%;

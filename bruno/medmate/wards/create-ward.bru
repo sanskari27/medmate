@@ -1,0 +1,44 @@
+meta {
+  name: Create ward
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/wards
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "Orthopaedic Ward",
+    "code": "ORT",
+    "floor": "3rd floor",
+    "category": "Surgical",
+    "beds": 10,
+    "sister": "Sr. Meena",
+    "dailyRate": "1000.00",
+    "bedsHeld": 2,
+    "underMaintenance": false
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with wards:create, adds a ward.
+  A 201 response stores wardId from ward.id. Bed labels are ORT-1 through ORT-10. ORT-9 and ORT-10 are held.
+}

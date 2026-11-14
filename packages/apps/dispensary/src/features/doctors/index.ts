@@ -1,3 +1,3 @@
 export { DoctorsPage } from "./pages/DoctorsPage";
-export { doctorsApi } from "./doctors.api";
+export { doctorsApi, useListDoctorsQuery } from "./doctors.api";
 export { canOpenDoctors } from "./model";

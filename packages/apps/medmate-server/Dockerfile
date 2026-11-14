@@ -15,6 +15,7 @@ COPY medmate-server-reports/pom.xml medmate-server-reports/pom.xml
 COPY medmate-server-dashboard/pom.xml medmate-server-dashboard/pom.xml
 COPY medmate-server-leads/pom.xml medmate-server-leads/pom.xml
 COPY medmate-server-departments/pom.xml medmate-server-departments/pom.xml
+COPY medmate-server-wards/pom.xml medmate-server-wards/pom.xml
 COPY medmate-server-doctors/pom.xml medmate-server-doctors/pom.xml
 COPY medmate-server-oversight/pom.xml medmate-server-oversight/pom.xml
 COPY medmate-server-app/pom.xml medmate-server-app/pom.xml
@@ -32,6 +33,7 @@ COPY medmate-server-reports/src medmate-server-reports/src
 COPY medmate-server-dashboard/src medmate-server-dashboard/src
 COPY medmate-server-leads/src medmate-server-leads/src
 COPY medmate-server-departments/src medmate-server-departments/src
+COPY medmate-server-wards/src medmate-server-wards/src
 COPY medmate-server-doctors/src medmate-server-doctors/src
 COPY medmate-server-oversight/src medmate-server-oversight/src
 COPY medmate-server-app/src medmate-server-app/src

@@ -59,6 +59,17 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "departments:update", label: "Update" },
         ],
       },
+      {
+        module: "Wards",
+        actions: [
+          { key: "wards:read", label: "Read" },
+          { key: "wards:create", label: "Create" },
+          { key: "wards:update", label: "Update" },
+          { key: "wards:admit", label: "Admit" },
+          { key: "wards:transfer", label: "Transfer" },
+          { key: "wards:discharge", label: "Discharge" },
+        ],
+      },
     ],
   },
   {
