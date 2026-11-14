@@ -1,0 +1,34 @@
+meta {
+  name: Delete list
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/inventory-prep/{{prepListId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("the owner deletes the list", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    if (!bru.getEnvVar("prepListId")) {
+      expect(res.getStatus()).to.equal(400);
+      return;
+    }
+    expect(res.getStatus()).to.equal(204);
+  });
+}
+
+docs {
+  Deletes the list and its rows. Another account receives 404.
+}

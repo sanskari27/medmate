@@ -3,6 +3,7 @@ import { authApi } from "@/features/authentication";
 import { catalogApi } from "@/features/catalog";
 import { leadsApi } from "@/features/leads";
 import { pharmaciesApi } from "@/features/pharmacies";
+import { prepApi } from "@/features/prep";
 import { reviewsApi } from "@/features/reviews";
 import { supportApi } from "@/features/support";
 import { readPersistedAuth } from "@/services/storage";
@@ -28,6 +29,7 @@ export function createAppStore() {
         supportApi.middleware,
         leadsApi.middleware,
         catalogApi.middleware,
+        prepApi.middleware,
       ),
   });
 }

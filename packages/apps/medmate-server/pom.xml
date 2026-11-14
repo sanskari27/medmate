@@ -36,6 +36,7 @@
     <module>medmate-server-wards</module>
     <module>medmate-server-doctors</module>
     <module>medmate-server-oversight</module>
+    <module>medmate-server-prep</module>
     <module>medmate-server-app</module>
   </modules>
 

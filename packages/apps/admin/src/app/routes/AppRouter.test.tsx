@@ -174,7 +174,15 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support", "Leads", "Manage Catalog"]);
+    expect(names).toEqual([
+      "Home",
+      "Pharmacies",
+      "Reviews",
+      "Support",
+      "Leads",
+      "Manage Catalog",
+      "Prepare Inventory",
+    ]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
     ].map((label) => label.textContent);
@@ -403,6 +411,42 @@ describe("AppRouter", () => {
     renderAt("/catalog");
     expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Manage Catalog" })).toBeNull();
+  });
+
+  it("shows Prepare Inventory to sales and sends support away", async () => {
+    const sales: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["sales"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: sales, pinReset: false }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = requestUrl(input);
+        if (url.includes("/api/v1/inventory-prep")) return json({ lists: [] });
+        return json({ detail: "Not found" }, 404);
+      }),
+    );
+    renderAt("/inventory-prep");
+    expect(await screen.findByRole("button", { name: "Prepare Inventory" })).toBeTruthy();
+    expect(await screen.findByText("No lists yet.")).toBeTruthy();
+    cleanup();
+    sessionStorage.clear();
+
+    const support: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["support"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: support, pinReset: false }),
+    );
+    renderAt("/inventory-prep");
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Prepare Inventory" })).toBeNull();
   });
 
   it("shows Support to support staff", async () => {

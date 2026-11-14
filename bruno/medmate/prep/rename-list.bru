@@ -1,0 +1,42 @@
+meta {
+  name: Rename list
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/inventory-prep/{{prepListId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "City opening stock"
+  }
+}
+
+tests {
+  test("the owner renames the list", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    if (!bru.getEnvVar("prepListId")) {
+      expect(res.getStatus()).to.equal(400);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.list.name).to.equal("City opening stock");
+  });
+}
+
+docs {
+  The name is unique for that owner, ignoring case.
+}

@@ -5,12 +5,19 @@ import {
   IconDashboard,
   IconGlobe,
   IconHelp,
+  IconReceipt,
   IconRx,
   IconStore,
 } from "@/components/ui/Icon";
 import type { Account } from "@/types";
-import { canManageCatalog, canReview, canSupport } from "@/features/authentication";
+import {
+  canManageCatalog,
+  canPrepareInventory,
+  canReview,
+  canSupport,
+} from "@/features/authentication";
 import { CatalogPage } from "@/features/catalog";
+import { PrepListPage } from "@/features/prep";
 import { DashboardPage } from "@/features/dashboard";
 import { LeadsPage } from "@/features/leads";
 import { PharmaciesPage } from "@/features/pharmacies";
@@ -72,6 +79,14 @@ export const appRoutes: AppRoute[] = [
     icon: <IconRx size={19} />,
     element: <CatalogPage />,
   },
+  {
+    path: "/inventory-prep",
+    label: "Prepare Inventory",
+    title: "Prepare Inventory",
+    sub: "Opening stock",
+    icon: <IconReceipt size={19} />,
+    element: <PrepListPage />,
+  },
 ];
 
 export function navRoutes(account: Account | null | undefined): AppRoute[] {
@@ -79,6 +94,7 @@ export function navRoutes(account: Account | null | undefined): AppRoute[] {
     if (route.path === "/reviews") return canReview(account);
     if (route.path === "/support" || route.path === "/leads") return canSupport(account);
     if (route.path === "/catalog") return canManageCatalog(account);
+    if (route.path === "/inventory-prep") return canPrepareInventory(account);
     return true;
   });
 }

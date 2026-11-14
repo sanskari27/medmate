@@ -1,0 +1,48 @@
+meta {
+  name: Save lines
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/inventory-prep/{{prepListId}}/lines
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "lines": [
+      {
+        "productId": "DR100",
+        "productName": "Crocin, 500 mg"
+      }
+    ]
+  }
+}
+
+tests {
+  test("a draft row can omit the batch", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    if (!bru.getEnvVar("prepListId")) {
+      expect(res.getStatus()).to.equal(400);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.list.lines[0].productId).to.equal("DR100");
+    expect(res.body.list.lines[0].batchNo).to.equal(null);
+  });
+}
+
+docs {
+  Replaces every row. Blank batch, expiry, qty, free, rate, MRP, and GST are kept.
+}

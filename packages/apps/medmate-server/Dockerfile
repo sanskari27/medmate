@@ -19,6 +19,7 @@ COPY medmate-server-departments/pom.xml medmate-server-departments/pom.xml
 COPY medmate-server-wards/pom.xml medmate-server-wards/pom.xml
 COPY medmate-server-doctors/pom.xml medmate-server-doctors/pom.xml
 COPY medmate-server-oversight/pom.xml medmate-server-oversight/pom.xml
+COPY medmate-server-prep/pom.xml medmate-server-prep/pom.xml
 COPY medmate-server-app/pom.xml medmate-server-app/pom.xml
 COPY medmate-server-shared/src medmate-server-shared/src
 COPY medmate-server-identity/src medmate-server-identity/src
@@ -38,6 +39,7 @@ COPY medmate-server-departments/src medmate-server-departments/src
 COPY medmate-server-wards/src medmate-server-wards/src
 COPY medmate-server-doctors/src medmate-server-doctors/src
 COPY medmate-server-oversight/src medmate-server-oversight/src
+COPY medmate-server-prep/src medmate-server-prep/src
 COPY medmate-server-app/src medmate-server-app/src
 RUN mvn -q -DskipTests package
 

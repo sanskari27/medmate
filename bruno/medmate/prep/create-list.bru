@@ -1,0 +1,43 @@
+meta {
+  name: Create list
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inventory-prep
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "City opening"
+  }
+}
+
+tests {
+  test("the caller owns a new list", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([201, 409]);
+    if (res.getStatus() === 201) {
+      expect(res.body.list.name).to.equal("City opening");
+      expect(res.body.list.lineCount).to.equal(0);
+      bru.setEnvVar("prepListId", res.body.list.id);
+    }
+  });
+}
+
+docs {
+  Platform admin and staff:sales create a private list. A repeated name is 409.
+}

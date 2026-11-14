@@ -31,7 +31,8 @@ Architecture decisions for medmate-server.
 | [0025](0025-hospital-departments.md) | Hospital department tree, V23, and the doctor link in V24 |
 | [0026](0026-hospital-wards.md) | Hospital wards, beds, and admissions, V25 and V26 |
 | [0027](0027-medicine-catalog.md) | Medicine catalog module and the medicine_data database |
+| [0028](0028-prepare-inventory.md) | Prepare-inventory worksheets, V27, and catalog lookup at export |
 
-The next file is the next number: `0028-<slug>.md`.
+The next file is the next number: `0029-<slug>.md`.
 
 Write an ADR when the change picks a structure that later work has to live with: a new module boundary, a datastore, authentication, or a different deployable. A requirement spec records product behavior. It does not replace an ADR.

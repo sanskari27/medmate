@@ -12,6 +12,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
   medmate-server-catalog/              shared drug and FMCG catalog on medicine_data
+  medmate-server-prep/                 private opening-stock worksheets for admin and sales
   medmate-server-stock/                purchase bills, returns, inventory, and rack placement
   medmate-server-offers/               pharmacy discounts applied when a bill is posted
   medmate-server-billing/              cash and credit sales from the counter
@@ -110,6 +111,10 @@ The hospital ward board lives in `medmate-server-wards`. The module depends on i
 ## Catalog
 
 The shared drug and OTC/FMCG catalog lives in `medmate-server-catalog`. The module depends on identity for the admin and `staff:sales` check. Identity does not depend on it. Stock depends on it for medicine identity. The catalog does not depend on stock. Tables stay in the separate Postgres database `medicine_data`. A second Flyway history in that database applies `V1__medicine_catalog.sql` and `V2__display_name.sql`. The primary Flyway history is unchanged. `display_name` is optional on both catalogs. `GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` are anonymous and return it. Search matches it. `GET /api/v1/catalog` is a paged list for a platform admin or sales staff. `POST` and `PUT` under `/api/v1/catalog` replace a whole product, including `displayName`, and use the same check. There is no delete. The Node medicine-data process and its host are gone. The database and its secret remain. [0027](decisions/0027-medicine-catalog.md) records that boundary.
+
+## Prepare inventory
+
+Private opening-stock worksheets live in `medmate-server-prep`. The module depends on identity for the admin and `staff:sales` check, and on catalog for `CatalogStore.findMany` when a list is exported. Identity does not depend on it. It does not depend on stock or billing, and export does not write stock. Tables are created by `V27__prepare_inventory.sql` on the primary database. A list is visible only to the account that created it. [0028](decisions/0028-prepare-inventory.md) records that boundary.
 
 ## Leads
 

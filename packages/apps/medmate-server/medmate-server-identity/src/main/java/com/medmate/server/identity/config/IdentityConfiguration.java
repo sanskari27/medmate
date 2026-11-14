@@ -125,7 +125,9 @@ public class IdentityConfiguration {
                                 "/api/v1/leads",
                                 "/api/v1/leads/**",
                                 "/api/v1/catalog",
-                                "/api/v1/catalog/**")
+                                "/api/v1/catalog/**",
+                                "/api/v1/inventory-prep",
+                                "/api/v1/inventory-prep/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
