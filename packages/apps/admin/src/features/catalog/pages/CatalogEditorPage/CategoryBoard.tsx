@@ -20,7 +20,7 @@ function labelFor(action: string, title: string, index: number, titles: string[]
 function commitOnEnter(event: KeyboardEvent<HTMLInputElement>, commit: () => void) {
   if (event.key !== "Enter") return;
   event.preventDefault();
-  if (event.isComposing || event.keyCode === 229) return;
+  if (event.nativeEvent.isComposing || event.keyCode === 229) return;
   commit();
 }
 
