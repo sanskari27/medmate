@@ -1,0 +1,1 @@
+export { CatalogEditorPage } from "./CatalogEditorPage";

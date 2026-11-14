@@ -28,6 +28,11 @@ export function canSupport(account: Account | null | undefined): boolean {
   return account.accountType === "admin" || canHandleSupportCases(account);
 }
 
+export function canManageCatalog(account: Account | null | undefined): boolean {
+  if (!account) return false;
+  return account.accountType === "admin" || account.subtypes.includes("sales");
+}
+
 export function canUseAdminPortal(account: Account): boolean {
   if (account.accountType === "admin") return true;
   return (

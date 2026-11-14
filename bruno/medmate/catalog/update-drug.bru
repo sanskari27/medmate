@@ -20,6 +20,7 @@ body:json {
   {
     "productId": "DR-BRUNO",
     "productName": "Crocin Advance",
+    "displayName": "Counter name",
     "marketerName": "GSK",
     "prescriptionRequired": false,
     "package": "Strip",
@@ -38,6 +39,7 @@ tests {
       return;
     }
     if (res.getStatus() === 200) {
+      expect(res.body.drug[0].displayName).to.equal("Counter name");
       expect(res.body.drug[0].ingredients[0].name).to.equal("Ibuprofen");
       expect(res.body.drug[0].ingredients[1].name).to.equal("Paracetamol");
     }

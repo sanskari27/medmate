@@ -93,4 +93,52 @@ class CatalogRulesTest {
         CatalogRules.ParsedFmcg unnamed = CatalogRules.fmcg(json.readTree("{\"productId\":\"OTC1\"}"), null);
         assertThat(unnamed.problem()).isEqualTo("Product is not valid");
     }
+
+    @Test
+    void aBlankDisplayNameIsStoredAsNull() throws Exception {
+        CatalogRules.ParsedDrug drug = CatalogRules.drug(
+                json.readTree(
+                        """
+                        {"productId":"DR100","productName":"Crocin","displayName":"  ","prescriptionRequired":false}
+                        """),
+                null);
+        assertThat(drug.problem()).isNull();
+        assertThat(drug.draft().displayName()).isNull();
+    }
+
+    @Test
+    void listFiltersClearTheOtherCatalog() {
+        CatalogRules.Listing open = CatalogRules.list(null, null, "missing", null, null, null, null, null, null, null);
+        assertThat(open.problem()).isNull();
+        assertThat(open.displayName()).isEqualTo(CatalogRules.NamePresence.MISSING);
+        assertThat(open.kind()).isEqualTo(CatalogRules.Kind.BOTH);
+        assertThat(open.page()).isEqualTo(1);
+        assertThat(open.size()).isEqualTo(25);
+        assertThat(open.includeDrugs()).isTrue();
+        assertThat(open.includeFmcg()).isTrue();
+
+        CatalogRules.Listing prescription =
+                CatalogRules.list("both", "  ", null, "yes", null, null, null, null, "1", "25");
+        assertThat(prescription.text()).isNull();
+        assertThat(prescription.includeDrugs()).isTrue();
+        assertThat(prescription.includeFmcg()).isFalse();
+
+        CatalogRules.Listing bothEnds =
+                CatalogRules.list("drug", null, null, "no", null, "tablet", "soap", null, "2", "10");
+        assertThat(bothEnds.includeDrugs()).isFalse();
+        assertThat(bothEnds.includeFmcg()).isFalse();
+
+        assertThat(CatalogRules.list("nope", null, null, null, null, null, null, null, null, null)
+                        .problem())
+                .isEqualTo("Filter is not valid");
+        assertThat(CatalogRules.list(null, "x".repeat(81), null, null, null, null, null, null, null, null)
+                        .problem())
+                .isEqualTo("Query is not valid");
+        assertThat(CatalogRules.list(null, null, null, null, "y".repeat(81), null, null, null, null, null)
+                        .problem())
+                .isEqualTo("Filter is not valid");
+        assertThat(CatalogRules.list(null, null, null, null, null, null, null, null, "0", "25")
+                        .problem())
+                .isEqualTo("Page is not valid");
+    }
 }

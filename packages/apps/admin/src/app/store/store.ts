@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "@/features/authentication";
+import { catalogApi } from "@/features/catalog";
 import { leadsApi } from "@/features/leads";
 import { pharmaciesApi } from "@/features/pharmacies";
 import { reviewsApi } from "@/features/reviews";
@@ -26,6 +27,7 @@ export function createAppStore() {
         pharmaciesApi.middleware,
         supportApi.middleware,
         leadsApi.middleware,
+        catalogApi.middleware,
       ),
   });
 }

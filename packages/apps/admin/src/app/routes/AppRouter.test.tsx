@@ -174,11 +174,11 @@ describe("AppRouter", () => {
     const names = within(nav as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
-    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support", "Leads"]);
+    expect(names).toEqual(["Home", "Pharmacies", "Reviews", "Support", "Leads", "Manage Catalog"]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
     ].map((label) => label.textContent);
-    expect(sections).toEqual(["Pharmacies", "Support", "Leads"]);
+    expect(sections).toEqual(["Pharmacies", "Support", "Leads", "Catalog"]);
     expect(screen.getByText("Ada")).toBeTruthy();
     expect(screen.getByText("Platform admin")).toBeTruthy();
     expect(screen.getByText("Namma")).toBeTruthy();
@@ -366,6 +366,43 @@ describe("AppRouter", () => {
     renderAt("/leads");
     expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
+  });
+
+  it("shows Manage Catalog to sales and sends support away", async () => {
+    const sales: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["sales"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: sales, pinReset: false }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        json({
+          drug: { items: [], page: 1, size: 25, total: 0 },
+          fmcg: { items: [], page: 1, size: 25, total: 0 },
+        }),
+      ),
+    );
+    renderAt("/catalog");
+    expect(await screen.findByRole("button", { name: "Manage Catalog" })).toBeTruthy();
+    expect(await screen.findByText("No drugs match.")).toBeTruthy();
+    cleanup();
+    sessionStorage.clear();
+
+    const support: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["support"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: support, pinReset: false }),
+    );
+    renderAt("/catalog");
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Manage Catalog" })).toBeNull();
   });
 
   it("shows Support to support staff", async () => {

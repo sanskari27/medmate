@@ -33,11 +33,12 @@ public class JdbcCatalogStore implements CatalogStore {
 
     private static final String DRUG_SEARCH =
             """
-            SELECT product_id, product_name, marketer_name, medicine_type, product_form,
+            SELECT product_id, product_name, display_name, marketer_name, medicine_type, product_form,
                    mrp, prescription_required, package, qty_amount, qty_unit
             FROM drugs
             WHERE product_id = :id
                OR product_name ILIKE :pattern ESCAPE '\\'
+               OR display_name ILIKE :pattern ESCAPE '\\'
                OR marketer_name ILIKE :pattern ESCAPE '\\'
                OR medicine_type ILIKE :pattern ESCAPE '\\'
                OR product_form ILIKE :pattern ESCAPE '\\'
@@ -47,11 +48,12 @@ public class JdbcCatalogStore implements CatalogStore {
 
     private static final String FMCG_SEARCH =
             """
-            SELECT product_id, product_name, marketer_name, marketing_company, type, product_form,
+            SELECT product_id, product_name, display_name, marketer_name, marketing_company, type, product_form,
                    mrp, package, qty_amount, qty_unit
             FROM otc_fmcg
             WHERE product_id = :id
                OR product_name ILIKE :pattern ESCAPE '\\'
+               OR display_name ILIKE :pattern ESCAPE '\\'
                OR marketer_name ILIKE :pattern ESCAPE '\\'
                OR marketing_company ILIKE :pattern ESCAPE '\\'
                OR type ILIKE :pattern ESCAPE '\\'
@@ -75,35 +77,20 @@ public class JdbcCatalogStore implements CatalogStore {
                 .param("id", query)
                 .param("pattern", pattern)
                 .param("limit", limit)
-                .query((rs, row) -> new DrugSummary(
-                        rs.getString("product_id"),
-                        rs.getString("product_name"),
-                        rs.getString("marketer_name"),
-                        rs.getString("medicine_type"),
-                        rs.getString("product_form"),
-                        rs.getBigDecimal("mrp"),
-                        rs.getBoolean("prescription_required"),
-                        rs.getString("package"),
-                        rs.getBigDecimal("qty_amount"),
-                        rs.getString("qty_unit")))
+                .query((rs, row) -> drugSummary(rs))
                 .list();
         List<FmcgSummary> fmcg = jdbc.sql(FMCG_SEARCH)
                 .param("id", query)
                 .param("pattern", pattern)
                 .param("limit", limit)
-                .query((rs, row) -> new FmcgSummary(
-                        rs.getString("product_id"),
-                        rs.getString("product_name"),
-                        rs.getString("marketer_name"),
-                        rs.getString("marketing_company"),
-                        rs.getString("type"),
-                        rs.getString("product_form"),
-                        rs.getBigDecimal("mrp"),
-                        rs.getString("package"),
-                        rs.getBigDecimal("qty_amount"),
-                        rs.getString("qty_unit")))
+                .query((rs, row) -> fmcgSummary(rs))
                 .list();
         return new CatalogDocuments.SearchResponse(drugs, fmcg);
+    }
+
+    @Override
+    public CatalogDocuments.CatalogList list(CatalogRules.Listing listing) {
+        return new CatalogDocuments.CatalogList(pageDrugs(listing), pageFmcg(listing));
     }
 
     @Override
@@ -216,7 +203,7 @@ public class JdbcCatalogStore implements CatalogStore {
         Map<String, DrugParent> parents = new LinkedHashMap<>();
         jdbc.sql(
                         """
-                        SELECT product_id, product_name, marketer_name, marketer_address, medicine_type,
+                        SELECT product_id, product_name, display_name, marketer_name, marketer_address, medicine_type,
                                introduction, benefits, how_to_use, if_miss, packaging_detail, package,
                                qty_amount, qty_unit, qty_raw, product_form, mrp, prescription_required,
                                storage, how_it_works, country_of_origin, source_file
@@ -248,6 +235,7 @@ public class JdbcCatalogStore implements CatalogStore {
             details.add(new DrugDetail(
                     id,
                     parent.productName(),
+                    parent.displayName(),
                     parent.marketerName(),
                     parent.marketerAddress(),
                     parent.medicineType(),
@@ -286,7 +274,7 @@ public class JdbcCatalogStore implements CatalogStore {
         Map<String, FmcgParent> parents = new LinkedHashMap<>();
         jdbc.sql(
                         """
-                        SELECT product_id, product_name, marketing_company, type, packaging, package,
+                        SELECT product_id, product_name, display_name, marketing_company, type, packaging, package,
                                qty_amount, qty_unit, qty_raw, product_form, mrp, information,
                                directions_for_use, country_of_origin, marketer_name, marketer_address, source_file
                         FROM otc_fmcg
@@ -315,6 +303,7 @@ public class JdbcCatalogStore implements CatalogStore {
             details.add(new FmcgDetail(
                     id,
                     parent.productName(),
+                    parent.displayName(),
                     parent.marketingCompany(),
                     parent.type(),
                     parent.packaging(),
@@ -344,12 +333,12 @@ public class JdbcCatalogStore implements CatalogStore {
         jdbc.sql(
                         """
                         INSERT INTO drugs (
-                            product_id, product_name, marketer_name, marketer_address, medicine_type,
+                            product_id, product_name, display_name, marketer_name, marketer_address, medicine_type,
                             introduction, benefits, how_to_use, if_miss, packaging_detail, package,
                             qty_amount, qty_unit, qty_raw, product_form, mrp, prescription_required,
                             storage, how_it_works, country_of_origin, source_file
                         ) VALUES (
-                            :productId, :productName, :marketerName, :marketerAddress, :medicineType,
+                            :productId, :productName, :displayName, :marketerName, :marketerAddress, :medicineType,
                             :introduction, :benefits, :howToUse, :ifMiss, :packagingDetail, :packageName,
                             :qtyAmount, :qtyUnit, :qtyRaw, :productForm, :mrp, :prescriptionRequired,
                             :storage, :howItWorks, :countryOfOrigin, :sourceFile
@@ -357,6 +346,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         """)
                 .param("productId", draft.productId(), Types.VARCHAR)
                 .param("productName", draft.productName(), Types.VARCHAR)
+                .param("displayName", draft.displayName(), Types.VARCHAR)
                 .param("marketerName", draft.marketerName(), Types.VARCHAR)
                 .param("marketerAddress", draft.marketerAddress(), Types.VARCHAR)
                 .param("medicineType", draft.medicineType(), Types.VARCHAR)
@@ -384,6 +374,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         """
                         UPDATE drugs SET
                             product_name = :productName,
+                            display_name = :displayName,
                             marketer_name = :marketerName,
                             marketer_address = :marketerAddress,
                             medicine_type = :medicineType,
@@ -407,6 +398,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         """)
                 .param("productId", draft.productId(), Types.VARCHAR)
                 .param("productName", draft.productName(), Types.VARCHAR)
+                .param("displayName", draft.displayName(), Types.VARCHAR)
                 .param("marketerName", draft.marketerName(), Types.VARCHAR)
                 .param("marketerAddress", draft.marketerAddress(), Types.VARCHAR)
                 .param("medicineType", draft.medicineType(), Types.VARCHAR)
@@ -514,17 +506,18 @@ public class JdbcCatalogStore implements CatalogStore {
         jdbc.sql(
                         """
                         INSERT INTO otc_fmcg (
-                            product_id, product_name, marketing_company, type, packaging, package,
+                            product_id, product_name, display_name, marketing_company, type, packaging, package,
                             qty_amount, qty_unit, qty_raw, product_form, mrp, information,
                             directions_for_use, country_of_origin, marketer_name, marketer_address, source_file
                         ) VALUES (
-                            :productId, :productName, :marketingCompany, :type, :packaging, :packageName,
+                            :productId, :productName, :displayName, :marketingCompany, :type, :packaging, :packageName,
                             :qtyAmount, :qtyUnit, :qtyRaw, :productForm, :mrp, :information,
                             :directionsForUse, :countryOfOrigin, :marketerName, :marketerAddress, :sourceFile
                         )
                         """)
                 .param("productId", draft.productId(), Types.VARCHAR)
                 .param("productName", draft.productName(), Types.VARCHAR)
+                .param("displayName", draft.displayName(), Types.VARCHAR)
                 .param("marketingCompany", draft.marketingCompany(), Types.VARCHAR)
                 .param("type", draft.type(), Types.VARCHAR)
                 .param("packaging", draft.packaging(), Types.VARCHAR)
@@ -548,6 +541,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         """
                         UPDATE otc_fmcg SET
                             product_name = :productName,
+                            display_name = :displayName,
                             marketing_company = :marketingCompany,
                             type = :type,
                             packaging = :packaging,
@@ -567,6 +561,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         """)
                 .param("productId", draft.productId(), Types.VARCHAR)
                 .param("productName", draft.productName(), Types.VARCHAR)
+                .param("displayName", draft.displayName(), Types.VARCHAR)
                 .param("marketingCompany", draft.marketingCompany(), Types.VARCHAR)
                 .param("type", draft.type(), Types.VARCHAR)
                 .param("packaging", draft.packaging(), Types.VARCHAR)
@@ -733,9 +728,178 @@ public class JdbcCatalogStore implements CatalogStore {
         return grouped;
     }
 
+    private CatalogDocuments.SummaryPage<DrugSummary> pageDrugs(CatalogRules.Listing listing) {
+        if (!listing.includeDrugs()) {
+            return empty(listing);
+        }
+        String where = drugWhere(listing);
+        int total = count("drugs", where, listing, true);
+        String sql =
+                """
+                SELECT product_id, product_name, display_name, marketer_name, medicine_type, product_form,
+                       mrp, prescription_required, package, qty_amount, qty_unit
+                FROM drugs
+                """
+                        + where
+                        + " ORDER BY product_name ASC, product_id ASC LIMIT :limit OFFSET :offset";
+        List<DrugSummary> items = bind(jdbc.sql(sql), listing, true, true)
+                .query((rs, row) -> drugSummary(rs))
+                .list();
+        return new CatalogDocuments.SummaryPage<>(items, listing.page(), listing.size(), total);
+    }
+
+    private CatalogDocuments.SummaryPage<FmcgSummary> pageFmcg(CatalogRules.Listing listing) {
+        if (!listing.includeFmcg()) {
+            return empty(listing);
+        }
+        String where = fmcgWhere(listing);
+        int total = count("otc_fmcg", where, listing, false);
+        String sql =
+                """
+                SELECT product_id, product_name, display_name, marketer_name, marketing_company, type, product_form,
+                       mrp, package, qty_amount, qty_unit
+                FROM otc_fmcg
+                """
+                        + where
+                        + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :limit OFFSET :offset";
+        List<FmcgSummary> items = bind(jdbc.sql(sql), listing, false, true)
+                .query((rs, row) -> fmcgSummary(rs))
+                .list();
+        return new CatalogDocuments.SummaryPage<>(items, listing.page(), listing.size(), total);
+    }
+
+    private int count(String table, String where, CatalogRules.Listing listing, boolean drug) {
+        Integer total = bind(jdbc.sql("SELECT count(*) FROM " + table + where), listing, drug, false)
+                .query((rs, row) -> rs.getInt(1))
+                .single();
+        return total == null ? 0 : total;
+    }
+
+    private static JdbcClient.StatementSpec bind(
+            JdbcClient.StatementSpec spec, CatalogRules.Listing listing, boolean drug, boolean page) {
+        if (listing.text() != null) {
+            spec.param("id", listing.text()).param("pattern", CatalogRules.containsPattern(listing.text()));
+        }
+        if (listing.form() != null) {
+            spec.param("form", CatalogRules.containsPattern(listing.form()));
+        }
+        if (listing.marketer() != null) {
+            spec.param("marketer", CatalogRules.containsPattern(listing.marketer()));
+        }
+        if (drug && listing.medicineType() != null) {
+            spec.param("medicineType", CatalogRules.containsPattern(listing.medicineType()));
+        }
+        if (!drug && listing.fmcgType() != null) {
+            spec.param("fmcgType", CatalogRules.containsPattern(listing.fmcgType()));
+        }
+        if (page) {
+            spec.param("limit", listing.size()).param("offset", (listing.page() - 1) * listing.size());
+        }
+        return spec;
+    }
+
+    private static String drugWhere(CatalogRules.Listing listing) {
+        StringBuilder where = new StringBuilder(" WHERE true");
+        if (listing.text() != null) {
+            where.append(
+                    """
+                     AND (product_id = :id
+                       OR product_name ILIKE :pattern ESCAPE '\\'
+                       OR display_name ILIKE :pattern ESCAPE '\\'
+                       OR marketer_name ILIKE :pattern ESCAPE '\\'
+                       OR medicine_type ILIKE :pattern ESCAPE '\\'
+                       OR product_form ILIKE :pattern ESCAPE '\\')
+                    """);
+        }
+        appendNameAndForm(where, listing);
+        if (listing.prescription() == CatalogRules.Rx.YES) {
+            where.append(" AND prescription_required = true");
+        } else if (listing.prescription() == CatalogRules.Rx.NO) {
+            where.append(" AND prescription_required = false");
+        }
+        if (listing.medicineType() != null) {
+            where.append(" AND medicine_type ILIKE :medicineType ESCAPE '\\'");
+        }
+        if (listing.marketer() != null) {
+            where.append(" AND marketer_name ILIKE :marketer ESCAPE '\\'");
+        }
+        return where.toString();
+    }
+
+    private static String fmcgWhere(CatalogRules.Listing listing) {
+        StringBuilder where = new StringBuilder(" WHERE true");
+        if (listing.text() != null) {
+            where.append(
+                    """
+                     AND (product_id = :id
+                       OR product_name ILIKE :pattern ESCAPE '\\'
+                       OR display_name ILIKE :pattern ESCAPE '\\'
+                       OR marketer_name ILIKE :pattern ESCAPE '\\'
+                       OR marketing_company ILIKE :pattern ESCAPE '\\'
+                       OR type ILIKE :pattern ESCAPE '\\'
+                       OR product_form ILIKE :pattern ESCAPE '\\')
+                    """);
+        }
+        appendNameAndForm(where, listing);
+        if (listing.fmcgType() != null) {
+            where.append(" AND type ILIKE :fmcgType ESCAPE '\\'");
+        }
+        if (listing.marketer() != null) {
+            where.append(
+                    " AND (marketer_name ILIKE :marketer ESCAPE '\\' OR marketing_company ILIKE :marketer ESCAPE '\\')");
+        }
+        return where.toString();
+    }
+
+    private static void appendNameAndForm(StringBuilder where, CatalogRules.Listing listing) {
+        if (listing.displayName() == CatalogRules.NamePresence.MISSING) {
+            where.append(" AND display_name IS NULL");
+        } else if (listing.displayName() == CatalogRules.NamePresence.PRESENT) {
+            where.append(" AND display_name IS NOT NULL");
+        }
+        if (listing.form() != null) {
+            where.append(" AND product_form ILIKE :form ESCAPE '\\'");
+        }
+    }
+
+    private static <T> CatalogDocuments.SummaryPage<T> empty(CatalogRules.Listing listing) {
+        return new CatalogDocuments.SummaryPage<>(List.of(), listing.page(), listing.size(), 0);
+    }
+
+    private static DrugSummary drugSummary(ResultSet rs) throws SQLException {
+        return new DrugSummary(
+                rs.getString("product_id"),
+                rs.getString("product_name"),
+                rs.getString("display_name"),
+                rs.getString("marketer_name"),
+                rs.getString("medicine_type"),
+                rs.getString("product_form"),
+                rs.getBigDecimal("mrp"),
+                rs.getBoolean("prescription_required"),
+                rs.getString("package"),
+                rs.getBigDecimal("qty_amount"),
+                rs.getString("qty_unit"));
+    }
+
+    private static FmcgSummary fmcgSummary(ResultSet rs) throws SQLException {
+        return new FmcgSummary(
+                rs.getString("product_id"),
+                rs.getString("product_name"),
+                rs.getString("display_name"),
+                rs.getString("marketer_name"),
+                rs.getString("marketing_company"),
+                rs.getString("type"),
+                rs.getString("product_form"),
+                rs.getBigDecimal("mrp"),
+                rs.getString("package"),
+                rs.getBigDecimal("qty_amount"),
+                rs.getString("qty_unit"));
+    }
+
     private static DrugParent drugParent(ResultSet rs) throws SQLException {
         return new DrugParent(
                 rs.getString("product_name"),
+                rs.getString("display_name"),
                 rs.getString("marketer_name"),
                 rs.getString("marketer_address"),
                 rs.getString("medicine_type"),
@@ -760,6 +924,7 @@ public class JdbcCatalogStore implements CatalogStore {
     private static FmcgParent fmcgParent(ResultSet rs) throws SQLException {
         return new FmcgParent(
                 rs.getString("product_name"),
+                rs.getString("display_name"),
                 rs.getString("marketing_company"),
                 rs.getString("type"),
                 rs.getString("packaging"),
@@ -779,6 +944,7 @@ public class JdbcCatalogStore implements CatalogStore {
 
     private record DrugParent(
             String productName,
+            String displayName,
             String marketerName,
             String marketerAddress,
             String medicineType,
@@ -801,6 +967,7 @@ public class JdbcCatalogStore implements CatalogStore {
 
     private record FmcgParent(
             String productName,
+            String displayName,
             String marketingCompany,
             String type,
             String packaging,

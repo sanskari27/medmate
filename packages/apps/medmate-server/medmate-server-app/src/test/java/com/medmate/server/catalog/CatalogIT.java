@@ -139,6 +139,64 @@ class CatalogIT {
         assertThat(missing.getBody().get("fmcg")).isEmpty();
     }
 
+    @Test
+    void displayNameStaysNullUntilAnUpdateAndTheListIsPaged() throws Exception {
+        try (Connection connection = catalogDataSource.getConnection();
+                Statement statement = connection.createStatement();
+                ResultSet index = statement.executeQuery("SELECT to_regclass('public.drugs_display_name_trgm')")) {
+            assertThat(index.next()).isTrue();
+            assertThat(index.getString(1)).isEqualTo("drugs_display_name_trgm");
+        }
+
+        ResponseEntity<JsonNode> anonymous =
+                rest.exchange("/api/v1/catalog", HttpMethod.GET, new HttpEntity<>(json()), JsonNode.class);
+        assertThat(anonymous.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        String admin = token(verify("9822001702"));
+        JsonNode created = exchange(
+                HttpMethod.POST, "/api/v1/catalog/drugs", drug("Paracetamol", "Caffeine"), admin, HttpStatus.CREATED);
+        assertThat(created.get("drug").get(0).get("displayName").isNull()).isTrue();
+
+        Map<String, Object> second = drug("Zinc", "Oxide");
+        second.put("productId", "DR101");
+        second.put("productName", "Zinc");
+        exchange(HttpMethod.POST, "/api/v1/catalog/drugs", second, admin, HttpStatus.CREATED);
+
+        JsonNode firstPage = exchange(HttpMethod.GET, "/api/v1/catalog?page=1&size=1", null, admin, HttpStatus.OK);
+        assertThat(firstPage.get("drug").get("total").asInt()).isEqualTo(2);
+        assertThat(firstPage.get("drug").get("items")).hasSize(1);
+        assertThat(firstPage.get("drug").get("items").get(0).get("productId").asText())
+                .isEqualTo("DR100");
+        assertThat(firstPage.get("drug").get("items").get(0).get("displayName").isNull())
+                .isTrue();
+        assertThat(firstPage.get("fmcg").get("total").asInt()).isEqualTo(0);
+
+        JsonNode secondPage = exchange(HttpMethod.GET, "/api/v1/catalog?page=2&size=1", null, admin, HttpStatus.OK);
+        assertThat(secondPage.get("drug").get("items").get(0).get("productId").asText())
+                .isEqualTo("DR101");
+        assertThat(secondPage.get("drug").get("total").asInt()).isEqualTo(2);
+
+        JsonNode prescription =
+                exchange(HttpMethod.GET, "/api/v1/catalog?prescription=no&fmcgType=soap", null, admin, HttpStatus.OK);
+        assertThat(prescription.get("drug").get("total").asInt()).isEqualTo(0);
+        assertThat(prescription.get("fmcg").get("total").asInt()).isEqualTo(0);
+
+        Map<String, Object> named = drug("Paracetamol", "Caffeine");
+        named.put("displayName", "Shop name");
+        exchange(HttpMethod.PUT, "/api/v1/catalog/drugs/DR100", named, admin, HttpStatus.OK);
+        JsonNode found = exchange(HttpMethod.GET, "/api/search?q=shop", null, null, HttpStatus.OK);
+        assertThat(found.get("drug").get(0).get("displayName").asText()).isEqualTo("Shop name");
+
+        exchange(HttpMethod.PUT, "/api/v1/catalog/drugs/DR100", drug("Paracetamol", "Caffeine"), admin, HttpStatus.OK);
+        JsonNode cleared = exchange(HttpMethod.GET, "/api/products/DR100", null, null, HttpStatus.OK);
+        assertThat(cleared.get("drug").get(0).get("displayName").isNull()).isTrue();
+
+        ResponseEntity<JsonNode> badKind = rest.exchange(
+                "/api/v1/catalog?kind=nope", HttpMethod.GET, new HttpEntity<>(bearer(admin)), JsonNode.class);
+        assertThat(badKind.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(badKind.getBody().get("detail").asText()).isEqualTo("Filter is not valid");
+    }
+
     private JsonNode exchange(
             HttpMethod method, String path, Map<String, Object> body, String token, HttpStatus status) {
         HttpHeaders headers = token == null ? json() : bearer(token);

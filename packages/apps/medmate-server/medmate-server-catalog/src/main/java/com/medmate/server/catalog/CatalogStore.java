@@ -6,6 +6,8 @@ public interface CatalogStore {
 
     CatalogDocuments.SearchResponse search(String query, int limit);
 
+    CatalogDocuments.CatalogList list(CatalogRules.Listing listing);
+
     Found findMany(List<String> ids);
 
     CatalogDocuments.DrugDetail createDrug(CatalogDocuments.DrugDetail draft);

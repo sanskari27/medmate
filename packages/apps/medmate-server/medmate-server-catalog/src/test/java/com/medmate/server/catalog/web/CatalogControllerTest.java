@@ -54,6 +54,52 @@ class CatalogControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Query is not valid"));
         verify(store, never()).search("a", 20);
+
+        when(store.search("crocin", 20))
+                .thenReturn(new CatalogDocuments.SearchResponse(
+                        List.of(new CatalogDocuments.DrugSummary(
+                                "DR100", "Crocin", "Counter Crocin", null, null, null, null, false, null, null, null)),
+                        List.of()));
+        mvc.perform(get("/api/search").param("q", "crocin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.drug[0].displayName").value("Counter Crocin"));
+    }
+
+    @Test
+    void theCatalogListIsLimitedToAdminAndSales() throws Exception {
+        when(store.list(any()))
+                .thenReturn(new CatalogDocuments.CatalogList(
+                        new CatalogDocuments.SummaryPage<>(
+                                List.of(new CatalogDocuments.DrugSummary(
+                                        "DR100",
+                                        "Crocin",
+                                        "Counter Crocin",
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        false,
+                                        null,
+                                        null,
+                                        null)),
+                                1,
+                                25,
+                                1),
+                        new CatalogDocuments.SummaryPage<>(List.of(), 1, 25, 0)));
+        mvc.perform(get("/api/v1/catalog").principal(admin(false)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.drug.total").value(1))
+                .andExpect(jsonPath("$.drug.items[0].displayName").value("Counter Crocin"))
+                .andExpect(jsonPath("$.fmcg.total").value(0));
+
+        mvc.perform(get("/api/v1/catalog"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("This action is not allowed."));
+        mvc.perform(get("/api/v1/catalog").principal(staff(StaffSubtype.SUPPORT, false)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/catalog").param("kind", "nope").principal(admin(false)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Filter is not valid"));
     }
 
     @Test

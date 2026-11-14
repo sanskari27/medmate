@@ -6,6 +6,7 @@ export { useAuthActions, useAuthState } from "./hooks";
 export {
   accountRoleLabel,
   canHandleSupportCases,
+  canManageCatalog,
   canReview,
   canSupport,
   canUseAdminPortal,

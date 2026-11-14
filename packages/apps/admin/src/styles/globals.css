@@ -146,6 +146,15 @@ body {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
 
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 @keyframes pd-fade {
   from {
     opacity: 0;

@@ -1,5 +1,6 @@
 import { combineReducers } from "@reduxjs/toolkit";
 import { authApi, authReducer } from "@/features/authentication";
+import { catalogApi } from "@/features/catalog";
 import { leadsApi } from "@/features/leads";
 import { pharmaciesApi } from "@/features/pharmacies";
 import { reviewsApi } from "@/features/reviews";
@@ -12,4 +13,5 @@ export const rootReducer = combineReducers({
   [pharmaciesApi.reducerPath]: pharmaciesApi.reducer,
   [supportApi.reducerPath]: supportApi.reducer,
   [leadsApi.reducerPath]: leadsApi.reducer,
+  [catalogApi.reducerPath]: catalogApi.reducer,
 });

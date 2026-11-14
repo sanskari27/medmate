@@ -19,6 +19,8 @@ tests {
   test("a known id returns the product and an unknown id is empty", function() {
     if (res.getStatus() === 200) {
       expect(res.body.drug.length + res.body.fmcg.length).to.be.at.least(1);
+      const product = res.body.drug[0] || res.body.fmcg[0];
+      expect(product).to.have.property("displayName");
       return;
     }
     expect(res.getStatus()).to.equal(404);

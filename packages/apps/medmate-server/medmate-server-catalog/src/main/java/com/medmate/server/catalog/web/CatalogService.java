@@ -37,6 +37,27 @@ public class CatalogService {
         return read(() -> store.search(parsed.text(), parsed.limit()));
     }
 
+    public CatalogDocuments.CatalogList list(
+            AccountPrincipal actor,
+            String kind,
+            String query,
+            String displayName,
+            String prescription,
+            String form,
+            String medicineType,
+            String fmcgType,
+            String marketer,
+            String page,
+            String size) {
+        require(actor);
+        CatalogRules.Listing listing = CatalogRules.list(
+                kind, query, displayName, prescription, form, medicineType, fmcgType, marketer, page, size);
+        if (listing.problem() != null) {
+            throw problem(HttpStatus.BAD_REQUEST, listing.problem());
+        }
+        return read(() -> store.list(listing));
+    }
+
     public CatalogDocuments.ProductPage products(String ids) {
         CatalogRules.Ids parsed = CatalogRules.ids(ids);
         if (parsed.problem() != null) {

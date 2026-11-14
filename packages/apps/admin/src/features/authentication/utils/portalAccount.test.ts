@@ -3,6 +3,7 @@ import type { Account, AccountType } from "@/types";
 import {
   accountRoleLabel,
   canHandleSupportCases,
+  canManageCatalog,
   canReview,
   canSupport,
   canUseAdminPortal,
@@ -55,5 +56,10 @@ describe("portal access", () => {
     expect(canSupport(account("staff", ["finance"]))).toBe(false);
     expect(canHandleSupportCases(account("admin"))).toBe(false);
     expect(canHandleSupportCases(account("staff", ["support"]))).toBe(true);
+    expect(canManageCatalog(account("admin"))).toBe(true);
+    expect(canManageCatalog(account("staff", ["sales"]))).toBe(true);
+    expect(canManageCatalog(account("staff", ["support", "sales"]))).toBe(true);
+    expect(canManageCatalog(account("staff", ["support"]))).toBe(false);
+    expect(canManageCatalog(account("staff", ["finance"]))).toBe(false);
   });
 });

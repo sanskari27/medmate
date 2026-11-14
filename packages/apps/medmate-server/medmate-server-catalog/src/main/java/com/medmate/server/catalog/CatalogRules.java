@@ -1,6 +1,8 @@
 package com.medmate.server.catalog;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.medmate.server.shared.error.ApiProblem;
+import com.medmate.server.shared.web.PageQuery;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,6 +23,50 @@ public final class CatalogRules {
     public record ParsedDrug(CatalogDocuments.DrugDetail draft, String problem) {}
 
     public record ParsedFmcg(CatalogDocuments.FmcgDetail draft, String problem) {}
+
+    public enum Kind {
+        BOTH,
+        DRUG,
+        FMCG
+    }
+
+    public enum NamePresence {
+        ANY,
+        MISSING,
+        PRESENT
+    }
+
+    public enum Rx {
+        ANY,
+        YES,
+        NO
+    }
+
+    public record Listing(
+            Kind kind,
+            String text,
+            NamePresence displayName,
+            Rx prescription,
+            String form,
+            String medicineType,
+            String fmcgType,
+            String marketer,
+            int page,
+            int size,
+            String problem) {
+
+        public boolean includeDrugs() {
+            return kind != Kind.FMCG && fmcgType == null;
+        }
+
+        public boolean includeFmcg() {
+            return kind != Kind.DRUG && prescription == Rx.ANY && medicineType == null;
+        }
+
+        private static Listing rejected(String problem) {
+            return new Listing(null, null, null, null, null, null, null, null, 0, 0, problem);
+        }
+    }
 
     public static Query search(String rawQuery, String rawLimit) {
         String query = rawQuery == null ? "" : rawQuery.trim();
@@ -67,6 +113,60 @@ public final class CatalogRules {
         return new Ids(List.copyOf(seen), null);
     }
 
+    public static Listing list(
+            String rawKind,
+            String rawQuery,
+            String rawDisplayName,
+            String rawPrescription,
+            String rawForm,
+            String rawMedicineType,
+            String rawFmcgType,
+            String rawMarketer,
+            String rawPage,
+            String rawSize) {
+        int page;
+        int size;
+        try {
+            PageQuery parsed = PageQuery.parse(rawPage, rawSize);
+            page = parsed.page();
+            size = parsed.size();
+        } catch (ApiProblem exception) {
+            return Listing.rejected("Page is not valid");
+        }
+        Kind kind = kind(rawKind);
+        if (kind == null) {
+            return Listing.rejected("Filter is not valid");
+        }
+        String text = rawQuery == null ? "" : rawQuery.trim();
+        if (text.length() > 80) {
+            return Listing.rejected("Query is not valid");
+        }
+        NamePresence displayName = presence(rawDisplayName);
+        Rx prescription = prescription(rawPrescription);
+        if (displayName == null || prescription == null) {
+            return Listing.rejected("Filter is not valid");
+        }
+        String form = filterText(rawForm);
+        String medicineType = filterText(rawMedicineType);
+        String fmcgType = filterText(rawFmcgType);
+        String marketer = filterText(rawMarketer);
+        if (form == INVALID || medicineType == INVALID || fmcgType == INVALID || marketer == INVALID) {
+            return Listing.rejected("Filter is not valid");
+        }
+        return new Listing(
+                kind,
+                text.isEmpty() ? null : text,
+                displayName,
+                prescription,
+                form,
+                medicineType,
+                fmcgType,
+                marketer,
+                page,
+                size,
+                null);
+    }
+
     public static String pathId(String raw) {
         if (raw == null) {
             return null;
@@ -103,6 +203,7 @@ public final class CatalogRules {
         return new CatalogDocuments.DrugDetail(
                 productId(body, expectedId),
                 required(body, "productName"),
+                optional(body, "displayName"),
                 optional(body, "marketerName"),
                 optional(body, "marketerAddress"),
                 optional(body, "medicineType"),
@@ -137,6 +238,7 @@ public final class CatalogRules {
         return new CatalogDocuments.FmcgDetail(
                 productId(body, expectedId),
                 required(body, "productName"),
+                optional(body, "displayName"),
                 optional(body, "marketingCompany"),
                 optional(body, "type"),
                 optional(body, "packaging"),
@@ -281,6 +383,52 @@ public final class CatalogRules {
             throw new Invalid();
         }
         return node;
+    }
+
+    private static final String INVALID = "\u0000";
+
+    private static Kind kind(String raw) {
+        String value = raw == null ? "" : raw.trim();
+        return switch (value) {
+            case "", "both" -> Kind.BOTH;
+            case "drug" -> Kind.DRUG;
+            case "fmcg" -> Kind.FMCG;
+            default -> null;
+        };
+    }
+
+    private static NamePresence presence(String raw) {
+        String value = raw == null ? "" : raw.trim();
+        return switch (value) {
+            case "", "any" -> NamePresence.ANY;
+            case "missing" -> NamePresence.MISSING;
+            case "present" -> NamePresence.PRESENT;
+            default -> null;
+        };
+    }
+
+    private static Rx prescription(String raw) {
+        String value = raw == null ? "" : raw.trim();
+        return switch (value) {
+            case "", "any" -> Rx.ANY;
+            case "yes" -> Rx.YES;
+            case "no" -> Rx.NO;
+            default -> null;
+        };
+    }
+
+    private static String filterText(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String text = raw.trim();
+        if (text.isEmpty()) {
+            return null;
+        }
+        if (text.length() > 80) {
+            return INVALID;
+        }
+        return text;
     }
 
     private static final class Invalid extends RuntimeException {}

@@ -1,0 +1,35 @@
+meta {
+  name: List products
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/catalog?page=1&size=25
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a platform admin or sales staff lists both catalogs", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.drug.items).to.be.an("array");
+    expect(res.body.drug).to.have.property("total");
+    expect(res.body.fmcg.items).to.be.an("array");
+    expect(res.body.fmcg).to.have.property("total");
+  });
+}
+
+docs {
+  A platform admin or sales staff pages drugs and FMCG together. page defaults to 1 and size defaults to 25.
+}

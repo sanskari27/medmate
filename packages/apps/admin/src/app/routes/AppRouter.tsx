@@ -5,12 +5,14 @@ import {
   LoginPage,
   PinSetupPage,
   accountRoleLabel,
+  canManageCatalog,
   canReview,
   canSupport,
   canUseAdminPortal,
   useAuthActions,
   useAuthState,
 } from "@/features/authentication";
+import { CatalogEditorPage, CatalogPage } from "@/features/catalog";
 import { LeadDetailPage, LeadsPage } from "@/features/leads";
 import { PharmacyDetailPage } from "@/features/pharmacies";
 import { ReviewDetailPage, ReviewsPage } from "@/features/reviews";
@@ -27,6 +29,7 @@ export function AppRouter() {
   const items = navRoutes(session?.account);
   const review = canReview(session?.account);
   const support = canSupport(session?.account);
+  const catalog = canManageCatalog(session?.account);
   const roleLabel = session ? accountRoleLabel(session.account) : "";
   const storedName = session?.account.displayName?.trim() ?? "";
   const displayName = storedName || roleLabel;
@@ -56,7 +59,10 @@ export function AppRouter() {
           {items
             .filter(
               (route) =>
-                route.path !== "/reviews" && route.path !== "/support" && route.path !== "/leads",
+                route.path !== "/reviews" &&
+                route.path !== "/support" &&
+                route.path !== "/leads" &&
+                route.path !== "/catalog",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -84,6 +90,34 @@ export function AppRouter() {
           <Route
             path="/leads/:leadId"
             element={support ? <LeadDetailPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/catalog"
+            element={catalog ? <CatalogPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/catalog/drugs/new"
+            element={
+              catalog ? <CatalogEditorPage kind="drug" /> : <Navigate to="/dashboard" replace />
+            }
+          />
+          <Route
+            path="/catalog/fmcg/new"
+            element={
+              catalog ? <CatalogEditorPage kind="fmcg" /> : <Navigate to="/dashboard" replace />
+            }
+          />
+          <Route
+            path="/catalog/drugs/:productId"
+            element={
+              catalog ? <CatalogEditorPage kind="drug" /> : <Navigate to="/dashboard" replace />
+            }
+          />
+          <Route
+            path="/catalog/fmcg/:productId"
+            element={
+              catalog ? <CatalogEditorPage kind="fmcg" /> : <Navigate to="/dashboard" replace />
+            }
           />
           <Route path="/pharmacies/:pharmacyId" element={<PharmacyDetailPage />} />
         </Route>

@@ -11,6 +11,7 @@ public final class CatalogDocuments {
     public record DrugSummary(
             String productId,
             String productName,
+            String displayName,
             String marketerName,
             String medicineType,
             String productForm,
@@ -23,6 +24,7 @@ public final class CatalogDocuments {
     public record FmcgSummary(
             String productId,
             String productName,
+            String displayName,
             String marketerName,
             String marketingCompany,
             String type,
@@ -46,6 +48,7 @@ public final class CatalogDocuments {
     public record DrugDetail(
             String productId,
             String productName,
+            String displayName,
             String marketerName,
             String marketerAddress,
             String medicineType,
@@ -77,6 +80,7 @@ public final class CatalogDocuments {
     public record FmcgDetail(
             String productId,
             String productName,
+            String displayName,
             String marketingCompany,
             String type,
             String packaging,
@@ -104,4 +108,8 @@ public final class CatalogDocuments {
     public record Products(List<DrugDetail> drug, List<FmcgDetail> fmcg) {}
 
     public record ProductPage(List<DrugDetail> drug, List<FmcgDetail> fmcg, List<String> missing) {}
+
+    public record SummaryPage<T>(List<T> items, int page, int size, int total) {}
+
+    public record CatalogList(SummaryPage<DrugSummary> drug, SummaryPage<FmcgSummary> fmcg) {}
 }

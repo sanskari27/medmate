@@ -3,6 +3,7 @@ package com.medmate.server.stock;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.medmate.server.catalog.CatalogDocuments;
+import com.medmate.server.catalog.CatalogRules;
 import com.medmate.server.catalog.CatalogStore;
 import java.math.BigDecimal;
 import java.util.List;
@@ -64,6 +65,7 @@ class StoreMedicineCatalogTest {
         return new CatalogDocuments.DrugDetail(
                 id,
                 name,
+                null,
                 "GSK",
                 null,
                 "allopathy",
@@ -98,6 +100,7 @@ class StoreMedicineCatalogTest {
                 id,
                 name,
                 null,
+                null,
                 "soap",
                 "Bottle",
                 pack,
@@ -126,6 +129,11 @@ class StoreMedicineCatalogTest {
         @Override
         public CatalogDocuments.SearchResponse search(String query, int limit) {
             return new CatalogDocuments.SearchResponse(List.of(), List.of());
+        }
+
+        @Override
+        public CatalogDocuments.CatalogList list(CatalogRules.Listing listing) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

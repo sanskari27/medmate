@@ -35,6 +35,33 @@ public class CatalogController {
         return catalog.search(q, limit);
     }
 
+    @GetMapping("/api/v1/catalog")
+    public CatalogDocuments.CatalogList list(
+            Authentication authentication,
+            @RequestParam(required = false) String kind,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String displayName,
+            @RequestParam(required = false) String prescription,
+            @RequestParam(required = false) String form,
+            @RequestParam(required = false) String medicineType,
+            @RequestParam(required = false) String fmcgType,
+            @RequestParam(required = false) String marketer,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size) {
+        return catalog.list(
+                principal(authentication),
+                kind,
+                q,
+                displayName,
+                prescription,
+                form,
+                medicineType,
+                fmcgType,
+                marketer,
+                page,
+                size);
+    }
+
     @GetMapping("/api/products")
     public CatalogDocuments.ProductPage products(@RequestParam(required = false) String ids) {
         return catalog.products(ids);
