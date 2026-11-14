@@ -55,7 +55,9 @@ export function WardSetupModal({
   const [picked, setPicked] = useState<string | null>(null);
   const [draft, setDraft] = useState<WardDraft>(blankWard());
   const showingNew = picked === "new" || (picked === null && wards.length === 0 && canCreate);
-  const selected = showingNew ? null : (wards.find((ward) => ward.id === picked) ?? wards[0] ?? null);
+  const selected = showingNew
+    ? null
+    : (wards.find((ward) => ward.id === picked) ?? wards[0] ?? null);
   const beds = Number(draft.beds) || 0;
   const ready = draft.name.trim().length > 0 && draft.code.trim().length > 0;
 
@@ -149,7 +151,12 @@ export function WardSetupModal({
           {showingNew ? (
             <CreatePanel draft={draft} beds={beds} onChange={setDraft} onSubmit={createWard} />
           ) : selected ? (
-            <EditPanel key={selected.id} ward={selected} canUpdate={canUpdate} onUpdate={onUpdate} />
+            <EditPanel
+              key={selected.id}
+              ward={selected}
+              canUpdate={canUpdate}
+              onUpdate={onUpdate}
+            />
           ) : (
             <Text className="text-[13px] text-muted">No wards to edit.</Text>
           )}
