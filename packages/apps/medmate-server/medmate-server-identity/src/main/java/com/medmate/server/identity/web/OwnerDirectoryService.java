@@ -5,6 +5,7 @@ import com.medmate.server.identity.access.AccountType;
 import com.medmate.server.identity.access.BlockRules;
 import com.medmate.server.identity.access.Verification;
 import com.medmate.server.identity.documents.DocumentStore;
+import com.medmate.server.identity.pharmacy.PharmacyRules;
 import com.medmate.server.identity.store.BlockStore;
 import com.medmate.server.identity.store.IdentityStore;
 import com.medmate.server.identity.store.PharmacyStore;
@@ -131,8 +132,23 @@ public class OwnerDirectoryService {
         boolean disabled = pharmacies.ownerDisabled(pharmacyId);
         BlockStore.OpenRequest open = blocks.openForPharmacy(pharmacyId).orElse(null);
         ReviewService.ApplicationDetail fields = ReviewService.ApplicationDetail.from(application, documents);
+        List<ReviewView> reviews = pharmacies.reviews(pharmacyId).stream()
+                .map(row -> new ReviewView(row.stage(), row.decision(), row.comment(), row.actor(), row.at()))
+                .toList();
+        List<BlockHistoryView> blockHistory = blocks.history(pharmacyId).stream()
+                .map(row -> new BlockHistoryView(
+                        row.reason(),
+                        row.status(),
+                        row.requestedBy(),
+                        row.requestedAt(),
+                        row.decidedBy(),
+                        row.decidedAt()))
+                .toList();
         return OwnerDetail.from(
                 fields,
+                application.createdAt(),
+                reviews,
+                blockHistory,
                 BlockRules.State.of(disabled, open != null).wire(),
                 open == null ? null : new BlockRequestView(open.id(), open.reason(), open.requestedAt()));
     }
@@ -191,6 +207,16 @@ public class OwnerDirectoryService {
 
     public record BlockRequestView(UUID id, String reason, Instant requestedAt) {}
 
+    public record ReviewView(String stage, String decision, String comment, String actor, Instant at) {}
+
+    public record BlockHistoryView(
+            String reason,
+            String status,
+            String requestedBy,
+            Instant requestedAt,
+            String decidedBy,
+            Instant decidedAt) {}
+
     public record OwnerDetail(
             UUID pharmacyId,
             String status,
@@ -223,11 +249,21 @@ public class OwnerDirectoryService {
             boolean looseSelling,
             boolean lowStockAlerts,
             Instant submittedAt,
+            Instant createdAt,
+            List<PharmacyRules.ExtraDetail> extraDetails,
+            List<ReviewView> reviews,
+            List<BlockHistoryView> blockHistory,
             List<ReviewService.DocumentItem> documents,
             String blockState,
             BlockRequestView request) {
 
-        static OwnerDetail from(ReviewService.ApplicationDetail detail, String blockState, BlockRequestView request) {
+        static OwnerDetail from(
+                ReviewService.ApplicationDetail detail,
+                Instant createdAt,
+                List<ReviewView> reviews,
+                List<BlockHistoryView> blockHistory,
+                String blockState,
+                BlockRequestView request) {
             return new OwnerDetail(
                     detail.pharmacyId(),
                     detail.status(),
@@ -260,6 +296,10 @@ public class OwnerDirectoryService {
                     detail.looseSelling(),
                     detail.lowStockAlerts(),
                     detail.submittedAt(),
+                    createdAt,
+                    detail.extraDetails(),
+                    reviews,
+                    blockHistory,
                     detail.documents(),
                     blockState,
                     request);

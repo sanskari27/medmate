@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
-import type { OwnerDetail, OwnerSummary } from "../types";
+import type { OwnerDetail, OwnerSummary, PharmacyFleet, PharmacyInsights } from "../types";
 
 export const pharmaciesApi = createApi({
   reducerPath: "pharmaciesApi",
@@ -14,6 +14,12 @@ export const pharmaciesApi = createApi({
     }),
     ownerDetail: build.query<OwnerDetail, string>({
       query: (id) => ({ url: `/pharmacy-owners/${id}` }),
+    }),
+    pharmacyFleet: build.query<PharmacyFleet, void>({
+      query: () => ({ url: "/pharmacy-insights" }),
+    }),
+    pharmacyInsights: build.query<PharmacyInsights, { id: string; range: string }>({
+      query: ({ id, range }) => ({ url: `/pharmacy-insights/${id}`, params: { range } }),
     }),
     requestBlock: build.mutation<OwnerDetail, { id: string; reason: string }>({
       query: ({ id, reason }) => ({
@@ -59,6 +65,8 @@ export const pharmaciesApi = createApi({
 export const {
   useListOwnersQuery,
   useOwnerDetailQuery,
+  usePharmacyFleetQuery,
+  usePharmacyInsightsQuery,
   useRequestBlockMutation,
   useDecideBlockMutation,
   useBlockOwnerMutation,

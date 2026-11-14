@@ -168,7 +168,7 @@ describe("AppRouter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(await screen.findByRole("button", { name: "Auto-fill" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify & log in" }));
-    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     const nav = document.querySelector("[data-slot=nav]");
     expect(nav).toBeTruthy();
     const names = within(nav as HTMLElement)
@@ -334,7 +334,7 @@ describe("AppRouter", () => {
       JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
     );
     renderAt("/reviews");
-    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reviews" })).toBeNull();
     expect(screen.getByRole("button", { name: "Pharmacies" })).toBeTruthy();
   });
@@ -349,7 +349,7 @@ describe("AppRouter", () => {
       JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
     );
     renderAt("/support");
-    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Support" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
   });
@@ -364,7 +364,7 @@ describe("AppRouter", () => {
       JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
     );
     renderAt("/leads");
-    expect(await screen.findByText("This page is not built yet.")).toBeTruthy();
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
   });
 

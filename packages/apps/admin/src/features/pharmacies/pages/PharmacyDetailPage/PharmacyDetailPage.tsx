@@ -10,8 +10,18 @@ import { Text } from "@/components/ui/Text";
 import { useAuthState } from "@/features/authentication";
 import { DocumentPreview } from "../../components/DocumentPreview";
 import { FieldSections } from "../../components/FieldSections";
+import { PharmacyActivity } from "../../components/PharmacyActivity";
 import { useFilePreview } from "../../hooks/useFilePreview";
-import { blockLabel, ownerSections, slotLabel, textValue } from "../../ownerModel";
+import {
+  blockLabel,
+  decisionName,
+  formatWhen,
+  missingSlots,
+  ownerSections,
+  slotLabel,
+  stageName,
+  textValue,
+} from "../../ownerModel";
 import { problemMessage } from "../../problemMessage";
 import {
   useBlockOwnerMutation,
@@ -192,7 +202,17 @@ function BlockPanel({
       ) : (
         <Text className="mt-3 text-[13.5px] font-bold">{blockLabel(detail.blockState)}</Text>
       )}
-      {detail.request ? <Text className="mt-2 text-[13.5px]">{detail.request.reason}</Text> : null}
+      {detail.request ? (
+        <Stack className="mt-2 gap-1">
+          <Text className="text-[13.5px]">{detail.request.reason}</Text>
+          <Text className="text-[13.5px] text-muted">
+            Requested{" "}
+            <time dateTime={detail.request.requestedAt}>
+              {formatWhen(detail.request.requestedAt)}
+            </time>
+          </Text>
+        </Stack>
+      ) : null}
       {!admin && detail.blockState === "requested" ? (
         <Text className="mt-2 text-[13.5px] text-muted">Waiting for admin review.</Text>
       ) : null}
@@ -293,8 +313,84 @@ export function PharmacyDetailPage() {
         <Stack className="gap-4">
           <DocumentPanel documents={documents} selected={selected} onSelect={setSlot} />
           <BlockPanel detail={application} onChange={setOverride} />
+          <History detail={application} />
         </Stack>
       </div>
+      <PharmacyActivity pharmacyId={application.pharmacyId} />
+    </Stack>
+  );
+}
+
+function History({ detail }: { detail: OwnerDetail }) {
+  const missing = missingSlots(detail.documents ?? []);
+  const reviews = detail.reviews ?? [];
+  const blocks = detail.blockHistory ?? [];
+  return (
+    <Stack className="gap-4">
+      <section className="rounded-lg border border-line bg-paper px-4 py-4">
+        <Heading level={3} className="text-[15px]">
+          Missing documents
+        </Heading>
+        {missing.length === 0 ? (
+          <Text className="mt-3 text-[13.5px] text-muted">Every document slot is stored.</Text>
+        ) : (
+          <Text className="mt-3 text-[13.5px]">{missing.map(slotLabel).join(", ")}</Text>
+        )}
+      </section>
+      <section className="rounded-lg border border-line bg-paper px-4 py-4">
+        <Heading level={3} className="text-[15px]">
+          Review history
+        </Heading>
+        {reviews.length === 0 ? (
+          <Text className="mt-3 text-[13.5px] text-muted">No review decisions.</Text>
+        ) : (
+          <ul className="mt-3 grid gap-3">
+            {reviews.map((review) => (
+              <li key={`${review.at}-${review.stage}`}>
+                <Text className="text-[13.5px] font-bold">
+                  {stageName(review.stage)} · {decisionName(review.decision)}
+                </Text>
+                <Text className="text-[13.5px] text-muted">
+                  {textValue(review.actor)} ·{" "}
+                  <time dateTime={review.at}>{formatWhen(review.at)}</time>
+                </Text>
+                {review.comment ? <Text className="text-[13.5px]">{review.comment}</Text> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="rounded-lg border border-line bg-paper px-4 py-4">
+        <Heading level={3} className="text-[15px]">
+          Block history
+        </Heading>
+        {blocks.length === 0 ? (
+          <Text className="mt-3 text-[13.5px] text-muted">No closed block requests.</Text>
+        ) : (
+          <ul className="mt-3 grid gap-3">
+            {blocks.map((block) => (
+              <li key={`${block.requestedAt}-${block.reason}`}>
+                <Text className="text-[13.5px] font-bold">
+                  {decisionName(block.status)} · {block.reason}
+                </Text>
+                <Text className="text-[13.5px] text-muted">
+                  Requested by {textValue(block.requestedBy)} ·{" "}
+                  <time dateTime={block.requestedAt}>{formatWhen(block.requestedAt)}</time>
+                </Text>
+                <Text className="text-[13.5px] text-muted">
+                  Decided by {textValue(block.decidedBy)}
+                  {block.decidedAt ? (
+                    <>
+                      {" "}
+                      · <time dateTime={block.decidedAt}>{formatWhen(block.decidedAt)}</time>
+                    </>
+                  ) : null}
+                </Text>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </Stack>
   );
 }

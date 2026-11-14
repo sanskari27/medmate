@@ -82,6 +82,7 @@ public class PharmacyStore {
             boolean looseSelling,
             boolean lowStockAlerts,
             Instant submittedAt,
+            Instant createdAt,
             List<PharmacyRules.ExtraDetail> extraDetails,
             List<StoredDocument> documents) {
 
@@ -119,10 +120,13 @@ public class PharmacyStore {
                     looseSelling,
                     lowStockAlerts,
                     submittedAt,
+                    createdAt,
                     extraDetails,
                     documents);
         }
     }
+
+    public record ReviewRow(String stage, String decision, String comment, String actor, Instant at) {}
 
     public record Summary(UUID pharmacyId, String name, String phone, VerificationStatus status, Instant submittedAt) {}
 
@@ -177,7 +181,7 @@ public class PharmacyStore {
                           p.industry, p.registration_type, p.pharmacy_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
                           p.trade_licence_no, p.enable_tds, p.enable_tcs, p.pharmacist_name, p.invoice_prefix,
                           p.terms, p.accept_online_orders, p.self_order_kiosk, p.e_invoicing, p.loose_selling,
-                          p.low_stock_alerts, p.submitted_at, p.extra_details
+                          p.low_stock_alerts, p.submitted_at, p.created_at, p.extra_details
                         FROM pharmacy p
                         JOIN account a ON a.id = p.owner_account_id
                         WHERE p.id = :id
@@ -587,6 +591,25 @@ public class PharmacyStore {
                 .list();
     }
 
+    public List<ReviewRow> reviews(UUID pharmacyId) {
+        return jdbc.sql(
+                        """
+                        SELECT d.stage, d.decision, d.comment, d.created_at, COALESCE(a.display_name, '') AS actor
+                        FROM review_decision d
+                        JOIN account a ON a.id = d.actor_account_id
+                        WHERE d.pharmacy_id = :pharmacy
+                        ORDER BY d.created_at, d.id
+                        """)
+                .param("pharmacy", pharmacyId)
+                .query((rs, row) -> new ReviewRow(
+                        rs.getString("stage"),
+                        rs.getString("decision"),
+                        rs.getString("comment"),
+                        rs.getString("actor"),
+                        rs.getTimestamp("created_at").toInstant()))
+                .list();
+    }
+
     public void insertDecision(
             UUID id, UUID pharmacyId, String stage, String decision, String comment, UUID actorId, Instant now) {
         jdbc.sql(
@@ -639,6 +662,7 @@ public class PharmacyStore {
                 rs.getBoolean("loose_selling"),
                 rs.getBoolean("low_stock_alerts"),
                 submitted == null ? null : submitted.toInstant(),
+                rs.getTimestamp("created_at").toInstant(),
                 readExtra(rs.getString("extra_details")),
                 List.of());
     }

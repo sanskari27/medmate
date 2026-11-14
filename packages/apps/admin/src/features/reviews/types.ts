@@ -46,6 +46,7 @@ export type ApplicationDetail = {
   looseSelling: boolean;
   lowStockAlerts: boolean;
   submittedAt: string | null;
+  extraDetails?: { label: string; value: string }[];
   documents: ApplicationDocument[];
 };
 

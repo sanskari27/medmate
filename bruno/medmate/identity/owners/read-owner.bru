@@ -29,6 +29,10 @@ tests {
     expect(body.blockState).to.be.oneOf(["clear", "requested", "blocked"]);
     expect(body).to.have.property("request");
     expect(body.documents).to.be.an("array");
+    expect(body).to.have.property("createdAt");
+    expect(body.extraDetails).to.be.an("array");
+    expect(body.reviews).to.be.an("array");
+    expect(body.blockHistory).to.be.an("array");
   });
 }
 

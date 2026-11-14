@@ -107,9 +107,18 @@ export function applicationSections(detail: ApplicationDetail): FieldSection[] {
     {
       title: "Summary",
       rows: [
+        { label: "Pharmacy id", value: textValue(detail.pharmacyId) },
         { label: "Status", value: statusLabel(detail.status) },
         { label: "Phone", value: textValue(detail.phone) },
         { label: "Email", value: textValue(detail.email) },
+        ...(detail.rejection
+          ? [
+              {
+                label: "Rejection",
+                value: `${detail.rejection.stage === "compliance" ? "Compliance" : detail.rejection.stage === "admin" ? "Final review" : detail.rejection.stage} · ${textValue(detail.rejection.comment)}`,
+              },
+            ]
+          : []),
         {
           label: "Submitted",
           value: detail.submittedAt ? formatWhen(detail.submittedAt) : "—",
@@ -162,5 +171,16 @@ export function applicationSections(detail: ApplicationDetail): FieldSection[] {
         { label: "Low-stock alerts", value: yesNo(detail.lowStockAlerts) },
       ],
     },
+    ...((detail.extraDetails ?? []).length === 0
+      ? []
+      : [
+          {
+            title: "Extra details",
+            rows: (detail.extraDetails ?? []).map((item) => ({
+              label: textValue(item.label),
+              value: textValue(item.value),
+            })),
+          },
+        ]),
   ];
 }

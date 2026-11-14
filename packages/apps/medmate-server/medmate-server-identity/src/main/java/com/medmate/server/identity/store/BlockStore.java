@@ -2,6 +2,7 @@ package com.medmate.server.identity.store;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
@@ -19,6 +20,14 @@ public class BlockStore {
     }
 
     public record OpenRequest(UUID id, UUID pharmacyId, String reason, String status, Instant requestedAt) {}
+
+    public record ClosedRequest(
+            String reason,
+            String status,
+            String requestedBy,
+            Instant requestedAt,
+            String decidedBy,
+            Instant decidedAt) {}
 
     public Optional<OpenRequest> find(UUID id) {
         return jdbc.sql(
@@ -42,6 +51,31 @@ public class BlockStore {
                 .param("pharmacy", pharmacyId)
                 .query(this::read)
                 .optional();
+    }
+
+    public List<ClosedRequest> history(UUID pharmacyId) {
+        return jdbc.sql(
+                        """
+                        SELECT r.reason, r.status, r.requested_at, r.decided_at,
+                          COALESCE(req.display_name, '') AS requested_by_name,
+                          COALESCE(dec.display_name, '') AS decided_by_name
+                        FROM pharmacy_block_request r
+                        JOIN account req ON req.id = r.requested_by
+                        LEFT JOIN account dec ON dec.id = r.decided_by
+                        WHERE r.pharmacy_id = :pharmacy AND r.status <> 'open'
+                        ORDER BY r.requested_at, r.id
+                        """)
+                .param("pharmacy", pharmacyId)
+                .query((rs, row) -> new ClosedRequest(
+                        rs.getString("reason"),
+                        rs.getString("status"),
+                        rs.getString("requested_by_name"),
+                        rs.getTimestamp("requested_at").toInstant(),
+                        rs.getString("decided_by_name"),
+                        rs.getTimestamp("decided_at") == null
+                                ? null
+                                : rs.getTimestamp("decided_at").toInstant()))
+                .list();
     }
 
     public void insertOpen(UUID id, UUID pharmacyId, UUID requestedBy, String reason, Instant now) {

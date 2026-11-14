@@ -19,6 +19,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-reports/              pharmacy reports read from posted rows
   medmate-server-dashboard/            pharmacy dashboard read from posted rows
   medmate-server-leads/                public website forms for the admin inbox
+  medmate-server-oversight/            admin pharmacy fleet and activity reads
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
     com.medmate.server.config          process concerns (request id, local datasource)
@@ -85,6 +86,10 @@ The 23 pharmacy reports live in `medmate-server-reports`. The module depends on 
 ## Dashboard
 
 The pharmacy dashboard lives in `medmate-server-dashboard`. The module depends on identity for a membership check and on reports for the posted-row snapshot. It does not write those tables and it does not require a permission key. There is no dashboard table. `GET /pharmacy/dashboard` is open to an approved owner and to approved staff. [0021](decisions/0021-pharmacy-dashboard.md) records that boundary.
+
+## Oversight
+
+Admin pharmacy insights live in `medmate-server-oversight`. The module depends on identity for the same directory-reader check as pharmacy owners, and on dashboard and reports for the posted-row money rules. It reads identity, support, employee, CRM, offer, rack, and distributor tables through JDBC and does not write them. There is no oversight table. `GET /pharmacy-insights` is the fleet. `GET /pharmacy-insights/{id}` is one pharmacy. [0023](decisions/0023-admin-pharmacy-insights.md) records that boundary.
 
 ## Leads
 

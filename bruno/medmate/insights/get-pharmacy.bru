@@ -1,0 +1,39 @@
+meta {
+  name: Get pharmacy insights
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/pharmacy-insights/{{examplePharmacyId}}?range=30d
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.range).to.equal("30d");
+    expect(res.body).to.have.property("commercial");
+    expect(res.body).to.have.property("stock");
+    expect(res.body).to.have.property("people");
+    expect(res.body.cases).to.be.an("array");
+    expect(res.body.commercial.today).to.have.property("netSales");
+    expect(res.body.commercial.window).to.have.property("netProfit");
+    expect(res.body.stock).to.have.property("cost");
+    expect(res.body.people.patients).to.have.property("buyers");
+  });
+}
+
+docs {
+  One pharmacy's posted sales, stock, people counts, and support cases. range is 7d, 30d, or 12m.
+}

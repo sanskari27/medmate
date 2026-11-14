@@ -1,0 +1,1 @@
+export { PharmacyActivity } from "./PharmacyActivity";

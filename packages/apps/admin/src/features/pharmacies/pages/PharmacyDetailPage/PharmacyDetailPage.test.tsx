@@ -122,6 +122,32 @@ afterEach(() => {
 });
 
 describe("PharmacyDetailPage", () => {
+  it("shows the stored rejection, extra details, and request time", async () => {
+    renderDetail(
+      adminAccount,
+      owner({
+        status: "rejected",
+        rejection: { stage: "compliance", comment: "Licence is unreadable" },
+        createdAt: "2026-11-01T10:00:00Z",
+        extraDetails: [{ label: "Website", value: "care.example" }],
+        reviews: [],
+        blockHistory: [],
+        blockState: "requested",
+        request: { id: "req-1", reason: "Missing licence", requestedAt: "2026-11-12T10:00:00Z" },
+      }),
+    );
+    expect(await screen.findByText("pharm-1")).toBeTruthy();
+    expect(screen.getByText("Compliance · Licence is unreadable")).toBeTruthy();
+    expect(screen.getByText("Website")).toBeTruthy();
+    expect(screen.getByText("care.example")).toBeTruthy();
+    const times = [...document.querySelectorAll("time")].map((node) =>
+      node.getAttribute("datetime"),
+    );
+    expect(times).toContain("2026-11-12T10:00:00Z");
+    expect(screen.getByText("No review decisions.")).toBeTruthy();
+    expect(screen.getByText("No closed block requests.")).toBeTruthy();
+  });
+
   it("lets staff request a block and refuses an empty reason", async () => {
     const posts = renderDetail(
       staffAccount,

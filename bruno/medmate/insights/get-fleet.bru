@@ -1,0 +1,38 @@
+meta {
+  name: Get pharmacy fleet
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy-insights
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body).to.have.property("total");
+    expect(res.body).to.have.property("status");
+    expect(res.body).to.have.property("features");
+    expect(res.body).to.have.property("timing");
+    expect(res.body).to.have.property("dormant");
+    expect(res.body).to.have.property("support");
+    expect(res.body.rankingRange).to.equal("30d");
+    expect(res.body.rankings).to.have.property("sales");
+  });
+}
+
+docs {
+  Platform admin and platform staff read every pharmacy as counts. Rankings use the last 30 days.
+}

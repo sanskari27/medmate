@@ -1,4 +1,4 @@
-import type { BlockState, OwnerDetail } from "./types";
+import type { BlockState, OwnerDetail, OwnerDocument } from "./types";
 
 const SLOT_LABELS: Record<string, string> = {
   logo: "Logo",
@@ -10,6 +10,8 @@ const SLOT_LABELS: Record<string, string> = {
   "pharmacist-certificate": "Pharmacist certificate",
   signature: "Signature",
 };
+
+const DOCUMENT_SLOTS = Object.keys(SLOT_LABELS);
 
 export type FieldRow = {
   label: string;
@@ -39,6 +41,23 @@ export function blockLabel(state: BlockState): string {
 
 export function slotLabel(slot: string): string {
   return SLOT_LABELS[slot] ?? slot;
+}
+
+export function missingSlots(documents: OwnerDocument[]): string[] {
+  const present = new Set(documents.map((document) => document.slot));
+  return DOCUMENT_SLOTS.filter((slot) => !present.has(slot));
+}
+
+export function stageName(stage: string): string {
+  if (stage === "compliance") return "Compliance";
+  if (stage === "admin") return "Final review";
+  return stage;
+}
+
+export function decisionName(decision: string): string {
+  if (decision === "approve") return "Approved";
+  if (decision === "reject") return "Rejected";
+  return decision;
 }
 
 export function textValue(value: string | null | undefined): string {
@@ -77,14 +96,28 @@ export function ownerSections(detail: OwnerDetail): FieldSection[] {
     {
       title: "Summary",
       rows: [
+        { label: "Pharmacy id", value: textValue(detail.pharmacyId) },
         { label: "Status", value: statusLabel(detail.status) },
         { label: "Phone", value: textValue(detail.phone) },
         { label: "Email", value: textValue(detail.email) },
+        {
+          label: "Created",
+          value: detail.createdAt ? formatWhen(detail.createdAt) : "—",
+          dateTime: detail.createdAt ?? undefined,
+        },
         {
           label: "Submitted",
           value: detail.submittedAt ? formatWhen(detail.submittedAt) : "—",
           dateTime: detail.submittedAt ?? undefined,
         },
+        ...(detail.rejection
+          ? [
+              {
+                label: "Rejection",
+                value: `${stageName(detail.rejection.stage)} · ${textValue(detail.rejection.comment)}`,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -132,5 +165,16 @@ export function ownerSections(detail: OwnerDetail): FieldSection[] {
         { label: "Low-stock alerts", value: yesNo(detail.lowStockAlerts) },
       ],
     },
+    ...((detail.extraDetails ?? []).length === 0
+      ? []
+      : [
+          {
+            title: "Extra details",
+            rows: (detail.extraDetails ?? []).map((item) => ({
+              label: textValue(item.label),
+              value: textValue(item.value),
+            })),
+          },
+        ]),
   ];
 }
