@@ -1,6 +1,6 @@
 export const PHARMACY_TYPES = [
   { value: "pharmacy", label: "Pharmacy" },
-  { value: "hospital", label: "Hospital" },
+  { value: "hospital", label: "Hospital", disabled: true },
 ] as const;
 
 export const REGISTRATION_TYPES = [

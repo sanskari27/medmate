@@ -17,7 +17,7 @@ export function SelectField({
 }: {
   label: string;
   value: string;
-  options: readonly { value: string; label: string }[];
+  options: readonly { value: string; label: string; disabled?: boolean }[];
   onChange: (value: string) => void;
 }) {
   return (
@@ -29,7 +29,11 @@ export function SelectField({
           className="w-full appearance-none rounded-sm border border-line-2 bg-paper px-3 py-[9px] pr-9 text-[13.5px] text-ink outline-none"
         >
           {options.map((option) => (
-            <option key={option.value || "empty"} value={option.value}>
+            <option
+              key={option.value || "empty"}
+              value={option.value}
+              disabled={option.disabled}
+            >
               {option.label}
             </option>
           ))}

@@ -69,6 +69,12 @@ describe("SetupWizard", () => {
     expect(screen.getByText("Compliance rejected this application")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Get started" }));
+    expect((screen.getByRole("option", { name: "Hospital" }) as HTMLOptionElement).disabled).toBe(
+      true,
+    );
+    expect((screen.getByRole("option", { name: "Pharmacy" }) as HTMLOptionElement).disabled).toBe(
+      false,
+    );
     for (let step = 0; step < 6; step += 1) {
       fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     }

@@ -16,7 +16,7 @@ import {
   choiceOptions,
   documentAccept,
 } from "../options";
-import type { DocumentSlot, DraftPatch, SetupDraft } from "../types";
+import type { DocumentSlot, DraftPatch, PharmacyType, SetupDraft } from "../types";
 import { FeatureRow, FileField, LogoPicker, SelectField } from "./fields";
 import { IconBox, IconBulb, IconInventory, IconKiosk, IconRupee, IconSparkle } from "./icons";
 
@@ -118,9 +118,7 @@ export function BusinessStep({ draft, phone, onChange }: StepProps) {
           label="Pharmacy or hospital *"
           value={draft.pharmacyType}
           options={[{ value: "", label: "Select" }, ...PHARMACY_TYPES]}
-          onChange={(value) =>
-            onChange({ pharmacyType: value === "hospital" || value === "pharmacy" ? value : "" })
-          }
+          onChange={(value) => onChange({ pharmacyType: value as PharmacyType })}
         />
         <SelectField
           label="Registration type *"
