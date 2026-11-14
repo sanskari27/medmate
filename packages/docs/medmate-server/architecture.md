@@ -109,7 +109,7 @@ The hospital ward board lives in `medmate-server-wards`. The module depends on i
 
 ## Catalog
 
-The shared drug and OTC/FMCG catalog lives in `medmate-server-catalog`. The module depends on identity for the admin and `staff:sales` check. Identity does not depend on it. Stock depends on it for medicine identity. The catalog does not depend on stock. Tables stay in the separate Postgres database `medicine_data`. A second Flyway history in that database applies `V1__medicine_catalog.sql`. The primary Flyway history is unchanged. `GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` are anonymous. `POST` and `PUT` under `/api/v1/catalog` replace a whole product and are limited to a platform admin or sales staff. There is no delete. The Node medicine-data process still serves its own host. [0027](decisions/0027-medicine-catalog.md) records that boundary.
+The shared drug and OTC/FMCG catalog lives in `medmate-server-catalog`. The module depends on identity for the admin and `staff:sales` check. Identity does not depend on it. Stock depends on it for medicine identity. The catalog does not depend on stock. Tables stay in the separate Postgres database `medicine_data`. A second Flyway history in that database applies `V1__medicine_catalog.sql`. The primary Flyway history is unchanged. `GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` are anonymous. `POST` and `PUT` under `/api/v1/catalog` replace a whole product and are limited to a platform admin or sales staff. There is no delete. The Node medicine-data process and its host are gone. The database and its secret remain. [0027](decisions/0027-medicine-catalog.md) records that boundary.
 
 ## Leads
 

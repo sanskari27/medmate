@@ -15,7 +15,7 @@ Purchases need the shared drug and FMCG catalog. That catalog lives in Postgres 
 - The security filter permits `/api/search`, `/api/products`, `/api/products/**`, `/api/v1/catalog`, and `/api/v1/catalog/**` so a missing session reaches the module. The pharmacy approval gate allows the same paths through. A rejected bearer stays on the existing JWT filter.
 - Stock's local and prod catalog adapter reads this module. The identity-it profile keeps the in-process catalog fake. The HTTP client and `medmate.medicine-data.base-url` are removed.
 - Production passes `MEDICINE_DATASOURCE_URL`, `MEDICINE_DATASOURCE_USERNAME`, and `MEDICINE_DATASOURCE_PASSWORD` when `/medmate-repo/medmate-server/catalog_database_secret_name` names the existing secret `medmate/medicine-data/database`. No new database is created.
-- Server-core is not a source for this module. The Node app and its host stay until a later cutover.
+- Server-core is not a source for this module. The Node app, its host, and its Terraform stack are removed. The database `medicine_data`, the role `medicine_data_user`, and the secret `medmate/medicine-data/database` stay.
 
 ## Consequences
 
