@@ -20,6 +20,7 @@ import { ReportPage, ReportsPage, canOpenReports } from "@/features/reports";
 import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
 import { PatientsPage, canOpenPatients } from "@/features/patients";
+import { DoctorsPage, canOpenDoctors } from "@/features/doctors";
 import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
 import { RacksPage, canOpenRacks } from "@/features/racks";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
@@ -64,6 +65,11 @@ export function AppRouter() {
   const billingOpen = canOpenBilling(session?.account.pharmacyRole, session?.account.permissions);
   const salesOpen = canOpenSales(session?.account.pharmacyRole, session?.account.permissions);
   const patientsOpen = canOpenPatients(session?.account.pharmacyRole, session?.account.permissions);
+  const doctorsOpen = canOpenDoctors(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+    session?.account.pharmacyType,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -74,6 +80,8 @@ export function AppRouter() {
   ]);
   const counterPaths = new Set(["/billing", "/sales", "/patients"]);
   let counterLabeled = false;
+  const hospitalPaths = new Set(["/doctors"]);
+  let hospitalLabeled = false;
   const cataloguePaths = new Set([
     "/distributors",
     "/purchases",
@@ -99,6 +107,7 @@ export function AppRouter() {
       if (route.path === "/billing") return billingOpen;
       if (route.path === "/sales") return salesOpen;
       if (route.path === "/patients") return patientsOpen;
+      if (route.path === "/doctors") return doctorsOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
@@ -106,6 +115,10 @@ export function AppRouter() {
       if (counterPaths.has(route.path)) {
         next = counterLabeled ? { ...route, group: undefined } : { ...route, group: "Counter" };
         counterLabeled = true;
+      }
+      if (hospitalPaths.has(route.path)) {
+        next = hospitalLabeled ? { ...route, group: undefined } : { ...next, group: "Hospital" };
+        hospitalLabeled = true;
       }
       if (cataloguePaths.has(route.path)) {
         next = catalogueLabeled ? { ...route, group: undefined } : { ...route, group: "Catalogue" };
@@ -163,7 +176,8 @@ export function AppRouter() {
                 route.path !== "/reports" &&
                 route.path !== "/billing" &&
                 route.path !== "/sales" &&
-                route.path !== "/patients",
+                route.path !== "/patients" &&
+                route.path !== "/doctors",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -203,6 +217,10 @@ export function AppRouter() {
           <Route
             path="/patients"
             element={patientsOpen ? <PatientsPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/doctors"
+            element={doctorsOpen ? <DoctorsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/offers"

@@ -11,6 +11,7 @@ describe("staff permission catalog", () => {
   it("groups management actions and counts them", () => {
     expect(PERMISSION_AREAS.map((area) => area.area)).toEqual([
       "Counter",
+      "Hospital",
       "Management",
       "Catalogue",
       "Business",
@@ -20,7 +21,8 @@ describe("staff permission catalog", () => {
       "Sales",
       "CRM · Patients",
     ]);
-    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual([
+    expect(PERMISSION_AREAS[1]?.modules.map((module) => module.module)).toEqual(["Doctors"]);
+    expect(PERMISSION_AREAS[2]?.modules.map((module) => module.module)).toEqual([
       "Manage users",
       "Manage Employees",
       "Invoice Settings",
@@ -33,6 +35,9 @@ describe("staff permission catalog", () => {
       "sales:return",
       "patients:read",
       "patients:update",
+      "doctors:read",
+      "doctors:create",
+      "doctors:update",
       "users:read",
       "users:create",
       "users:update",
@@ -69,19 +74,19 @@ describe("staff permission catalog", () => {
       "reports:read",
       "reports:export",
     ]);
-    expect(PERMISSION_AREAS[2]?.modules.map((module) => module.module)).toEqual([
+    expect(PERMISSION_AREAS[3]?.modules.map((module) => module.module)).toEqual([
       "Distributors",
       "Purchases",
       "Inventory",
       "Rack & Locations",
       "Offers",
     ]);
-    expect(PERMISSION_AREAS[3]?.modules.map((module) => module.module)).toEqual([
+    expect(PERMISSION_AREAS[4]?.modules.map((module) => module.module)).toEqual([
       "Expenses",
       "Reports",
     ]);
-    expect(PERMISSION_KEYS).toHaveLength(41);
-    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 41");
+    expect(PERMISSION_KEYS).toHaveLength(44);
+    expect(accessLabel(["users:read", "support:write", "inventory:read"])).toBe("3 / 44");
     expect(togglePermission(["users:read"], "users:read")).toEqual([]);
     expect(togglePermission(["users:read"], "users:create")).toEqual([
       "users:read",

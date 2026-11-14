@@ -16,4 +16,5 @@ public record AccountPrincipal(
         String rejectionComment,
         Set<StaffSubtype> subtypes,
         Set<String> permissions,
-        boolean pinSet) {}
+        boolean pinSet,
+        String pharmacyType) {}

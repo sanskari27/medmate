@@ -1,0 +1,57 @@
+meta {
+  name: Create doctor
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/doctors
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "code": "DR-ANU",
+    "firstName": "Anu",
+    "lastName": "Rao",
+    "displayName": "Dr Anu Rao",
+    "gender": "female",
+    "primaryMobile": "{{examplePhone}}",
+    "registrationNumber": "KMC-1",
+    "qualification": "MBBS",
+    "specialization": "General medicine",
+    "workplaceName": "City Hospital",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "pinCode": "560001",
+    "windows": [
+      {
+        "type": "offline",
+        "days": ["monday"],
+        "start": "09:00",
+        "end": "13:00",
+        "fee": "0"
+      }
+    ]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with doctors:create, adds a doctor.
+  A 201 response stores doctorId from doctor.id. The screen does not show that id.
+}

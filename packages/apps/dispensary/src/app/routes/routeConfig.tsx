@@ -20,6 +20,7 @@ import { ReportsPage } from "@/features/reports";
 import { BillingPage } from "@/features/billing";
 import { SalesPage } from "@/features/sales";
 import { PatientsPage } from "@/features/patients";
+import { DoctorsPage } from "@/features/doctors";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -64,6 +65,15 @@ export const appRoutes: AppRoute[] = [
     sub: "Customers and khata",
     icon: <IconUsers size={19} />,
     element: <PatientsPage />,
+  },
+  {
+    path: "/doctors",
+    label: "Doctors",
+    title: "Doctors",
+    sub: "Registration, consultation and documents",
+    group: "Hospital",
+    icon: <IconUsers size={19} />,
+    element: <DoctorsPage />,
   },
   {
     path: "/distributors",

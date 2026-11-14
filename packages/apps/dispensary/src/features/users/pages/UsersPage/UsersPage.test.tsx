@@ -80,7 +80,7 @@ describe("UsersPage", () => {
   it("lists staff without a role field and shows the management permissions", async () => {
     renderPage();
     expect(await screen.findByText("Counter")).toBeTruthy();
-    expect(screen.getByText("1 / 41")).toBeTruthy();
+    expect(screen.getByText("1 / 44")).toBeTruthy();
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByText("Reset to Cashier defaults")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Add user" }));
@@ -93,6 +93,11 @@ describe("UsersPage", () => {
     expect(screen.getByRole("checkbox", { name: "Sales Return" })).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "CRM · Patients Read" })).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "CRM · Patients Update" })).toBeTruthy();
+    expect(within(dialog).getByText("Hospital")).toBeTruthy();
+    expect(within(dialog).getByText("Doctors")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Doctors Read" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Doctors Create" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Doctors Update" })).toBeTruthy();
     expect(screen.getByText("Management")).toBeTruthy();
     expect(screen.getByText("Manage users")).toBeTruthy();
     expect(screen.getByText("Help & Support")).toBeTruthy();

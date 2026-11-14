@@ -41,6 +41,19 @@ export const PERMISSION_AREAS: PermissionArea[] = [
     ],
   },
   {
+    area: "Hospital",
+    modules: [
+      {
+        module: "Doctors",
+        actions: [
+          { key: "doctors:read", label: "Read" },
+          { key: "doctors:create", label: "Create" },
+          { key: "doctors:update", label: "Update" },
+        ],
+      },
+    ],
+  },
+  {
     area: "Management",
     modules: [
       {

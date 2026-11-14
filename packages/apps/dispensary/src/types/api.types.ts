@@ -21,6 +21,7 @@ export type Account = {
   permissions: string[];
   pinSetupRequired: boolean;
   disabled?: boolean;
+  pharmacyType?: "pharmacy" | "hospital" | null;
 };
 
 export type Session = {

@@ -64,6 +64,7 @@ public class AccountDirectory {
         VerificationStatus status = null;
         String stage = null;
         String comment = null;
+        String pharmacyType = null;
         if (account.type() == AccountType.PHARMACY) {
             PharmacyStore.PharmacyRow owned =
                     pharmacies.findByOwner(account.id()).orElse(null);
@@ -73,6 +74,7 @@ public class AccountDirectory {
                 status = owned.status();
                 stage = owned.rejectionStage();
                 comment = owned.rejectionComment();
+                pharmacyType = owned.pharmacyType();
             } else {
                 UUID memberOf = pharmacies.membership(account.id()).orElse(null);
                 if (memberOf != null) {
@@ -83,6 +85,7 @@ public class AccountDirectory {
                     status = pharmacy.status();
                     stage = pharmacy.rejectionStage();
                     comment = pharmacy.rejectionComment();
+                    pharmacyType = pharmacy.pharmacyType();
                 }
             }
         }
@@ -102,6 +105,7 @@ public class AccountDirectory {
                 comment,
                 subtypes,
                 permissions,
-                pinSet);
+                pinSet,
+                pharmacyType);
     }
 }

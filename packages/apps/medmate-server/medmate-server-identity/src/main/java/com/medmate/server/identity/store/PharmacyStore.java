@@ -43,7 +43,8 @@ public class PharmacyStore {
             String rejectionComment,
             String name,
             String email,
-            Instant submittedAt) {}
+            Instant submittedAt,
+            String pharmacyType) {}
 
     public record DocumentRow(String objectKey, String contentType) {}
 
@@ -154,7 +155,7 @@ public class PharmacyStore {
     public Optional<PharmacyRow> findById(UUID id) {
         return jdbc.sql(
                         """
-                        SELECT id, owner_account_id, verification_status, rejection_stage, rejection_comment, name, email, submitted_at
+                        SELECT id, owner_account_id, verification_status, rejection_stage, rejection_comment, name, email, submitted_at, pharmacy_type
                         FROM pharmacy WHERE id = :id
                         """)
                 .param("id", id)
@@ -165,7 +166,7 @@ public class PharmacyStore {
     public Optional<PharmacyRow> findByOwner(UUID ownerAccountId) {
         return jdbc.sql(
                         """
-                        SELECT id, owner_account_id, verification_status, rejection_stage, rejection_comment, name, email, submitted_at
+                        SELECT id, owner_account_id, verification_status, rejection_stage, rejection_comment, name, email, submitted_at, pharmacy_type
                         FROM pharmacy WHERE owner_account_id = :owner
                         """)
                 .param("owner", ownerAccountId)
@@ -714,7 +715,8 @@ public class PharmacyStore {
                 rs.getString("rejection_comment"),
                 rs.getString("name"),
                 rs.getString("email"),
-                submitted == null ? null : submitted.toInstant());
+                submitted == null ? null : submitted.toInstant(),
+                rs.getString("pharmacy_type"));
     }
 
     private static String blank(String value) {

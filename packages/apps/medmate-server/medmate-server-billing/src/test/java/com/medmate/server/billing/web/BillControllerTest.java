@@ -83,7 +83,8 @@ class BillControllerTest {
                 null,
                 Set.of(),
                 Set.of(keys),
-                true);
+                true,
+                null);
         return new AccountAuthentication(principal);
     }
 }

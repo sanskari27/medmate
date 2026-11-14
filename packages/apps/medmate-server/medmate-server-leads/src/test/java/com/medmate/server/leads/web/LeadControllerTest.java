@@ -185,7 +185,8 @@ class LeadControllerTest {
                 null,
                 subtypes,
                 Set.of(),
-                true);
+                true,
+                null);
         return new AccountAuthentication(principal);
     }
 }

@@ -83,7 +83,8 @@ class DashboardControllerTest {
                 null,
                 Set.of(),
                 Set.of(),
-                true);
+                true,
+                null);
         return new AccountAuthentication(principal);
     }
 }

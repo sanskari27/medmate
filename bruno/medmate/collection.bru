@@ -244,6 +244,10 @@ script:post-response {
     bru.setEnvVar("employeeCode", body.employee.id);
   }
 
+  if (pathname === "/pharmacy/doctors" && status === 201 && body && body.doctor && body.doctor.id) {
+    bru.setEnvVar("doctorId", body.doctor.id);
+  }
+
   if (pathname === "/pharmacy/distributors" && status === 201 && body && body.distributor && body.distributor.id) {
     bru.setEnvVar("distributorCode", body.distributor.id);
   }

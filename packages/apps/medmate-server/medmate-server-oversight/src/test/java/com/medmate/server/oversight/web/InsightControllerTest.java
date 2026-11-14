@@ -95,7 +95,8 @@ class InsightControllerTest {
                 null,
                 subtypes,
                 Set.of(),
-                true));
+                true,
+                null));
     }
 
     private static AccountAuthentication pharmacy() {
@@ -112,6 +113,7 @@ class InsightControllerTest {
                 null,
                 Set.of(),
                 Set.of(),
-                true));
+                true,
+                null));
     }
 }

@@ -414,6 +414,47 @@ describe("AppRouter", () => {
     expect(screen.getByText("Catalogue")).toBeTruthy();
     expect(screen.getByText("Business")).toBeTruthy();
     expect(screen.getByText("Counter")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Doctors" })).toBeNull();
+  });
+
+  it("shows Doctors after Counter for a hospital owner", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyType: "hospital" },
+    });
+    renderAt("/dashboard");
+    const nav = document.querySelector("[data-slot=nav]");
+    const names = within(nav as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+    expect(names.indexOf("Doctors")).toBe(names.indexOf("CRM - Patients") + 1);
+    expect(names.indexOf("Distributors")).toBe(names.indexOf("Doctors") + 1);
+    expect(screen.getByText("Hospital")).toBeTruthy();
+  });
+
+  it("sends hospital staff without doctors:read away from Doctors", () => {
+    writeSession({
+      ...session,
+      account: { ...session.account, pharmacyRole: "staff", pharmacyType: "hospital" },
+    });
+    renderAt("/doctors");
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Doctors" })).toBeNull();
+  });
+
+  it("shows Doctors to hospital staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        pharmacyType: "hospital",
+        permissions: ["doctors:read"],
+      },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Doctors" })).toBeTruthy();
+    expect(screen.getByText("Hospital")).toBeTruthy();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {

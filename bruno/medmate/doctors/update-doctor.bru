@@ -1,0 +1,37 @@
+meta {
+  name: Update doctor
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/doctors/{{doctorId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "specialization": "Cardiology",
+    "relationshipStatus": "visiting"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  doctors:update changes the doctor, including status, windows, and document verification.
+  Run Create doctor first so doctorId is stored. A retail pharmacy receives 403.
+}

@@ -84,6 +84,9 @@ class AccessTest {
         assertThat(Access.validKey("expenses:create")).isTrue();
         assertThat(Access.validKey("reports:read")).isTrue();
         assertThat(Access.validKey("reports:export")).isTrue();
+        assertThat(Access.validKey("doctors:read")).isTrue();
+        assertThat(Access.validKey("doctors:create")).isTrue();
+        assertThat(Access.validKey("doctors:update")).isTrue();
         assertThat(Access.pharmacyMember(
                         AccountType.PHARMACY,
                         false,

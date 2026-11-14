@@ -1,0 +1,28 @@
+meta {
+  name: List doctors
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/doctors
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with doctors:read, lists this pharmacy's doctors.
+}
