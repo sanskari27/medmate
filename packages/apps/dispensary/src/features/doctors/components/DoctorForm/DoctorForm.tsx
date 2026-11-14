@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/utils/className";
+import { departmentLabel, doctorDepartmentChoices, type Department } from "@/features/departments";
 import {
   CONSULTATION_TYPES,
   DAYS,
@@ -52,12 +53,14 @@ const DAY_SHORT: Record<string, string> = {
 
 export function DoctorForm({
   doctor,
+  departments,
   saving,
   error,
   onClose,
   onSave,
 }: {
   doctor: Doctor | null;
+  departments: Department[];
   saving: boolean;
   error: string | null;
   onClose: () => void;
@@ -318,6 +321,19 @@ export function DoctorForm({
                   value={form.gender}
                   options={GENDERS}
                   onChange={(gender) => patch({ gender })}
+                />
+                <Choice
+                  id="doctor-department"
+                  label="Department"
+                  value={form.departmentId}
+                  placeholder="No department"
+                  options={doctorDepartmentChoices(departments, doctor?.department ?? null).map(
+                    (department) => ({
+                      value: department.id,
+                      label: departmentLabel(department),
+                    }),
+                  )}
+                  onChange={(departmentId) => patch({ departmentId })}
                 />
               </Grid>
               <Section title="Professional" />

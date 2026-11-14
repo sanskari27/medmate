@@ -54,7 +54,8 @@ public class DoctorStore {
             String workplacePhone,
             String photoKey,
             String photoContentType,
-            String photoFileName) {
+            String photoFileName,
+            UUID departmentId) {
 
         public DoctorRules.Values values(List<DoctorRules.Window> windows) {
             return new DoctorRules.Values(
@@ -84,7 +85,8 @@ public class DoctorStore {
                     state,
                     pinCode,
                     workplacePhone,
-                    windows);
+                    windows,
+                    departmentId);
         }
     }
 
@@ -175,13 +177,13 @@ public class DoctorStore {
                           registration_number, registration_council, registration_state, qualification, specialization,
                           sub_specialization, years_experience, primary_mobile, alternate_mobile, email, whatsapp,
                           relationship_status, notes, workplace_name, workplace_type, address, city, state, pin_code,
-                          workplace_phone, photo_key, photo_content_type, photo_file_name)
+                          workplace_phone, photo_key, photo_content_type, photo_file_name, department_id)
                         VALUES (
                           :id, :pharmacy, :code, :codeKey, :firstName, :lastName, :displayName, :gender, :status,
                           :registrationNumber, :registrationCouncil, :registrationState, :qualification, :specialization,
                           :subSpecialization, :yearsExperience, :primaryMobile, :alternateMobile, :email, :whatsapp,
                           :relationshipStatus, :notes, :workplaceName, :workplaceType, :address, :city, :state, :pinCode,
-                          :workplacePhone, :photoKey, :photoType, :photoName)
+                          :workplacePhone, :photoKey, :photoType, :photoName, CAST(:departmentId AS uuid))
                         """),
                         id,
                         pharmacyId,
@@ -205,7 +207,8 @@ public class DoctorStore {
                           relationship_status = :relationshipStatus, notes = :notes, workplace_name = :workplaceName,
                           workplace_type = :workplaceType, address = :address, city = :city, state = :state,
                           pin_code = :pinCode, workplace_phone = :workplacePhone, photo_key = :photoKey,
-                          photo_content_type = :photoType, photo_file_name = :photoName
+                          photo_content_type = :photoType, photo_file_name = :photoName,
+                          department_id = CAST(:departmentId AS uuid)
                         WHERE pharmacy_id = :pharmacy AND id = :id
                         """),
                         id,
@@ -330,7 +333,13 @@ public class DoctorStore {
                 .param("workplacePhone", values.workplacePhone(), Types.VARCHAR)
                 .param("photoKey", stored.key(), Types.VARCHAR)
                 .param("photoType", stored.contentType(), Types.VARCHAR)
-                .param("photoName", stored.fileName(), Types.VARCHAR);
+                .param("photoName", stored.fileName(), Types.VARCHAR)
+                .param(
+                        "departmentId",
+                        values.departmentId() == null
+                                ? null
+                                : values.departmentId().toString(),
+                        Types.VARCHAR);
     }
 
     private String select() {
@@ -339,7 +348,7 @@ public class DoctorStore {
                   registration_council, registration_state, qualification, specialization, sub_specialization,
                   years_experience, primary_mobile, alternate_mobile, email, whatsapp, relationship_status, notes,
                   workplace_name, workplace_type, address, city, state, pin_code, workplace_phone, photo_key,
-                  photo_content_type, photo_file_name
+                  photo_content_type, photo_file_name, department_id
                 FROM doctor
                 """;
     }
@@ -377,7 +386,8 @@ public class DoctorStore {
                 rs.getString("workplace_phone"),
                 rs.getString("photo_key"),
                 rs.getString("photo_content_type"),
-                rs.getString("photo_file_name"));
+                rs.getString("photo_file_name"),
+                rs.getObject("department_id", UUID.class));
     }
 
     private WindowRow window(java.sql.ResultSet rs, int row) throws java.sql.SQLException {

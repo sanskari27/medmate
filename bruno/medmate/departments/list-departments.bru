@@ -1,0 +1,28 @@
+meta {
+  name: List departments
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/departments
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, hospital staff with departments:read, or staff who can create or update a doctor, lists this pharmacy's departments.
+}

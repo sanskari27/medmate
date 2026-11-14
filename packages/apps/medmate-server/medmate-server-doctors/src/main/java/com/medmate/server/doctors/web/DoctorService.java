@@ -1,6 +1,7 @@
 package com.medmate.server.doctors.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.medmate.server.departments.store.DepartmentStore;
 import com.medmate.server.doctors.DoctorRules;
 import com.medmate.server.doctors.store.DoctorStore;
 import com.medmate.server.identity.access.Access;
@@ -28,6 +29,7 @@ public class DoctorService {
     private static final String HOSPITAL_ONLY = "Doctors are only available for a hospital";
 
     private final DoctorStore doctors;
+    private final DepartmentStore departments;
     private final PharmacyStore pharmacies;
     private final DocumentStore documents;
     private final MedmateIdentityProperties properties;
@@ -35,11 +37,13 @@ public class DoctorService {
 
     public DoctorService(
             DoctorStore doctors,
+            DepartmentStore departments,
             PharmacyStore pharmacies,
             DocumentStore documents,
             MedmateIdentityProperties properties,
             Clock clock) {
         this.doctors = doctors;
+        this.departments = departments;
         this.pharmacies = pharmacies;
         this.documents = documents;
         this.properties = properties;
@@ -50,9 +54,14 @@ public class DoctorService {
         require(actor, DoctorRules.READ, "Doctors cannot be read");
         Map<UUID, List<DoctorStore.WindowRow>> windows = windows(actor.pharmacyId());
         Map<UUID, List<DoctorStore.DocumentRow>> docs = documents(actor.pharmacyId());
+        Map<UUID, DepartmentStore.DepartmentRow> directory = directory(actor.pharmacyId());
         List<DoctorViews.DoctorView> people = new ArrayList<>();
         for (DoctorStore.DoctorRow row : doctors.list(actor.pharmacyId())) {
-            people.add(view(row, windows.getOrDefault(row.id(), List.of()), docs.getOrDefault(row.id(), List.of())));
+            people.add(view(
+                    row,
+                    windows.getOrDefault(row.id(), List.of()),
+                    docs.getOrDefault(row.id(), List.of()),
+                    directory.get(row.departmentId())));
         }
         return new DoctorViews.ListResponse(people);
     }
@@ -81,6 +90,7 @@ public class DoctorService {
                 actor.pharmacyId(), DoctorRules.codeKey(prepared.values().code()), null)) {
             throw conflict();
         }
+        requireDepartment(actor.pharmacyId(), prepared.values().departmentId(), null);
         UUID id = UUID.randomUUID();
         DoctorStore.Photo stored = writePhoto(actor.pharmacyId(), id, photo, null, false);
         doctors.insert(id, actor.pharmacyId(), prepared.values(), stored);
@@ -114,6 +124,7 @@ public class DoctorService {
                 actor.pharmacyId(), DoctorRules.codeKey(prepared.values().code()), id)) {
             throw conflict();
         }
+        requireDepartment(actor.pharmacyId(), prepared.values().departmentId(), current.departmentId());
         boolean removePhoto = removePhoto(body, photo);
         DoctorStore.Photo stored = writePhoto(actor.pharmacyId(), id, photo, current.photoKey(), removePhoto);
         if (stored == null) {
@@ -180,8 +191,11 @@ public class DoctorService {
 
     private DoctorViews.OneResponse response(AccountPrincipal actor, UUID id) {
         DoctorStore.DoctorRow row = doctors.find(actor.pharmacyId(), id).orElseThrow(DoctorService::missing);
-        return new DoctorViews.OneResponse(
-                view(row, windowsFor(actor.pharmacyId(), id), documentsFor(actor.pharmacyId(), id)));
+        return new DoctorViews.OneResponse(view(
+                row,
+                windowsFor(actor.pharmacyId(), id),
+                documentsFor(actor.pharmacyId(), id),
+                department(actor.pharmacyId(), row.departmentId())));
     }
 
     private List<DoctorStore.WindowRow> windowsFor(UUID pharmacyId, UUID doctorId) {
@@ -242,8 +256,45 @@ public class DoctorService {
         return new DoctorViews.StoredFile(stored.contentType(), stored.body());
     }
 
+    private void requireDepartment(UUID pharmacyId, UUID departmentId, UUID currentId) {
+        if (departmentId == null) {
+            return;
+        }
+        DepartmentStore.DepartmentRow row =
+                departments.find(pharmacyId, departmentId).orElseThrow(() -> bad("Department was not found"));
+        if (!row.active() && !departmentId.equals(currentId)) {
+            throw bad("Department is inactive");
+        }
+    }
+
+    private DepartmentStore.DepartmentRow department(UUID pharmacyId, UUID departmentId) {
+        if (departmentId == null) {
+            return null;
+        }
+        return departments.find(pharmacyId, departmentId).orElse(null);
+    }
+
+    private Map<UUID, DepartmentStore.DepartmentRow> directory(UUID pharmacyId) {
+        Map<UUID, DepartmentStore.DepartmentRow> byId = new HashMap<>();
+        for (DepartmentStore.DepartmentRow row : departments.list(pharmacyId)) {
+            byId.put(row.id(), row);
+        }
+        return byId;
+    }
+
+    private static DoctorViews.DepartmentLink link(DepartmentStore.DepartmentRow department) {
+        if (department == null) {
+            return null;
+        }
+        return new DoctorViews.DepartmentLink(
+                department.id(), department.name(), department.code(), department.active());
+    }
+
     private DoctorViews.DoctorView view(
-            DoctorStore.DoctorRow row, List<DoctorStore.WindowRow> windows, List<DoctorStore.DocumentRow> docs) {
+            DoctorStore.DoctorRow row,
+            List<DoctorStore.WindowRow> windows,
+            List<DoctorStore.DocumentRow> docs,
+            DepartmentStore.DepartmentRow department) {
         DoctorViews.FileLink photo = null;
         if (row.photoKey() != null) {
             photo = new DoctorViews.FileLink(
@@ -300,7 +351,8 @@ public class DoctorService {
                 row.workplacePhone(),
                 photo,
                 windowLinks,
-                links);
+                links,
+                link(department));
     }
 
     private Map<UUID, List<DoctorStore.WindowRow>> windows(UUID pharmacyId) {

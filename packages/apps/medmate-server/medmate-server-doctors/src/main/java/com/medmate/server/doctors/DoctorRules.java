@@ -74,7 +74,8 @@ public final class DoctorRules {
             String state,
             String pinCode,
             String workplacePhone,
-            List<Window> windows) {}
+            List<Window> windows,
+            UUID departmentId) {}
 
     public record Prepared(Values values, List<DocumentChange> documentChanges, String problem) {}
 
@@ -166,6 +167,10 @@ public final class DoctorRules {
         if (changes == null) {
             return fail("Verification status is not recognised");
         }
+        String departmentProblem = departmentProblem(body);
+        if (departmentProblem != null) {
+            return fail(departmentProblem);
+        }
         return new Prepared(
                 new Values(
                         code,
@@ -194,7 +199,8 @@ public final class DoctorRules {
                         state,
                         pin,
                         workplacePhone,
-                        windows),
+                        windows,
+                        departmentId(body, null, false)),
                 changes,
                 null);
     }
@@ -282,6 +288,10 @@ public final class DoctorRules {
         if (changes == null) {
             return fail("Verification status is not recognised");
         }
+        String departmentProblem = departmentProblem(body);
+        if (departmentProblem != null) {
+            return fail(departmentProblem);
+        }
         return new Prepared(
                 new Values(
                         code(body, current.code(), true),
@@ -310,7 +320,8 @@ public final class DoctorRules {
                         region(body, "state", current.state(), true),
                         pin(body, current.pinCode(), true),
                         emptyPhone(body, "workplacePhone", current.workplacePhone()),
-                        body.has("windows") ? windows(body, current.windows(), true) : current.windows()),
+                        body.has("windows") ? windows(body, current.windows(), true) : current.windows(),
+                        departmentId(body, current.departmentId(), true)),
                 changes,
                 null);
     }
@@ -370,6 +381,39 @@ public final class DoctorRules {
 
     public static String codeKey(String code) {
         return code == null ? "" : code.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String departmentProblem(JsonNode body) {
+        if (body == null
+                || !body.has("departmentId")
+                || body.get("departmentId").isNull()) {
+            return null;
+        }
+        String value = body.get("departmentId").asText("").trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        try {
+            UUID.fromString(value);
+            return null;
+        } catch (IllegalArgumentException exception) {
+            return "Department was not found";
+        }
+    }
+
+    private static UUID departmentId(JsonNode body, UUID current, boolean updating) {
+        if (body == null || !body.has("departmentId")) {
+            return updating ? current : null;
+        }
+        JsonNode node = body.get("departmentId");
+        if (node.isNull()) {
+            return null;
+        }
+        String value = node.asText("").trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        return UUID.fromString(value);
     }
 
     private static Prepared fail(String problem) {

@@ -103,6 +103,13 @@ export type DoctorWindow = {
   fee: string;
 };
 
+export type DoctorDepartment = {
+  id: string;
+  name: string;
+  code: string;
+  isActive: boolean;
+};
+
 export type Doctor = {
   id: string;
   code: string;
@@ -134,6 +141,7 @@ export type Doctor = {
   photo: DoctorFile | null;
   windows: DoctorWindow[];
   documents: DoctorDocument[];
+  department: DoctorDepartment | null;
 };
 
 export type DoctorList = { doctors: Doctor[] };
@@ -175,6 +183,7 @@ export type DoctorDraft = {
   pinCode: string;
   workplacePhone: string;
   windows: WindowDraft[];
+  departmentId: string;
 };
 
 export type PendingDocument = {
@@ -246,6 +255,7 @@ export function blankDraft(): DoctorDraft {
     pinCode: "",
     workplacePhone: "",
     windows: [blankWindow()],
+    departmentId: "",
   };
 }
 
@@ -286,6 +296,7 @@ export function draftFromDoctor(doctor: Doctor): DoctorDraft {
           fee: window.fee,
         }))
       : [blankWindow()],
+    departmentId: doctor.department?.id ?? "",
   };
 }
 
@@ -357,6 +368,7 @@ export type DoctorPayload = {
   workplacePhone: string;
   windows: WindowDraft[];
   documents: { id: string; verificationStatus: VerificationStatus }[];
+  departmentId: string | null;
   removePhoto?: boolean;
 };
 
@@ -400,6 +412,7 @@ export function payload(
       id: document.id,
       verificationStatus: document.verificationStatus,
     })),
+    departmentId: draft.departmentId.trim() ? draft.departmentId.trim() : null,
     ...(removePhoto ? { removePhoto: true } : {}),
   };
 }
@@ -417,6 +430,7 @@ export function toFormData(
     if (key === "windows") body.set("windows", JSON.stringify(value));
     else if (key === "documents") body.set("documentUpdates", JSON.stringify(value));
     else if (key === "removePhoto") body.set("removePhoto", "true");
+    else if (key === "departmentId") body.set("departmentId", value ? String(value) : "");
     else body.set(key, String(value));
   }
   if (photo) body.set("photo", photo);

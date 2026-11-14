@@ -122,6 +122,72 @@ class DoctorsFlowIT {
         assertThat(hidden.getBody().get("detail").asText()).isEqualTo("Doctors are only available for a hospital");
     }
 
+    @Test
+    void aDoctorMayKeepOneActiveDepartment() {
+        JsonNode ownerSession = verify("9822000411", "pharmacy", "signup", false);
+        String owner = token(ownerSession);
+        approve(ownerSession.get("account").get("pharmacyId").asText(), "hospital");
+
+        String active = department(owner, "Cardiology", "CARD", true);
+        String inactive = department(owner, "Archive", "OLD", false);
+
+        ResponseEntity<JsonNode> created = exchange("/pharmacy/doctors", owner, doctorJson("DR-ANU"), HttpMethod.POST);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(created.getBody().get("doctor").get("department").isNull()).isTrue();
+        String doctorId = created.getBody().get("doctor").get("id").asText();
+
+        ResponseEntity<JsonNode> linked =
+                exchange("/pharmacy/doctors/" + doctorId, owner, Map.of("departmentId", active), HttpMethod.PATCH);
+        assertThat(linked.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(linked.getBody().get("doctor").get("department").get("code").asText())
+                .isEqualTo("CARD");
+
+        ResponseEntity<JsonNode> rejected =
+                exchange("/pharmacy/doctors/" + doctorId, owner, Map.of("departmentId", inactive), HttpMethod.PATCH);
+        assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(rejected.getBody().get("detail").asText()).isEqualTo("Department is inactive");
+        assertThat(get("/pharmacy/doctors/" + doctorId, owner)
+                        .get("doctor")
+                        .get("department")
+                        .get("code")
+                        .asText())
+                .isEqualTo("CARD");
+
+        ResponseEntity<JsonNode> retired =
+                exchange("/pharmacy/departments/" + active, owner, Map.of("isActive", false), HttpMethod.PATCH);
+        assertThat(retired.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<JsonNode> kept = exchange(
+                "/pharmacy/doctors/" + doctorId,
+                owner,
+                Map.of("departmentId", active, "code", "DR-KEEP"),
+                HttpMethod.PATCH);
+        assertThat(kept.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(kept.getBody().get("doctor").get("code").asText()).isEqualTo("DR-KEEP");
+        assertThat(kept.getBody()
+                        .get("doctor")
+                        .get("department")
+                        .get("isActive")
+                        .asBoolean())
+                .isFalse();
+
+        String editor = staff(owner, "9822000412", List.of("doctors:update"));
+        assertThat(get("/pharmacy/departments", editor).get("departments")).hasSize(2);
+        ResponseEntity<JsonNode> denied =
+                exchange("/pharmacy/departments", editor, Map.of("name", "Ward", "code", "WARD"), HttpMethod.POST);
+        assertThat(denied.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(denied.getBody().get("detail").asText()).isEqualTo("Departments cannot be created");
+    }
+
+    private String department(String token, String name, String code, boolean active) {
+        ResponseEntity<JsonNode> created = exchange(
+                "/pharmacy/departments",
+                token,
+                Map.of("name", name, "code", code, "isActive", active),
+                HttpMethod.POST);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return created.getBody().get("department").get("id").asText();
+    }
+
     private MultiValueMap<String, Object> doctorForm() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("code", "DR-ANU");

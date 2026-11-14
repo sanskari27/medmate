@@ -140,4 +140,61 @@ describe("DoctorsPage", () => {
     expect(screen.queryByRole("button", { name: "Dr Anu Rao" })).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+
+  it("keeps an inactive current department in the choices", async () => {
+    writeSession(session);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = input instanceof Request ? input.url : String(input);
+        if (url.includes("/pharmacy/departments")) {
+          return json({
+            departments: [
+              {
+                id: "card",
+                name: "Cardiology",
+                code: "CARD",
+                description: null,
+                isActive: true,
+                displayOrder: 1,
+                parent: null,
+              },
+              {
+                id: "old",
+                name: "Archive",
+                code: "OLD",
+                description: null,
+                isActive: false,
+                displayOrder: 2,
+                parent: null,
+              },
+            ],
+          });
+        }
+        return json({
+          doctors: [
+            {
+              ...list.doctors[0],
+              department: { id: "old", name: "Archive", code: "OLD", isActive: false },
+            },
+          ],
+        });
+      }),
+    );
+    render(
+      <Provider store={createAppStore()}>
+        <DoctorsPage />
+      </Provider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Dr Anu Rao" }));
+    const department = screen.getByLabelText("Department") as HTMLSelectElement;
+    expect([...department.options].map((option) => option.textContent)).toEqual([
+      "No department",
+      "Cardiology (CARD)",
+      "Archive (OLD)",
+    ]);
+    expect(department.value).toBe("old");
+    fireEvent.change(department, { target: { value: "" } });
+    expect(department.value).toBe("");
+  });
 });

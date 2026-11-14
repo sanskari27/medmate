@@ -1,5 +1,6 @@
 package com.medmate.server.doctors.web;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +15,8 @@ public final class DoctorViews {
             UUID id, String documentType, String fileName, String contentType, String verificationStatus, String url) {}
 
     public record WindowLink(String type, List<String> days, String start, String end, String fee) {}
+
+    public record DepartmentLink(UUID id, String name, String code, @JsonProperty("isActive") boolean active) {}
 
     public record DoctorView(
             UUID id,
@@ -45,7 +48,8 @@ public final class DoctorViews {
             String workplacePhone,
             FileLink photo,
             List<WindowLink> windows,
-            List<DocumentLink> documents) {}
+            List<DocumentLink> documents,
+            DepartmentLink department) {}
 
     public record ListResponse(List<DoctorView> doctors) {}
 

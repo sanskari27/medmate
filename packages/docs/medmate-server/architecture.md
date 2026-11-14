@@ -20,6 +20,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-dashboard/            pharmacy dashboard read from posted rows
   medmate-server-leads/                public website forms for the admin inbox
   medmate-server-doctors/              hospital doctor directory
+  medmate-server-departments/          hospital department tree
   medmate-server-oversight/            admin pharmacy fleet and activity reads
   medmate-server-app/                  runnable Spring Boot jar
     com.medmate.server                 application and component scan
@@ -94,7 +95,11 @@ Admin pharmacy insights live in `medmate-server-oversight`. The module depends o
 
 ## Doctors
 
-The hospital doctor directory lives in `medmate-server-doctors`. The module depends on identity for access checks, the pharmacy type, and the document store. Identity does not depend on it. Tables are created by `V22__doctors.sql`. A route refuses a pharmacy whose type is not `hospital`. Photos and documents use the same private prefix as pharmacy licences, under `doctor-documents/`. The signed-in account includes `pharmacyType`. [0024](decisions/0024-hospital-doctors.md) records that boundary.
+The hospital doctor directory lives in `medmate-server-doctors`. The module depends on identity for access checks, the pharmacy type, and the document store, and on departments to resolve a doctor's optional department. Identity does not depend on it. Tables are created by `V22__doctors.sql`. `V24__doctor_department.sql` adds the optional department link. A route refuses a pharmacy whose type is not `hospital`. Photos and documents use the same private prefix as pharmacy licences, under `doctor-documents/`. The signed-in account includes `pharmacyType`. [0024](decisions/0024-hospital-doctors.md) records that boundary.
+
+## Departments
+
+The hospital department tree lives in `medmate-server-departments`. The module depends on identity for access checks and the pharmacy type. Identity does not depend on it. Doctors depends on it. Departments does not depend on doctors. Tables are created by `V23__departments.sql`. A route refuses a pharmacy whose type is not `hospital`. [0025](decisions/0025-hospital-departments.md) records that boundary.
 
 ## Leads
 

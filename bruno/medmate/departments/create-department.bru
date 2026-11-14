@@ -1,0 +1,40 @@
+meta {
+  name: Create department
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/departments
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "name": "Cardiology",
+    "code": "CARD",
+    "description": "Heart and vessels",
+    "displayOrder": 1,
+    "isActive": true
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved hospital owner, or hospital staff with departments:create, adds a department.
+  A 201 response stores departmentId from department.id. The screen does not show that id.
+}

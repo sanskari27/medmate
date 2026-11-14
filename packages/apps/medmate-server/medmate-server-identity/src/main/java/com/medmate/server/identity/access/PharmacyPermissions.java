@@ -48,7 +48,10 @@ public final class PharmacyPermissions {
             "reports:export",
             "doctors:read",
             "doctors:create",
-            "doctors:update");
+            "doctors:update",
+            "departments:read",
+            "departments:create",
+            "departments:update");
 
     private PharmacyPermissions() {}
 

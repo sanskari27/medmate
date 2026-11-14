@@ -21,6 +21,7 @@ import { BillingPage, canOpenBilling } from "@/features/billing";
 import { SalesPage, canOpenSales } from "@/features/sales";
 import { PatientsPage, canOpenPatients } from "@/features/patients";
 import { DoctorsPage, canOpenDoctors } from "@/features/doctors";
+import { DepartmentsPage, canOpenDepartments } from "@/features/departments";
 import { PurchasesPage, canOpenPurchases } from "@/features/purchases";
 import { RacksPage, canOpenRacks } from "@/features/racks";
 import { InvoiceSettingsPage, canOpenInvoiceSettings } from "@/features/invoice-settings";
@@ -70,6 +71,11 @@ export function AppRouter() {
     session?.account.permissions,
     session?.account.pharmacyType,
   );
+  const departmentsOpen = canOpenDepartments(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+    session?.account.pharmacyType,
+  );
   const ownerPaths = new Set(["/users", "/support", "/profile"]);
   const managementPaths = new Set([
     "/employees",
@@ -80,7 +86,7 @@ export function AppRouter() {
   ]);
   const counterPaths = new Set(["/billing", "/sales", "/patients"]);
   let counterLabeled = false;
-  const hospitalPaths = new Set(["/doctors"]);
+  const hospitalPaths = new Set(["/doctors", "/departments"]);
   let hospitalLabeled = false;
   const cataloguePaths = new Set([
     "/distributors",
@@ -108,6 +114,7 @@ export function AppRouter() {
       if (route.path === "/sales") return salesOpen;
       if (route.path === "/patients") return patientsOpen;
       if (route.path === "/doctors") return doctorsOpen;
+      if (route.path === "/departments") return departmentsOpen;
       return !ownerPaths.has(route.path) || owner;
     })
     .map((route) => {
@@ -177,7 +184,8 @@ export function AppRouter() {
                 route.path !== "/billing" &&
                 route.path !== "/sales" &&
                 route.path !== "/patients" &&
-                route.path !== "/doctors",
+                route.path !== "/doctors" &&
+                route.path !== "/departments",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -221,6 +229,10 @@ export function AppRouter() {
           <Route
             path="/doctors"
             element={doctorsOpen ? <DoctorsPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/departments"
+            element={departmentsOpen ? <DepartmentsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/offers"

@@ -39,6 +39,7 @@ const doctor = {
   photo: null,
   windows: [],
   documents: [],
+  department: null,
 } satisfies Doctor;
 
 function filled(overrides: Partial<DoctorDraft> = {}): DoctorDraft {

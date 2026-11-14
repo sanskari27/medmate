@@ -51,6 +51,14 @@ export const PERMISSION_AREAS: PermissionArea[] = [
           { key: "doctors:update", label: "Update" },
         ],
       },
+      {
+        module: "Departments",
+        actions: [
+          { key: "departments:read", label: "Read" },
+          { key: "departments:create", label: "Create" },
+          { key: "departments:update", label: "Update" },
+        ],
+      },
     ],
   },
   {

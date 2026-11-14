@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
 import { problemMessage, useAuthState } from "@/features/authentication";
+import { useListDepartmentsQuery } from "@/features/departments";
 import { DoctorForm } from "../../components/DoctorForm";
 import {
   useCreateDoctorMutation,
@@ -28,6 +29,7 @@ export function DoctorsPage() {
   const { session } = useAuthState();
   const access = doctorAccess(session?.account.pharmacyRole, session?.account.permissions);
   const list = useListDoctorsQuery();
+  const departments = useListDepartmentsQuery();
   const [createDoctor, created] = useCreateDoctorMutation();
   const [updateDoctor, updated] = useUpdateDoctorMutation();
   const [query, setQuery] = useState("");
@@ -116,16 +118,22 @@ export function DoctorsPage() {
           <table className="w-full border-separate border-spacing-0 text-[13px]">
             <thead>
               <tr>
-                {["Doctor", "Code", "Specialization", "Mobile", "Relationship", "Status"].map(
-                  (heading) => (
-                    <th
-                      key={heading}
-                      className="bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase"
-                    >
-                      {heading}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Doctor",
+                  "Code",
+                  "Department",
+                  "Specialization",
+                  "Mobile",
+                  "Relationship",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="bg-wash-2 px-3.5 py-[11px] text-left text-[10.5px] font-bold tracking-[0.07em] text-muted uppercase"
+                  >
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -158,6 +166,7 @@ export function DoctorsPage() {
                     </Stack>
                   </td>
                   <td className="px-3.5 py-[11px] font-mono">{doctor.code}</td>
+                  <td className="px-3.5 py-[11px]">{doctor.department?.name ?? "—"}</td>
                   <td className="px-3.5 py-[11px]">{doctor.specialization}</td>
                   <td className="px-3.5 py-[11px]">{doctor.primaryMobile}</td>
                   <td className="px-3.5 py-[11px]">
@@ -170,7 +179,7 @@ export function DoctorsPage() {
               ))}
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-9 text-center text-muted">
+                  <td colSpan={7} className="px-5 py-9 text-center text-muted">
                     {empty}
                   </td>
                 </tr>
@@ -182,6 +191,7 @@ export function DoctorsPage() {
       {editing && (editing === "new" ? access.create : access.update) ? (
         <DoctorForm
           doctor={editing === "new" ? null : editing}
+          departments={departments.data?.departments ?? []}
           saving={created.isLoading || updated.isLoading}
           error={error}
           onClose={() => setEditing(null)}

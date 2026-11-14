@@ -415,6 +415,7 @@ describe("AppRouter", () => {
     expect(screen.getByText("Business")).toBeTruthy();
     expect(screen.getByText("Counter")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Doctors" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Departments" })).toBeNull();
   });
 
   it("shows Doctors after Counter for a hospital owner", () => {
@@ -428,7 +429,8 @@ describe("AppRouter", () => {
       .getAllByRole("button")
       .map((button) => button.textContent?.trim());
     expect(names.indexOf("Doctors")).toBe(names.indexOf("CRM - Patients") + 1);
-    expect(names.indexOf("Distributors")).toBe(names.indexOf("Doctors") + 1);
+    expect(names.indexOf("Departments")).toBe(names.indexOf("Doctors") + 1);
+    expect(names.indexOf("Distributors")).toBe(names.indexOf("Departments") + 1);
     expect(screen.getByText("Hospital")).toBeTruthy();
   });
 
@@ -454,7 +456,38 @@ describe("AppRouter", () => {
     });
     renderAt("/dashboard");
     expect(screen.getByRole("button", { name: "Doctors" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Departments" })).toBeNull();
     expect(screen.getByText("Hospital")).toBeTruthy();
+  });
+
+  it("sends hospital staff without departments:read away from Departments", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        pharmacyType: "hospital",
+        permissions: ["doctors:read"],
+      },
+    });
+    renderAt("/departments");
+    expect(screen.getByText("Loading dashboard")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Departments" })).toBeNull();
+  });
+
+  it("shows Departments to hospital staff who can read them", () => {
+    writeSession({
+      ...session,
+      account: {
+        ...session.account,
+        pharmacyRole: "staff",
+        pharmacyType: "hospital",
+        permissions: ["departments:read"],
+      },
+    });
+    renderAt("/dashboard");
+    expect(screen.getByRole("button", { name: "Departments" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Doctors" })).toBeNull();
   });
 
   it("sends pharmacy staff away from Help & Support", () => {

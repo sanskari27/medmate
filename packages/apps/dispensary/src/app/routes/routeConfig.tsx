@@ -21,6 +21,7 @@ import { BillingPage } from "@/features/billing";
 import { SalesPage } from "@/features/sales";
 import { PatientsPage } from "@/features/patients";
 import { DoctorsPage } from "@/features/doctors";
+import { DepartmentsPage } from "@/features/departments";
 import { PurchasesPage } from "@/features/purchases";
 import { RacksPage } from "@/features/racks";
 import { EmployeesPage } from "@/features/employees";
@@ -74,6 +75,14 @@ export const appRoutes: AppRoute[] = [
     group: "Hospital",
     icon: <IconUsers size={19} />,
     element: <DoctorsPage />,
+  },
+  {
+    path: "/departments",
+    label: "Departments",
+    title: "Departments",
+    sub: "Names, codes and hierarchy",
+    icon: <IconUsers size={19} />,
+    element: <DepartmentsPage />,
   },
   {
     path: "/distributors",
