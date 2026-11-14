@@ -1,0 +1,33 @@
+meta {
+  name: Read product
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/products/DR100
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a known id returns the product and an unknown id is empty", function() {
+    if (res.getStatus() === 200) {
+      expect(res.body.drug.length + res.body.fmcg.length).to.be.at.least(1);
+      return;
+    }
+    expect(res.getStatus()).to.equal(404);
+    expect(res.body.detail).to.equal("Product was not found");
+    expect(res.body.drug).to.eql([]);
+    expect(res.body.fmcg).to.eql([]);
+  });
+}
+
+docs {
+  Anyone can read one product. An unknown id is 404 with both lists empty.
+}

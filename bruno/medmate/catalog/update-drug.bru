@@ -1,0 +1,49 @@
+meta {
+  name: Update drug
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/catalog/drugs/DR-BRUNO
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "productId": "DR-BRUNO",
+    "productName": "Crocin Advance",
+    "marketerName": "GSK",
+    "prescriptionRequired": false,
+    "package": "Strip",
+    "mrp": 30,
+    "ingredients": [
+      { "name": "Ibuprofen", "strength": "200 mg" },
+      { "name": "Paracetamol", "strength": "500 mg" }
+    ]
+  }
+}
+
+tests {
+  test("a platform admin or sales staff replaces the drug", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    if (res.getStatus() === 200) {
+      expect(res.body.drug[0].ingredients[0].name).to.equal("Ibuprofen");
+      expect(res.body.drug[0].ingredients[1].name).to.equal("Paracetamol");
+    }
+  });
+}
+
+docs {
+  PUT replaces the parent and every child list. Position follows the array order, starting at 1. An unknown id is 404.
+}

@@ -41,6 +41,11 @@
     </dependency>
     <dependency>
       <groupId>com.medmate</groupId>
+      <artifactId>medmate-server-catalog</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.medmate</groupId>
       <artifactId>medmate-server-stock</artifactId>
       <version>${project.version}</version>
     </dependency>

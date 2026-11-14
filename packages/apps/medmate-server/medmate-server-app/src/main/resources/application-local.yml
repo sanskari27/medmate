@@ -23,3 +23,7 @@ medmate:
     bucket: ""
     prefix: app-uploads/medmate-server
     region: ap-south-1
+  catalog:
+    url: jdbc:postgresql://127.0.0.1:5432/medicine_data
+    username: medicine_data
+    password: medicine_data

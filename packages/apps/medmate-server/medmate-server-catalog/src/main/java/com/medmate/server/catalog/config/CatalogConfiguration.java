@@ -1,0 +1,40 @@
+package com.medmate.server.catalog.config;
+
+import com.medmate.server.catalog.CatalogStore;
+import com.medmate.server.catalog.store.JdbcCatalogStore;
+import com.zaxxer.hikari.HikariDataSource;
+import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+
+@Configuration
+@Profile({"local", "prod", "identity-it"})
+@ConditionalOnProperty(prefix = "medmate.catalog", name = "url")
+public class CatalogConfiguration {
+
+    @Bean(destroyMethod = "close")
+    DataSource catalogDataSource(Environment environment) {
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setPoolName("catalog");
+        dataSource.setJdbcUrl(environment.getRequiredProperty("medmate.catalog.url"));
+        dataSource.setUsername(environment.getRequiredProperty("medmate.catalog.username"));
+        dataSource.setPassword(environment.getRequiredProperty("medmate.catalog.password"));
+        dataSource.setMaximumPoolSize(environment.getProperty("medmate.catalog.maximum-pool-size", Integer.class, 10));
+        return dataSource;
+    }
+
+    @Bean
+    CatalogStore catalogStore(@Qualifier("catalogDataSource") DataSource catalogDataSource) {
+        Flyway.configure()
+                .dataSource(catalogDataSource)
+                .locations("classpath:db/catalog")
+                .load()
+                .migrate();
+        return new JdbcCatalogStore(catalogDataSource);
+    }
+}

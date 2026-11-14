@@ -1,0 +1,28 @@
+meta {
+  name: Search products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/search?q=crocin&limit=2
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("both catalogs are returned", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.drug).to.be.an("array");
+    expect(res.body.fmcg).to.be.an("array");
+  });
+}
+
+docs {
+  Anyone can search. q is 2 to 80 characters. limit defaults to 20 and caps at 50.
+}

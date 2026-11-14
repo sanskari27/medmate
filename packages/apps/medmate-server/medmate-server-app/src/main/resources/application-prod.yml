@@ -28,3 +28,7 @@ medmate:
     bucket: ${APP_UPLOADS_BUCKET:}
     prefix: ${APP_UPLOADS_PREFIX:app-uploads/medmate-server}
     region: ${AWS_REGION:ap-south-1}
+  catalog:
+    url: ${MEDICINE_DATASOURCE_URL}
+    username: ${MEDICINE_DATASOURCE_USERNAME}
+    password: ${MEDICINE_DATASOURCE_PASSWORD}

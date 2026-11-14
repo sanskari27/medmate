@@ -1,0 +1,48 @@
+meta {
+  name: Create drug
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/catalog/drugs
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "productId": "DR-BRUNO",
+    "productName": "Crocin Advance",
+    "marketerName": "GSK",
+    "prescriptionRequired": false,
+    "package": "Strip",
+    "mrp": 25,
+    "ingredients": [
+      { "name": "Paracetamol", "strength": "500 mg" }
+    ]
+  }
+}
+
+tests {
+  test("a platform admin or sales staff creates the drug", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      return;
+    }
+    if (res.getStatus() === 201) {
+      expect(res.body.drug[0].productId).to.equal("DR-BRUNO");
+      expect(res.body.drug[0].ingredients[0].name).to.equal("Paracetamol");
+    }
+  });
+}
+
+docs {
+  A platform admin or sales staff saves a whole drug. Creating an id that already exists in the drug catalog is 409.
+}

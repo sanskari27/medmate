@@ -35,6 +35,12 @@ locals {
   ]
 }
 
+resource "aws_ssm_parameter" "catalog_database" {
+  name  = "/medmate-repo/${local.project.name}/catalog_database_secret_name"
+  type  = "String"
+  value = "medmate/medicine-data/database"
+}
+
 module "service" {
   source = "../modules/app-service"
 

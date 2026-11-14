@@ -116,7 +116,16 @@ public class IdentityConfiguration {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.requestMatchers(
-                                "/actuator/**", "/auth/**", "/support/stream", "/api/v1/leads", "/api/v1/leads/**")
+                                "/actuator/**",
+                                "/auth/**",
+                                "/support/stream",
+                                "/api/search",
+                                "/api/products",
+                                "/api/products/**",
+                                "/api/v1/leads",
+                                "/api/v1/leads/**",
+                                "/api/v1/catalog",
+                                "/api/v1/catalog/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

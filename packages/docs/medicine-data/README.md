@@ -9,6 +9,8 @@ It reads two catalogs in the shared Postgres database `medicine_data`:
 
 The process applies those files on startup. They create the tables when missing and create the search indexes. This application does not insert, update, or delete rows. Load data with the database secret `medmate/medicine-data/database` from outside the app.
 
+medmate-server opens this same database from `medmate-server-catalog`. That module applies the same tables and serves the same reads, and a platform admin or sales staff can create or update a product there. This Node process still serves `medicine-data.nammamedmate.com`.
+
 The container has no data volume and does not use the uploads prefix.
 
 `pg_trgm` is created by `ensure-database`. Each deploy copies that script onto the instance and runs it before the container starts. The GIN trigram indexes below depend on it.

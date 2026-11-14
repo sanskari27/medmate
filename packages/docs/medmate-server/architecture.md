@@ -11,6 +11,7 @@ packages/apps/medmate-server/          Maven reactor
   medmate-server-support/              FAQs, support cases, and the live chat socket
   medmate-server-employees/            pharmacy personnel register
   medmate-server-distributors/         pharmacy distributor directory and ledger
+  medmate-server-catalog/              shared drug and FMCG catalog on medicine_data
   medmate-server-stock/                purchase bills, returns, inventory, and rack placement
   medmate-server-offers/               pharmacy discounts applied when a bill is posted
   medmate-server-billing/              cash and credit sales from the counter
@@ -64,7 +65,7 @@ The supplier directory and its payable ledger live in `medmate-server-distributo
 
 ## Stock
 
-Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. `V13__racks.sql` adds the product location and the empty-rack list. The location belongs to the product, not a batch. The module reads medicine identity from medicine-data. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records the stock boundary. [0015](decisions/0015-pharmacy-racks.md) records the rack boundary.
+Purchase bills, purchase returns, and the pharmacy inventory live in `medmate-server-stock`. The module depends on identity for access checks and on distributors to post ledger lines. Identity does not depend on it. Distributors does not depend on it. Tables are created by `V10__stock.sql`. `V13__racks.sql` adds the product location and the empty-rack list. The location belongs to the product, not a batch. The module reads medicine identity from the catalog module. It does not keep a second outstanding balance. [0013](decisions/0013-stock-and-purchases.md) records the stock boundary. [0015](decisions/0015-pharmacy-racks.md) records the rack boundary.
 
 ## Offers
 
@@ -105,6 +106,10 @@ The hospital department tree lives in `medmate-server-departments`. The module d
 ## Wards
 
 The hospital ward board lives in `medmate-server-wards`. The module depends on identity for access checks and the pharmacy type. Identity does not depend on it. It does not depend on doctors, departments, CRM, or billing. Tables are created by `V26__ward_capacity.sql`. `V25__wards.sql` stays as the migration that was already applied. A bed is a label from the ward code and the bed count. The ward charge is the current daily rate of the ward the patient is in, times days admitted, and it is stored when the patient is discharged. A route refuses a pharmacy whose type is not `hospital`. [0026](decisions/0026-hospital-wards.md) records that boundary.
+
+## Catalog
+
+The shared drug and OTC/FMCG catalog lives in `medmate-server-catalog`. The module depends on identity for the admin and `staff:sales` check. Identity does not depend on it. Stock depends on it for medicine identity. The catalog does not depend on stock. Tables stay in the separate Postgres database `medicine_data`. A second Flyway history in that database applies `V1__medicine_catalog.sql`. The primary Flyway history is unchanged. `GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` are anonymous. `POST` and `PUT` under `/api/v1/catalog` replace a whole product and are limited to a platform admin or sales staff. There is no delete. The Node medicine-data process still serves its own host. [0027](decisions/0027-medicine-catalog.md) records that boundary.
 
 ## Leads
 

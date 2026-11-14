@@ -145,7 +145,13 @@ db-local: ## Start Homebrew Postgres 16 and ensure the medmate_server database e
 	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "ALTER ROLE $(DB_USER) WITH LOGIN PASSWORD '$(DB_PASSWORD)'"
 	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$(MEDMATE_DB_NAME)'" | grep -q 1 \
 	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE $(MEDMATE_DB_NAME) OWNER $(DB_USER)"
-	@echo "Postgres 16 is ready at 127.0.0.1:$(DB_PORT) (db $(MEDMATE_DB_NAME))"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = 'medicine_data'" | grep -q 1 \
+	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE ROLE medicine_data LOGIN PASSWORD 'medicine_data'"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "ALTER ROLE medicine_data WITH LOGIN PASSWORD 'medicine_data'"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'medicine_data'" | grep -q 1 \
+	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medicine_data OWNER medicine_data"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medicine_data -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+	@echo "Postgres 16 is ready at 127.0.0.1:$(DB_PORT) (db $(MEDMATE_DB_NAME), medicine_data)"
 
 db-up: ## Start local Postgres in Docker (user/db/password: pharmacy)
 	@command -v docker >/dev/null 2>&1 || { echo "docker is required for the local database"; exit 1; }

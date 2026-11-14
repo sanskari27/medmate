@@ -81,6 +81,16 @@ print("PGPASSWORD=" + data["password"])
 print("PGSSLMODE=require")' "$JSON" >> "$ENV_FILE"
 fi
 
+CATALOG_SECRET="$(aws ssm get-parameter --region "$REGION" --name "/medmate-repo/${APP}/catalog_database_secret_name" --query Parameter.Value --output text 2>/dev/null || true)"
+if [[ -n "${CATALOG_SECRET:-}" && "$CATALOG_SECRET" != "None" ]]; then
+  JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$CATALOG_SECRET" --query SecretString --output text)"
+  python3 -c 'import json, sys
+data = json.loads(sys.argv[1])
+print("MEDICINE_DATASOURCE_URL=" + data["jdbcUrl"])
+print("MEDICINE_DATASOURCE_USERNAME=" + data["username"])
+print("MEDICINE_DATASOURCE_PASSWORD=" + data["password"])' "$JSON" >> "$ENV_FILE"
+fi
+
 RUNTIME="$(aws ssm get-parameter --region "$REGION" --name "/medmate-repo/${APP}/runtime_env" --query Parameter.Value --output text 2>/dev/null || echo '{}')"
 python3 -c 'import json, sys
 raw = sys.argv[1].strip() or "{}"
