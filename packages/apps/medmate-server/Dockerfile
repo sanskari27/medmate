@@ -6,6 +6,7 @@ COPY medmate-server-identity/pom.xml medmate-server-identity/pom.xml
 COPY medmate-server-support/pom.xml medmate-server-support/pom.xml
 COPY medmate-server-employees/pom.xml medmate-server-employees/pom.xml
 COPY medmate-server-distributors/pom.xml medmate-server-distributors/pom.xml
+COPY medmate-server-catalog/pom.xml medmate-server-catalog/pom.xml
 COPY medmate-server-stock/pom.xml medmate-server-stock/pom.xml
 COPY medmate-server-offers/pom.xml medmate-server-offers/pom.xml
 COPY medmate-server-billing/pom.xml medmate-server-billing/pom.xml
@@ -24,6 +25,7 @@ COPY medmate-server-identity/src medmate-server-identity/src
 COPY medmate-server-support/src medmate-server-support/src
 COPY medmate-server-employees/src medmate-server-employees/src
 COPY medmate-server-distributors/src medmate-server-distributors/src
+COPY medmate-server-catalog/src medmate-server-catalog/src
 COPY medmate-server-stock/src medmate-server-stock/src
 COPY medmate-server-offers/src medmate-server-offers/src
 COPY medmate-server-billing/src medmate-server-billing/src
