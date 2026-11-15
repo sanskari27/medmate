@@ -29,6 +29,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
@@ -59,6 +61,8 @@ public class JdbcCatalogStore implements CatalogStore {
     private final JdbcClient jdbc;
     private final TransactionTemplate transactions;
     private final ExecutorService pool;
+    private final ExecutorService partner;
+    private final ThreadLocal<AtomicInteger> backendSlot = new ThreadLocal<>();
     private final Object counts = new Object();
     private int drugGeneration;
     private int fmcgGeneration;
@@ -71,10 +75,12 @@ public class JdbcCatalogStore implements CatalogStore {
         this.jdbc = JdbcClient.create(dataSource);
         this.transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
         this.pool = Executors.newFixedThreadPool(8, JdbcCatalogStore::readThread);
+        this.partner = Executors.newFixedThreadPool(4, JdbcCatalogStore::readThread);
     }
 
     public void close() {
         pool.shutdown();
+        partner.shutdown();
     }
 
     @Override
@@ -881,20 +887,19 @@ public class JdbcCatalogStore implements CatalogStore {
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
             int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
-            try {
-                return drugBranch(
-                        containsPredicate(column, null),
-                        listing,
-                        true,
-                        needed,
-                        budget,
-                        spec -> spec.param("pattern", pattern));
-            } catch (RuntimeException exception) {
-                if (!timedOut(exception)) {
-                    throw exception;
-                }
-                return trigramDrugs(column, pattern, listing, needed);
-            }
+            AtomicInteger walkPid = new AtomicInteger();
+            AtomicInteger scanPid = new AtomicInteger();
+            return race(
+                    walkPid,
+                    () -> drugBranch(
+                            containsPredicate(column, null),
+                            listing,
+                            true,
+                            needed,
+                            budget,
+                            spec -> spec.param("pattern", pattern)),
+                    scanPid,
+                    () -> trigramDrugs(column, pattern, listing, needed));
         }
         return drugBranch(
                 containsPredicate(column, cutoff),
@@ -912,20 +917,19 @@ public class JdbcCatalogStore implements CatalogStore {
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
             int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
-            try {
-                return fmcgBranch(
-                        containsPredicate(column, null),
-                        listing,
-                        true,
-                        needed,
-                        budget,
-                        spec -> spec.param("pattern", pattern));
-            } catch (RuntimeException exception) {
-                if (!timedOut(exception)) {
-                    throw exception;
-                }
-                return trigramFmcg(column, pattern, listing, needed);
-            }
+            AtomicInteger walkPid = new AtomicInteger();
+            AtomicInteger scanPid = new AtomicInteger();
+            return race(
+                    walkPid,
+                    () -> fmcgBranch(
+                            containsPredicate(column, null),
+                            listing,
+                            true,
+                            needed,
+                            budget,
+                            spec -> spec.param("pattern", pattern)),
+                    scanPid,
+                    () -> trigramFmcg(column, pattern, listing, needed));
         }
         return fmcgBranch(
                 containsPredicate(column, cutoff),
@@ -1022,6 +1026,7 @@ public class JdbcCatalogStore implements CatalogStore {
                 + drugFilters(listing)
                 + " ORDER BY product_name ASC, product_id ASC LIMIT :needed";
         List<DrugSummary> rows = transactions.execute(status -> {
+            publishBackend();
             trigramPlan();
             JdbcClient.StatementSpec spec =
                     jdbc.sql(sql).param("needed", needed).param("pattern", pattern);
@@ -1036,6 +1041,7 @@ public class JdbcCatalogStore implements CatalogStore {
                 + fmcgFilters(listing)
                 + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed";
         List<FmcgSummary> rows = transactions.execute(status -> {
+            publishBackend();
             trigramPlan();
             JdbcClient.StatementSpec spec =
                     jdbc.sql(sql).param("needed", needed).param("pattern", pattern);
@@ -1068,6 +1074,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC, product_id ASC LIMIT :needed"
                 : sql;
         List<DrugSummary> rows = transactions.execute(status -> {
+            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1102,6 +1109,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed"
                 : sql;
         List<FmcgSummary> rows = transactions.execute(status -> {
+            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1264,6 +1272,91 @@ public class JdbcCatalogStore implements CatalogStore {
         return top.get(top.size() - 1).productName();
     }
 
+    private <T> List<T> race(
+            AtomicInteger walkPid, Supplier<List<T>> walk, AtomicInteger scanPid, Supplier<List<T>> scan) {
+        AtomicBoolean walkDone = new AtomicBoolean();
+        AtomicBoolean scanDone = new AtomicBoolean();
+        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(
+                () -> {
+                    backendSlot.set(scanPid);
+                    RuntimeException failure = null;
+                    try {
+                        return scan.get();
+                    } catch (RuntimeException exception) {
+                        failure = exception;
+                        throw exception;
+                    } finally {
+                        backendSlot.remove();
+                        scanDone.set(true);
+                        if (failure == null && !walkDone.get()) {
+                            cancelSoon(walkPid);
+                        }
+                    }
+                },
+                partner);
+        backendSlot.set(walkPid);
+        try {
+            List<T> rows = walk.get();
+            walkDone.set(true);
+            if (!scanDone.get()) {
+                cancelSoon(scanPid);
+            }
+            return rows;
+        } catch (RuntimeException exception) {
+            walkDone.set(true);
+            if (!stopped(exception)) {
+                throw exception;
+            }
+            try {
+                return scanned.join();
+            } catch (CompletionException wrapped) {
+                Throwable cause = wrapped.getCause();
+                if (cause instanceof RuntimeException runtime) {
+                    throw runtime;
+                }
+                throw wrapped;
+            }
+        } finally {
+            backendSlot.remove();
+        }
+    }
+
+    private void publishBackend() {
+        AtomicInteger slot = backendSlot.get();
+        if (slot == null || slot.get() != 0) {
+            return;
+        }
+        Integer pid = jdbc.sql("SELECT pg_backend_pid()").query(Integer.class).single();
+        if (pid != null) {
+            slot.set(pid);
+        }
+    }
+
+    private void cancelSoon(AtomicInteger pid) {
+        Thread thread = new Thread(() -> cancelBackend(pid), "catalog-cancel");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void cancelBackend(AtomicInteger pid) {
+        long deadline = System.nanoTime() + 30_000_000L;
+        while (pid.get() == 0 && System.nanoTime() < deadline) {
+            Thread.onSpinWait();
+        }
+        int backend = pid.get();
+        if (backend == 0) {
+            return;
+        }
+        try {
+            transactions.execute(status -> jdbc.sql("SELECT pg_cancel_backend(:pid)")
+                    .param("pid", backend)
+                    .query(Boolean.class)
+                    .single());
+        } catch (RuntimeException ignored) {
+            // The other query already finished.
+        }
+    }
+
     private void walkPlan(int timeoutMillis) {
         String timeout = timeoutMillis > 0 ? ", set_config('statement_timeout', '" + timeoutMillis + "', true)" : "";
         jdbc.sql(
@@ -1282,12 +1375,15 @@ public class JdbcCatalogStore implements CatalogStore {
                 .single();
     }
 
-    private static boolean timedOut(Throwable exception) {
+    private static boolean stopped(Throwable exception) {
         Throwable current = exception;
         while (current != null) {
             String message = current.getMessage();
-            if (message != null && message.toLowerCase(Locale.ROOT).contains("statement timeout")) {
-                return true;
+            if (message != null) {
+                String text = message.toLowerCase(Locale.ROOT);
+                if (text.contains("statement timeout") || text.contains("canceling statement")) {
+                    return true;
+                }
             }
             current = current.getCause();
         }

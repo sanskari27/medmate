@@ -25,7 +25,7 @@ public class CatalogConfiguration {
         dataSource.setJdbcUrl(environment.getRequiredProperty("medmate.catalog.url"));
         dataSource.setUsername(environment.getRequiredProperty("medmate.catalog.username"));
         dataSource.setPassword(environment.getRequiredProperty("medmate.catalog.password"));
-        dataSource.setMaximumPoolSize(environment.getProperty("medmate.catalog.maximum-pool-size", Integer.class, 10));
+        dataSource.setMaximumPoolSize(environment.getProperty("medmate.catalog.maximum-pool-size", Integer.class, 12));
         dataSource.setConnectionInitSql("SET plan_cache_mode = force_custom_plan");
         return dataSource;
     }
