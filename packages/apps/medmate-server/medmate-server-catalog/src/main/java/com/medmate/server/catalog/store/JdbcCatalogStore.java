@@ -27,8 +27,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
@@ -43,6 +46,8 @@ public class JdbcCatalogStore implements CatalogStore {
     // A short name walk stops at the first matches. A late match gives up and uses the trigram index.
     private static final int SHORT_NAME_WALK_MILLIS = 250;
     private static final int LONG_NAME_WALK_MILLIS = 150;
+    // Common names finish the ordered walk inside this window, so the trigram plan stays idle.
+    private static final int NAME_HEAD_START_MILLIS = 120;
     private static final String DRUG_COLUMNS =
             "product_id, product_name, display_name, marketer_name, medicine_type, product_form, "
                     + "mrp, prescription_required, package, qty_amount, qty_unit";
@@ -1262,8 +1267,6 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     private <T> List<T> race(Supplier<List<T>> walk, Supplier<List<T>> scan) {
-        CompletableFuture<List<T>> first = new CompletableFuture<>();
-        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(scan::get, partner);
         CompletableFuture<List<T>> walked = CompletableFuture.supplyAsync(
                 () -> {
                     try {
@@ -1276,6 +1279,25 @@ public class JdbcCatalogStore implements CatalogStore {
                     }
                 },
                 partner);
+        try {
+            List<T> early = walked.get(NAME_HEAD_START_MILLIS, TimeUnit.MILLISECONDS);
+            if (early != null) {
+                return early;
+            }
+        } catch (TimeoutException ignored) {
+            // A late product name is still in the walk. The trigram plan can answer sooner.
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(exception);
+        } catch (ExecutionException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            throw new IllegalStateException(cause);
+        }
+        CompletableFuture<List<T>> first = new CompletableFuture<>();
+        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(scan::get, partner);
         scanned.whenComplete((rows, error) -> {
             if (error == null) {
                 first.complete(rows);
