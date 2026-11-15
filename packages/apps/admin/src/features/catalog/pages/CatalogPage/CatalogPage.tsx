@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -17,6 +17,8 @@ import {
 } from "../../model";
 import { problemMessage } from "../../problemMessage";
 import { FilterDialog } from "./FilterDialog";
+
+const textDelayMs = 300;
 
 const selectClass =
   "w-full rounded-sm border border-line-2 bg-paper px-3 py-[9px] text-[13.5px] text-ink outline-none hover:border-[#b9d0c2] focus:border-mid focus:shadow-focus";
@@ -95,9 +97,21 @@ function Section({
 export function CatalogPage() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<CatalogFilters>(emptyFilters);
+  const [query, setQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const appliedQuery = useRef(filters.q);
   const list = useListCatalogQuery({ page, size: 25, ...filters });
   const activeFilters = advancedCount(filters);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (appliedQuery.current === query) return;
+      appliedQuery.current = query;
+      setFilters((current) => ({ ...current, q: query }));
+      setPage(1);
+    }, textDelayMs);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   function choose<Key extends keyof CatalogFilters>(key: Key, value: CatalogFilters[Key]) {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -144,12 +158,12 @@ export function CatalogPage() {
             <Field label="Text" htmlFor="catalog-text">
               <Input
                 id="catalog-text"
-                value={filters.q}
+                value={query}
                 autoCorrect="off"
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="Name, id, or marketer"
-                onChange={(event) => choose("q", event.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
               />
             </Field>
             <Field label="Kind" htmlFor="catalog-kind">

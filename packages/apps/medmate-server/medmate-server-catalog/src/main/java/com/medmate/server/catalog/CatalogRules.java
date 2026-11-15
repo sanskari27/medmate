@@ -179,7 +179,15 @@ public final class CatalogRules {
     }
 
     public static String containsPattern(String query) {
-        return "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        return "%" + likeLiteral(query) + "%";
+    }
+
+    public static String prefixPattern(String query) {
+        return likeLiteral(query) + "%";
+    }
+
+    private static String likeLiteral(String query) {
+        return query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     public static ParsedDrug drug(JsonNode body, String expectedId) {

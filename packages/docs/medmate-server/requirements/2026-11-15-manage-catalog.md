@@ -24,7 +24,7 @@ The shared drug and FMCG catalog already supports anonymous search and a whole-p
 
 `displayName` is returned immediately after `productName` on drug and FMCG summaries and details. On create and update it is optional text. A missing or blank value is stored as null. It is not unique. `PUT` still replaces the parent and every child list, so a missing or blank `displayName` clears the stored value. The other catalog is left alone.
 
-`GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` stay anonymous and return `displayName`. Search also matches `display_name` with the same case-insensitive contains match as the other text fields. Exact `product_id` match, the required `q` of 2 to 80 characters, and the limit cap stay as they are.
+`GET /api/search`, `GET /api/products`, and `GET /api/products/{productId}` stay anonymous and return `displayName`. Search contains-matches `display_name` the same way it contains-matches `product_name`. Exact `product_id` match, the required `q` of 2 to 80 characters, and the limit cap stay as they are.
 
 `GET /api/v1/catalog` uses the same check as create and update: a non-disabled platform admin, or a non-disabled staff account whose subtypes include `sales`. Anyone else, including a missing session, a pharmacy owner, and any other staff subtype, receives 403 with detail `This action is not allowed.` A bearer the existing JWT filter rejects stays 401 with detail `Session was not accepted`.
 
@@ -32,7 +32,7 @@ One `page` and one `size` apply to both catalogs. `page` defaults to 1. `size` d
 
 `kind` omitted or blank is `both`. `drug` or `fmcg` returns an empty page and total 0 for the other catalog. Any other `kind` is 400 with detail `Filter is not valid`.
 
-`q` blank is ignored. A value longer than 80 characters is 400 with detail `Query is not valid`. A shorter value matches `product_id` exactly, or contains the text, ignoring case, on the current search fields and on `displayName`.
+`q` blank is ignored. A value longer than 80 characters is 400 with detail `Query is not valid`. A shorter value matches `product_id` exactly. It contains the text, ignoring case, on `product_name`, `display_name`, `marketer_name`, and FMCG `marketing_company`. On `medicine_type`, `product_form`, and FMCG `type` it matches a case-insensitive prefix of the whole value. `displayName` on a product is that `display_name`. An unfiltered total is the exact row count, remembered until a create or update for that catalog and refreshed at least every 5 minutes. A filtered total is an exact count of the same match.
 
 `displayName` omitted, blank, or `any` means either. `missing` is a null `display_name`. `present` is a non-null `display_name`. Any other value is 400 with detail `Filter is not valid`.
 

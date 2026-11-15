@@ -19,10 +19,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -31,66 +38,66 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class JdbcCatalogStore implements CatalogStore {
 
-    private static final String DRUG_SEARCH =
-            """
-            SELECT product_id, product_name, display_name, marketer_name, medicine_type, product_form,
-                   mrp, prescription_required, package, qty_amount, qty_unit
-            FROM drugs
-            WHERE product_id = :id
-               OR product_name ILIKE :pattern ESCAPE '\\'
-               OR display_name ILIKE :pattern ESCAPE '\\'
-               OR marketer_name ILIKE :pattern ESCAPE '\\'
-               OR medicine_type ILIKE :pattern ESCAPE '\\'
-               OR product_form ILIKE :pattern ESCAPE '\\'
-            ORDER BY product_name ASC, product_id ASC
-            LIMIT :limit
-            """;
-
-    private static final String FMCG_SEARCH =
-            """
-            SELECT product_id, product_name, display_name, marketer_name, marketing_company, type, product_form,
-                   mrp, package, qty_amount, qty_unit
-            FROM otc_fmcg
-            WHERE product_id = :id
-               OR product_name ILIKE :pattern ESCAPE '\\'
-               OR display_name ILIKE :pattern ESCAPE '\\'
-               OR marketer_name ILIKE :pattern ESCAPE '\\'
-               OR marketing_company ILIKE :pattern ESCAPE '\\'
-               OR type ILIKE :pattern ESCAPE '\\'
-               OR product_form ILIKE :pattern ESCAPE '\\'
-            ORDER BY product_name ASC NULLS LAST, product_id ASC
-            LIMIT :limit
-            """;
+    private static final long COUNT_TTL_MILLIS = 5 * 60 * 1000L;
+    private static final String DRUG_COLUMNS =
+            "product_id, product_name, display_name, marketer_name, medicine_type, product_form, "
+                    + "mrp, prescription_required, package, qty_amount, qty_unit";
+    private static final String FMCG_COLUMNS =
+            "product_id, product_name, display_name, marketer_name, marketing_company, type, product_form, "
+                    + "mrp, package, qty_amount, qty_unit";
+    private static final Comparator<DrugSummary> DRUG_ORDER = Comparator.comparing(
+                    DrugSummary::productName, Comparator.nullsFirst(String::compareTo))
+            .thenComparing(DrugSummary::productId);
+    private static final Comparator<FmcgSummary> FMCG_ORDER = Comparator.comparing(
+                    FmcgSummary::productName, Comparator.nullsLast(String::compareTo))
+            .thenComparing(FmcgSummary::productId);
 
     private final JdbcClient jdbc;
     private final TransactionTemplate transactions;
+    private final ExecutorService pool;
+    private final Object counts = new Object();
+    private int drugGeneration;
+    private int fmcgGeneration;
+    private Integer drugTotal;
+    private Integer fmcgTotal;
+    private long drugTotalAt;
+    private long fmcgTotalAt;
 
     public JdbcCatalogStore(DataSource dataSource) {
         this.jdbc = JdbcClient.create(dataSource);
         this.transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
+        this.pool = Executors.newFixedThreadPool(4, JdbcCatalogStore::readThread);
+    }
+
+    public void close() {
+        pool.shutdown();
     }
 
     @Override
     public CatalogDocuments.SearchResponse search(String query, int limit) {
+        LabelHits labels = labelHits(query);
+        boolean ordered = query.length() < 5 || labels.any();
         String pattern = CatalogRules.containsPattern(query);
-        List<DrugSummary> drugs = jdbc.sql(DRUG_SEARCH)
-                .param("id", query)
-                .param("pattern", pattern)
-                .param("limit", limit)
-                .query((rs, row) -> drugSummary(rs))
-                .list();
-        List<FmcgSummary> fmcg = jdbc.sql(FMCG_SEARCH)
-                .param("id", query)
-                .param("pattern", pattern)
-                .param("limit", limit)
-                .query((rs, row) -> fmcgSummary(rs))
-                .list();
-        return new CatalogDocuments.SearchResponse(drugs, fmcg);
+        CompletableFuture<List<DrugSummary>> drugs =
+                CompletableFuture.supplyAsync(() -> matchDrugs(query, pattern, ordered, limit, labels), pool);
+        CompletableFuture<List<FmcgSummary>> fmcg =
+                CompletableFuture.supplyAsync(() -> matchFmcg(query, pattern, ordered, limit, labels), pool);
+        return new CatalogDocuments.SearchResponse(await(drugs), await(fmcg));
     }
 
     @Override
     public CatalogDocuments.CatalogList list(CatalogRules.Listing listing) {
-        return new CatalogDocuments.CatalogList(pageDrugs(listing), pageFmcg(listing));
+        LabelHits labels = listing.text() == null ? LabelHits.NONE : labelHits(listing.text());
+        boolean ordered = listing.text() != null && (listing.text().length() < 5 || labels.any());
+        CompletableFuture<List<DrugSummary>> drugRows =
+                CompletableFuture.supplyAsync(() -> drugItems(listing, labels, ordered), pool);
+        CompletableFuture<Integer> drugCount = CompletableFuture.supplyAsync(() -> drugCount(listing), pool);
+        CompletableFuture<List<FmcgSummary>> fmcgRows =
+                CompletableFuture.supplyAsync(() -> fmcgItems(listing, labels, ordered), pool);
+        CompletableFuture<Integer> fmcgCount = CompletableFuture.supplyAsync(() -> fmcgCount(listing), pool);
+        return new CatalogDocuments.CatalogList(
+                new CatalogDocuments.SummaryPage<>(await(drugRows), listing.page(), listing.size(), await(drugCount)),
+                new CatalogDocuments.SummaryPage<>(await(fmcgRows), listing.page(), listing.size(), await(fmcgCount)));
     }
 
     @Override
@@ -125,11 +132,13 @@ public class JdbcCatalogStore implements CatalogStore {
     @Override
     public DrugDetail createDrug(DrugDetail draft) {
         try {
-            return transactions.execute(status -> {
+            DrugDetail saved = transactions.execute(status -> {
                 insertDrug(draft);
                 insertDrugChildren(draft);
                 return requireDrug(draft.productId());
             });
+            forgetDrugs();
+            return saved;
         } catch (DuplicateKeyException exception) {
             throw new CatalogConflict();
         }
@@ -137,7 +146,7 @@ public class JdbcCatalogStore implements CatalogStore {
 
     @Override
     public DrugDetail updateDrug(DrugDetail draft) {
-        return transactions.execute(status -> {
+        DrugDetail saved = transactions.execute(status -> {
             if (updateDrugRow(draft) == 0) {
                 throw new CatalogMissing();
             }
@@ -154,16 +163,20 @@ public class JdbcCatalogStore implements CatalogStore {
             insertDrugChildren(draft);
             return requireDrug(draft.productId());
         });
+        forgetDrugs();
+        return saved;
     }
 
     @Override
     public FmcgDetail createFmcg(FmcgDetail draft) {
         try {
-            return transactions.execute(status -> {
+            FmcgDetail saved = transactions.execute(status -> {
                 insertFmcg(draft);
                 insertFmcgChildren(draft);
                 return requireFmcg(draft.productId());
             });
+            forgetFmcg();
+            return saved;
         } catch (DuplicateKeyException exception) {
             throw new CatalogConflict();
         }
@@ -171,7 +184,7 @@ public class JdbcCatalogStore implements CatalogStore {
 
     @Override
     public FmcgDetail updateFmcg(FmcgDetail draft) {
-        return transactions.execute(status -> {
+        FmcgDetail saved = transactions.execute(status -> {
             if (updateFmcgRow(draft) == 0) {
                 throw new CatalogMissing();
             }
@@ -186,6 +199,8 @@ public class JdbcCatalogStore implements CatalogStore {
             insertFmcgChildren(draft);
             return requireFmcg(draft.productId());
         });
+        forgetFmcg();
+        return saved;
     }
 
     private DrugDetail requireDrug(String productId) {
@@ -728,44 +743,268 @@ public class JdbcCatalogStore implements CatalogStore {
         return grouped;
     }
 
-    private CatalogDocuments.SummaryPage<DrugSummary> pageDrugs(CatalogRules.Listing listing) {
+    private List<DrugSummary> drugItems(CatalogRules.Listing listing, LabelHits labels, boolean ordered) {
         if (!listing.includeDrugs()) {
-            return empty(listing);
+            return List.of();
         }
-        String where = drugWhere(listing);
-        int total = count("drugs", where, listing, true);
-        String sql =
-                """
-                SELECT product_id, product_name, display_name, marketer_name, medicine_type, product_form,
-                       mrp, prescription_required, package, qty_amount, qty_unit
-                FROM drugs
-                """
-                        + where
-                        + " ORDER BY product_name ASC, product_id ASC LIMIT :limit OFFSET :offset";
-        List<DrugSummary> items = bind(jdbc.sql(sql), listing, true, true)
-                .query((rs, row) -> drugSummary(rs))
-                .list();
-        return new CatalogDocuments.SummaryPage<>(items, listing.page(), listing.size(), total);
+        if (listing.text() == null) {
+            return drugSlice(listing);
+        }
+        int offset = (listing.page() - 1) * listing.size();
+        int needed = offset + listing.size();
+        String pattern = CatalogRules.containsPattern(listing.text());
+        List<DrugSummary> rows = new ArrayList<>();
+        rows.addAll(drugBranch("product_id = :id", listing, false, needed, spec -> spec.param("id", listing.text())));
+        rows.addAll(containsDrugs("product_name", pattern, listing, ordered, needed));
+        rows.addAll(containsDrugs("display_name", pattern, listing, ordered, needed));
+        rows.addAll(containsDrugs("marketer_name", pattern, listing, ordered, needed));
+        for (String form : labels.drugForms()) {
+            rows.addAll(drugBranch(
+                    "lower(product_form) = :label", listing, true, needed, spec -> spec.param("label", form)));
+        }
+        for (String type : labels.drugTypes()) {
+            rows.addAll(drugBranch(
+                    "lower(medicine_type) = :label", listing, true, needed, spec -> spec.param("label", type)));
+        }
+        return window(rows, DRUG_ORDER, offset, listing.size());
     }
 
-    private CatalogDocuments.SummaryPage<FmcgSummary> pageFmcg(CatalogRules.Listing listing) {
+    private List<FmcgSummary> fmcgItems(CatalogRules.Listing listing, LabelHits labels, boolean ordered) {
         if (!listing.includeFmcg()) {
-            return empty(listing);
+            return List.of();
         }
-        String where = fmcgWhere(listing);
-        int total = count("otc_fmcg", where, listing, false);
-        String sql =
-                """
-                SELECT product_id, product_name, display_name, marketer_name, marketing_company, type, product_form,
-                       mrp, package, qty_amount, qty_unit
-                FROM otc_fmcg
-                """
-                        + where
-                        + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :limit OFFSET :offset";
-        List<FmcgSummary> items = bind(jdbc.sql(sql), listing, false, true)
+        if (listing.text() == null) {
+            return fmcgSlice(listing);
+        }
+        int offset = (listing.page() - 1) * listing.size();
+        int needed = offset + listing.size();
+        String pattern = CatalogRules.containsPattern(listing.text());
+        List<FmcgSummary> rows = new ArrayList<>();
+        rows.addAll(fmcgBranch("product_id = :id", listing, false, needed, spec -> spec.param("id", listing.text())));
+        rows.addAll(containsFmcg("product_name", pattern, listing, ordered, needed));
+        rows.addAll(containsFmcg("display_name", pattern, listing, ordered, needed));
+        rows.addAll(containsFmcg("marketer_name", pattern, listing, ordered, needed));
+        rows.addAll(containsFmcg("marketing_company", pattern, listing, ordered, needed));
+        for (String form : labels.fmcgForms()) {
+            rows.addAll(fmcgBranch(
+                    "lower(product_form) = :label", listing, true, needed, spec -> spec.param("label", form)));
+        }
+        for (String type : labels.fmcgTypes()) {
+            rows.addAll(fmcgBranch("lower(type) = :label", listing, true, needed, spec -> spec.param("label", type)));
+        }
+        return window(rows, FMCG_ORDER, offset, listing.size());
+    }
+
+    private List<DrugSummary> matchDrugs(String query, String pattern, boolean ordered, int limit, LabelHits labels) {
+        List<DrugSummary> rows = new ArrayList<>();
+        rows.addAll(drugBranch("product_id = :id", null, false, limit, spec -> spec.param("id", query)));
+        rows.addAll(containsDrugs("product_name", pattern, null, ordered, limit));
+        rows.addAll(containsDrugs("display_name", pattern, null, ordered, limit));
+        rows.addAll(containsDrugs("marketer_name", pattern, null, ordered, limit));
+        for (String form : labels.drugForms()) {
+            rows.addAll(
+                    drugBranch("lower(product_form) = :label", null, true, limit, spec -> spec.param("label", form)));
+        }
+        for (String type : labels.drugTypes()) {
+            rows.addAll(
+                    drugBranch("lower(medicine_type) = :label", null, true, limit, spec -> spec.param("label", type)));
+        }
+        return window(rows, DRUG_ORDER, 0, limit);
+    }
+
+    private List<FmcgSummary> matchFmcg(String query, String pattern, boolean ordered, int limit, LabelHits labels) {
+        List<FmcgSummary> rows = new ArrayList<>();
+        rows.addAll(fmcgBranch("product_id = :id", null, false, limit, spec -> spec.param("id", query)));
+        rows.addAll(containsFmcg("product_name", pattern, null, ordered, limit));
+        rows.addAll(containsFmcg("display_name", pattern, null, ordered, limit));
+        rows.addAll(containsFmcg("marketer_name", pattern, null, ordered, limit));
+        rows.addAll(containsFmcg("marketing_company", pattern, null, ordered, limit));
+        for (String form : labels.fmcgForms()) {
+            rows.addAll(
+                    fmcgBranch("lower(product_form) = :label", null, true, limit, spec -> spec.param("label", form)));
+        }
+        for (String type : labels.fmcgTypes()) {
+            rows.addAll(fmcgBranch("lower(type) = :label", null, true, limit, spec -> spec.param("label", type)));
+        }
+        return window(rows, FMCG_ORDER, 0, limit);
+    }
+
+    private List<DrugSummary> containsDrugs(
+            String column, String pattern, CatalogRules.Listing listing, boolean ordered, int needed) {
+        return drugBranch(
+                column + " ILIKE :pattern ESCAPE '\\'",
+                listing,
+                ordered,
+                needed,
+                spec -> spec.param("pattern", pattern));
+    }
+
+    private List<FmcgSummary> containsFmcg(
+            String column, String pattern, CatalogRules.Listing listing, boolean ordered, int needed) {
+        return fmcgBranch(
+                column + " ILIKE :pattern ESCAPE '\\'",
+                listing,
+                ordered,
+                needed,
+                spec -> spec.param("pattern", pattern));
+    }
+
+    private List<DrugSummary> drugBranch(
+            String predicate,
+            CatalogRules.Listing listing,
+            boolean ordered,
+            int needed,
+            Consumer<JdbcClient.StatementSpec> extra) {
+        String sql = "SELECT " + DRUG_COLUMNS + " FROM drugs WHERE " + predicate
+                + drugFilters(listing)
+                + " ORDER BY product_name ASC, product_id ASC LIMIT :needed";
+        List<DrugSummary> rows = transactions.execute(status -> {
+            if (ordered) {
+                nameOrder();
+            }
+            JdbcClient.StatementSpec spec = jdbc.sql(sql).param("needed", needed);
+            bindFilters(spec, listing, true);
+            extra.accept(spec);
+            return spec.query((rs, row) -> drugSummary(rs)).list();
+        });
+        return rows == null ? List.of() : rows;
+    }
+
+    private List<FmcgSummary> fmcgBranch(
+            String predicate,
+            CatalogRules.Listing listing,
+            boolean ordered,
+            int needed,
+            Consumer<JdbcClient.StatementSpec> extra) {
+        String sql = "SELECT " + FMCG_COLUMNS + " FROM otc_fmcg WHERE " + predicate
+                + fmcgFilters(listing)
+                + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed";
+        List<FmcgSummary> rows = transactions.execute(status -> {
+            if (ordered) {
+                nameOrder();
+            }
+            JdbcClient.StatementSpec spec = jdbc.sql(sql).param("needed", needed);
+            bindFilters(spec, listing, false);
+            extra.accept(spec);
+            return spec.query((rs, row) -> fmcgSummary(rs)).list();
+        });
+        return rows == null ? List.of() : rows;
+    }
+
+    private List<DrugSummary> drugSlice(CatalogRules.Listing listing) {
+        String sql = "SELECT " + DRUG_COLUMNS + " FROM drugs" + drugWhere(listing)
+                + " ORDER BY product_name ASC, product_id ASC LIMIT :limit OFFSET :offset";
+        return bind(jdbc.sql(sql), listing, true, true)
+                .query((rs, row) -> drugSummary(rs))
+                .list();
+    }
+
+    private List<FmcgSummary> fmcgSlice(CatalogRules.Listing listing) {
+        String sql = "SELECT " + FMCG_COLUMNS + " FROM otc_fmcg" + fmcgWhere(listing)
+                + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :limit OFFSET :offset";
+        return bind(jdbc.sql(sql), listing, false, true)
                 .query((rs, row) -> fmcgSummary(rs))
                 .list();
-        return new CatalogDocuments.SummaryPage<>(items, listing.page(), listing.size(), total);
+    }
+
+    private int drugCount(CatalogRules.Listing listing) {
+        if (!listing.includeDrugs()) {
+            return 0;
+        }
+        if (drugUnfiltered(listing)) {
+            return cachedCount(true);
+        }
+        return count("drugs", drugWhere(listing), listing, true);
+    }
+
+    private int fmcgCount(CatalogRules.Listing listing) {
+        if (!listing.includeFmcg()) {
+            return 0;
+        }
+        if (fmcgUnfiltered(listing)) {
+            return cachedCount(false);
+        }
+        return count("otc_fmcg", fmcgWhere(listing), listing, false);
+    }
+
+    private int cachedCount(boolean drug) {
+        int generation;
+        synchronized (counts) {
+            Integer value = drug ? drugTotal : fmcgTotal;
+            long at = drug ? drugTotalAt : fmcgTotalAt;
+            if (value != null && System.currentTimeMillis() - at < COUNT_TTL_MILLIS) {
+                return value;
+            }
+            generation = drug ? drugGeneration : fmcgGeneration;
+        }
+        int total = tableCount(drug ? "drugs" : "otc_fmcg");
+        synchronized (counts) {
+            int current = drug ? drugGeneration : fmcgGeneration;
+            if (current == generation) {
+                if (drug) {
+                    drugTotal = total;
+                    drugTotalAt = System.currentTimeMillis();
+                } else {
+                    fmcgTotal = total;
+                    fmcgTotalAt = System.currentTimeMillis();
+                }
+                return total;
+            }
+            Integer fresh = drug ? drugTotal : fmcgTotal;
+            return fresh == null ? total : fresh;
+        }
+    }
+
+    private int tableCount(String table) {
+        Integer total = transactions.execute(status -> {
+            jdbc.sql("SELECT set_config('enable_seqscan', 'off', true)")
+                    .query(String.class)
+                    .single();
+            return jdbc.sql("SELECT count(*) FROM " + table)
+                    .query((rs, row) -> rs.getInt(1))
+                    .single();
+        });
+        return total == null ? 0 : total;
+    }
+
+    private void forgetDrugs() {
+        synchronized (counts) {
+            drugTotal = null;
+            drugGeneration++;
+        }
+    }
+
+    private void forgetFmcg() {
+        synchronized (counts) {
+            fmcgTotal = null;
+            fmcgGeneration++;
+        }
+    }
+
+    private LabelHits labelHits(String query) {
+        String prefix = CatalogRules.prefixPattern(query.toLowerCase(Locale.ROOT));
+        return new LabelHits(
+                labels("drugs", "product_form", prefix),
+                labels("drugs", "medicine_type", prefix),
+                labels("otc_fmcg", "product_form", prefix),
+                labels("otc_fmcg", "type", prefix));
+    }
+
+    private List<String> labels(String table, String column, String prefix) {
+        return jdbc.sql("SELECT DISTINCT lower(" + column + ") AS value FROM " + table + " WHERE lower(" + column
+                        + ") LIKE :prefix ESCAPE '\\'")
+                .param("prefix", prefix)
+                .query(String.class)
+                .list();
+    }
+
+    private void nameOrder() {
+        jdbc.sql("SELECT set_config('enable_bitmapscan', 'off', true)")
+                .query(String.class)
+                .single();
+        jdbc.sql("SELECT set_config('enable_seqscan', 'off', true)")
+                .query(String.class)
+                .single();
     }
 
     private int count(String table, String where, CatalogRules.Listing listing, boolean drug) {
@@ -778,7 +1017,9 @@ public class JdbcCatalogStore implements CatalogStore {
     private static JdbcClient.StatementSpec bind(
             JdbcClient.StatementSpec spec, CatalogRules.Listing listing, boolean drug, boolean page) {
         if (listing.text() != null) {
-            spec.param("id", listing.text()).param("pattern", CatalogRules.containsPattern(listing.text()));
+            spec.param("id", listing.text())
+                    .param("pattern", CatalogRules.containsPattern(listing.text()))
+                    .param("prefix", CatalogRules.prefixPattern(listing.text().toLowerCase(Locale.ROOT)));
         }
         if (listing.form() != null) {
             spec.param("form", CatalogRules.containsPattern(listing.form()));
@@ -807,8 +1048,8 @@ public class JdbcCatalogStore implements CatalogStore {
                        OR product_name ILIKE :pattern ESCAPE '\\'
                        OR display_name ILIKE :pattern ESCAPE '\\'
                        OR marketer_name ILIKE :pattern ESCAPE '\\'
-                       OR medicine_type ILIKE :pattern ESCAPE '\\'
-                       OR product_form ILIKE :pattern ESCAPE '\\')
+                       OR lower(medicine_type) LIKE :prefix ESCAPE '\\'
+                       OR lower(product_form) LIKE :prefix ESCAPE '\\')
                     """);
         }
         appendNameAndForm(where, listing);
@@ -836,8 +1077,8 @@ public class JdbcCatalogStore implements CatalogStore {
                        OR display_name ILIKE :pattern ESCAPE '\\'
                        OR marketer_name ILIKE :pattern ESCAPE '\\'
                        OR marketing_company ILIKE :pattern ESCAPE '\\'
-                       OR type ILIKE :pattern ESCAPE '\\'
-                       OR product_form ILIKE :pattern ESCAPE '\\')
+                       OR lower(type) LIKE :prefix ESCAPE '\\'
+                       OR lower(product_form) LIKE :prefix ESCAPE '\\')
                     """);
         }
         appendNameAndForm(where, listing);
@@ -862,8 +1103,120 @@ public class JdbcCatalogStore implements CatalogStore {
         }
     }
 
-    private static <T> CatalogDocuments.SummaryPage<T> empty(CatalogRules.Listing listing) {
-        return new CatalogDocuments.SummaryPage<>(List.of(), listing.page(), listing.size(), 0);
+    private static String drugFilters(CatalogRules.Listing listing) {
+        if (listing == null) {
+            return "";
+        }
+        StringBuilder filters = new StringBuilder();
+        appendNameAndForm(filters, listing);
+        if (listing.prescription() == CatalogRules.Rx.YES) {
+            filters.append(" AND prescription_required = true");
+        } else if (listing.prescription() == CatalogRules.Rx.NO) {
+            filters.append(" AND prescription_required = false");
+        }
+        if (listing.medicineType() != null) {
+            filters.append(" AND medicine_type ILIKE :medicineType ESCAPE '\\'");
+        }
+        if (listing.marketer() != null) {
+            filters.append(" AND marketer_name ILIKE :marketer ESCAPE '\\'");
+        }
+        return filters.toString();
+    }
+
+    private static String fmcgFilters(CatalogRules.Listing listing) {
+        if (listing == null) {
+            return "";
+        }
+        StringBuilder filters = new StringBuilder();
+        appendNameAndForm(filters, listing);
+        if (listing.fmcgType() != null) {
+            filters.append(" AND type ILIKE :fmcgType ESCAPE '\\'");
+        }
+        if (listing.marketer() != null) {
+            filters.append(
+                    " AND (marketer_name ILIKE :marketer ESCAPE '\\' OR marketing_company ILIKE :marketer ESCAPE '\\')");
+        }
+        return filters.toString();
+    }
+
+    private static JdbcClient.StatementSpec bindFilters(
+            JdbcClient.StatementSpec spec, CatalogRules.Listing listing, boolean drug) {
+        if (listing == null) {
+            return spec;
+        }
+        if (listing.form() != null) {
+            spec.param("form", CatalogRules.containsPattern(listing.form()));
+        }
+        if (listing.marketer() != null) {
+            spec.param("marketer", CatalogRules.containsPattern(listing.marketer()));
+        }
+        if (drug && listing.medicineType() != null) {
+            spec.param("medicineType", CatalogRules.containsPattern(listing.medicineType()));
+        }
+        if (!drug && listing.fmcgType() != null) {
+            spec.param("fmcgType", CatalogRules.containsPattern(listing.fmcgType()));
+        }
+        return spec;
+    }
+
+    private static boolean drugUnfiltered(CatalogRules.Listing listing) {
+        return listing.text() == null
+                && listing.displayName() == CatalogRules.NamePresence.ANY
+                && listing.prescription() == CatalogRules.Rx.ANY
+                && listing.form() == null
+                && listing.medicineType() == null
+                && listing.marketer() == null;
+    }
+
+    private static boolean fmcgUnfiltered(CatalogRules.Listing listing) {
+        return listing.text() == null
+                && listing.displayName() == CatalogRules.NamePresence.ANY
+                && listing.form() == null
+                && listing.fmcgType() == null
+                && listing.marketer() == null;
+    }
+
+    private static <T> List<T> window(List<T> rows, Comparator<T> order, int offset, int size) {
+        Map<String, T> unique = new LinkedHashMap<>();
+        for (T row : rows) {
+            unique.putIfAbsent(productId(row), row);
+        }
+        return unique.values().stream().sorted(order).skip(offset).limit(size).toList();
+    }
+
+    private static String productId(Object row) {
+        if (row instanceof DrugSummary drug) {
+            return drug.productId();
+        }
+        return ((FmcgSummary) row).productId();
+    }
+
+    private static <T> T await(CompletableFuture<T> future) {
+        try {
+            return future.join();
+        } catch (CompletionException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            throw exception;
+        }
+    }
+
+    private static Thread readThread(Runnable runnable) {
+        Thread thread = new Thread(runnable, "catalog-read");
+        thread.setDaemon(true);
+        return thread;
+    }
+
+    private record LabelHits(
+            List<String> drugForms, List<String> drugTypes, List<String> fmcgForms, List<String> fmcgTypes) {
+
+        private static final LabelHits NONE = new LabelHits(List.of(), List.of(), List.of(), List.of());
+
+        private boolean any() {
+            return !drugForms.isEmpty() || !drugTypes.isEmpty() || !fmcgForms.isEmpty() || !fmcgTypes.isEmpty();
+        }
     }
 
     private static DrugSummary drugSummary(ResultSet rs) throws SQLException {

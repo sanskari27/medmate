@@ -144,4 +144,31 @@ describe("CatalogPage", () => {
     fireEvent.click(screen.getByRole("link", { name: "Crocin" }));
     expect(await screen.findByText("Opened DR100")).toBeTruthy();
   });
+
+  it("sends the catalog text once, after typing pauses", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = requestUrl(input);
+        urls.push(url);
+        return json({
+          drug: { items: [crocin], page: 1, size: 25, total: 1 },
+          fmcg: { items: [], page: 1, size: 25, total: 0 },
+        });
+      }),
+    );
+
+    renderPage();
+    expect(await screen.findByRole("link", { name: "Crocin" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Text"), { target: { value: "cr" } });
+    fireEvent.change(screen.getByLabelText("Text"), { target: { value: "crocin" } });
+    await waitFor(() => {
+      expect(urls.map(queryValue).filter((value) => value != null)).toEqual(["crocin"]);
+    });
+  });
 });
+
+function queryValue(url: string) {
+  return new URL(url, "http://localhost").searchParams.get("q");
+}

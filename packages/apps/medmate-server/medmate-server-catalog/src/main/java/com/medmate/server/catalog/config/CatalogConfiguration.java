@@ -1,10 +1,11 @@
 package com.medmate.server.catalog.config;
 
-import com.medmate.server.catalog.CatalogStore;
 import com.medmate.server.catalog.store.JdbcCatalogStore;
 import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.flywaydb.database.postgresql.PostgreSQLConfigurationExtension;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -25,18 +26,22 @@ public class CatalogConfiguration {
         dataSource.setUsername(environment.getRequiredProperty("medmate.catalog.username"));
         dataSource.setPassword(environment.getRequiredProperty("medmate.catalog.password"));
         dataSource.setMaximumPoolSize(environment.getProperty("medmate.catalog.maximum-pool-size", Integer.class, 10));
+        dataSource.setConnectionInitSql("SET plan_cache_mode = force_custom_plan");
         return dataSource;
     }
 
-    @Bean
-    CatalogStore catalogStore(@Qualifier("catalogDataSource") DataSource catalogDataSource) {
-        Flyway.configure()
+    @Bean(destroyMethod = "close")
+    JdbcCatalogStore catalogStore(@Qualifier("catalogDataSource") DataSource catalogDataSource) {
+        FluentConfiguration flyway = Flyway.configure()
                 .dataSource(catalogDataSource)
                 .locations("classpath:db/catalog")
                 .baselineOnMigrate(true)
-                .baselineVersion("0")
-                .load()
-                .migrate();
+                .baselineVersion("0");
+        // A transactional advisory lock stays open for the migration and blocks CREATE INDEX CONCURRENTLY.
+        flyway.getPluginRegister()
+                .getPlugin(PostgreSQLConfigurationExtension.class)
+                .setTransactionalLock(false);
+        flyway.load().migrate();
         return new JdbcCatalogStore(catalogDataSource);
     }
 }

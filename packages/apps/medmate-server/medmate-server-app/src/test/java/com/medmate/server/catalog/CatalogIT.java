@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -195,6 +196,110 @@ class CatalogIT {
                 "/api/v1/catalog?kind=nope", HttpMethod.GET, new HttpEntity<>(bearer(admin)), JsonNode.class);
         assertThat(badKind.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(badKind.getBody().get("detail").asText()).isEqualTo("Filter is not valid");
+    }
+
+    @Test
+    void searchKeepsNameOrderAndMatchesFormAndTypeByPrefix() throws Exception {
+        try (Connection connection = catalogDataSource.getConnection();
+                Statement statement = connection.createStatement();
+                ResultSet index = statement.executeQuery(
+                        """
+                        SELECT to_regclass('public.drugs_product_name_id'),
+                               to_regclass('public.drugs_form_name_id'),
+                               to_regclass('public.otc_fmcg_product_name_id'),
+                               to_regclass('public.otc_fmcg_type_name_id')
+                        """)) {
+            assertThat(index.next()).isTrue();
+            assertThat(index.getString(1)).isEqualTo("drugs_product_name_id");
+            assertThat(index.getString(2)).isEqualTo("drugs_form_name_id");
+            assertThat(index.getString(3)).isEqualTo("otc_fmcg_product_name_id");
+            assertThat(index.getString(4)).isEqualTo("otc_fmcg_type_name_id");
+        }
+
+        String admin = token(verify("9822001703"));
+        exchange(
+                HttpMethod.POST,
+                "/api/v1/catalog/drugs",
+                labeledDrug("DR200", "Zinc Oxide", "Tablet", "allopathy", "Acme"),
+                admin,
+                HttpStatus.CREATED);
+        exchange(
+                HttpMethod.POST,
+                "/api/v1/catalog/drugs",
+                labeledDrug("DR201", "Ablet Plain", "Capsule", "drugs", "Other"),
+                admin,
+                HttpStatus.CREATED);
+        exchange(
+                HttpMethod.POST,
+                "/api/v1/catalog/drugs",
+                labeledDrug("DR202", "Alpha Tablet", "Syrup", "allopathy", "Other"),
+                admin,
+                HttpStatus.CREATED);
+        exchange(
+                HttpMethod.POST,
+                "/api/v1/catalog/fmcg",
+                Map.of(
+                        "productId", "OT1",
+                        "productName", "Daily Wash",
+                        "type", "Soap",
+                        "marketingCompany", "Hindustan",
+                        "productForm", "Liquid"),
+                admin,
+                HttpStatus.CREATED);
+
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=tablet", null, null, HttpStatus.OK)))
+                .containsExactly("Alpha Tablet", "Zinc Oxide");
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=tablet&limit=1", null, null, HttpStatus.OK)))
+                .containsExactly("Alpha Tablet");
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=ablet", null, null, HttpStatus.OK)))
+                .containsExactly("Ablet Plain", "Alpha Tablet");
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=rug", null, null, HttpStatus.OK)))
+                .isEmpty();
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=drug", null, null, HttpStatus.OK)))
+                .containsExactly("Ablet Plain");
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=DR200", null, null, HttpStatus.OK)))
+                .containsExactly("Zinc Oxide");
+        assertThat(namesOf(exchange(HttpMethod.GET, "/api/search?q=acme", null, null, HttpStatus.OK)))
+                .containsExactly("Zinc Oxide");
+        assertThat(fmcgNames(exchange(HttpMethod.GET, "/api/search?q=soa", null, null, HttpStatus.OK)))
+                .containsExactly("Daily Wash");
+        assertThat(fmcgNames(exchange(HttpMethod.GET, "/api/search?q=oap", null, null, HttpStatus.OK)))
+                .isEmpty();
+        assertThat(fmcgNames(exchange(HttpMethod.GET, "/api/search?q=hindu", null, null, HttpStatus.OK)))
+                .containsExactly("Daily Wash");
+
+        JsonNode first = exchange(HttpMethod.GET, "/api/v1/catalog?q=tablet&page=1&size=1", null, admin, HttpStatus.OK);
+        assertThat(first.get("drug").get("total").asInt()).isEqualTo(2);
+        assertThat(first.get("drug").get("items").get(0).get("productName").asText())
+                .isEqualTo("Alpha Tablet");
+        JsonNode second =
+                exchange(HttpMethod.GET, "/api/v1/catalog?q=tablet&page=2&size=1", null, admin, HttpStatus.OK);
+        assertThat(second.get("drug").get("total").asInt()).isEqualTo(2);
+        assertThat(second.get("drug").get("items").get(0).get("productName").asText())
+                .isEqualTo("Zinc Oxide");
+    }
+
+    private static List<String> namesOf(JsonNode body) {
+        List<String> names = new ArrayList<>();
+        body.get("drug").forEach(row -> names.add(row.get("productName").asText()));
+        return names;
+    }
+
+    private static List<String> fmcgNames(JsonNode body) {
+        List<String> names = new ArrayList<>();
+        body.get("fmcg").forEach(row -> names.add(row.get("productName").asText()));
+        return names;
+    }
+
+    private static Map<String, Object> labeledDrug(
+            String id, String name, String form, String medicineType, String marketer) {
+        Map<String, Object> body = drug("Paracetamol", "Caffeine");
+        body.put("productId", id);
+        body.put("productName", name);
+        body.put("productForm", form);
+        body.put("medicineType", medicineType);
+        body.put("marketerName", marketer);
+        return body;
     }
 
     private JsonNode exchange(

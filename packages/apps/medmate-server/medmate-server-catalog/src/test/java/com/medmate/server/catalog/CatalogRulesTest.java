@@ -18,6 +18,7 @@ class CatalogRulesTest {
         assertThat(CatalogRules.search("crocin", "0").problem()).isEqualTo("Query is not valid");
         assertThat(CatalogRules.search("crocin", "nope").problem()).isEqualTo("Query is not valid");
         assertThat(CatalogRules.containsPattern("100%_a")).isEqualTo("%100\\%\\_a%");
+        assertThat(CatalogRules.prefixPattern("100%_a")).isEqualTo("100\\%\\_a%");
     }
 
     @Test
