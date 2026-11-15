@@ -29,8 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
@@ -62,7 +60,6 @@ public class JdbcCatalogStore implements CatalogStore {
     private final TransactionTemplate transactions;
     private final ExecutorService pool;
     private final ExecutorService partner;
-    private final ThreadLocal<AtomicInteger> backendSlot = new ThreadLocal<>();
     private final Object counts = new Object();
     private int drugGeneration;
     private int fmcgGeneration;
@@ -883,14 +880,11 @@ public class JdbcCatalogStore implements CatalogStore {
     private List<DrugSummary> containsDrugs(
             String column, String query, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         if (!"product_name".equals(column) && query.length() >= 3) {
-            return trigramDrugs(column, pattern, listing, needed);
+            return trigramDrugs(column, pattern, listing, needed, 0);
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
             int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
-            AtomicInteger walkPid = new AtomicInteger();
-            AtomicInteger scanPid = new AtomicInteger();
             return race(
-                    walkPid,
                     () -> drugBranch(
                             containsPredicate(column, null),
                             listing,
@@ -898,8 +892,7 @@ public class JdbcCatalogStore implements CatalogStore {
                             needed,
                             budget,
                             spec -> spec.param("pattern", pattern)),
-                    scanPid,
-                    () -> trigramDrugs(column, pattern, listing, needed));
+                    () -> trigramDrugs(column, pattern, listing, needed, budget));
         }
         return drugBranch(
                 containsPredicate(column, cutoff),
@@ -913,14 +906,11 @@ public class JdbcCatalogStore implements CatalogStore {
     private List<FmcgSummary> containsFmcg(
             String column, String query, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         if (!"product_name".equals(column) && query.length() >= 3) {
-            return trigramFmcg(column, pattern, listing, needed);
+            return trigramFmcg(column, pattern, listing, needed, 0);
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
             int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
-            AtomicInteger walkPid = new AtomicInteger();
-            AtomicInteger scanPid = new AtomicInteger();
             return race(
-                    walkPid,
                     () -> fmcgBranch(
                             containsPredicate(column, null),
                             listing,
@@ -928,8 +918,7 @@ public class JdbcCatalogStore implements CatalogStore {
                             needed,
                             budget,
                             spec -> spec.param("pattern", pattern)),
-                    scanPid,
-                    () -> trigramFmcg(column, pattern, listing, needed));
+                    () -> trigramFmcg(column, pattern, listing, needed, budget));
         }
         return fmcgBranch(
                 containsPredicate(column, cutoff),
@@ -1021,12 +1010,13 @@ public class JdbcCatalogStore implements CatalogStore {
                 + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed)";
     }
 
-    private List<DrugSummary> trigramDrugs(String column, String pattern, CatalogRules.Listing listing, int needed) {
+    private List<DrugSummary> trigramDrugs(
+            String column, String pattern, CatalogRules.Listing listing, int needed, int timeoutMillis) {
         String sql = "SELECT " + DRUG_COLUMNS + " FROM drugs WHERE " + column + " ILIKE :pattern ESCAPE '\\'"
                 + drugFilters(listing)
                 + " ORDER BY product_name ASC, product_id ASC LIMIT :needed";
         List<DrugSummary> rows = transactions.execute(status -> {
-            publishBackend();
+            limit(timeoutMillis);
             trigramPlan();
             JdbcClient.StatementSpec spec =
                     jdbc.sql(sql).param("needed", needed).param("pattern", pattern);
@@ -1036,12 +1026,13 @@ public class JdbcCatalogStore implements CatalogStore {
         return rows == null ? List.of() : rows;
     }
 
-    private List<FmcgSummary> trigramFmcg(String column, String pattern, CatalogRules.Listing listing, int needed) {
+    private List<FmcgSummary> trigramFmcg(
+            String column, String pattern, CatalogRules.Listing listing, int needed, int timeoutMillis) {
         String sql = "SELECT " + FMCG_COLUMNS + " FROM otc_fmcg WHERE " + column + " ILIKE :pattern ESCAPE '\\'"
                 + fmcgFilters(listing)
                 + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed";
         List<FmcgSummary> rows = transactions.execute(status -> {
-            publishBackend();
+            limit(timeoutMillis);
             trigramPlan();
             JdbcClient.StatementSpec spec =
                     jdbc.sql(sql).param("needed", needed).param("pattern", pattern);
@@ -1074,7 +1065,6 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC, product_id ASC LIMIT :needed"
                 : sql;
         List<DrugSummary> rows = transactions.execute(status -> {
-            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1109,7 +1099,6 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed"
                 : sql;
         List<FmcgSummary> rows = transactions.execute(status -> {
-            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1272,89 +1261,61 @@ public class JdbcCatalogStore implements CatalogStore {
         return top.get(top.size() - 1).productName();
     }
 
-    private <T> List<T> race(
-            AtomicInteger walkPid, Supplier<List<T>> walk, AtomicInteger scanPid, Supplier<List<T>> scan) {
-        AtomicBoolean walkDone = new AtomicBoolean();
-        AtomicBoolean scanDone = new AtomicBoolean();
-        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(
+    private <T> List<T> race(Supplier<List<T>> walk, Supplier<List<T>> scan) {
+        CompletableFuture<List<T>> first = new CompletableFuture<>();
+        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(scan::get, partner);
+        CompletableFuture<List<T>> walked = CompletableFuture.supplyAsync(
                 () -> {
-                    backendSlot.set(scanPid);
-                    RuntimeException failure = null;
                     try {
-                        return scan.get();
+                        return walk.get();
                     } catch (RuntimeException exception) {
-                        failure = exception;
-                        throw exception;
-                    } finally {
-                        backendSlot.remove();
-                        scanDone.set(true);
-                        if (failure == null && !walkDone.get()) {
-                            cancelSoon(walkPid);
+                        if (stopped(exception)) {
+                            return null;
                         }
+                        throw exception;
                     }
                 },
                 partner);
-        backendSlot.set(walkPid);
-        try {
-            List<T> rows = walk.get();
-            walkDone.set(true);
-            if (!scanDone.get()) {
-                cancelSoon(scanPid);
+        scanned.whenComplete((rows, error) -> {
+            if (error == null) {
+                first.complete(rows);
             }
-            return rows;
-        } catch (RuntimeException exception) {
-            walkDone.set(true);
-            if (!stopped(exception)) {
-                throw exception;
+        });
+        walked.whenComplete((rows, error) -> {
+            if (error != null) {
+                first.completeExceptionally(error);
+                return;
             }
-            try {
-                return scanned.join();
-            } catch (CompletionException wrapped) {
-                Throwable cause = wrapped.getCause();
-                if (cause instanceof RuntimeException runtime) {
-                    throw runtime;
+            if (rows != null) {
+                first.complete(rows);
+                return;
+            }
+            scanned.whenComplete((scanRows, scanError) -> {
+                if (scanError != null) {
+                    first.completeExceptionally(scanError);
+                } else {
+                    first.complete(scanRows);
                 }
-                throw wrapped;
-            }
-        } finally {
-            backendSlot.remove();
-        }
-    }
-
-    private void publishBackend() {
-        AtomicInteger slot = backendSlot.get();
-        if (slot == null || slot.get() != 0) {
-            return;
-        }
-        Integer pid = jdbc.sql("SELECT pg_backend_pid()").query(Integer.class).single();
-        if (pid != null) {
-            slot.set(pid);
-        }
-    }
-
-    private void cancelSoon(AtomicInteger pid) {
-        Thread thread = new Thread(() -> cancelBackend(pid), "catalog-cancel");
-        thread.setDaemon(true);
-        thread.start();
-    }
-
-    private void cancelBackend(AtomicInteger pid) {
-        long deadline = System.nanoTime() + 30_000_000L;
-        while (pid.get() == 0 && System.nanoTime() < deadline) {
-            Thread.onSpinWait();
-        }
-        int backend = pid.get();
-        if (backend == 0) {
-            return;
-        }
+            });
+        });
         try {
-            transactions.execute(status -> jdbc.sql("SELECT pg_cancel_backend(:pid)")
-                    .param("pid", backend)
-                    .query(Boolean.class)
-                    .single());
-        } catch (RuntimeException ignored) {
-            // The other query already finished.
+            return first.join();
+        } catch (CompletionException wrapped) {
+            Throwable cause = wrapped.getCause();
+            if (cause instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            throw wrapped;
         }
+    }
+
+    private void limit(int timeoutMillis) {
+        if (timeoutMillis <= 0) {
+            return;
+        }
+        jdbc.sql("SELECT set_config('statement_timeout', '" + timeoutMillis + "', true)")
+                .query(String.class)
+                .single();
     }
 
     private void walkPlan(int timeoutMillis) {
