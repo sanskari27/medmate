@@ -1048,7 +1048,7 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     private LabelHits labelHits(String query) {
-        String prefix = CatalogRules.prefixPattern(query.toLowerCase(Locale.ROOT));
+        String prefix = query.toLowerCase(Locale.ROOT);
         CompletableFuture<List<String>> drugForms = later(() -> labels("drugs", "product_form", prefix));
         CompletableFuture<List<String>> drugTypes = later(() -> labels("drugs", "medicine_type", prefix));
         CompletableFuture<List<String>> fmcgForms = later(() -> labels("otc_fmcg", "product_form", prefix));
@@ -1056,22 +1056,40 @@ public class JdbcCatalogStore implements CatalogStore {
         return new LabelHits(await(drugForms), await(drugTypes), await(fmcgForms), await(fmcgTypes));
     }
 
-    // min() on the form index stops at the first matching label. A plain DISTINCT scans every tablet.
+    // The first key in [prefix, prefixEnd) is one index probe. DISTINCT of tab scans every tablet.
     private List<String> labels(String table, String column, String prefix) {
+        String end = prefixEnd(prefix);
+        String upper = end == null ? "" : " AND lower(" + column + ") < :to";
         String sql = "WITH RECURSIVE found AS ("
                 + " SELECT min(lower(" + column + ")) AS value FROM " + table
-                + " WHERE lower(" + column + ") LIKE :prefix ESCAPE '\\'"
+                + " WHERE lower(" + column + ") >= :from" + upper
                 + " UNION ALL"
                 + " SELECT (SELECT min(lower(" + column + ")) FROM " + table
-                + " WHERE lower(" + column + ") > found.value"
-                + " AND lower(" + column + ") LIKE :prefix ESCAPE '\\')"
+                + " WHERE lower(" + column + ") > found.value" + upper + ")"
                 + " FROM found WHERE found.value IS NOT NULL"
                 + ") SELECT value FROM found WHERE value IS NOT NULL";
         List<String> values = transactions.execute(status -> {
-            nameOrder();
-            return jdbc.sql(sql).param("prefix", prefix).query(String.class).list();
+            jdbc.sql("SELECT set_config('enable_seqscan', 'off', true)")
+                    .query(String.class)
+                    .single();
+            JdbcClient.StatementSpec spec = jdbc.sql(sql).param("from", prefix);
+            if (end != null) {
+                spec.param("to", end);
+            }
+            return spec.query(String.class).list();
         });
         return values == null ? List.of() : values;
+    }
+
+    private static String prefixEnd(String prefix) {
+        char[] chars = prefix.toCharArray();
+        for (int index = chars.length - 1; index >= 0; index--) {
+            if (chars[index] != Character.MAX_VALUE) {
+                chars[index]++;
+                return new String(chars, 0, index + 1);
+            }
+        }
+        return null;
     }
 
     private static String drugCutoff(List<DrugSummary> rows, int needed) {
