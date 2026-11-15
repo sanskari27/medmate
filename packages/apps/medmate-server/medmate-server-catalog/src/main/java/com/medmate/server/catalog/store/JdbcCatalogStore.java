@@ -1056,22 +1056,22 @@ public class JdbcCatalogStore implements CatalogStore {
         return new LabelHits(await(drugForms), await(drugTypes), await(fmcgForms), await(fmcgTypes));
     }
 
-    // The first key in [prefix, prefixEnd) is one index probe. DISTINCT of tab scans every tablet.
+    // The form index is ordered by the pattern operators, so the first key is one probe.
+    // min() with the default comparison cannot use that index and scans every tablet.
     private List<String> labels(String table, String column, String prefix) {
         String end = prefixEnd(prefix);
-        String upper = end == null ? "" : " AND lower(" + column + ") < :to";
+        String upper = end == null ? "" : " AND lower(" + column + ") ~<~ :to";
         String sql = "WITH RECURSIVE found AS ("
-                + " SELECT min(lower(" + column + ")) AS value FROM " + table
-                + " WHERE lower(" + column + ") >= :from" + upper
+                + " (SELECT lower(" + column + ") AS value FROM " + table
+                + " WHERE lower(" + column + ") ~>=~ :from" + upper
+                + " ORDER BY lower(" + column + ") USING ~<~ LIMIT 1)"
                 + " UNION ALL"
-                + " SELECT (SELECT min(lower(" + column + ")) FROM " + table
-                + " WHERE lower(" + column + ") > found.value" + upper + ")"
-                + " FROM found WHERE found.value IS NOT NULL"
+                + " (SELECT (SELECT lower(" + column + ") FROM " + table
+                + " WHERE lower(" + column + ") ~>~ found.value" + upper
+                + " ORDER BY lower(" + column + ") USING ~<~ LIMIT 1)"
+                + " FROM found WHERE found.value IS NOT NULL)"
                 + ") SELECT value FROM found WHERE value IS NOT NULL";
         List<String> values = transactions.execute(status -> {
-            jdbc.sql("SELECT set_config('enable_seqscan', 'off', true)")
-                    .query(String.class)
-                    .single();
             JdbcClient.StatementSpec spec = jdbc.sql(sql).param("from", prefix);
             if (end != null) {
                 spec.param("to", end);
