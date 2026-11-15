@@ -78,9 +78,20 @@ public class JdbcCatalogStore implements CatalogStore {
     public CatalogDocuments.SearchResponse search(String query, int limit) {
         LabelHits labels = labelHits(query);
         String pattern = CatalogRules.containsPattern(query);
+        List<CompletableFuture<List<DrugSummary>>> drugAnchorTasks = drugAnchors(query, pattern, null, limit, labels);
+        List<CompletableFuture<List<FmcgSummary>>> fmcgAnchorTasks = fmcgAnchors(query, pattern, null, limit, labels);
+        List<DrugSummary> drugAnchor = awaitAll(drugAnchorTasks);
+        List<FmcgSummary> fmcgAnchor = awaitAll(fmcgAnchorTasks);
+        List<CompletableFuture<List<DrugSummary>>> drugSecondaryTasks =
+                drugSecondary(query, pattern, null, limit, labels, drugCutoff(drugAnchor, limit));
+        List<CompletableFuture<List<FmcgSummary>>> fmcgSecondaryTasks =
+                fmcgSecondary(query, pattern, null, limit, labels, fmcgCutoff(fmcgAnchor, limit));
+        List<DrugSummary> drugs = new ArrayList<>(drugAnchor);
+        drugs.addAll(awaitAll(drugSecondaryTasks));
+        List<FmcgSummary> fmcg = new ArrayList<>(fmcgAnchor);
+        fmcg.addAll(awaitAll(fmcgSecondaryTasks));
         return new CatalogDocuments.SearchResponse(
-                window(awaitAll(drugBranches(query, pattern, null, limit, labels)), DRUG_ORDER, 0, limit),
-                window(awaitAll(fmcgBranches(query, pattern, null, limit, labels)), FMCG_ORDER, 0, limit));
+                window(drugs, DRUG_ORDER, 0, limit), window(fmcg, FMCG_ORDER, 0, limit));
     }
 
     @Override
@@ -95,17 +106,24 @@ public class JdbcCatalogStore implements CatalogStore {
         } else {
             LabelHits labels = labelHits(listing.text());
             int offset = (listing.page() - 1) * listing.size();
+            int needed = offset + listing.size();
             String pattern = CatalogRules.containsPattern(listing.text());
-            drugs = window(
-                    awaitAll(drugBranches(listing.text(), pattern, listing, offset + listing.size(), labels)),
-                    DRUG_ORDER,
-                    offset,
-                    listing.size());
-            fmcg = window(
-                    awaitAll(fmcgBranches(listing.text(), pattern, listing, offset + listing.size(), labels)),
-                    FMCG_ORDER,
-                    offset,
-                    listing.size());
+            List<CompletableFuture<List<DrugSummary>>> drugAnchorTasks =
+                    drugAnchors(listing.text(), pattern, listing, needed, labels);
+            List<CompletableFuture<List<FmcgSummary>>> fmcgAnchorTasks =
+                    fmcgAnchors(listing.text(), pattern, listing, needed, labels);
+            List<DrugSummary> drugAnchor = awaitAll(drugAnchorTasks);
+            List<FmcgSummary> fmcgAnchor = awaitAll(fmcgAnchorTasks);
+            List<CompletableFuture<List<DrugSummary>>> drugSecondaryTasks =
+                    drugSecondary(listing.text(), pattern, listing, needed, labels, drugCutoff(drugAnchor, needed));
+            List<CompletableFuture<List<FmcgSummary>>> fmcgSecondaryTasks =
+                    fmcgSecondary(listing.text(), pattern, listing, needed, labels, fmcgCutoff(fmcgAnchor, needed));
+            List<DrugSummary> drugRows = new ArrayList<>(drugAnchor);
+            drugRows.addAll(awaitAll(drugSecondaryTasks));
+            List<FmcgSummary> fmcgRows = new ArrayList<>(fmcgAnchor);
+            fmcgRows.addAll(awaitAll(fmcgSecondaryTasks));
+            drugs = window(drugRows, DRUG_ORDER, offset, listing.size());
+            fmcg = window(fmcgRows, FMCG_ORDER, offset, listing.size());
         }
         return new CatalogDocuments.CatalogList(
                 new CatalogDocuments.SummaryPage<>(drugs, listing.page(), listing.size(), await(drugCount)),
@@ -769,16 +787,16 @@ public class JdbcCatalogStore implements CatalogStore {
         return fmcgSlice(listing);
     }
 
-    private List<CompletableFuture<List<DrugSummary>>> drugBranches(
+    private List<CompletableFuture<List<DrugSummary>>> drugAnchors(
             String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels) {
         if (listing != null && !listing.includeDrugs()) {
             return List.of();
         }
         List<CompletableFuture<List<DrugSummary>>> parts = new ArrayList<>();
         parts.add(later(() -> drugBranch("product_id = :id", listing, false, needed, spec -> spec.param("id", text))));
-        parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, labels, needed)));
-        parts.add(later(() -> containsDrugs("display_name", text, pattern, listing, labels, needed)));
-        parts.add(later(() -> containsDrugs("marketer_name", text, pattern, listing, labels, needed)));
+        if (!labels.drugAnchored()) {
+            parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, labels, needed, null)));
+        }
         for (String form : labels.drugForms()) {
             parts.add(later(() -> drugBranch(
                     "lower(product_form) = :label", listing, true, needed, spec -> spec.param("label", form))));
@@ -790,17 +808,30 @@ public class JdbcCatalogStore implements CatalogStore {
         return parts;
     }
 
-    private List<CompletableFuture<List<FmcgSummary>>> fmcgBranches(
+    private List<CompletableFuture<List<DrugSummary>>> drugSecondary(
+            String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels, String cutoff) {
+        if (listing != null && !listing.includeDrugs()) {
+            return List.of();
+        }
+        List<CompletableFuture<List<DrugSummary>>> parts = new ArrayList<>();
+        if (labels.drugAnchored()) {
+            parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, labels, needed, cutoff)));
+        }
+        parts.add(later(() -> containsDrugs("display_name", text, pattern, listing, labels, needed, cutoff)));
+        parts.add(later(() -> containsDrugs("marketer_name", text, pattern, listing, labels, needed, cutoff)));
+        return parts;
+    }
+
+    private List<CompletableFuture<List<FmcgSummary>>> fmcgAnchors(
             String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels) {
         if (listing != null && !listing.includeFmcg()) {
             return List.of();
         }
         List<CompletableFuture<List<FmcgSummary>>> parts = new ArrayList<>();
         parts.add(later(() -> fmcgBranch("product_id = :id", listing, false, needed, spec -> spec.param("id", text))));
-        parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, labels, needed)));
-        parts.add(later(() -> containsFmcg("display_name", text, pattern, listing, labels, needed)));
-        parts.add(later(() -> containsFmcg("marketer_name", text, pattern, listing, labels, needed)));
-        parts.add(later(() -> containsFmcg("marketing_company", text, pattern, listing, labels, needed)));
+        if (!labels.fmcgAnchored()) {
+            parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, labels, needed, null)));
+        }
         for (String form : labels.fmcgForms()) {
             parts.add(later(() -> fmcgBranch(
                     "lower(product_form) = :label", listing, true, needed, spec -> spec.param("label", form))));
@@ -812,42 +843,76 @@ public class JdbcCatalogStore implements CatalogStore {
         return parts;
     }
 
+    private List<CompletableFuture<List<FmcgSummary>>> fmcgSecondary(
+            String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels, String cutoff) {
+        if (listing != null && !listing.includeFmcg()) {
+            return List.of();
+        }
+        List<CompletableFuture<List<FmcgSummary>>> parts = new ArrayList<>();
+        if (labels.fmcgAnchored()) {
+            parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, labels, needed, cutoff)));
+        }
+        parts.add(later(() -> containsFmcg("display_name", text, pattern, listing, labels, needed, cutoff)));
+        parts.add(later(() -> containsFmcg("marketer_name", text, pattern, listing, labels, needed, cutoff)));
+        parts.add(later(() -> containsFmcg("marketing_company", text, pattern, listing, labels, needed, cutoff)));
+        return parts;
+    }
+
     private List<DrugSummary> containsDrugs(
-            String column, String query, String pattern, CatalogRules.Listing listing, LabelHits labels, int needed) {
+            String column,
+            String query,
+            String pattern,
+            CatalogRules.Listing listing,
+            LabelHits labels,
+            int needed,
+            String cutoff) {
         return drugBranch(
-                column + " ILIKE :pattern ESCAPE '\\'",
+                containsPredicate(column, cutoff),
                 listing,
-                walkContains(column, query, labels),
+                cutoff != null || walkContains(column, query),
                 needed,
-                spec -> spec.param("pattern", pattern));
+                spec -> bindContains(spec, pattern, cutoff));
     }
 
     private List<FmcgSummary> containsFmcg(
-            String column, String query, String pattern, CatalogRules.Listing listing, LabelHits labels, int needed) {
+            String column,
+            String query,
+            String pattern,
+            CatalogRules.Listing listing,
+            LabelHits labels,
+            int needed,
+            String cutoff) {
         return fmcgBranch(
-                column + " ILIKE :pattern ESCAPE '\\'",
+                containsPredicate(column, cutoff),
                 listing,
-                walkContains(column, query, labels),
+                cutoff != null || walkContains(column, query),
                 needed,
-                spec -> spec.param("pattern", pattern));
+                spec -> bindContains(spec, pattern, cutoff));
     }
 
-    // The name btree can stop after LIMIT when the word is common in product_name.
-    // Forcing that walk on display name or marketer reads the whole catalog when the word is rare there.
-    // Trigram indexes need 3 characters, so a shorter query still walks every column.
-    private boolean walkContains(String column, String query, LabelHits labels) {
+    private static String containsPredicate(String column, String cutoff) {
+        String predicate = column + " ILIKE :pattern ESCAPE '\\'";
+        if (cutoff != null) {
+            return predicate + " AND product_name <= :cutoff";
+        }
+        return predicate;
+    }
+
+    private static void bindContains(JdbcClient.StatementSpec spec, String pattern, String cutoff) {
+        spec.param("pattern", pattern);
+        if (cutoff != null) {
+            spec.param("cutoff", cutoff);
+        }
+    }
+
+    // Walk the name btree only when a short product name is common enough to stop at LIMIT.
+    // A cutoff from a form or type page bounds every other column to that alphabetical prefix.
+    // Trigram indexes need 3 characters, so a shorter query still walks.
+    private static boolean walkContains(String column, String query) {
         if (query.length() < 3) {
             return true;
         }
-        if (!"product_name".equals(column)) {
-            return false;
-        }
-        if (!labels.drugForms().isEmpty() || !labels.fmcgForms().isEmpty()) {
-            return true;
-        }
-        return query.length() < 5
-                && labels.drugTypes().isEmpty()
-                && labels.fmcgTypes().isEmpty();
+        return "product_name".equals(column) && query.length() < 5;
     }
 
     private List<DrugSummary> drugBranch(
@@ -991,12 +1056,38 @@ public class JdbcCatalogStore implements CatalogStore {
         return new LabelHits(await(drugForms), await(drugTypes), await(fmcgForms), await(fmcgTypes));
     }
 
+    // min() on the form index stops at the first matching label. A plain DISTINCT scans every tablet.
     private List<String> labels(String table, String column, String prefix) {
-        return jdbc.sql("SELECT DISTINCT lower(" + column + ") AS value FROM " + table + " WHERE lower(" + column
-                        + ") LIKE :prefix ESCAPE '\\'")
-                .param("prefix", prefix)
-                .query(String.class)
-                .list();
+        String sql = "WITH RECURSIVE found AS ("
+                + " SELECT min(lower(" + column + ")) AS value FROM " + table
+                + " WHERE lower(" + column + ") LIKE :prefix ESCAPE '\\'"
+                + " UNION ALL"
+                + " SELECT (SELECT min(lower(" + column + ")) FROM " + table
+                + " WHERE lower(" + column + ") > found.value"
+                + " AND lower(" + column + ") LIKE :prefix ESCAPE '\\')"
+                + " FROM found WHERE found.value IS NOT NULL"
+                + ") SELECT value FROM found WHERE value IS NOT NULL";
+        List<String> values = transactions.execute(status -> {
+            nameOrder();
+            return jdbc.sql(sql).param("prefix", prefix).query(String.class).list();
+        });
+        return values == null ? List.of() : values;
+    }
+
+    private static String drugCutoff(List<DrugSummary> rows, int needed) {
+        List<DrugSummary> top = window(rows, DRUG_ORDER, 0, needed);
+        if (top.size() < needed) {
+            return null;
+        }
+        return top.get(top.size() - 1).productName();
+    }
+
+    private static String fmcgCutoff(List<FmcgSummary> rows, int needed) {
+        List<FmcgSummary> top = window(rows, FMCG_ORDER, 0, needed);
+        if (top.size() < needed || top.get(top.size() - 1).productName() == null) {
+            return null;
+        }
+        return top.get(top.size() - 1).productName();
     }
 
     private void nameOrder() {
@@ -1223,7 +1314,16 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     private record LabelHits(
-            List<String> drugForms, List<String> drugTypes, List<String> fmcgForms, List<String> fmcgTypes) {}
+            List<String> drugForms, List<String> drugTypes, List<String> fmcgForms, List<String> fmcgTypes) {
+
+        private boolean drugAnchored() {
+            return !drugForms.isEmpty() || !drugTypes.isEmpty();
+        }
+
+        private boolean fmcgAnchored() {
+            return !fmcgForms.isEmpty() || !fmcgTypes.isEmpty();
+        }
+    }
 
     private static DrugSummary drugSummary(ResultSet rs) throws SQLException {
         return new DrugSummary(
