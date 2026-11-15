@@ -44,10 +44,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class JdbcCatalogStore implements CatalogStore {
 
     private static final long COUNT_TTL_MILLIS = 5 * 60 * 1000L;
-    // A short name walk stops at the first matches. A late match gives up and uses the trigram index.
-    private static final int SHORT_NAME_WALK_MILLIS = 250;
-    private static final int LONG_NAME_WALK_MILLIS = 150;
-    // Common names finish the ordered walk inside this window, so the trigram plan stays idle.
+    // Common names finish the ordered walk inside this window. A later match uses the trigram index.
     private static final int NAME_HEAD_START_MILLIS = 120;
     private static final String DRUG_COLUMNS =
             "product_id, product_name, display_name, marketer_name, medicine_type, product_form, "
@@ -890,16 +887,15 @@ public class JdbcCatalogStore implements CatalogStore {
             return trigramDrugs(column, pattern, listing, needed, 0);
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
-            int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
             return race(
                     () -> drugBranch(
                             containsPredicate(column, null),
                             listing,
                             true,
                             needed,
-                            budget,
+                            NAME_HEAD_START_MILLIS,
                             spec -> spec.param("pattern", pattern)),
-                    () -> trigramDrugs(column, pattern, listing, needed, budget));
+                    () -> trigramDrugs(column, pattern, listing, needed, 400));
         }
         return drugBranch(
                 containsPredicate(column, cutoff),
@@ -916,16 +912,15 @@ public class JdbcCatalogStore implements CatalogStore {
             return trigramFmcg(column, pattern, listing, needed, 0);
         }
         if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
-            int budget = query.length() < 5 ? SHORT_NAME_WALK_MILLIS : LONG_NAME_WALK_MILLIS;
             return race(
                     () -> fmcgBranch(
                             containsPredicate(column, null),
                             listing,
                             true,
                             needed,
-                            budget,
+                            NAME_HEAD_START_MILLIS,
                             spec -> spec.param("pattern", pattern)),
-                    () -> trigramFmcg(column, pattern, listing, needed, budget));
+                    () -> trigramFmcg(column, pattern, listing, needed, 400));
         }
         return fmcgBranch(
                 containsPredicate(column, cutoff),
