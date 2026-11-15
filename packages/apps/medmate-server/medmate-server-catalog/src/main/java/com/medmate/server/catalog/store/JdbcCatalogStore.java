@@ -27,12 +27,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
@@ -44,10 +40,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class JdbcCatalogStore implements CatalogStore {
 
     private static final long COUNT_TTL_MILLIS = 5 * 60 * 1000L;
-    // Common names finish the ordered walk inside this window. A later match uses the trigram index.
-    private static final int NAME_HEAD_START_MILLIS = 120;
     // A branch that is still running after this contributes no rows. Rows from the other branches stay.
     private static final int BRANCH_TIMEOUT_MILLIS = 1000;
+    // The planner picks a name-index walk for a common fragment and a trigram bitmap for a rare one.
+    private static final int NAME_TIMEOUT_MILLIS = 3000;
     private static final String DRUG_COLUMNS =
             "product_id, product_name, display_name, marketer_name, medicine_type, product_form, "
                     + "mrp, prescription_required, package, qty_amount, qty_unit";
@@ -64,8 +60,6 @@ public class JdbcCatalogStore implements CatalogStore {
     private final JdbcClient jdbc;
     private final TransactionTemplate transactions;
     private final ExecutorService pool;
-    private final ExecutorService partner;
-    private final ThreadLocal<AtomicInteger> backendSlot = new ThreadLocal<>();
     private final Object counts = new Object();
     private int drugGeneration;
     private int fmcgGeneration;
@@ -78,12 +72,10 @@ public class JdbcCatalogStore implements CatalogStore {
         this.jdbc = JdbcClient.create(dataSource);
         this.transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
         this.pool = Executors.newFixedThreadPool(8, JdbcCatalogStore::readThread);
-        this.partner = Executors.newFixedThreadPool(4, JdbcCatalogStore::readThread);
     }
 
     public void close() {
         pool.shutdown();
-        partner.shutdown();
     }
 
     @Override
@@ -779,8 +771,8 @@ public class JdbcCatalogStore implements CatalogStore {
         return fmcgSlice(listing);
     }
 
-    // The id, form, type, and product name fill the page first. Other columns then stay at or
-    // before that last name, so a common fragment does not sort the whole catalog.
+    // Id, form, and type fill the page first. Product name and the other columns then stay
+    // at or before that last name, so a common fragment does not sort the whole catalog.
     private void textMatches(
             String text,
             String pattern,
@@ -796,9 +788,9 @@ public class JdbcCatalogStore implements CatalogStore {
         List<DrugSummary> drugAnchor = awaitAll(drugAnchorTasks);
         List<FmcgSummary> fmcgAnchor = awaitAll(fmcgAnchorTasks);
         List<CompletableFuture<List<DrugSummary>>> drugSecondaryTasks =
-                drugSecondary(text, pattern, listing, needed, labels, drugCutoff(drugAnchor, needed));
+                drugSecondary(text, pattern, listing, needed, drugCutoff(drugAnchor, needed));
         List<CompletableFuture<List<FmcgSummary>>> fmcgSecondaryTasks =
-                fmcgSecondary(text, pattern, listing, needed, labels, fmcgCutoff(fmcgAnchor, needed));
+                fmcgSecondary(text, pattern, listing, needed, fmcgCutoff(fmcgAnchor, needed));
         drugs.addAll(drugAnchor);
         drugs.addAll(awaitAll(drugSecondaryTasks));
         fmcg.addAll(fmcgAnchor);
@@ -812,21 +804,16 @@ public class JdbcCatalogStore implements CatalogStore {
         }
         List<CompletableFuture<List<DrugSummary>>> parts = new ArrayList<>();
         parts.add(later(() -> drugLabelUnion(text, listing, needed, labels)));
-        if (!labels.drugAnchored() || text.length() >= 3) {
-            parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, needed, null)));
-        }
         return parts;
     }
 
     private List<CompletableFuture<List<DrugSummary>>> drugSecondary(
-            String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels, String cutoff) {
+            String text, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         if (listing != null && !listing.includeDrugs()) {
             return List.of();
         }
         List<CompletableFuture<List<DrugSummary>>> parts = new ArrayList<>();
-        if (labels.drugAnchored() && text.length() < 3) {
-            parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, needed, cutoff)));
-        }
+        parts.add(later(() -> containsDrugs("product_name", text, pattern, listing, needed, cutoff)));
         parts.add(later(() -> containsDrugs("display_name", text, pattern, listing, needed, cutoff)));
         parts.add(later(() -> containsDrugs("marketer_name", text, pattern, listing, needed, cutoff)));
         return parts;
@@ -839,21 +826,16 @@ public class JdbcCatalogStore implements CatalogStore {
         }
         List<CompletableFuture<List<FmcgSummary>>> parts = new ArrayList<>();
         parts.add(later(() -> fmcgLabelUnion(text, listing, needed, labels)));
-        if (!labels.fmcgAnchored() || text.length() >= 3) {
-            parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, needed, null)));
-        }
         return parts;
     }
 
     private List<CompletableFuture<List<FmcgSummary>>> fmcgSecondary(
-            String text, String pattern, CatalogRules.Listing listing, int needed, LabelHits labels, String cutoff) {
+            String text, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         if (listing != null && !listing.includeFmcg()) {
             return List.of();
         }
         List<CompletableFuture<List<FmcgSummary>>> parts = new ArrayList<>();
-        if (labels.fmcgAnchored() && text.length() < 3) {
-            parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, needed, cutoff)));
-        }
+        parts.add(later(() -> containsFmcg("product_name", text, pattern, listing, needed, cutoff)));
         parts.add(later(() -> containsFmcg("display_name", text, pattern, listing, needed, cutoff)));
         parts.add(later(() -> containsFmcg("marketer_name", text, pattern, listing, needed, cutoff)));
         parts.add(later(() -> containsFmcg("marketing_company", text, pattern, listing, needed, cutoff)));
@@ -864,17 +846,17 @@ public class JdbcCatalogStore implements CatalogStore {
             String column, String query, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         return withinBranch(() -> {
             if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
-                return race(
-                        () -> drugBranch(
-                                containsPredicate(column, null),
-                                listing,
-                                true,
-                                needed,
-                                NAME_HEAD_START_MILLIS,
-                                spec -> spec.param("pattern", pattern)),
-                        () -> trigramDrugs(column, pattern, listing, needed, 400));
+                // Leave the planner free. A common fragment walks the name index and stops at the limit.
+                // Forcing the trigram index sorts that whole match set.
+                return drugBranch(
+                        containsPredicate(column, null),
+                        listing,
+                        false,
+                        needed,
+                        NAME_TIMEOUT_MILLIS,
+                        spec -> spec.param("pattern", pattern));
             }
-            if (cutoff == null && !"product_name".equals(column) && query.length() >= 3) {
+            if (cutoff == null && query.length() >= 3) {
                 return trigramDrugs(column, pattern, listing, needed, BRANCH_TIMEOUT_MILLIS);
             }
             return drugBranch(
@@ -891,17 +873,15 @@ public class JdbcCatalogStore implements CatalogStore {
             String column, String query, String pattern, CatalogRules.Listing listing, int needed, String cutoff) {
         return withinBranch(() -> {
             if ("product_name".equals(column) && cutoff == null && query.length() >= 3) {
-                return race(
-                        () -> fmcgBranch(
-                                containsPredicate(column, null),
-                                listing,
-                                true,
-                                needed,
-                                NAME_HEAD_START_MILLIS,
-                                spec -> spec.param("pattern", pattern)),
-                        () -> trigramFmcg(column, pattern, listing, needed, 400));
+                return fmcgBranch(
+                        containsPredicate(column, null),
+                        listing,
+                        false,
+                        needed,
+                        NAME_TIMEOUT_MILLIS,
+                        spec -> spec.param("pattern", pattern));
             }
-            if (cutoff == null && !"product_name".equals(column) && query.length() >= 3) {
+            if (cutoff == null && query.length() >= 3) {
                 return trigramFmcg(column, pattern, listing, needed, BRANCH_TIMEOUT_MILLIS);
             }
             return fmcgBranch(
@@ -1050,7 +1030,6 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC, product_id ASC LIMIT :needed"
                 : sql;
         List<DrugSummary> rows = transactions.execute(status -> {
-            publishBackend();
             limit(timeoutMillis);
             if (ordered) {
                 walkPlan();
@@ -1086,7 +1065,6 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed"
                 : sql;
         List<FmcgSummary> rows = transactions.execute(status -> {
-            publishBackend();
             limit(timeoutMillis);
             if (ordered) {
                 walkPlan();
@@ -1248,105 +1226,6 @@ public class JdbcCatalogStore implements CatalogStore {
             return null;
         }
         return top.get(top.size() - 1).productName();
-    }
-
-    private <T> List<T> race(Supplier<List<T>> walk, Supplier<List<T>> scan) {
-        AtomicInteger walkPid = new AtomicInteger();
-        CompletableFuture<List<T>> walked = CompletableFuture.supplyAsync(
-                () -> {
-                    backendSlot.set(walkPid);
-                    try {
-                        try {
-                            return walk.get();
-                        } catch (RuntimeException exception) {
-                            if (stopped(exception)) {
-                                return null;
-                            }
-                            throw exception;
-                        }
-                    } finally {
-                        backendSlot.remove();
-                    }
-                },
-                partner);
-        try {
-            List<T> early = walked.get(NAME_HEAD_START_MILLIS, TimeUnit.MILLISECONDS);
-            if (early != null) {
-                return early;
-            }
-        } catch (TimeoutException ignored) {
-            // The walk is still the active query, so cancelling it cannot hit a later request.
-            if (!walked.isDone()) {
-                cancelBackend(walkPid.get());
-            }
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(exception);
-        } catch (ExecutionException exception) {
-            Throwable cause = exception.getCause();
-            if (cause instanceof RuntimeException runtime) {
-                throw runtime;
-            }
-            throw new IllegalStateException(cause);
-        }
-        CompletableFuture<List<T>> first = new CompletableFuture<>();
-        CompletableFuture<List<T>> scanned = CompletableFuture.supplyAsync(scan::get, partner);
-        scanned.whenComplete((rows, error) -> {
-            if (error == null) {
-                first.complete(rows);
-            }
-        });
-        walked.whenComplete((rows, error) -> {
-            if (error != null) {
-                first.completeExceptionally(error);
-                return;
-            }
-            if (rows != null) {
-                first.complete(rows);
-                return;
-            }
-            scanned.whenComplete((scanRows, scanError) -> {
-                if (scanError != null) {
-                    first.completeExceptionally(scanError);
-                } else {
-                    first.complete(scanRows);
-                }
-            });
-        });
-        try {
-            return first.join();
-        } catch (CompletionException wrapped) {
-            Throwable cause = wrapped.getCause();
-            if (cause instanceof RuntimeException runtime) {
-                throw runtime;
-            }
-            throw wrapped;
-        }
-    }
-
-    private void publishBackend() {
-        AtomicInteger slot = backendSlot.get();
-        if (slot == null || slot.get() != 0) {
-            return;
-        }
-        Integer pid = jdbc.sql("SELECT pg_backend_pid()").query(Integer.class).single();
-        if (pid != null) {
-            slot.set(pid);
-        }
-    }
-
-    private void cancelBackend(int pid) {
-        if (pid == 0) {
-            return;
-        }
-        try {
-            transactions.execute(status -> jdbc.sql("SELECT pg_cancel_backend(:pid)")
-                    .param("pid", pid)
-                    .query(Boolean.class)
-                    .single());
-        } catch (RuntimeException ignored) {
-            // The walk already finished.
-        }
     }
 
     private void limit(int timeoutMillis) {
@@ -1616,16 +1495,7 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     private record LabelHits(
-            List<String> drugForms, List<String> drugTypes, List<String> fmcgForms, List<String> fmcgTypes) {
-
-        private boolean drugAnchored() {
-            return !drugForms.isEmpty() || !drugTypes.isEmpty();
-        }
-
-        private boolean fmcgAnchored() {
-            return !fmcgForms.isEmpty() || !fmcgTypes.isEmpty();
-        }
-    }
+            List<String> drugForms, List<String> drugTypes, List<String> fmcgForms, List<String> fmcgTypes) {}
 
     private static DrugSummary drugSummary(ResultSet rs) throws SQLException {
         return new DrugSummary(
