@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
@@ -65,6 +66,7 @@ public class JdbcCatalogStore implements CatalogStore {
     private final TransactionTemplate transactions;
     private final ExecutorService pool;
     private final ExecutorService partner;
+    private final ThreadLocal<AtomicInteger> backendSlot = new ThreadLocal<>();
     private final Object counts = new Object();
     private int drugGeneration;
     private int fmcgGeneration;
@@ -1070,6 +1072,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC, product_id ASC LIMIT :needed"
                 : sql;
         List<DrugSummary> rows = transactions.execute(status -> {
+            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1104,6 +1107,7 @@ public class JdbcCatalogStore implements CatalogStore {
                         + " ORDER BY product_name ASC NULLS LAST, product_id ASC LIMIT :needed"
                 : sql;
         List<FmcgSummary> rows = transactions.execute(status -> {
+            publishBackend();
             if (ordered) {
                 walkPlan(timeoutMillis);
             }
@@ -1267,15 +1271,21 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     private <T> List<T> race(Supplier<List<T>> walk, Supplier<List<T>> scan) {
+        AtomicInteger walkPid = new AtomicInteger();
         CompletableFuture<List<T>> walked = CompletableFuture.supplyAsync(
                 () -> {
+                    backendSlot.set(walkPid);
                     try {
-                        return walk.get();
-                    } catch (RuntimeException exception) {
-                        if (stopped(exception)) {
-                            return null;
+                        try {
+                            return walk.get();
+                        } catch (RuntimeException exception) {
+                            if (stopped(exception)) {
+                                return null;
+                            }
+                            throw exception;
                         }
-                        throw exception;
+                    } finally {
+                        backendSlot.remove();
                     }
                 },
                 partner);
@@ -1285,7 +1295,10 @@ public class JdbcCatalogStore implements CatalogStore {
                 return early;
             }
         } catch (TimeoutException ignored) {
-            // A late product name is still in the walk. The trigram plan can answer sooner.
+            // The walk is still the active query, so cancelling it cannot hit a later request.
+            if (!walked.isDone()) {
+                cancelBackend(walkPid.get());
+            }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(exception);
@@ -1328,6 +1341,31 @@ public class JdbcCatalogStore implements CatalogStore {
                 throw runtime;
             }
             throw wrapped;
+        }
+    }
+
+    private void publishBackend() {
+        AtomicInteger slot = backendSlot.get();
+        if (slot == null || slot.get() != 0) {
+            return;
+        }
+        Integer pid = jdbc.sql("SELECT pg_backend_pid()").query(Integer.class).single();
+        if (pid != null) {
+            slot.set(pid);
+        }
+    }
+
+    private void cancelBackend(int pid) {
+        if (pid == 0) {
+            return;
+        }
+        try {
+            transactions.execute(status -> jdbc.sql("SELECT pg_cancel_backend(:pid)")
+                    .param("pid", pid)
+                    .query(Boolean.class)
+                    .single());
+        } catch (RuntimeException ignored) {
+            // The walk already finished.
         }
     }
 
