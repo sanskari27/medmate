@@ -29,6 +29,12 @@ public final class AccessTokens {
     }
 
     public String issue(UUID accountId, UUID clinicId, String clinicRole, Instant now) {
+        if (clinicId == null && clinicRole != null) {
+            throw new IllegalArgumentException("clinicId is required when clinicRole is present");
+        }
+        if (clinicId != null && clinicRole == null) {
+            throw new IllegalArgumentException("clinicRole is required when clinicId is present");
+        }
         try {
             JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
                     .subject(accountId.toString())

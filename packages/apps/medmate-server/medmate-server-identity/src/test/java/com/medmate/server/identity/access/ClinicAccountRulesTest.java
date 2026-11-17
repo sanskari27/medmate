@@ -59,12 +59,20 @@ class ClinicAccountRulesTest {
     }
 
     @Test
+    void clinicRoleParsingRejectsUnknownValues() {
+        assertThat(ClinicRole.parse("OWNER")).isEqualTo(ClinicRole.OWNER);
+        assertThat(ClinicRole.parse(" front_desk ")).isEqualTo(ClinicRole.FRONT_DESK);
+        assertThat(ClinicRole.parse("receptionist")).isNull();
+        assertThat(ClinicRole.parse(null)).isNull();
+    }
+
+    @Test
     void aClinicAccountResolvesToItsTenant() {
         UUID accountId = UUID.randomUUID();
         IdentityStore.AccountRow row = new IdentityStore.AccountRow(
                 accountId, "919845012345", AccountType.CLINIC, "Dr. Ananya Rao", false, CLINIC_ID, "owner");
 
-        AccountPrincipal principal = directory(accountId).load(row);
+        AccountPrincipal principal = directory(Set.of()).load(row);
 
         assertThat(principal.accountType()).isEqualTo(AccountType.CLINIC);
         assertThat(principal.clinicId()).isEqualTo(CLINIC_ID);
@@ -77,11 +85,23 @@ class ClinicAccountRulesTest {
         IdentityStore.AccountRow row =
                 new IdentityStore.AccountRow(accountId, "919800000000", AccountType.ADMIN, "Ada", false, null, null);
 
-        AccountPrincipal principal = directory(accountId).load(row);
+        AccountPrincipal principal = directory(Set.of()).load(row);
 
         assertThat(principal.accountType()).isEqualTo(AccountType.ADMIN);
         assertThat(principal.clinicId()).isNull();
         assertThat(principal.clinicRole()).isNull();
+    }
+
+    @Test
+    void aClinicAccountWithoutGrantsResolvesWithNoPermissions() {
+        UUID accountId = UUID.randomUUID();
+        IdentityStore.AccountRow row = new IdentityStore.AccountRow(
+                accountId, "+919876500011", AccountType.CLINIC, "New Receptionist", false, CLINIC_ID, "front_desk");
+
+        AccountPrincipal principal = directory(Set.of()).load(row);
+
+        assertThat(principal.clinicRole()).isEqualTo("front_desk");
+        assertThat(principal.permissions()).isEmpty();
     }
 
     @Test
@@ -199,11 +219,23 @@ class ClinicAccountRulesTest {
                 "owner");
     }
 
-    private static AccountDirectory directory(UUID accountId) {
-        IdentityStore accounts = mock(IdentityStore.class);
-        when(accounts.subtypes(accountId)).thenReturn(Set.of());
-        when(accounts.permissions(accountId)).thenReturn(Set.of());
-        when(accounts.pinHash(accountId)).thenReturn(Optional.empty());
-        return new AccountDirectory(accounts, mock(PharmacyStore.class));
+    private static AccountDirectory directory(Set<String> permissions) {
+        IdentityStore accounts = new IdentityStore(null) {
+            @Override
+            public Set<StaffSubtype> subtypes(UUID id) {
+                return Set.of();
+            }
+
+            @Override
+            public Set<String> permissions(UUID id) {
+                return permissions;
+            }
+
+            @Override
+            public Optional<String> pinHash(UUID id) {
+                return Optional.empty();
+            }
+        };
+        return new AccountDirectory(accounts, new PharmacyStore(null));
     }
 }

@@ -1,6 +1,7 @@
 package com.medmate.server.identity.store;
 
 import com.medmate.server.identity.access.AccountType;
+import com.medmate.server.identity.access.ClinicRole;
 import com.medmate.server.identity.access.StaffSubtype;
 import com.medmate.server.identity.otp.OtpMachine;
 import com.medmate.server.identity.otp.OtpPurpose;
@@ -247,6 +248,7 @@ public class IdentityStore {
     }
 
     private AccountRow account(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+        ClinicRole clinicRole = ClinicRole.parse(rs.getString("clinic_role"));
         return new AccountRow(
                 rs.getObject("id", UUID.class),
                 rs.getString("phone"),
@@ -254,6 +256,6 @@ public class IdentityStore {
                 rs.getString("display_name"),
                 rs.getBoolean("disabled"),
                 rs.getObject("clinic_id", UUID.class),
-                rs.getString("clinic_role"));
+                clinicRole == null ? null : clinicRole.wire());
     }
 }

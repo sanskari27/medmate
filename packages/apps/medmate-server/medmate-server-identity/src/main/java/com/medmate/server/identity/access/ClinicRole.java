@@ -12,4 +12,17 @@ public enum ClinicRole {
     public String wire() {
         return name().toLowerCase(Locale.ROOT);
     }
+
+    public static ClinicRole parse(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String normalized = raw.trim().toLowerCase(Locale.ROOT);
+        for (ClinicRole role : values()) {
+            if (role.wire().equals(normalized)) {
+                return role;
+            }
+        }
+        return null;
+    }
 }

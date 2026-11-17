@@ -12,6 +12,8 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
   flyway:
     enabled: false
+    placeholders:
+      clinicSeed: "FALSE"
   servlet:
     multipart:
       max-file-size: 6MB

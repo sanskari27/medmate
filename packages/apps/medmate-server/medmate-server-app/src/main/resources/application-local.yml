@@ -5,6 +5,8 @@ spring:
     password: pharmacy
   flyway:
     enabled: true
+    placeholders:
+      clinicSeed: "TRUE"
 
 medmate:
   jwt:
