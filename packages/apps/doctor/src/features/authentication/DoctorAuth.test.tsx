@@ -76,7 +76,7 @@ describe("DoctorAuth", () => {
 
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
     expect(fetch).toHaveBeenCalled();
-    expect(queries.getByLabelText("OTP code")).toBeInTheDocument();
+    expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument();
   });
 
   it("asks the identity service for a sign-in code", async () => {
@@ -98,6 +98,70 @@ describe("DoctorAuth", () => {
     expect(body).toMatchObject({ phone: "9845012345", accountType: "clinic", purpose: "login" });
   });
 
+  it("shows the reason when no code could be sent", async () => {
+    const fetch = vi.fn(async () => json({ detail: "Code could not be sent" }, 503));
+    const { store, queries, container } = renderLogin(fetch);
+
+    fireEvent.change(queries.getByLabelText("Mobile number"), {
+      target: { value: "9845012345" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(queries.getByText("Code could not be sent")).toBeInTheDocument());
+    expect(store.getState().auth.step).toBe("phone");
+  });
+
+  it("shows the reason when the code was not accepted", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url.includes("/sms-mock")) return json([]);
+      if (url.includes("/auth/otp/send")) return json({ mode: "otp" });
+      if (url.includes("/auth/otp/verify")) return json({ detail: "Code was not accepted" }, 401);
+      return json({});
+    });
+    const { store, queries, container } = renderLogin(fetch);
+
+    fireEvent.change(queries.getByLabelText("Mobile number"), {
+      target: { value: "9845012345" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+    await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
+
+    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
+      target: { value: "000000" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(queries.getByText("Code was not accepted")).toBeInTheDocument());
+    expect(store.getState().auth.step).toBe("otp");
+  });
+
+  it("a wrong PIN does not sign the account in", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url.includes("/sms-mock")) return json([]);
+      if (url.includes("/auth/otp/send")) return json({ mode: "pin" });
+      if (url.includes("/auth/pin")) return json({ detail: "PIN was not accepted" }, 401);
+      return json({});
+    });
+    const { store, queries, container } = renderLogin(fetch);
+
+    fireEvent.change(queries.getByLabelText("Mobile number"), {
+      target: { value: "9845012345" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+    await waitFor(() => expect(store.getState().auth.step).toBe("pin"));
+
+    fireEvent.change(queries.getByLabelText("4-digit PIN"), {
+      target: { value: "9999" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(queries.getByText(/PIN was not accepted/i)).toBeInTheDocument());
+    expect(store.getState().auth.session).toBeNull();
+    expect(queries.queryByText(/welcome to the doctor portal/i)).not.toBeInTheDocument();
+  });
+
   it("verifying the OTP moves the step to pin", async () => {
     const fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = requestUrl(input);
@@ -114,7 +178,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("OTP code"), {
+    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -141,7 +205,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("OTP code"), {
+    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -168,7 +232,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("OTP code"), {
+    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -183,7 +247,7 @@ describe("DoctorAuth", () => {
     await waitFor(() => expect(queries.getByText(/Home/i)).toBeInTheDocument());
   });
 
-  it("shows the OTP code from the mock in development", async () => {
+  it("shows the 6-digit OTP from the mock in development", async () => {
     const fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = requestUrl(input);
       if (url.includes("/sms-mock")) return json([{ phone: "+919845012345", code: "123456" }]);
@@ -196,7 +260,7 @@ describe("DoctorAuth", () => {
       target: { value: "9845012345" },
     });
     fireEvent.submit(container.querySelector("form")!);
-    await waitFor(() => expect(queries.getByLabelText("OTP code")).toBeInTheDocument());
+    await waitFor(() => expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument());
 
     await waitFor(() => expect(queries.getByText(/Demo OTP/i)).toBeInTheDocument());
     await waitFor(() => expect(queries.getByText(/123456/i)).toBeInTheDocument());
@@ -218,7 +282,7 @@ describe("DoctorAuth", () => {
         target: { value: "9845012345" },
       });
       fireEvent.submit(container.querySelector("form")!);
-      await waitFor(() => expect(queries.getByLabelText("OTP code")).toBeInTheDocument());
+      await waitFor(() => expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument());
 
       expect(queries.queryByText(/Demo OTP/i)).not.toBeInTheDocument();
     } finally {

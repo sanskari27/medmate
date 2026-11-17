@@ -177,14 +177,22 @@ db-local: ## Start Homebrew Postgres 16 and ensure the medmate_server database e
 	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medicine_data -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
 	@echo "Postgres 16 is ready at 127.0.0.1:$(DB_PORT) (db $(MEDMATE_DB_NAME), medicine_data)"
 
-db-clinic-local: db-local ## Create the demo clinic database and its registry row for medmate-clinic-api
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "DROP DATABASE IF EXISTS medmate WITH (FORCE)"
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate OWNER $(DB_USER)"
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "DROP DATABASE IF EXISTS medmate_clinic_11111111 WITH (FORCE)"
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate_clinic_11111111 OWNER $(DB_USER)"
+db-clinic-local: db-local ## Create the demo clinic database and its rows for medmate-clinic-api
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'medmate'" | grep -q 1 \
+	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate OWNER $(DB_USER)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "ALTER DATABASE medmate OWNER TO $(DB_USER)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'medmate_clinic_11111111'" | grep -q 1 \
+	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate_clinic_11111111 OWNER $(DB_USER)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "ALTER DATABASE medmate_clinic_11111111 OWNER TO $(DB_USER)"
 	@PGPASSWORD="$(DB_PASSWORD)" "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -U "$(DB_USER)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V2__patients.sql
 	@PGPASSWORD="$(DB_PASSWORD)" "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -U "$(DB_USER)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V3__clinic_grants.sql
+	@PGPASSWORD="$(DB_PASSWORD)" "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -U "$(DB_USER)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/demo/demo_clinic.sql
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medmate_clinic_11111111 -c "ALTER TABLE patient OWNER TO $(DB_USER)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medmate_clinic_11111111 -c "ALTER TABLE clinic_grant OWNER TO $(DB_USER)"
 	@echo "Demo clinic database medmate_clinic_11111111 is ready. The clinic API registers it in medmate on start."
+
+demo-pins: ## Give the seeded clinic accounts the demo PIN, so a local run signs straight in
+	@python3 scripts/seed_demo_pins.py
 
 db-up: ## Start local Postgres in Docker (user/db/password: pharmacy)
 	@command -v docker >/dev/null 2>&1 || { echo "docker is required for the local database"; exit 1; }

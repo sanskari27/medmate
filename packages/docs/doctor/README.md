@@ -25,9 +25,16 @@ no secrets, and `VITE_API_BASE_URL` points it at the clinic API.
 
 Locally: `make doctor-app` serves it on http://127.0.0.1:3206, proxying
 `/auth` to medmate-server on :8080, `/sms-mock` to :8090 and `/clinic-api` to
-the clinic API on :8091. A local run sends the same one-time code every time,
-`12345`, so a developer does not have to read it out of the SMS mock; the code
-is shown on the code screen as well. The clinic's demo accounts are
-`9845012345` (owner), `9886244120` (nurse), `9900122331` (front desk),
-`9986041277` (doctor) and `9876500011` (receptionist, no grants). An account
-that has no PIN yet is asked to choose one the first time it signs in.
+the clinic API on :8091.
+
+A local run sends the same one-time code every time, `123456`, so a developer
+does not have to read it out of the SMS mock; the code is shown on the code
+screen as well. The seeded accounts are `9845012345` (owner), `9741022981`
+(doctor), `9986041277` (doctor), `9880433120` (admin), `9886244120` (nurse),
+`9900122331` (front desk) and `9876500011` (receptionist, no grants). The
+identity service seeds them without a PIN, so `make demo-pins` gives each one
+the PIN `1234` and a demo never stops at the PIN setup screen.
+
+`make db-clinic-local` creates the demo clinic's own database and fills it with
+the demo patients: who is waiting, who is with a doctor, who has been seen,
+who owes what, and who carries conditions, allergies and a health ID.

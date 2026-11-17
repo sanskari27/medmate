@@ -16,7 +16,7 @@ medmate:
   # A local run sends the same code every time, so a developer does not have to
   # read it out of the SMS mock. Every other environment sends a random one.
   otp:
-    fixed-code: "12345"
+    fixed-code: "123456"
   admin-bootstrap-token: local-bootstrap
   sms:
     base-url: http://127.0.0.1:8090

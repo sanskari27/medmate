@@ -11,6 +11,7 @@ import { pinSetupSchema, type PinSetupFields } from "../../schemas/auth.schema";
 export function PinSetup() {
   const dispatch = useAppDispatch();
   const [done, setDone] = useState(false);
+  const [fault, setFault] = useState<string | null>(null);
   const form = useForm<PinSetupFields>({
     resolver: zodResolver(pinSetupSchema),
     defaultValues: { pin: "", again: "" },
@@ -34,11 +35,12 @@ export function PinSetup() {
   }
 
   async function onSubmit(values: PinSetupFields) {
+    setFault(null);
     try {
-      await dispatch(setPin({ pin: values.pin }));
+      await dispatch(setPin({ pin: values.pin })).unwrap();
       setDone(true);
-    } catch {
-      // Could not set PIN. Try again.
+    } catch (failure) {
+      setFault(typeof failure === "string" ? failure : "Could not set the PIN. Try again.");
     }
   }
 
@@ -88,6 +90,7 @@ export function PinSetup() {
         />
         {againError ? <p className="mt-1 text-[12px] text-red">{againError}</p> : null}
       </div>
+      {fault ? <p className="text-[12.5px] font-bold text-red">{fault}</p> : null}
       <Button
         size="lg"
         type="submit"

@@ -36,10 +36,10 @@ export function PinStep({ phone }: PinStepProps) {
   async function onSubmit(values: { pin: string }) {
     setFault(null);
     try {
-      await dispatch(signInWithPin({ phone, pin: values.pin, accountType: "clinic" }));
+      await dispatch(signInWithPin({ phone, pin: values.pin, accountType: "clinic" })).unwrap();
       setDone(true);
-    } catch {
-      setFault("Invalid PIN. Try again.");
+    } catch (failure) {
+      setFault(typeof failure === "string" ? failure : "Invalid PIN. Try again.");
     }
   }
 
