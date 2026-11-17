@@ -157,7 +157,7 @@ git commit -m "Add the clinic API service and per-clinic database routing"
 
 - [ ] **Step 1: Write the failing test**
 
-`PatientRedactionTest`: an item for an account holding only `clinic:patients:read` has `conditions`, `allergies`, `abha` and `lastSeen` absent, and `due` absent unless the account holds `clinic:billing:read`; an account holding `clinic:patients:read_clinical` sees the clinical fields; every item's `phone` is masked with the last four digits after a bullet run; removing `clinic:patients:read_clinical` from the grant store stops the clinical fields on the very next call, without a new token.
+`PatientRedactionTest`: an item for an account holding only `clinic:patients:read` has `conditions`, `allergies`, `abha` and `lastSeen` absent, and `due` absent unless the account holds `clinic:billing:read`; an account holding `clinic:patients:read_clinical` sees the clinical fields; every item's `phone` is masked with the last five digits after a bullet run; removing `clinic:patients:read_clinical` from the grant store stops the clinical fields on the very next call, without a new token.
 
 `ClinicPatientsControllerTest`: no session is 401 `Session was not accepted`; a valid clinic token without `clinic:patients:read` is 403 `This action is not allowed.`; `page` defaults to 1 and `size` to 25; a `size` of 101 is 400; `q` matches the name ignoring case; `status` filters; `due=true` selects patients with an outstanding amount; `sort=name` orders by last name then first name; a page past the end returns an empty item list with the real total.
 

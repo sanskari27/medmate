@@ -130,7 +130,7 @@ then first name. `status` is `waiting`, `with-doctor`, `seen` or `inactive`.
 
 The response is `{ "items", "page", "size", "total" }`. Each item is
 `{ "id", "name", "age", "sex", "phone", "status", "due", "conditions",
-"allergies", "abha", "lastSeen" }`. `phone` is masked as the last four digits
+"allergies", "abha", "lastSeen" }`. `phone` is masked as the last five digits
 after a bullet run, for example `••••• 28051`. `lastSeen` is the name of the
 doctor who last saw the patient, or null.
 
