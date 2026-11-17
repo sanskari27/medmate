@@ -64,11 +64,11 @@ export function LandingPage() {
             key={stat.label}
             type="button"
             variant="ghost"
-            className="rounded-card border border-line bg-surface p-2"
+            className="h-auto w-full flex-col items-stretch rounded-card border border-line bg-surface p-0"
             onClick={() => navigate(patientListPath(stat.filter))}
             aria-label={`View ${stat.label}`}
           >
-            <Box className="flex flex-col items-center gap-2 p-2">
+            <Box className="flex flex-col items-center gap-2 p-4">
               <Box className="grid h-10 w-10 place-items-center rounded-control bg-surface-3">
                 <Icon name="users" size={20} className="text-ink-2" />
               </Box>

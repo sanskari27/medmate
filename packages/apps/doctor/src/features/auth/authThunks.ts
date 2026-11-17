@@ -59,6 +59,10 @@ export const signOut = createAsyncThunk(
       await dispatch(api.endpoints.signOut.initiate(body)).unwrap();
     } finally {
       dispatch(sessionCleared());
+      // The cached answers belong to the session that is ending. Without
+      // this, the next account to sign in would read the clinic and the
+      // grants of the one that signed out.
+      dispatch(api.util.resetApiState());
     }
   },
 );

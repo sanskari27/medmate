@@ -27,6 +27,7 @@ export default defineConfig({
       "/clinic-api": {
         target: "http://127.0.0.1:8091",
         changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/clinic-api/, ""),
       },
     },
   },

@@ -3,8 +3,15 @@ import { apiClient } from "@/services/api/apiClient";
 import { authEndpoints, clinicEndpoints } from "@/services/api/apiEndpoints";
 import type { ClinicMe, ClinicPatient, Paginated, Session } from "@/types";
 
-export type OtpSendRequest = { phone: string; accountType?: string };
-export type OtpVerifyRequest = { phone: string; code: string; accountType?: string };
+export type OtpPurpose = "login" | "pin_reset" | "signup";
+
+export type OtpSendRequest = { phone: string; accountType?: string; purpose?: OtpPurpose };
+export type OtpVerifyRequest = {
+  phone: string;
+  code: string;
+  accountType?: string;
+  purpose?: OtpPurpose;
+};
 export type PinSetRequest = { pin: string };
 export type PinSignInRequest = { phone: string; pin: string; accountType?: string };
 export type SignOutRequest = { refreshToken?: string };
@@ -28,10 +35,18 @@ export const api = createApi({
   tagTypes: ["Me", "Patients"],
   endpoints: (build) => ({
     sendOtp: build.mutation<unknown, OtpSendRequest>({
-      query: (body) => ({ url: authEndpoints.sendOtp, method: "POST", body }),
+      query: (body) => ({
+        url: authEndpoints.sendOtp,
+        method: "POST",
+        body: { purpose: "login", ...body },
+      }),
     }),
     verifyOtp: build.mutation<OtpVerifyResponse, OtpVerifyRequest>({
-      query: (body) => ({ url: authEndpoints.verifyOtp, method: "POST", body }),
+      query: (body) => ({
+        url: authEndpoints.verifyOtp,
+        method: "POST",
+        body: { purpose: "login", ...body },
+      }),
     }),
     pin: build.mutation<OtpVerifyResponse, PinSignInRequest>({
       query: (body) => ({ url: authEndpoints.pin, method: "POST", body }),

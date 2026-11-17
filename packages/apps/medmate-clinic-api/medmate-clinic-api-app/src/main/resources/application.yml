@@ -7,6 +7,9 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:medmate}
   flyway:
     enabled: true
+    # The service owns the registry schema. The per-clinic schemas in
+    # db/migration belong to the clinic databases, not to the shared one.
+    locations: classpath:db/registry-migration
 
 server:
   port: ${SERVER_PORT:8091}

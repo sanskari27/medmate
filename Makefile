@@ -17,6 +17,10 @@ DB_CONTAINER ?= medmate-postgres
 MEDMATE_DB_NAME ?= medmate_server
 MEDMATE_DATASOURCE_URL ?= jdbc:postgresql://127.0.0.1:$(DB_PORT)/$(MEDMATE_DB_NAME)
 
+# Both services verify the same secret locally, so a token the identity
+# service issues is a token the clinic API accepts.
+LOCAL_JWT_SECRET ?= local-dev-jwt-secret-local-dev-jwt-32
+
 JAVA21_HOME := $(shell \
   if /usr/libexec/java_home -v 21 >/dev/null 2>&1; then \
     /usr/libexec/java_home -v 21; \
@@ -127,7 +131,14 @@ medmatepharmacy: ## medmatepharmacy.com site on :3201
 
 clinic-api: java21-check ## Run the clinic API on :8091 against the local Postgres
 	cd packages/apps/medmate-clinic-api && \
-	  JAVA_HOME="$(JAVA21_HOME)" ./mvnw -pl medmate-clinic-api-app -am spring-boot:run
+	  JAVA_HOME="$(JAVA21_HOME)" \
+	  SPRING_DATASOURCE_URL="jdbc:postgresql://127.0.0.1:$(DB_PORT)/medmate" \
+	  SPRING_DATASOURCE_USERNAME="$(DB_USER)" \
+	  SPRING_DATASOURCE_PASSWORD="$(DB_PASSWORD)" \
+	  MEDMATE_CLINIC_DB_USER="$(DB_USER)" \
+	  MEDMATE_CLINIC_DB_PASSWORD="$(DB_PASSWORD)" \
+	  MEDMATE_JWT_SECRET="$(LOCAL_JWT_SECRET)" \
+	  ./mvnw -pl medmate-clinic-api-app -am spring-boot:run
 
 clinic-api-verify: java21-check ## Format-check and test the clinic API
 	cd packages/apps/medmate-clinic-api && \
@@ -167,14 +178,13 @@ db-local: ## Start Homebrew Postgres 16 and ensure the medmate_server database e
 	@echo "Postgres 16 is ready at 127.0.0.1:$(DB_PORT) (db $(MEDMATE_DB_NAME), medicine_data)"
 
 db-clinic-local: db-local ## Create the demo clinic database and its registry row for medmate-clinic-api
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'medmate'" | grep -q 1 \
-	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate"
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medmate -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V1__clinic_registry.sql
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'medmate_clinic_11111111'" | grep -q 1 \
-	  || "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate_clinic_11111111 OWNER pharmacy"
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V2__patients.sql
-	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V3__clinic_grants.sql
-	@echo "Demo clinic database medmate_clinic_11111111 and registry row in medmate are ready"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "DROP DATABASE IF EXISTS medmate WITH (FORCE)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate OWNER $(DB_USER)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "DROP DATABASE IF EXISTS medmate_clinic_11111111 WITH (FORCE)"
+	@"$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -d postgres -c "CREATE DATABASE medmate_clinic_11111111 OWNER $(DB_USER)"
+	@PGPASSWORD="$(DB_PASSWORD)" "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -U "$(DB_USER)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V2__patients.sql
+	@PGPASSWORD="$(DB_PASSWORD)" "$(PG_BIN)/psql" -h 127.0.0.1 -p "$(DB_PORT)" -U "$(DB_USER)" -d medmate_clinic_11111111 -f packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/main/resources/db/migration/V3__clinic_grants.sql
+	@echo "Demo clinic database medmate_clinic_11111111 is ready. The clinic API registers it in medmate on start."
 
 db-up: ## Start local Postgres in Docker (user/db/password: pharmacy)
 	@command -v docker >/dev/null 2>&1 || { echo "docker is required for the local database"; exit 1; }

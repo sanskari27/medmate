@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
+import { api } from "@/services/api/api";
 import { sendOtp, verifyOtp, setPin, signOut } from "./authThunks";
 
 const session = { accessToken: "access", refreshToken: "refresh" };
@@ -57,6 +58,21 @@ describe("auth thunks", () => {
     await store.dispatch(signOut());
     expect(store.getState().auth.session).toBeNull();
     expect(store.getState().auth.step).toBe("phone");
+  });
+
+  it("signOut drops the cached answers of the session that ended", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ items: [], page: 1, size: 25, total: 0 })),
+    );
+    const store = createAppStore();
+    store.dispatch({ type: "auth/sessionStarted", payload: { session, pinReset: false } });
+    await store.dispatch(api.endpoints.listPatients.initiate(undefined));
+    expect(Object.keys(store.getState().api.queries).length).toBeGreaterThan(0);
+
+    await store.dispatch(signOut());
+
+    expect(Object.keys(store.getState().api.queries)).toHaveLength(0);
   });
 
   it("failed verify does not store a session", async () => {

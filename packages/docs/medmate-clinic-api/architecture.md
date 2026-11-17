@@ -65,6 +65,10 @@ per request rather than baked into the token.
 
 The registry is the only table shared between clinics.
 
+Flyway owns the registry schema and nothing else. Each clinic's own schema is
+migrated into that clinic's database on its own, because the service reaches a
+clinic's database only to read and write its rows, never to change its shape.
+
 ## Boundaries
 
 - It shares no code with `medmate-server`. It re-implements the

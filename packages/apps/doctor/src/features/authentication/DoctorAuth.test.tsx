@@ -21,6 +21,14 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
+/** The body of a request, whether the client sent a Request or an init. */
+async function readBody(call: unknown[] | undefined): Promise<Record<string, unknown>> {
+  if (!call) return {};
+  const [input, init] = call as [RequestInfo | URL, RequestInit | undefined];
+  if (input instanceof Request) return JSON.parse(await input.clone().text());
+  return JSON.parse(String(init?.body));
+}
+
 function renderLogin(
   fetchImpl: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
 ) {
@@ -69,6 +77,25 @@ describe("DoctorAuth", () => {
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
     expect(fetch).toHaveBeenCalled();
     expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument();
+  });
+
+  it("asks the identity service for a sign-in code", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url.includes("/sms-mock")) return json([]);
+      return json({});
+    });
+    const { queries, container } = renderLogin(fetch);
+
+    fireEvent.change(queries.getByLabelText("Mobile number"), {
+      target: { value: "9845012345" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    const call = fetch.mock.calls.find(([input]) => requestUrl(input).includes("/auth/otp/send"));
+    const body = await readBody(call);
+    expect(body).toMatchObject({ phone: "9845012345", accountType: "clinic", purpose: "login" });
   });
 
   it("verifying the OTP moves the step to pin", async () => {
