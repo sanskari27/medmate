@@ -85,7 +85,7 @@ icons   every rendered glyph byte-identical to the verified set
 ```
 
 Run it by pasting the script into DevTools on a running build, or through
-Playwright. `UI-SPEC.md` is the design contract: type scale, colour tokens,
+Playwright. `../../../packages/docs/doctor/UI-SPEC.md` is the design contract: type scale, colour tokens,
 geometry, icons, motion and the rules for new work.
 
 ---
@@ -94,12 +94,12 @@ geometry, icons, motion and the rules for new work.
 
 | Document | What it holds |
 |---|---|
-| `DEVELOPMENT-ROADMAP.md` | The plan, the waves, the gates, and the status of all 77 stories |
-| `MEDMATE-PRODUCT-AUDIT.md` | The audit, with the live evidence behind every finding |
-| `MEDMATE-ARCHITECTURE.md` | How the product works, in plain language |
-| `UI-SPEC.md` | The design contract for anything built on this |
-| `FIX-PACKAGE.md` | The two fix packages with their tests |
-| `GOOGLE-SHEET-REQUIREMENTS.md` | The tracker of record and the sheet payload |
+| `../../../packages/docs/doctor/DEVELOPMENT-ROADMAP.md` | The plan, the waves, the gates, and the status of all 77 stories |
+| `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` | The audit, with the live evidence behind every finding |
+| `../../../packages/docs/platform/MEDMATE-ARCHITECTURE.md` | How the product works, in plain language |
+| `../../../packages/docs/doctor/UI-SPEC.md` | The design contract for anything built on this |
+| `../../../packages/docs/platform/FIX-PACKAGE.md` | The two fix packages with their tests |
+| `../../../packages/docs/platform/GOOGLE-SHEET-REQUIREMENTS.md` | The tracker of record and the sheet payload |
 
 The live tracker:
 <https://docs.google.com/spreadsheets/d/19Ngyy5OJtdjqLI7Z0hP-LBRZQxF8cpBBMpwcsX6XGgM/edit>

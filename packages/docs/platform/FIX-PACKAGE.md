@@ -276,7 +276,7 @@ is a regression test against the real defect, not a hypothetical one.
  * Regression tests for the audit F1 / F5 fix.
  *
  * The fixtures below are the EXACT payloads captured from the live demo on
- * 2026-11-17 (see MEDMATE-PRODUCT-AUDIT.md, section 2.4). If this suite
+ * 2026-11-17 (see ../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md, section 2.4). If this suite
  * passes, the front desk and admin can no longer receive clinical fields.
  *
  * Run:  node --test fixes/
@@ -1069,6 +1069,6 @@ These two fixes do not close the audit. Still outstanding, in priority order:
   not yet meet (data-use notice on the kiosk, full data export, storage
   location). Tracked as **F-211 / F-212 / F-503 / F-507 / F-511**.
 
-See `DEVELOPMENT-ROADMAP.md` for the full plan and `MEDMATE-PRODUCT-AUDIT.md`
+See `../../../packages/docs/doctor/DEVELOPMENT-ROADMAP.md` for the full plan and `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md`
 for the evidence behind every finding.
 

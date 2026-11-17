@@ -264,7 +264,7 @@ function createSheet() {
 |---|---|---|
 | **Not Started** | Not begun | Nothing started |
 | **Dev in Progress** | Being built | The first line of code is written, or the work is partly done but not verified in the deployed environment |
-| **Completed** | Shipped and verified | The work is merged, deployed to the demo environment, verified there, and the audit finding it closes is marked closed in `MEDMATE-PRODUCT-AUDIT.md` |
+| **Completed** | Shipped and verified | The work is merged, deployed to the demo environment, verified there, and the audit finding it closes is marked closed in `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` |
 
 **Completed is a high bar on purpose.** Merging to a branch is *Dev in Progress*, not
 *Completed*. A feature only becomes **Completed** when it is running and verified in the
@@ -387,11 +387,11 @@ next to the code:
 
 | Document | What it holds |
 |---|---|
-| `MEDMATE-ARCHITECTURE.md` | How the product works, in plain language — the source the feature list was decomposed from |
-| `MEDMATE-PRODUCT-AUDIT.md` | Every finding, with the live evidence behind it, and what each fix must close |
-| `DEVELOPMENT-ROADMAP.md` | Sequencing, waves, exit gates, dependencies, risks, and the full acceptance criteria per feature |
-| `FIX-PACKAGE.md` | The two verified fix packages (record-level access, OTP rate limiting) with their tests |
-| `UI-SPEC.md` | The extracted design system — typography, icons, fonts, card dimensions — and the fidelity rules for new work |
+| `../../../packages/docs/platform/MEDMATE-ARCHITECTURE.md` | How the product works, in plain language — the source the feature list was decomposed from |
+| `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` | Every finding, with the live evidence behind it, and what each fix must close |
+| `../../../packages/docs/doctor/DEVELOPMENT-ROADMAP.md` | Sequencing, waves, exit gates, dependencies, risks, and the full acceptance criteria per feature |
+| `../../../packages/docs/platform/FIX-PACKAGE.md` | The two verified fix packages (record-level access, OTP rate limiting) with their tests |
+| `../../../packages/docs/doctor/UI-SPEC.md` | The extracted design system — typography, icons, fonts, card dimensions — and the fidelity rules for new work |
 
 **Migration note.** The old tracker (`roadmap-progress.json` and its CLI) has been removed
 from the workspace per the file-management instruction. The three-state Sheet maps onto it
@@ -404,7 +404,7 @@ exactly:
 | `not-started`, `blocked` | Not Started |
 
 The acceptance criteria, evidence links and dependency graph that the JSON held live in
-`DEVELOPMENT-ROADMAP.md` §2 and the audit report.
+`../../../packages/docs/doctor/DEVELOPMENT-ROADMAP.md` §2 and the audit report.
 
 ---
 

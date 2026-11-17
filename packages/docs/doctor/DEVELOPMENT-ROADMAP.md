@@ -1,6 +1,6 @@
 # MedMate — Development Roadmap
 
-**Derived from:** `MEDMATE-ARCHITECTURE.md` (every feature and requirement the product describes) and `MEDMATE-PRODUCT-AUDIT.md` (every gap, defect and risk found in the live audit of 17 Nov 2026).
+**Derived from:** `../../../packages/docs/platform/MEDMATE-ARCHITECTURE.md` (every feature and requirement the product describes) and `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` (every gap, defect and risk found in the live audit of 17 Nov 2026).
 
 **Scope:** 77 features across 5 epics, tracked to a completion percentage per feature.
 
@@ -12,7 +12,7 @@
 
 | Document | Role |
 |---|---|
-| [`GOOGLE-SHEET-REQUIREMENTS.md`](GOOGLE-SHEET-REQUIREMENTS.md) | The tracker of record. Contains the sheet structure, the paste-in payload for all 77 stories, an Apps Script to create the sheet automatically, and the status definitions. |
+| [`../../../packages/docs/platform/GOOGLE-SHEET-REQUIREMENTS.md`](../../../packages/docs/platform/GOOGLE-SHEET-REQUIREMENTS.md) | The tracker of record. Contains the sheet structure, the paste-in payload for all 77 stories, an Apps Script to create the sheet automatically, and the status definitions. |
 | This document | The engineering plan: sequencing, waves, exit gates, dependencies, risks, and the acceptance criteria per feature. |
 
 ### Sheet structure — three columns
@@ -29,7 +29,7 @@
 |---|---|---|
 | **Not Started** | Not begun | Nothing started |
 | **Dev in Progress** | Being built | The first line is written, or the work is partly done but not verified in the deployed environment |
-| **Completed** | Shipped and verified | Merged **and** deployed to the demo environment **and** verified there, with the audit finding it closes marked closed in `MEDMATE-PRODUCT-AUDIT.md` |
+| **Completed** | Shipped and verified | Merged **and** deployed to the demo environment **and** verified there, with the audit finding it closes marked closed in `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` |
 
 **Completed is a high bar on purpose.** Merging to a branch is *Dev in Progress*.
 A feature only becomes **Completed** when it is running and verified in the
@@ -136,7 +136,7 @@ The plan runs in four waves. Each wave ends with a deployable state.
 
 ### Wave 0 — Close the security gaps (blocking, ~2 weeks)
 
-*Nothing else matters if these ship wrong.* Fix packages for F1 and F3 are written and tested in `FIX-PACKAGE.md`.
+*Nothing else matters if these ship wrong.* Fix packages for F1 and F3 are written and tested in `../../../packages/docs/platform/FIX-PACKAGE.md`.
 
 | Feature | What | Audit ref |
 |---|---|---|
@@ -150,7 +150,7 @@ The plan runs in four waves. Each wave ends with a deployable state.
 | **F-208** | Kiosk idle reset that preserves entered data | D5, W6 |
 | **F-209** | Kiosk accessibility to WCAG 2.2 AA | W5 |
 
-**Exit gate:** `FIX-PACKAGE.md` tests green, F1 and F2 closed in the audit, the DPA sentence in §4 literally true.
+**Exit gate:** `../../../packages/docs/platform/FIX-PACKAGE.md` tests green, F1 and F2 closed in the audit, the DPA sentence in §4 literally true.
 
 ### Wave 1 — Make it fast (2–3 weeks)
 
@@ -212,10 +212,10 @@ the admin all sit on top of it.
 
 - **F-101 Sign-in** — OTP + personal PIN. Shipped; needs an admin PIN-reset path (AC4) and a live SMS provider.
 - **F-102 Role model** — one capability model driving both UI and API. Shipped at module level; AC4 (no second hardcoded matrix) is still open.
-- **F-103 / F-104 Record enforcement and redaction** — the F1 fix. Central policy, one place, no per-endpoint drift. Fix in `FIX-PACKAGE.md` §2 (`lib/rbac-policy.ts`).
+- **F-103 / F-104 Record enforcement and redaction** — the F1 fix. Central policy, one place, no per-endpoint drift. Fix in `../../../packages/docs/platform/FIX-PACKAGE.md` §2 (`lib/rbac-policy.ts`).
 - **F-105 Audit log** — live and populated; immutability (AC3) and export (AC4) outstanding.
 - **F-106 Screen and device lock** — the kiosk device lock (HTTP 423) is a genuine differentiator. AC4, the fallback exit when the opener's PIN is unavailable, is a real operational trap.
-- **F-107 Rate limiting** — the F3 fix. Fix in `FIX-PACKAGE.md` §4 (`lib/otp-rate-limit.ts`).
+- **F-107 Rate limiting** — the F3 fix. Fix in `../../../packages/docs/platform/FIX-PACKAGE.md` §4 (`lib/otp-rate-limit.ts`).
 - **F-108 Cover for colleague** — the F2 fix. Needs `POST /api/visits/:id/claim`, a "covering for Dr X" banner, and an audit entry.
 - **F-109 Doctor scoping** — apply the `/api/reports` coercion pattern to invoices, day-close, queue and patients.
 
@@ -314,8 +314,8 @@ These apply to every feature, not just one.
 
 | Requirement | Why | Verified by |
 |---|---|---|
-| **Server-side authorization on every endpoint** | Link hiding is not security; the audit probed the API directly | `FIX-PACKAGE.md` §3 |
-| **No clinical field reaches a role without `records`** | DPA §4 is a written commitment | `FIX-PACKAGE.md` §3 |
+| **Server-side authorization on every endpoint** | Link hiding is not security; the audit probed the API directly | `../../../packages/docs/platform/FIX-PACKAGE.md` §3 |
+| **No clinical field reaches a role without `records`** | DPA §4 is a written commitment | `../../../packages/docs/platform/FIX-PACKAGE.md` §3 |
 | **Every state change is audit-logged with actor and time** | DPDP audit trail | F-105 AC1 |
 | **A feature is `Completed` only when deployed and verified** | Prevents the tracker drifting from reality | Sheet status + `verify/check-fidelity.js` |
 | **WCAG 2.2 AA on every patient- and staff-facing screen** | The kiosk is the most public surface and currently the least accessible | F-209 |
@@ -323,7 +323,7 @@ These apply to every feature, not just one.
 | **No clinical data in analytics, logs or third-party calls** | DPA §2 | F-520 |
 | **Production data in India** | DPA §6 | F-519 |
 | **Full data export, free, without a support request** | Terms and DPA §9; the top churn driver in this market | F-503 |
-| **Explicit, non-mutating projections** | A redactor that mutates its source row corrupts the audit trail | `FIX-PACKAGE.md` §3 |
+| **Explicit, non-mutating projections** | A redactor that mutates its source row corrupts the audit trail | `../../../packages/docs/platform/FIX-PACKAGE.md` §3 |
 
 ---
 
@@ -357,7 +357,7 @@ dimension fails the build.
 
 ### The contract
 
-`UI-SPEC.md` is the design contract for all future work: the type scale, the
+`../../../packages/docs/doctor/UI-SPEC.md` is the design contract for all future work: the type scale, the
 colour tokens, the geometry table, the icon inventory, the motion rules, the
 breakpoints, and seven fidelity rules (reuse the class vocabulary, never
 hardcode a colour, never add a resting shadow, card geometry is fixed,
@@ -479,8 +479,8 @@ A feature is done when **all** of the following are true:
 - [ ] It is deployed to the demo environment and verified there
 - [ ] The **Status** cell in the Google Sheet is set to **Completed**
 - [ ] No new console errors; no unhandled promise rejections
-- [ ] The audit finding it resolves is marked closed in `MEDMATE-PRODUCT-AUDIT.md`
-- [ ] The UI matches `UI-SPEC.md`, and `verify/check-fidelity.js` reports zero drift
+- [ ] The audit finding it resolves is marked closed in `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md`
+- [ ] The UI matches `../../../packages/docs/doctor/UI-SPEC.md`, and `verify/check-fidelity.js` reports zero drift
 - [ ] The sheet's status dropdown still holds one of the three allowed values
 
 ---
@@ -519,4 +519,4 @@ A feature is done when **all** of the following are true:
 
 ---
 
-*Companion documents: `GOOGLE-SHEET-REQUIREMENTS.md` (the tracker of record), `UI-SPEC.md` (the design contract), `FIX-PACKAGE.md` (the two verified fix packages), `MEDMATE-ARCHITECTURE.md` (how the product works, in plain language), `MEDMATE-PRODUCT-AUDIT.md` (the evidence behind every finding).*
+*Companion documents: `../../../packages/docs/platform/GOOGLE-SHEET-REQUIREMENTS.md` (the tracker of record), `../../../packages/docs/doctor/UI-SPEC.md` (the design contract), `../../../packages/docs/platform/FIX-PACKAGE.md` (the two verified fix packages), `../../../packages/docs/platform/MEDMATE-ARCHITECTURE.md` (how the product works, in plain language), `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` (the evidence behind every finding).*

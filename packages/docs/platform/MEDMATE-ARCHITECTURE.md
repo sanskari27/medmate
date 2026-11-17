@@ -353,4 +353,4 @@ Yes — **Reports → Excel export** for consultation history and medicine analy
 
 ---
 
-*This document explains the product as it behaves today, observed live on 17 November 2026. Companion document: `MEDMATE-PRODUCT-AUDIT.md` (the critical review, findings and roadmap).*
+*This document explains the product as it behaves today, observed live on 17 November 2026. Companion document: `../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` (the critical review, findings and roadmap).*

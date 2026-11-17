@@ -230,4 +230,4 @@ Options, in order of preference:
   fidelity. A React port should be judged against it, not replace it blindly.
 
 *Evidence gathered 17 November 2026 from the deployed MVP's own bundle and
-stylesheet; see `MEDMATE-PRODUCT-AUDIT.md` for the full audit.*
+stylesheet; see `../../../../packages/docs/platform/MEDMATE-PRODUCT-AUDIT.md` for the full audit.*

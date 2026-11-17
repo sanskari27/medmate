@@ -396,7 +396,7 @@ MedMate publishes three legal documents (`/legal/terms`, `/legal/dpa`, `/legal/d
 > - **F1 (+F5)** — `fixes/rbac-policy.ts` + `fixes/rbac-policy.test.ts` (16 tests, passing). One central policy module that strips clinical fields for roles without `records` and coerces cross-doctor queries to the signed-in doctor. Fixes the DPA §4 contradiction.
 > - **F3** — `fixes/otp-rate-limit.ts` + `fixes/otp-rate-limit.test.ts` (8 tests, passing). Two-tier limiter keyed on `(scope, phone, ip)` with separate staff and kiosk buckets, `Retry-After`, and a countdown. This is the direct cause of the `429` errors seen during this audit.
 >
-> The full plan, with a per-feature completion percentage and a progress-tracking mechanism, is in `DEVELOPMENT-ROADMAP.md`.
+> The full plan, with a per-feature completion percentage and a progress-tracking mechanism, is in `../../../packages/docs/doctor/DEVELOPMENT-ROADMAP.md`.
 
 | # | Action | Effort |
 |---|---|---|
