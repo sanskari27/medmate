@@ -7,7 +7,8 @@ public enum AccountType {
     PHARMACY,
     CUSTOMER,
     RIDER,
-    STAFF;
+    STAFF,
+    CLINIC;
 
     public String wire() {
         return name().toLowerCase(Locale.ROOT);

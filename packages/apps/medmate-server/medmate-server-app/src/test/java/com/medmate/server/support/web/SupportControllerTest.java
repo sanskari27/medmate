@@ -137,6 +137,8 @@ class SupportControllerTest {
                 Set.of(),
                 Set.of(),
                 true,
+                null,
+                null,
                 null);
         Authentication authentication = new AccountAuthentication(principal);
         return request -> {

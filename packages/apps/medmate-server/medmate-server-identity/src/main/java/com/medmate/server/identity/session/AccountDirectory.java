@@ -106,6 +106,8 @@ public class AccountDirectory {
                 subtypes,
                 permissions,
                 pinSet,
-                pharmacyType);
+                pharmacyType,
+                account.clinicId(),
+                account.clinicRole());
     }
 }

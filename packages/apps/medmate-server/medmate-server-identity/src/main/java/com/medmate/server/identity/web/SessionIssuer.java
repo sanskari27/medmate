@@ -40,7 +40,10 @@ public class SessionIssuer {
         String refresh = Secrets.randomToken();
         accounts.insertRefresh(Secrets.sha256(refresh), principal.id(), now.plusSeconds(refreshSeconds));
         return new SessionResponse(
-                tokens.issue(principal.id(), now), refresh, accessSeconds, AccountResponse.from(principal));
+                tokens.issue(principal.id(), principal.clinicId(), principal.clinicRole(), now),
+                refresh,
+                accessSeconds,
+                AccountResponse.from(principal));
     }
 
     public record SessionResponse(String accessToken, String refreshToken, long expiresIn, AccountResponse account) {}
@@ -60,7 +63,9 @@ public class SessionIssuer {
             List<String> permissions,
             boolean pinSetupRequired,
             boolean disabled,
-            String pharmacyType) {
+            String pharmacyType,
+            UUID clinicId,
+            String clinicRole) {
 
         static AccountResponse from(AccountPrincipal principal) {
             RejectionResponse rejection = null;
@@ -88,7 +93,9 @@ public class SessionIssuer {
                     principal.permissions().stream().toList(),
                     pinSetup,
                     principal.disabled(),
-                    principal.pharmacyType());
+                    principal.pharmacyType(),
+                    principal.clinicId(),
+                    principal.clinicRole());
         }
     }
 }

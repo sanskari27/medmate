@@ -28,7 +28,14 @@ public class IdentityStore {
         this.jdbc = jdbc;
     }
 
-    public record AccountRow(UUID id, String phone, AccountType type, String displayName, boolean disabled) {}
+    public record AccountRow(
+            UUID id,
+            String phone,
+            AccountType type,
+            String displayName,
+            boolean disabled,
+            UUID clinicId,
+            String clinicRole) {}
 
     public record OtpRow(OtpMachine.State state) {}
 
@@ -44,7 +51,8 @@ public class IdentityStore {
     }
 
     public Optional<AccountRow> findAccount(UUID id) {
-        return jdbc.sql("SELECT id, phone, account_type, display_name, disabled FROM account WHERE id = :id")
+        return jdbc.sql(
+                        "SELECT id, phone, account_type, display_name, disabled, clinic_id, clinic_role FROM account WHERE id = :id")
                 .param("id", id)
                 .query(this::account)
                 .optional();
@@ -52,7 +60,7 @@ public class IdentityStore {
 
     public Optional<AccountRow> findAccount(String phone, AccountType type) {
         return jdbc.sql(
-                        "SELECT id, phone, account_type, display_name, disabled FROM account WHERE phone = :phone AND account_type = :type")
+                        "SELECT id, phone, account_type, display_name, disabled, clinic_id, clinic_role FROM account WHERE phone = :phone AND account_type = :type")
                 .param("phone", phone)
                 .param("type", type.wire())
                 .query(this::account)
@@ -61,7 +69,7 @@ public class IdentityStore {
 
     public List<AccountRow> findPlatformAccounts(String phone) {
         return jdbc.sql(
-                        "SELECT id, phone, account_type, display_name, disabled FROM account WHERE phone = :phone AND account_type IN ('admin', 'staff')")
+                        "SELECT id, phone, account_type, display_name, disabled, clinic_id, clinic_role FROM account WHERE phone = :phone AND account_type IN ('admin', 'staff')")
                 .param("phone", phone)
                 .query(this::account)
                 .list();
@@ -244,6 +252,8 @@ public class IdentityStore {
                 rs.getString("phone"),
                 AccountType.parse(rs.getString("account_type")),
                 rs.getString("display_name"),
-                rs.getBoolean("disabled"));
+                rs.getBoolean("disabled"),
+                rs.getObject("clinic_id", UUID.class),
+                rs.getString("clinic_role"));
     }
 }

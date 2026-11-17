@@ -17,4 +17,6 @@ public record AccountPrincipal(
         Set<StaffSubtype> subtypes,
         Set<String> permissions,
         boolean pinSet,
-        String pharmacyType) {}
+        String pharmacyType,
+        UUID clinicId,
+        String clinicRole) {}

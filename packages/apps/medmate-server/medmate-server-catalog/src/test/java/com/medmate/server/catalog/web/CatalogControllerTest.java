@@ -184,6 +184,8 @@ class CatalogControllerTest {
                 subtypes,
                 Set.of(),
                 true,
+                null,
+                null,
                 null);
         return new AccountAuthentication(principal);
     }

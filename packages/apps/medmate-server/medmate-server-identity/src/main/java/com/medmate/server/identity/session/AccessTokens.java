@@ -25,13 +25,19 @@ public final class AccessTokens {
     }
 
     public String issue(UUID accountId, Instant now) {
+        return issue(accountId, null, null, now);
+    }
+
+    public String issue(UUID accountId, UUID clinicId, String clinicRole, Instant now) {
         try {
-            JWTClaimsSet claims = new JWTClaimsSet.Builder()
+            JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
                     .subject(accountId.toString())
                     .issueTime(Date.from(now))
-                    .expirationTime(Date.from(now.plusSeconds(accessSeconds)))
-                    .build();
-            SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
+                    .expirationTime(Date.from(now.plusSeconds(accessSeconds)));
+            if (clinicId != null) {
+                claims.claim("clinicId", clinicId.toString()).claim("clinicRole", clinicRole);
+            }
+            SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims.build());
             jwt.sign(new MACSigner(secret));
             return jwt.serialize();
         } catch (Exception exception) {
@@ -40,18 +46,38 @@ public final class AccessTokens {
     }
 
     public UUID parse(String token, Instant now) {
+        Verified verified = verify(token, now);
+        return verified == null ? null : verified.accountId();
+    }
+
+    public Tenant parseClaims(String token, Instant now) {
+        Verified verified = verify(token, now);
+        return verified == null ? null : new Tenant(verified.clinicId(), verified.clinicRole());
+    }
+
+    private Verified verify(String token, Instant now) {
         try {
             SignedJWT jwt = SignedJWT.parse(token);
             if (!jwt.verify(new MACVerifier(secret))) {
                 return null;
             }
-            Date expiration = jwt.getJWTClaimsSet().getExpirationTime();
+            JWTClaimsSet claims = jwt.getJWTClaimsSet();
+            Date expiration = claims.getExpirationTime();
             if (expiration == null || !expiration.toInstant().isAfter(now)) {
                 return null;
             }
-            return UUID.fromString(jwt.getJWTClaimsSet().getSubject());
+            Object rawClinicId = claims.getClaim("clinicId");
+            Object rawClinicRole = claims.getClaim("clinicRole");
+            return new Verified(
+                    UUID.fromString(claims.getSubject()),
+                    rawClinicId == null ? null : UUID.fromString(String.valueOf(rawClinicId)),
+                    rawClinicRole == null ? null : String.valueOf(rawClinicRole));
         } catch (Exception exception) {
             return null;
         }
     }
+
+    public record Tenant(UUID clinicId, String clinicRole) {}
+
+    private record Verified(UUID accountId, UUID clinicId, String clinicRole) {}
 }

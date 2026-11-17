@@ -103,6 +103,8 @@ class OfferControllerTest {
                 Set.of(),
                 Set.of(keys),
                 true,
+                null,
+                null,
                 null);
         return new AccountAuthentication(principal);
     }

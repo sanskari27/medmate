@@ -96,6 +96,8 @@ class InsightControllerTest {
                 subtypes,
                 Set.of(),
                 true,
+                null,
+                null,
                 null));
     }
 
@@ -114,6 +116,8 @@ class InsightControllerTest {
                 Set.of(),
                 Set.of(),
                 true,
+                null,
+                null,
                 null));
     }
 }
