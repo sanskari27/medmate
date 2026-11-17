@@ -64,6 +64,7 @@ doctor: ## Report whether Java 21, local Postgres, node, docker, and python are 
 	@command -v npm >/dev/null && echo "npm: $$(npm -v)" || echo "npm: missing"
 	@command -v docker >/dev/null && docker --version || echo "docker: missing (needed to build the deployment image)"
 	@command -v python3 >/dev/null && python3 --version || echo "python3: missing"
+	@echo "run the doctor portal with: make doctor-app"
 
 check: ## Validate every packages/apps/*/project.yaml contract
 	python3 scripts/validate_projects.py
@@ -106,6 +107,10 @@ dispensary: ## Dispensary console on :3204 (proxies /auth to :8080)
 	@test -d packages/apps/dispensary/node_modules || { echo "Run 'make install' first"; exit 1; }
 	npm run dev --prefix packages/apps/dispensary
 
+doctor-app: ## Doctor portal on :3206 (proxies /auth to :8080, /sms-mock to :8090, /clinic-api to :8091)
+	@test -d packages/apps/doctor/node_modules || { echo "Run 'make install' first"; exit 1; }
+	npm run dev --prefix packages/apps/doctor
+
 admin: ## Admin console on :3205 (proxies /auth to :8080)
 	@test -d packages/apps/admin/node_modules || { echo "Run 'make install' first"; exit 1; }
 	npm run dev --prefix packages/apps/admin
@@ -119,6 +124,14 @@ medmatepharmacy: ## medmatepharmacy.com site on :3201
 	npm run dev --prefix packages/apps/medmatepharmacy
 
 ## Database
+
+clinic-api: java21-check ## Run the clinic API on :8091 against the local Postgres
+	cd packages/apps/medmate-clinic-api && \
+	  JAVA_HOME="$(JAVA21_HOME)" ./mvnw -pl medmate-clinic-api-app -am spring-boot:run
+
+clinic-api-verify: java21-check ## Format-check and test the clinic API
+	cd packages/apps/medmate-clinic-api && \
+	  JAVA_HOME="$(JAVA21_HOME)" ./mvnw -B verify
 
 java21-check: ## Fail when Java 21 is not installed
 	@test -n "$(JAVA21_HOME)" || { echo "Java 21 is required. Install it with: brew install openjdk@21"; exit 1; }

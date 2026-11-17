@@ -308,6 +308,12 @@ def validate_projects(projects: list[dict] | None = None) -> list[str]:
     seen: dict[str, str] = {}
     for project in projects:
         errors.extend(project.get("errors", []))
+        # Every application ships a README that says what it is, where its
+        # records live and how it is deployed.
+        directory_name = project.get("directoryName") or project.get("name")
+        readme = repo_root() / "packages" / "docs" / str(directory_name) / "README.md"
+        if not readme.is_file():
+            errors.append(f"{directory_name}: packages/docs/{directory_name}/README.md must exist")
         for record in project.get("routing", {}).get("records", []):
             for host in record.get("hosts", []):
                 owner = seen.get(host)
