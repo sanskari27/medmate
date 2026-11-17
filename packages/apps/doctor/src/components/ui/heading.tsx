@@ -3,22 +3,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
-const headingVariants = cva(
-  "m-0 font-extrabold [line-height:1.18] tracking-[-0.02em] text-ink",
-  {
-    variants: {
-      level: {
-        1: "text-[2em]",
-        2: "text-[1.5em]",
-        3: "text-[1.17em]",
-        4: "text-[1em]",
-      },
-    },
-    defaultVariants: {
-      level: 2,
+const headingVariants = cva("m-0 font-extrabold [line-height:1.18] tracking-[-0.02em] text-ink", {
+  variants: {
+    level: {
+      1: "text-[2em]",
+      2: "text-[1.5em]",
+      3: "text-[1.17em]",
+      4: "text-[1em]",
     },
   },
-);
+  defaultVariants: {
+    level: 2,
+  },
+});
 
 export type HeadingProps = ComponentProps<"h2"> &
   VariantProps<typeof headingVariants> & {

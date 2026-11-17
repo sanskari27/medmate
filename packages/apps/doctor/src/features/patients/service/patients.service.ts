@@ -52,10 +52,9 @@ export function usePatientCounts() {
   const seen = useListPatientsQuery(patientQuery({ status: "seen" }, 1, COUNT_PAGE_SIZE), {
     skip: !session,
   });
-  const owing = useListPatientsQuery(
-    patientQuery({ due: true }, 1, MAX_PAGE_SIZE),
-    { skip: !session || !hasBillingRead },
-  );
+  const owing = useListPatientsQuery(patientQuery({ due: true }, 1, MAX_PAGE_SIZE), {
+    skip: !session || !hasBillingRead,
+  });
 
   return {
     totalPatients: all.data?.total ?? 0,

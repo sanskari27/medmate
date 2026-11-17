@@ -1,1 +1,6 @@
-export { clearSession, readPersistedAuth, writePersistedAuth, writeSession } from "./sessionStorage.service";
+export {
+  clearSession,
+  readPersistedAuth,
+  writePersistedAuth,
+  writeSession,
+} from "./sessionStorage.service";

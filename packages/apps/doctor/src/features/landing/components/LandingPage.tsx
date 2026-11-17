@@ -6,15 +6,25 @@ import { problemMessage } from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { filterParams, usePatientCounts } from "@/features/patients";
 import { buildLandingSummary, money } from "@/features/landing/service/landingSummary";
-import type { ClinicPatient } from "@/types";
+import type { ClinicPatient, PatientFilter } from "@/types";
 
 const LANDING_PAGE_SIZE = 100;
+
+/** The patient list, opened with the filter the stat stands for. */
+function patientListPath(filter?: PatientFilter): string {
+  const params = new URLSearchParams(filterParams(filter ?? {}));
+  const query = params.toString();
+  return query ? `/patients?${query}` : "/patients";
+}
 
 export function LandingPage() {
   const { session } = useAppSelector((state) => state.auth);
   const me = useGetMeQuery(undefined, { skip: !session });
   const counts = usePatientCounts();
-  const patients = useListPatientsQuery({ size: LANDING_PAGE_SIZE, sort: "name" }, { skip: !session });
+  const patients = useListPatientsQuery(
+    { size: LANDING_PAGE_SIZE, sort: "name" },
+    { skip: !session },
+  );
   const navigate = useNavigate();
 
   if (me.isLoading) {
@@ -55,7 +65,7 @@ export function LandingPage() {
             type="button"
             variant="ghost"
             className="rounded-card border border-line bg-surface p-2"
-            onClick={() => navigate(`/patients?${new URLSearchParams(filterParams(stat.filter ?? {})).toString()}`)}
+            onClick={() => navigate(patientListPath(stat.filter))}
             aria-label={`View ${stat.label}`}
           >
             <Box className="flex flex-col items-center gap-2 p-2">
@@ -90,7 +100,9 @@ export function LandingPage() {
             {items.length === 0 ? (
               <Box className="px-6 py-12 text-center">
                 <Icon name="users" size={48} className="mx-auto mb-3 text-muted" />
-                <TextComponent className="text-[14px] font-bold text-ink mb-1">No patients yet</TextComponent>
+                <TextComponent className="text-[14px] font-bold text-ink mb-1">
+                  No patients yet
+                </TextComponent>
                 <TextComponent className="text-[13px] text-muted mx-auto max-w-[340px]">
                   Patients appear here as soon as the clinic starts seeing them.
                 </TextComponent>
@@ -103,7 +115,9 @@ export function LandingPage() {
                     className="flex items-center justify-between gap-4 border-b border-line px-5 py-3 last:border-b-0"
                   >
                     <Box>
-                      <TextComponent className="text-[14px] font-bold text-ink">{patient.name}</TextComponent>
+                      <TextComponent className="text-[14px] font-bold text-ink">
+                        {patient.name}
+                      </TextComponent>
                       <TextComponent className="text-[12.5px] text-muted">
                         {patient.age} {patient.sex} · {patient.phone}
                       </TextComponent>
@@ -113,7 +127,9 @@ export function LandingPage() {
                         <span className="chip">{patient.conditions}</span>
                       ) : null}
                       {canSeeMoney && patient.due ? (
-                        <span className="chip border-gold-100 text-gold-ink">{money(patient.due)}</span>
+                        <span className="chip border-gold-100 text-gold-ink">
+                          {money(patient.due)}
+                        </span>
                       ) : null}
                       <span
                         className="grid h-6 w-6 place-items-center rounded-pill"

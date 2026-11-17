@@ -26,7 +26,9 @@ export function PatientRow({ patient, hasClinicalRead, hasBillingRead }: Patient
                 <Icon name="users" size={18} className="text-ink-2" />
               </Box>
               <Box className="min-w-0">
-                <TextComponent className="text-[14px] font-bold text-ink truncate">{patient.name}</TextComponent>
+                <TextComponent className="text-[14px] font-bold text-ink truncate">
+                  {patient.name}
+                </TextComponent>
                 <TextComponent className="text-[12px] text-muted">
                   {patient.age} yrs · {patient.sex}
                 </TextComponent>
@@ -37,7 +39,9 @@ export function PatientRow({ patient, hasClinicalRead, hasBillingRead }: Patient
               <TextComponent className="font-mono">{patient.phone}</TextComponent>
             </Box>
             <Box className="flex items-center gap-2">
-              <Badge tone={STATUS_TONES[patient.status] ?? "default"}>{patient.status.replace("-", " ")}</Badge>
+              <Badge tone={STATUS_TONES[patient.status] ?? "default"}>
+                {patient.status.replace("-", " ")}
+              </Badge>
             </Box>
           </Box>
 
@@ -63,12 +67,13 @@ export function PatientRow({ patient, hasClinicalRead, hasBillingRead }: Patient
               </Badge>
             )}
             {hasClinicalRead && patient.lastSeen && (
-              <TextComponent className="text-[11px] text-muted">Last seen by {patient.lastSeen}</TextComponent>
+              <TextComponent className="text-[11px] text-muted">
+                Last seen by {patient.lastSeen}
+              </TextComponent>
             )}
             {hasBillingRead && patient.due !== undefined && patient.due > 0 && (
               <Badge tone="danger" className="gap-1">
-                <Icon name="rupee" size={12} />
-                ₹{patient.due.toLocaleString("en-IN")}
+                <Icon name="rupee" size={12} />₹{patient.due.toLocaleString("en-IN")}
               </Badge>
             )}
           </Box>

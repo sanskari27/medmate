@@ -48,9 +48,7 @@ export function PinSetup() {
       className="grid w-full max-w-[440px] place-items-center gap-6"
     >
       <h2 className="text-[22px] font-bold text-ink tracking-[-0.02em]">Create your login PIN</h2>
-      <p className="mt-1 text-[13.5px] text-muted">
-        Use this 4-digit PIN next time you sign in.
-      </p>
+      <p className="mt-1 text-[13.5px] text-muted">Use this 4-digit PIN next time you sign in.</p>
       <div className="w-full flex flex-col gap-2">
         <label htmlFor="pin" className="text-[13px] text-ink-2">
           4-digit PIN
@@ -69,9 +67,7 @@ export function PinSetup() {
           autoFocus
           aria-invalid={Boolean(pinError)}
         />
-        {pinError ? (
-          <p className="mt-1 text-[12px] text-red">{pinError}</p>
-        ) : null}
+        {pinError ? <p className="mt-1 text-[12px] text-red">{pinError}</p> : null}
       </div>
       <div className="w-full flex flex-col gap-2">
         <label htmlFor="again" className="text-[13px] text-ink-2">
@@ -90,9 +86,7 @@ export function PinSetup() {
           placeholder="••••"
           aria-invalid={Boolean(againError)}
         />
-        {againError ? (
-          <p className="mt-1 text-[12px] text-red">{againError}</p>
-        ) : null}
+        {againError ? <p className="mt-1 text-[12px] text-red">{againError}</p> : null}
       </div>
       <Button
         size="lg"

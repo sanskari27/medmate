@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
 import { writeSession } from "@/services/storage";
@@ -32,7 +33,7 @@ const patientsWithClinical = {
       conditions: "Hypertension",
       allergies: "Penicillin",
       abha: true,
-      lastSeen: "2026-11-15T10:30:00Z",
+      lastSeen: "Dr. Meghana Iyer",
     },
     {
       id: "patient-2",
@@ -42,9 +43,9 @@ const patientsWithClinical = {
       phone: "••••• 12345",
       status: "with-doctor",
       conditions: "Diabetes",
-      allergies: "",
+      allergies: null,
       abha: false,
-      lastSeen: "2026-11-14T14:20:00Z",
+      lastSeen: null,
     },
     {
       id: "patient-3",
@@ -56,7 +57,7 @@ const patientsWithClinical = {
       conditions: "Asthma",
       allergies: "Dust",
       abha: true,
-      lastSeen: "2026-11-13T09:15:00Z",
+      lastSeen: "Dr. Ananya Rao",
     },
   ],
   page: 1,
@@ -84,18 +85,26 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
-function renderPatientList(me: typeof meDoctor, patients: typeof patientsWithClinical, sessionOverrides: Partial<Session> = {}) {
-  writeSession({ ...session, ...sessionOverrides });
+function renderPatientList(
+  patients: typeof patientsWithClinical,
+  path = "/patients",
+  captured?: { url: string },
+) {
+  writeSession(session);
   const fetch = vi.fn(async (input: RequestInfo | URL) => {
     const url = requestUrl(input);
-    if (url.includes("/clinic-api/clinic/me")) return json(me);
-    if (url.includes("/clinic-api/clinic/patients")) return json(patients);
+    if (captured) captured.url = url;
+    const parsed = new URL(url, "http://localhost");
+    if (parsed.pathname.includes("/clinic-api/clinic/me")) return json(meDoctor);
+    if (parsed.pathname.includes("/clinic-api/clinic/patients")) return json(patients);
     return json({});
   });
   vi.stubGlobal("fetch", fetch as unknown as typeof fetch);
   return render(
     <Provider store={createAppStore()}>
-      <PatientListPage />
+      <MemoryRouter initialEntries={[path]}>
+        <PatientListPage />
+      </MemoryRouter>
     </Provider>,
   );
 }
@@ -108,83 +117,74 @@ afterEach(() => {
 
 describe("PatientListPage", () => {
   it("renders the patients of the signed-in clinic", async () => {
-    renderPatientList(meDoctor, patientsWithClinical);
+    renderPatientList(patientsWithClinical);
     await waitFor(() => expect(screen.getByText("Anjali Menon")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Rahul Sharma")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Priya Patel")).toBeInTheDocument());
   });
 
   it("search filters by name", async () => {
-    let capturedUrl = "";
-    const fetch = vi.fn(async (input: RequestInfo | URL) => {
-      capturedUrl = requestUrl(input);
-      const url = new URL(capturedUrl, "http://localhost");
-      if (url.pathname.includes("/clinic-api/clinic/me")) return json(meDoctor);
-      if (url.pathname.includes("/clinic-api/clinic/patients")) return json(patientsWithClinical);
-      return json({});
-    });
-    writeSession(session);
-    vi.stubGlobal("fetch", fetch as unknown as typeof fetch);
-    render(
-      <Provider store={createAppStore()}>
-        <PatientListPage />
-      </Provider>,
-    );
+    const captured = { url: "" };
+    renderPatientList(patientsWithClinical, "/patients", captured);
     await waitFor(() => expect(screen.getByText("Anjali Menon")).toBeInTheDocument());
 
     const searchInput = screen.getByPlaceholderText(/search/i);
     fireEvent.change(searchInput, { target: { value: "Anjali" } });
-    await waitFor(() => expect(capturedUrl).toContain("q=Anjali"));
+    await waitFor(() => expect(captured.url).toContain("q=Anjali"));
   });
 
   it("status and due filters are sent as query parameters", async () => {
-    let capturedUrl = "";
-    const fetch = vi.fn(async (input: RequestInfo | URL) => {
-      capturedUrl = requestUrl(input);
-      const url = new URL(capturedUrl, "http://localhost");
-      if (url.pathname.includes("/clinic-api/clinic/me")) return json(meDoctor);
-      if (url.pathname.includes("/clinic-api/clinic/patients")) return json(patientsWithClinical);
-      return json({});
-    });
-    writeSession(session);
-    vi.stubGlobal("fetch", fetch as unknown as typeof fetch);
-    render(
-      <Provider store={createAppStore()}>
-        <PatientListPage />
-      </Provider>,
-    );
+    const captured = { url: "" };
+    renderPatientList(patientsWithClinical, "/patients", captured);
     await waitFor(() => expect(screen.getByText("Anjali Menon")).toBeInTheDocument());
 
     const statusSelect = screen.getByRole("combobox", { name: /status/i });
     fireEvent.change(statusSelect, { target: { value: "waiting" } });
-    await waitFor(() => expect(capturedUrl).toContain("status=waiting"));
+    await waitFor(() => expect(captured.url).toContain("status=waiting"));
 
     const dueSelect = screen.getByRole("combobox", { name: /due/i });
     fireEvent.change(dueSelect, { target: { value: "true" } });
-    await waitFor(() => expect(capturedUrl).toContain("due=true"));
+    await waitFor(() => expect(captured.url).toContain("due=true"));
+  });
+
+  it("opens with the filter a link to the patient list carries", async () => {
+    const captured = { url: "" };
+    renderPatientList(patientsWithClinical, "/patients?status=waiting", captured);
+    await waitFor(() => expect(captured.url).toContain("status=waiting"));
+    expect(screen.getByRole("combobox", { name: /status/i })).toHaveValue("waiting");
   });
 
   it("an empty clinic renders an empty state and not an error", async () => {
-    renderPatientList(meDoctor, emptyPatients);
+    renderPatientList(emptyPatients);
     await waitFor(() => expect(screen.getByText("No patients")).toBeInTheDocument());
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
   });
 
   it("every row shows a masked phone", async () => {
-    renderPatientList(meDoctor, patientsWithClinical);
+    renderPatientList(patientsWithClinical);
     await waitFor(() => expect(screen.getByText("••••• 28051")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("••••• 12345")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("••••• 67890")).toBeInTheDocument());
   });
 
   it("a row shows the patient's own detail inline", async () => {
-    renderPatientList(meDoctor, patientsWithClinical);
+    renderPatientList(patientsWithClinical);
     await waitFor(() => expect(screen.getByText("Hypertension")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Penicillin")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Diabetes")).toBeInTheDocument());
     // ABHA badge - two patients have ABHA
     expect(screen.getAllByText(/ABHA/i)).toHaveLength(2);
-    // Last seen - three patients have last seen + one in sort dropdown
-    expect(screen.getAllByText(/last seen/i)).toHaveLength(4);
+  });
+
+  it("a row names the doctor who last saw the patient", async () => {
+    renderPatientList(patientsWithClinical);
+    await waitFor(() =>
+      expect(screen.getByText("Last seen by Dr. Meghana Iyer")).toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(screen.getByText("Last seen by Dr. Ananya Rao")).toBeInTheDocument(),
+    );
+    // A patient nobody has seen yet carries no last seen doctor.
+    expect(screen.queryByText(/Last seen by Rahul/)).not.toBeInTheDocument();
   });
 });

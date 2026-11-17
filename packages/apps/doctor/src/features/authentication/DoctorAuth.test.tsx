@@ -21,10 +21,16 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
-function renderLogin(fetchImpl: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+function renderLogin(
+  fetchImpl: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const store = createAppStore();
   vi.stubGlobal("fetch", fetchImpl as unknown as typeof fetch);
-  const { container } = render(<Provider store={store}><LoginPage /></Provider>);
+  const { container } = render(
+    <Provider store={store}>
+      <LoginPage />
+    </Provider>,
+  );
   return { store, container, queries: within(container) };
 }
 
@@ -153,8 +159,7 @@ describe("DoctorAuth", () => {
   it("shows the OTP code from the mock in development", async () => {
     const fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = requestUrl(input);
-      if (url.includes("/sms-mock"))
-        return json([{ phone: "+919845012345", code: "123456" }]);
+      if (url.includes("/sms-mock")) return json([{ phone: "+919845012345", code: "123456" }]);
       if (url.includes("/auth/otp/send")) return json({});
       return json({});
     });
@@ -176,8 +181,7 @@ describe("DoctorAuth", () => {
     try {
       const fetch = vi.fn(async (input: RequestInfo | URL) => {
         const url = requestUrl(input);
-        if (url.includes("/sms-mock"))
-          return json([{ phone: "+919845012345", code: "123456" }]);
+        if (url.includes("/sms-mock")) return json([{ phone: "+919845012345", code: "123456" }]);
         if (url.includes("/auth/otp/send")) return json({});
         return json({});
       });

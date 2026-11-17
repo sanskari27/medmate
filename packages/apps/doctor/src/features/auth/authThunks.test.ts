@@ -17,21 +17,30 @@ afterEach(() => {
 
 describe("auth thunks", () => {
   it("sendOtp advances the step to otp", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => json({})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({})),
+    );
     const store = createAppStore();
     await store.dispatch(sendOtp({ phone: "123" }));
     expect(store.getState().auth.step).toBe("otp");
   });
 
   it("successful verifyOtp stores the session", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => json(session)));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json(session)),
+    );
     const store = createAppStore();
     await store.dispatch(verifyOtp({ phone: "123", code: "0000" }));
     expect(store.getState().auth.session).toEqual(session);
   });
 
   it("successful PIN sign-in stores the session", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => json({})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({})),
+    );
     const store = createAppStore();
     store.dispatch({ type: "auth/sessionStarted", payload: { session, pinReset: false } });
     await store.dispatch(setPin({ pin: "1234" }));
@@ -39,7 +48,10 @@ describe("auth thunks", () => {
   });
 
   it("signOut clears the session and returns step to phone", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => json({})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({})),
+    );
     const store = createAppStore();
     store.dispatch({ type: "auth/sessionStarted", payload: { session, pinReset: false } });
     await store.dispatch(signOut());
@@ -48,7 +60,10 @@ describe("auth thunks", () => {
   });
 
   it("failed verify does not store a session", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => json({ title: "bad" }, 400)));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ title: "bad" }, 400)),
+    );
     const store = createAppStore();
     try {
       await store.dispatch(verifyOtp({ phone: "123", code: "0000" })).unwrap();

@@ -49,9 +49,7 @@ export function PinStep({ phone }: PinStepProps) {
       className="grid w-full max-w-[440px] place-items-center gap-6"
     >
       <h2 className="text-[22px] font-bold text-ink tracking-[-0.02em]">Enter your PIN</h2>
-      <p className="mt-1 text-[13.5px] text-muted">
-        Use the 4-digit PIN you created after signup.
-      </p>
+      <p className="mt-1 text-[13.5px] text-muted">Use the 4-digit PIN you created after signup.</p>
       <div className="w-full flex flex-col gap-2">
         <label htmlFor="pin" className="text-[13px] text-ink-2">
           4-digit PIN

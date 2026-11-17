@@ -57,9 +57,7 @@ export function PhoneStep({ onPhone }: PhoneStepProps) {
             aria-invalid={Boolean(phoneError)}
           />
         </div>
-        {phoneError ? (
-          <p className="mt-1 text-[12px] text-red">{phoneError}</p>
-        ) : null}
+        {phoneError ? <p className="mt-1 text-[12px] text-red">{phoneError}</p> : null}
       </div>
       <Button
         size="lg"

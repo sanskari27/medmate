@@ -59,8 +59,7 @@ export function OtpStep({ phone }: OtpStepProps) {
         />
         {devCode ? (
           <div className="mt-2.5 rounded-sm border border-dashed border-line-2 bg-surface-3 px-3 py-2 text-[12.5px] text-muted">
-            Demo OTP:{" "}
-            <span className="font-bold text-ink">{devCode}</span>{" "}
+            Demo OTP: <span className="font-bold text-ink">{devCode}</span>{" "}
             <Button
               variant="ghost"
               className="m-0 inline p-1.5 text-[13px]"
@@ -70,9 +69,7 @@ export function OtpStep({ phone }: OtpStepProps) {
             </Button>
           </div>
         ) : null}
-        {otpError ? (
-          <p className="mt-1 text-[12px] text-red">{otpError}</p>
-        ) : null}
+        {otpError ? <p className="mt-1 text-[12px] text-red">{otpError}</p> : null}
       </div>
       <Button
         size="lg"

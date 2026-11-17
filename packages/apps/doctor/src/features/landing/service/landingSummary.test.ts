@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildLandingSummary, filterParams, holds, money } from "./landingSummary";
-import type { ClinicGrant, ClinicPatient, ClinicRole } from "@/types";
+import { buildLandingSummary, holds, money } from "./landingSummary";
+import type { ClinicGrant, ClinicRole } from "@/types";
 
 const ALL_GRANTS: ClinicGrant[] = [
   "clinic:patients:read",
@@ -9,34 +9,13 @@ const ALL_GRANTS: ClinicGrant[] = [
   "clinic:staff:read",
 ];
 
-const patients: ClinicPatient[] = [
-  {
-    id: "p1",
-    name: "Anjali Menon",
-    age: 34,
-    sex: "F",
-    phone: "••••• 28051",
-    status: "waiting",
-    due: 500,
-    conditions: "Hypertension",
-  },
-  {
-    id: "p2",
-    name: "Rahul Sharma",
-    age: 45,
-    sex: "M",
-    phone: "••••• 12345",
-    status: "with-doctor",
-  },
-  {
-    id: "p3",
-    name: "Meera Nair",
-    age: 8,
-    sex: "F",
-    phone: "••••• 90771",
-    status: "seen",
-  },
-];
+const counts = {
+  totalPatients: 4,
+  waitingCount: 1,
+  withDoctorCount: 1,
+  seenCount: 1,
+  amountDue: 750,
+};
 
 describe("landing summary", () => {
   it("gives each role its own headline", () => {
@@ -48,44 +27,51 @@ describe("landing summary", () => {
       owner: /clinic today/i,
     };
     for (const role of Object.keys(headlines) as ClinicRole[]) {
-      const summary = buildLandingSummary(role, patients, ALL_GRANTS);
+      const summary = buildLandingSummary(role, counts, ALL_GRANTS);
       expect(summary.title).toMatch(headlines[role]);
     }
   });
 
   it("shows an amount only to a role that holds the billing grant", () => {
-    const withoutBilling = buildLandingSummary("front_desk", patients, ["clinic:patients:read"]);
+    const withoutBilling = buildLandingSummary("front_desk", counts, ["clinic:patients:read"]);
     expect(withoutBilling.stats.some((stat) => stat.value.includes("₹"))).toBe(false);
     expect(withoutBilling.stats.some((stat) => stat.label === "Amount due")).toBe(false);
 
-    const withBilling = buildLandingSummary("front_desk", patients, ALL_GRANTS);
+    const withBilling = buildLandingSummary("front_desk", counts, ALL_GRANTS);
     const due = withBilling.stats.find((stat) => stat.label === "Amount due");
-    expect(due?.value).toBe("₹500");
+    expect(due?.value).toBe("₹750");
   });
 
   it("never shows an amount to a role without the billing grant, whatever the role", () => {
     for (const role of ["doctor", "nurse", "front_desk", "admin", "owner"] as ClinicRole[]) {
-      const summary = buildLandingSummary(role, patients, ["clinic:patients:read"]);
+      const summary = buildLandingSummary(role, counts, ["clinic:patients:read"]);
       expect(summary.stats.some((stat) => stat.value.includes("₹"))).toBe(false);
     }
   });
 
   it("counts each patient status", () => {
-    const summary = buildLandingSummary("doctor", patients, ALL_GRANTS);
+    const summary = buildLandingSummary("doctor", counts, ALL_GRANTS);
     const value = (label: string) => summary.stats.find((stat) => stat.label === label)?.value;
     expect(value("Waiting")).toBe("1");
     expect(value("With doctor")).toBe("1");
     expect(value("Seen")).toBe("1");
+    expect(value("Patients")).toBe("4");
   });
 
   it("links each stat to the patient list with the matching filter", () => {
-    const summary = buildLandingSummary("doctor", patients, ALL_GRANTS);
+    const summary = buildLandingSummary("doctor", counts, ALL_GRANTS);
     const waiting = summary.stats.find((stat) => stat.label === "Waiting");
-    expect(filterParams(waiting?.filter ?? {})).toEqual({ status: "waiting" });
+    expect(waiting?.filter).toEqual({ status: "waiting" });
+    const amount = summary.stats.find((stat) => stat.label === "Amount due");
+    expect(amount?.filter).toEqual({ due: true });
   });
 
   it("handles a clinic with no patients", () => {
-    const summary = buildLandingSummary("admin", [], ALL_GRANTS);
+    const summary = buildLandingSummary(
+      "admin",
+      { totalPatients: 0, waitingCount: 0, withDoctorCount: 0, seenCount: 0, amountDue: 0 },
+      ALL_GRANTS,
+    );
     expect(summary.stats.every((stat) => stat.value === "0" || stat.value === "₹0")).toBe(true);
   });
 

@@ -21,8 +21,18 @@ export function PatientListPage() {
     size: PAGE_SIZE,
   };
 
-  const { patients, total, page: currentPage, size, hasClinicalRead, hasBillingRead, isLoading, isError, error, refetch } =
-    usePatients(filters);
+  const {
+    patients,
+    total,
+    page: currentPage,
+    size,
+    hasClinicalRead,
+    hasBillingRead,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePatients(filters);
 
   const applyFilters = (next: PatientListFilters) => {
     setSearchParams({ ...filterParams(next), page: String(next.page ?? 1) });
@@ -38,8 +48,16 @@ export function PatientListPage() {
     return (
       <Box className="rounded-card border border-red-bg bg-red-bg p-4">
         <TextComponent className="text-red font-bold">Error loading patients</TextComponent>
-        <TextComponent className="mt-1 text-[13px] text-red">{problemMessage(error, "Could not load the patient list")}</TextComponent>
-        <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => refetch()}>
+        <TextComponent className="mt-1 text-[13px] text-red">
+          {problemMessage(error, "Could not load the patient list")}
+        </TextComponent>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="mt-3"
+          onClick={() => refetch()}
+        >
           Retry
         </Button>
       </Box>
@@ -60,7 +78,9 @@ export function PatientListPage() {
         {patients.length === 0 ? (
           <Box className="px-6 py-12 text-center">
             <Icon name="users" size={48} className="mx-auto mb-3 text-muted" />
-            <TextComponent className="text-[14px] font-bold text-ink mb-1">No patients</TextComponent>
+            <TextComponent className="text-[14px] font-bold text-ink mb-1">
+              No patients
+            </TextComponent>
             <TextComponent className="text-[13px] text-muted max-w-[340px] mx-auto">
               {filters.q || filters.status || filters.due !== undefined
                 ? "No patients match this filter. Try adjusting your search."
