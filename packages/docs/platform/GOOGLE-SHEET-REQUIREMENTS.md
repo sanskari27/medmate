@@ -8,6 +8,27 @@ The tracker of record for MedMate requirements and development status.
 > stories are completed. The payload in §1 below is the source used to write it,
 > and is kept here so the sheet can be rebuilt or audited.
 
+## Status of the sheet
+
+**Live tracker:** https://docs.google.com/spreadsheets/d/19Ngyy5OJtdjqLI7Z0hP-LBRZQxF8cpBBMpwcsX6XGgM/edit
+
+It holds all 77 stories with the status of each one. The payload that fills it
+lives in the repository at `packages/docs/doctor/stories.tsv`, so the sheet and
+the repository can never disagree by accident.
+
+| Status | Meaning |
+| --- | --- |
+| **Completed** | Built and verified in this repository |
+| **Dev in Progress** | Real work exists in the live Netlify demo, not yet ported here |
+| **Not Started** | Nothing built anywhere yet |
+
+At the last update: **7 Completed, 15 Dev in Progress, 55 Not Started.**
+
+> **The dropdown.** The Status column holds only the three allowed values. If
+> column C does not yet show a dropdown, add it in four clicks: select column
+> C, then **Data ▸ Data validation ▸ List of items**, with
+> `Not Started, Dev in Progress, Completed`.
+
 **Sheet structure — 3 columns, nothing more:**
 
 | Column | Contents |

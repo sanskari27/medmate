@@ -36,9 +36,13 @@ A feature only becomes **Completed** when it is running and verified in the
 deployed environment — the same rule the previous JSON tracker enforced
 automatically, now carried by the status dropdown and the sheet's protection.
 
-> **Status snapshot.** The table in §2 is a point-in-time snapshot taken on
-> 17 Nov 2026. The Sheet is the live tracker; when the two disagree, the Sheet
-> wins and this table is regenerated from it.
+> **Status.** The Sheet is the live tracker and `packages/docs/doctor/stories.tsv`
+> is the payload that fills it, so the two cannot drift. The table in §2 is the
+> repository copy.
+>
+> - **Completed** — built and verified in this repository.
+> - **Dev in Progress** — real work exists in the live Netlify demo, not yet ported here.
+> - **Not Started** — nothing built anywhere yet.
 
 
 ---
