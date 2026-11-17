@@ -121,6 +121,25 @@ class ClinicPatientsControllerTest {
     }
 
     @Test
+    void searchMatchesPhoneNumber() throws Exception {
+        String token = token(SECRET, OWNER, CLINIC_ID, "owner", Instant.now());
+        mvc.perform(get("/clinic/patients").param("q", "9845099505").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].name").value("Reyansh Sharma"));
+    }
+
+    @Test
+    void sortLastSeenPutsNeverSeenPatientsLast() throws Exception {
+        String token = token(SECRET, OWNER, CLINIC_ID, "owner", Instant.now());
+        mvc.perform(get("/clinic/patients").param("sort", "last-seen").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].name").value("Ravi Kumar"))
+                .andExpect(jsonPath("$.items[1].name").value("Lakshmi Narayan"))
+                .andExpect(jsonPath("$.items[2].lastSeen").doesNotExist());
+    }
+
+    @Test
     void pagePastEndReturnsEmptyItemsWithRealTotal() throws Exception {
         String token = token(SECRET, OWNER, CLINIC_ID, "owner", Instant.now());
         mvc.perform(get("/clinic/patients").param("page", "999").header("Authorization", "Bearer " + token))

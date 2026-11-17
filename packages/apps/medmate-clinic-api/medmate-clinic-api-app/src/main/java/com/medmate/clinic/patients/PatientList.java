@@ -31,6 +31,11 @@ public final class PatientList {
     private final JdbcTemplate jdbc;
     private final UUID clinicId;
 
+    /**
+     * Builds queries against the routed clinic's datasource. The clinic id is the tenant boundary
+     * (the datasource itself), not a column on patient rows, so it is never used to scope a query
+     * to another clinic's database.
+     */
     public PatientList(DataSource dataSource, UUID clinicId) {
         this.jdbc = new JdbcTemplate(Objects.requireNonNull(dataSource, "dataSource"));
         this.clinicId = Objects.requireNonNull(clinicId, "clinicId");
@@ -42,7 +47,8 @@ public final class PatientList {
         List<Object> params = new ArrayList<>();
         List<String> conditions = new ArrayList<>();
         if (q != null && !q.isBlank()) {
-            conditions.add("name ILIKE ?");
+            conditions.add("(name ILIKE ? OR phone ILIKE ?)");
+            params.add("%" + q + "%");
             params.add("%" + q + "%");
         }
         if (status != null && !status.isBlank()) {
@@ -58,7 +64,9 @@ public final class PatientList {
         }
         String orderBy;
         if ("name".equals(sort)) {
-            orderBy = "order by split_part(name, ' ', 2), split_part(name, ' ', 1), id";
+            orderBy = "order by trim(split_part(name, ' ', 2)), trim(split_part(name, ' ', 1)), id";
+        } else if ("last-seen".equals(sort)) {
+            orderBy = "order by last_seen nulls last, id";
         } else {
             orderBy = "order by id";
         }

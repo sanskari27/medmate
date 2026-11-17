@@ -103,7 +103,7 @@ public class PatientController {
         if (phone == null || phone.isBlank()) {
             return phone;
         }
-        int reveal = 4;
+        int reveal = 5;
         StringBuilder masked = new StringBuilder();
         for (int i = 0; i < phone.length() - reveal; i++) {
             masked.append('\u2022');

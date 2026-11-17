@@ -105,7 +105,7 @@ class PatientRedactionTest {
         String token = token(SECRET, DOCTOR, CLINIC_ID, "doctor", Instant.now());
         mvc.perform(get("/clinic/patients").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].phone").value("•••••• 9505"));
+                .andExpect(jsonPath("$.items[0].phone").value("••••• 99505"));
     }
 
     private DataSource dataSource() {
