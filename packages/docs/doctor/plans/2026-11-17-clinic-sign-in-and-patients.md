@@ -25,8 +25,11 @@
 - A feature imports another feature only through that feature's `index.ts`. Shared UI does not import features. Presentational components do not call `fetch`.
 - `eslint-plugin-boundaries` stops a feature importing another feature, and stops shared UI importing features.
 - Error details are exact strings. `Session was not accepted`, `This action is not allowed.`, `Clinic records are unavailable`.
-- The demo clinic phone numbers are `9845012345`, `9986041277`, `9741022981`, `9886244120`, `9900122331`, `9880433120`, and the new receptionist `9876500011`.
+- The demo clinic id is `11111111-1111-1111-1111-111111111111`. The second clinic used by the isolation test is `22222222-2222-2222-2222-222222222222`. Both ids are fixed here because the identity seed and the clinic registry seed must agree on them.
+- The demo clinic accounts are: Dr. Ananya Rao `9845012345` OWNER, Dr. Vikram Shenoy `9986041277` DOCTOR, Dr. Meghana Iyer `9741022981` DOCTOR, Mary Joseph `9886244120` NURSE, Priya Shetty `9900122331` FRONT_DESK, Kiran Bhat `9880433120` ADMIN, and a receptionist `9876500011` FRONT_DESK with no grants yet.
 - The JWT secret is shared through the SSM parameter `/medmate-repo/common/jwt_secret`. Locally both services use `local-dev-jwt-secret-local-dev-jwt-32`.
+- The next free Flyway version in the reactor is `V28`. The identity module's own migrations are numbered separately, but the reactor shares one history, so the clinic migration is `V28__clinic.sql`.
+- `AccountPrincipal` is a record with eighteen construction sites: one in `AccountDirectory` and seventeen in test files across other modules. Adding two fields means updating every one of them.
 
 ## Review Focus
 
