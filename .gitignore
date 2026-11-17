@@ -17,3 +17,5 @@ __pycache__/
 
 *.env*
 dummy
+# superpowers workspace (ledger, briefs, review packages)
+.superpowers/
