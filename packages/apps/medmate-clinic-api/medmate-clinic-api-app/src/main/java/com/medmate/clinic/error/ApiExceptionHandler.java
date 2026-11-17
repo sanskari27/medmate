@@ -1,5 +1,6 @@
 package com.medmate.clinic.error;
 
+import com.medmate.clinic.routing.ClinicUnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,15 @@ public class ApiExceptionHandler {
     ProblemDetail problem(ApiProblem exception, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.status(), exception.getMessage());
         problem.setTitle(exception.title());
+        problem.setProperty("requestId", ProblemResponses.requestId(request));
+        return problem;
+    }
+
+    @ExceptionHandler(ClinicUnavailableException.class)
+    ProblemDetail clinicUnavailable(ClinicUnavailableException exception, HttpServletRequest request) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+        problem.setTitle("Clinic unavailable");
         problem.setProperty("requestId", ProblemResponses.requestId(request));
         return problem;
     }

@@ -3,7 +3,9 @@ package com.medmate.clinic.routing;
 import com.medmate.clinic.security.ClinicPrincipal;
 import java.util.Objects;
 import javax.sql.DataSource;
+import org.springframework.stereotype.Component;
 
+@Component
 public final class ClinicRouting {
 
     private final ClinicRegistry registry;

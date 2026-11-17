@@ -1,0 +1,26 @@
+meta {
+  name: Get clinic profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/clinic/me
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.clinicId: isString
+  res.body.clinicName: isString
+  res.body.role: isString
+}
+
+docs {
+  Returns the clinic of the session's token. Run identity/auth/Verify clinic OTP first so the collection script attaches the session token.
+}

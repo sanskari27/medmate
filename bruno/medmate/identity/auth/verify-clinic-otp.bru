@@ -1,0 +1,38 @@
+meta {
+  name: Verify clinic OTP
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "accountType": "clinic",
+    "purpose": "login",
+    "code": "{{otpCode}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isString
+  res.body.refreshToken: isString
+}
+
+docs {
+  Sends the otpCode stored by Send clinic OTP. Run Send clinic OTP first, with `make sms-mock` running.
+  The session token carries the clinic id and clinic role of the signing account.
+  The collection script stores the access token for the clinic requests.
+}

@@ -1,0 +1,25 @@
+meta {
+  name: List clinic patients
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/clinic/patients
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.items: isArray
+}
+
+docs {
+  Lists the patients of the session's clinic, with grant-based redaction.
+  Requires a clinic session with the clinic:patients:read grant; clinical fields appear only with clinic:patients:read_clinical.
+}
