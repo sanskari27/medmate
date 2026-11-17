@@ -14,7 +14,7 @@ WORKDIR /app
 COPY --from=build /src/medmate-clinic-api-app/target/medmate-clinic-api.jar medmate-clinic-api.jar
 USER app
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70"
-EXPOSE 8090
+EXPOSE 8091
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:8090/actuator/health || exit 1
+  CMD curl -fsS http://127.0.0.1:8091/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "/app/medmate-clinic-api.jar"]

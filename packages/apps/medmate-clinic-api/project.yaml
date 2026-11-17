@@ -10,7 +10,7 @@ routing:
       hosts:
         - clinic-api.nammamedmate.com
 runtime:
-  port: 8090
+  port: 8091
   healthPath: /actuator/health
   memory: 768m
   env:
