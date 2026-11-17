@@ -28,6 +28,7 @@
 - The demo clinic id is `11111111-1111-1111-1111-111111111111`. The second clinic used by the isolation test is `22222222-2222-2222-2222-222222222222`. Both ids are fixed here because the identity seed and the clinic registry seed must agree on them.
 - The demo clinic accounts are: Dr. Ananya Rao `9845012345` OWNER, Dr. Vikram Shenoy `9986041277` DOCTOR, Dr. Meghana Iyer `9741022981` DOCTOR, Mary Joseph `9886244120` NURSE, Priya Shetty `9900122331` FRONT_DESK, Kiran Bhat `9880433120` ADMIN, and a receptionist `9876500011` FRONT_DESK with no grants yet.
 - The JWT secret is shared through the SSM parameter `/medmate-repo/common/jwt_secret`. Locally both services use `local-dev-jwt-secret-local-dev-jwt-32`.
+- The demo accounts are seeded for local development only. A production database must not contain enabled demo accounts.
 - The next free Flyway version in the reactor is `V28`. The identity module's own migrations are numbered separately, but the reactor shares one history, so the clinic migration is `V28__clinic.sql`.
 - `AccountPrincipal` is a record with eighteen construction sites: one in `AccountDirectory` and seventeen in test files across other modules. Adding two fields means updating every one of them.
 
@@ -77,7 +78,7 @@ Expected: FAIL to compile, `cannot find symbol ClinicRole`.
 
 - [ ] **Step 3: Implement `ClinicRole`, `ClinicPermissions`, the principal fields, the claims and the migration**
 
-`AccountType` gains `CLINIC`. `ClinicRole` is an enum with the five roles. `ClinicPermissions.KEYS` holds the four grant keys. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`, null for every other account type. `AccessTokens.issue` takes the tenant and writes a `clinicId` claim and a `clinicRole` claim only when the tenant is not null; `parseClaims` reads them back. `V28__clinic.sql` adds nullable `clinic_id` and `clinic_role` to the account table and seeds the six demo accounts of the demo clinic, with their phones and roles. `AccountDirectory` fills the two clinic fields on the principal, `AuthController` accepts `accountType: "clinic"`, and `SessionIssuer` passes the tenant into the token.
+`AccountType` gains `CLINIC`. `ClinicRole` is an enum with the five roles. `ClinicPermissions.KEYS` holds the four grant keys. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`, null for every other account type. `AccessTokens.issue` takes the tenant and writes a `clinicId` claim and a `clinicRole` claim only when the tenant is not null. The refresh route re-issues the access token from the account row, which already carries the tenant, so no previous token is parsed. `V28__clinic.sql` adds nullable `clinic_id` and `clinic_role` to the account table and seeds the seven demo accounts of the demo clinic, with their phones and roles. `AccountDirectory` fills the two clinic fields on the principal, `AuthController` accepts `accountType: "clinic"`, and `SessionIssuer` passes the tenant into the token.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
