@@ -1,2 +1,2 @@
-export type { ClinicMe, ClinicPatient, Paginated } from "./clinic.types";
-export type { Session, SignStep } from "./auth.types";
+export type { ClinicGrant, ClinicMe, ClinicPatient, ClinicRole, Paginated, PatientListFilters, PatientSort, PatientStatus } from "./clinic.types";
+export type { ProblemDetail, Session, SignStep } from "./auth.types";

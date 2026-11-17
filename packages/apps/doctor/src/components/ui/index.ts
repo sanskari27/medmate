@@ -1,6 +1,9 @@
 export { Badge } from "./badge";
+export { Box } from "./box";
 export { Button } from "./button";
 export { Card } from "./card";
 export { Chip } from "./chip";
+export { Heading } from "./heading";
 export { Input } from "./input";
 export { Skeleton } from "./skeleton";
+export { Text } from "./text";
