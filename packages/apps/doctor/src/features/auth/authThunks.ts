@@ -2,7 +2,13 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "@/services/api/api";
 import { authReducer } from "./authSlice";
 import { sessionStarted, sessionCleared, stepChanged } from "./authSlice";
-import type { OtpSendRequest, OtpVerifyRequest, PinSetRequest, SignOutRequest } from "@/services/api/api";
+import type {
+  OtpSendRequest,
+  OtpVerifyRequest,
+  PinSetRequest,
+  PinSignInRequest,
+  SignOutRequest,
+} from "@/services/api/api";
 import type { RootState } from "@/app/store";
 
 export const sendOtp = createAsyncThunk(
@@ -18,7 +24,16 @@ export const verifyOtp = createAsyncThunk(
   async (arg: OtpVerifyRequest, { dispatch }) => {
     const session = await dispatch(api.endpoints.verifyOtp.initiate(arg)).unwrap();
     dispatch(sessionStarted({ session, pinReset: false }));
-    dispatch(stepChanged("pin"));
+    dispatch(stepChanged(session.account?.pinSetupRequired ? "pin-setup" : "pin"));
+    return session;
+  },
+);
+
+export const signInWithPin = createAsyncThunk(
+  "auth/signInWithPin",
+  async (arg: PinSignInRequest, { dispatch }) => {
+    const session = await dispatch(api.endpoints.pin.initiate(arg)).unwrap();
+    dispatch(sessionStarted({ session, pinReset: false }));
     return session;
   },
 );
@@ -32,7 +47,6 @@ export const setPin = createAsyncThunk(
     if (session) {
       dispatch(sessionStarted({ session, pinReset: false }));
     }
-    dispatch(stepChanged("pin"));
   },
 );
 

@@ -3,10 +3,15 @@ import { apiClient } from "@/services/api/apiClient";
 import { authEndpoints, clinicEndpoints } from "@/services/api/apiEndpoints";
 import type { ClinicMe, ClinicPatient, Paginated, Session } from "@/types";
 
-export type OtpSendRequest = { phone: string };
-export type OtpVerifyRequest = { phone: string; code: string };
+export type OtpSendRequest = { phone: string; accountType?: string };
+export type OtpVerifyRequest = { phone: string; code: string; accountType?: string };
 export type PinSetRequest = { pin: string };
+export type PinSignInRequest = { phone: string; pin: string; accountType?: string };
 export type SignOutRequest = { refreshToken?: string };
+
+export type OtpVerifyResponse = Session & {
+  account?: { pinSetupRequired: boolean; phone?: string; clinicId?: string; clinicRole?: string };
+};
 
 export type ListPatientsArgs = {
   page?: number;
@@ -25,8 +30,11 @@ export const api = createApi({
     sendOtp: build.mutation<unknown, OtpSendRequest>({
       query: (body) => ({ url: authEndpoints.sendOtp, method: "POST", body }),
     }),
-    verifyOtp: build.mutation<Session, OtpVerifyRequest>({
+    verifyOtp: build.mutation<OtpVerifyResponse, OtpVerifyRequest>({
       query: (body) => ({ url: authEndpoints.verifyOtp, method: "POST", body }),
+    }),
+    pin: build.mutation<OtpVerifyResponse, PinSignInRequest>({
+      query: (body) => ({ url: authEndpoints.pin, method: "POST", body }),
     }),
     setPin: build.mutation<unknown, PinSetRequest>({
       query: (body) => ({ url: authEndpoints.setPin, method: "POST", body }),

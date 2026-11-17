@@ -8,16 +8,26 @@ export const loginFieldsSchema = z.object({
 
 export type LoginFields = z.infer<typeof loginFieldsSchema>;
 
-export const phoneSchema = z.string().regex(/^\d{10}$/, "Enter a 10-digit mobile number");
+const phoneInnerSchema = z.string().regex(/^\d{10}$/, "Enter a 10-digit mobile number");
+const otpInnerSchema = z.string().regex(/^\d{6}$/, "Enter the 6-digit OTP");
+const pinInnerSchema = z.string().regex(/^\d{4}$/, "Enter the 4-digit PIN");
 
-export const otpSchema = z.string().regex(/^\d{6}$/, "Enter the 6-digit OTP");
+export const phoneSchema = z.object({
+  phone: phoneInnerSchema,
+});
 
-export const pinSchema = z.string().regex(/^\d{4}$/, "Enter the 4-digit PIN");
+export const otpSchema = z.object({
+  otp: otpInnerSchema,
+});
+
+export const pinSchema = z.object({
+  pin: pinInnerSchema,
+});
 
 export const pinSetupSchema = z
   .object({
-    pin: pinSchema,
-    again: pinSchema,
+    pin: pinInnerSchema,
+    again: pinInnerSchema,
   })
   .refine((value) => value.pin === value.again, {
     message: "PINs do not match",
