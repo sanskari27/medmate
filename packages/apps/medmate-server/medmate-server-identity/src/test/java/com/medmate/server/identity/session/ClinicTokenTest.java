@@ -22,9 +22,10 @@ class ClinicTokenTest {
         String token = tokens.issue(accountId, CLINIC_ID, "owner", NOW);
 
         assertThat(tokens.parse(token, NOW)).isEqualTo(accountId);
-        AccessTokens.Tenant tenant = tokens.parseClaims(token, NOW);
-        assertThat(tenant.clinicId()).isEqualTo(CLINIC_ID);
-        assertThat(tenant.clinicRole()).isEqualTo("owner");
+        assertThat(SignedJWT.parse(token).getJWTClaimsSet().getClaim("clinicId").toString())
+                .isEqualTo(CLINIC_ID.toString());
+        assertThat(SignedJWT.parse(token).getJWTClaimsSet().getClaim("clinicRole"))
+                .isEqualTo("owner");
     }
 
     @Test
@@ -38,9 +39,6 @@ class ClinicTokenTest {
                 .isNull();
         assertThat(SignedJWT.parse(token).getJWTClaimsSet().getClaim("clinicRole"))
                 .isNull();
-        AccessTokens.Tenant tenant = tokens.parseClaims(token, NOW);
-        assertThat(tenant.clinicId()).isNull();
-        assertThat(tenant.clinicRole()).isNull();
     }
 
     @Test
@@ -50,6 +48,5 @@ class ClinicTokenTest {
         AccessTokens other = new AccessTokens("another-jwt-secret-another-jwt-secret", 900);
 
         assertThat(other.parse(token, NOW)).isNull();
-        assertThat(other.parseClaims(token, NOW)).isNull();
     }
 }

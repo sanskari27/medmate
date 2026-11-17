@@ -1,8 +1,7 @@
 package com.medmate.server.identity.web;
 
 import com.medmate.server.identity.access.AccountPrincipal;
-import com.medmate.server.identity.access.AccountType;
-import com.medmate.server.identity.access.PharmacyRole;
+import com.medmate.server.identity.access.PinRules;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.crypto.Secrets;
 import com.medmate.server.identity.session.AccessTokens;
@@ -72,10 +71,12 @@ public class SessionIssuer {
             if (principal.verificationStatus() == VerificationStatus.REJECTED && principal.rejectionComment() != null) {
                 rejection = new RejectionResponse(principal.rejectionStage(), principal.rejectionComment());
             }
-            boolean pinSetup = principal.accountType() == AccountType.PHARMACY
-                    && principal.pharmacyRole() == PharmacyRole.OWNER
-                    && principal.verificationStatus() == VerificationStatus.APPROVED
-                    && !principal.pinSet();
+            boolean pinSetup = PinRules.setupRequired(
+                    principal.accountType(),
+                    principal.disabled(),
+                    principal.pinSet(),
+                    principal.pharmacyRole(),
+                    principal.verificationStatus());
             return new AccountResponse(
                     principal.id(),
                     principal.accountType().wire(),

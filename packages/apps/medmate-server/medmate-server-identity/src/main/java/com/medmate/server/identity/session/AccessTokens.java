@@ -46,38 +46,18 @@ public final class AccessTokens {
     }
 
     public UUID parse(String token, Instant now) {
-        Verified verified = verify(token, now);
-        return verified == null ? null : verified.accountId();
-    }
-
-    public Tenant parseClaims(String token, Instant now) {
-        Verified verified = verify(token, now);
-        return verified == null ? null : new Tenant(verified.clinicId(), verified.clinicRole());
-    }
-
-    private Verified verify(String token, Instant now) {
         try {
             SignedJWT jwt = SignedJWT.parse(token);
             if (!jwt.verify(new MACVerifier(secret))) {
                 return null;
             }
-            JWTClaimsSet claims = jwt.getJWTClaimsSet();
-            Date expiration = claims.getExpirationTime();
+            Date expiration = jwt.getJWTClaimsSet().getExpirationTime();
             if (expiration == null || !expiration.toInstant().isAfter(now)) {
                 return null;
             }
-            Object rawClinicId = claims.getClaim("clinicId");
-            Object rawClinicRole = claims.getClaim("clinicRole");
-            return new Verified(
-                    UUID.fromString(claims.getSubject()),
-                    rawClinicId == null ? null : UUID.fromString(String.valueOf(rawClinicId)),
-                    rawClinicRole == null ? null : String.valueOf(rawClinicRole));
+            return UUID.fromString(jwt.getJWTClaimsSet().getSubject());
         } catch (Exception exception) {
             return null;
         }
     }
-
-    public record Tenant(UUID clinicId, String clinicRole) {}
-
-    private record Verified(UUID accountId, UUID clinicId, String clinicRole) {}
 }

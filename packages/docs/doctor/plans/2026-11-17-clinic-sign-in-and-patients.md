@@ -60,7 +60,7 @@ Five failure modes the spec implies but no task's own assertions would otherwise
 
 **Interfaces:**
 - Consumes: nothing from later tasks.
-- Produces: `ClinicRole` enum with `OWNER, DOCTOR, NURSE, FRONT_DESK, ADMIN` and `wire()` returning the lowercase name. `ClinicPermissions.KEYS` a `List<String>` of `clinic:patients:read`, `clinic:patients:read_clinical`, `clinic:billing:read`, `clinic:staff:read`, plus `ClinicPermissions.valid(String)`. `AccessTokens.issue(UUID accountId, UUID clinicId, String clinicRole, Instant now)` returning a signed HS256 JWT that carries `clinicId` and `clinicRole` only when `clinicId` is not null. `AccessTokens.parse(String token, Instant now)` unchanged, plus `AccessTokens.parseClaims(String token, Instant now)` returning the two tenant values, used when the identity module re-issues a token for a refreshed session. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`.
+- Produces: `ClinicRole` enum with `OWNER, DOCTOR, NURSE, FRONT_DESK, ADMIN` and `wire()` returning the lowercase name. `ClinicPermissions.KEYS` a `List<String>` of `clinic:patients:read`, `clinic:patients:read_clinical`, `clinic:billing:read`, `clinic:staff:read`, plus `ClinicPermissions.valid(String)`. `AccessTokens.issue(UUID accountId, UUID clinicId, String clinicRole, Instant now)` returning a signed HS256 JWT that carries `clinicId` and `clinicRole` only when `clinicId` is not null. `AccessTokens.parse(String token, Instant now)` unchanged. The refresh route re-issues the access token from the account row, which already carries the tenant, so it does not parse the previous token's claims. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`.
 
 - [ ] **Step 1: Write the failing test**
 

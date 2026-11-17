@@ -4,6 +4,7 @@ import com.medmate.server.identity.access.AccountPrincipal;
 import com.medmate.server.identity.access.AccountType;
 import com.medmate.server.identity.access.BlockRules;
 import com.medmate.server.identity.access.PharmacyRole;
+import com.medmate.server.identity.access.PinRules;
 import com.medmate.server.identity.access.PlatformAccounts;
 import com.medmate.server.identity.access.VerificationStatus;
 import com.medmate.server.identity.config.MedmateIdentityProperties;
@@ -123,7 +124,7 @@ public class AuthService {
         }
         String phone = phone(rawPhone);
         AccountType type = type(rawType);
-        if (type != AccountType.PHARMACY) {
+        if (type != AccountType.PHARMACY && type != AccountType.CLINIC) {
             throw unauthorized("PIN was not accepted");
         }
         IdentityStore.AccountRow account = accounts.findAccount(phone, type).orElse(null);
@@ -144,14 +145,21 @@ public class AuthService {
         if (!Pins.valid(pin)) {
             throw bad("PIN must be 4 digits");
         }
-        if (principal.accountType() != AccountType.PHARMACY
-                || principal.pharmacyRole() != PharmacyRole.OWNER
-                || principal.verificationStatus() != VerificationStatus.APPROVED
-                || principal.disabled()) {
-            throw forbidden("PIN can be set after the pharmacy is approved");
+        if (!PinRules.setupAllowed(
+                principal.accountType(),
+                principal.disabled(),
+                principal.pharmacyRole(),
+                principal.verificationStatus())) {
+            throw forbidden(setupMessage(principal));
         }
         accounts.savePin(principal.id(), pins.encode(pin), clock.instant());
         return SessionIssuer.AccountResponse.from(directory.load(principal.id()));
+    }
+
+    private static String setupMessage(AccountPrincipal principal) {
+        return principal.accountType() == AccountType.CLINIC
+                ? "PIN setup is not available"
+                : "PIN can be set after the pharmacy is approved";
     }
 
     public SessionIssuer.SessionResponse refresh(String refreshToken) {
@@ -300,19 +308,19 @@ public class AuthService {
     }
 
     private boolean pinLogin(IdentityStore.AccountRow account) {
-        if (account == null || account.type() != AccountType.PHARMACY) {
+        if (account == null) {
             return false;
         }
         AccountPrincipal principal = directory.load(account);
-        if (principal.disabled()
-                && !BlockRules.restrictedOwnerSession(
-                        principal.accountType(), principal.pharmacyRole(), principal.disabled())) {
+        if (principal == null) {
             return false;
         }
-        if (principal.verificationStatus() != VerificationStatus.APPROVED || !principal.pinSet()) {
-            return false;
-        }
-        return principal.pharmacyRole() == PharmacyRole.OWNER || principal.pharmacyRole() == PharmacyRole.STAFF;
+        return PinRules.signIn(
+                principal.accountType(),
+                principal.disabled(),
+                principal.pinSet(),
+                principal.pharmacyRole(),
+                principal.verificationStatus());
     }
 
     private boolean pinResetAllowed(IdentityStore.AccountRow account) {
