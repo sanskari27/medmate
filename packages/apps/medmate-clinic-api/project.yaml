@@ -1,0 +1,20 @@
+name: medmate-clinic-api
+kind: java
+quality:
+  compile: true
+  test: true
+  verify: true
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - clinic-api.nammamedmate.com
+runtime:
+  port: 8090
+  healthPath: /actuator/health
+  memory: 768m
+  env:
+    SPRING_PROFILES_ACTIVE: prod
+resources:
+  database:
+    enabled: true

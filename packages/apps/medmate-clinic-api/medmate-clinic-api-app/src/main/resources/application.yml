@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: medmate-clinic-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/medmate}
+    username: ${SPRING_DATASOURCE_USERNAME:medmate}
+    password: ${SPRING_DATASOURCE_PASSWORD:medmate}
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+medmate:
+  jwt:
+    secret: ${MEDMATE_JWT_SECRET:01234567890123456789012345678901}
