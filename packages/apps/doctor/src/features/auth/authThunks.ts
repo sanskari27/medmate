@@ -14,8 +14,10 @@ import type { RootState } from "@/app/store";
 export const sendOtp = createAsyncThunk(
   "auth/sendOtp",
   async (arg: OtpSendRequest, { dispatch }) => {
-    await dispatch(api.endpoints.sendOtp.initiate(arg)).unwrap();
-    dispatch(stepChanged("otp"));
+    const sent = await dispatch(api.endpoints.sendOtp.initiate(arg)).unwrap();
+    // An account that already has a PIN signs in with that PIN, and no code
+    // is sent to it.
+    dispatch(stepChanged(sent.mode === "pin" ? "pin" : "otp"));
   },
 );
 
@@ -41,11 +43,14 @@ export const signInWithPin = createAsyncThunk(
 export const setPin = createAsyncThunk(
   "auth/setPin",
   async (arg: PinSetRequest, { dispatch, getState }) => {
-    await dispatch(api.endpoints.setPin.initiate(arg)).unwrap();
+    const account = await dispatch(api.endpoints.setPin.initiate(arg)).unwrap();
     const state = getState() as RootState;
     const session = state.auth.session;
     if (session) {
-      dispatch(sessionStarted({ session, pinReset: false }));
+      // The account the service returns says the PIN is set now, so the
+      // portal stops asking for it.
+      dispatch(sessionStarted({ session: { ...session, account }, pinReset: false }));
+      dispatch(stepChanged("pin"));
     }
   },
 );

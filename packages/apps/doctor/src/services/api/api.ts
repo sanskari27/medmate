@@ -1,7 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api/apiClient";
 import { authEndpoints, clinicEndpoints } from "@/services/api/apiEndpoints";
-import type { ClinicMe, ClinicPatient, Paginated, Session } from "@/types";
+import type { ClinicAccount, ClinicMe, ClinicPatient, Paginated, Session } from "@/types";
 
 export type OtpPurpose = "login" | "pin_reset" | "signup";
 
@@ -16,8 +16,13 @@ export type PinSetRequest = { pin: string };
 export type PinSignInRequest = { phone: string; pin: string; accountType?: string };
 export type SignOutRequest = { refreshToken?: string };
 
+export type OtpSendResponse = {
+  /** "otp" when a code was sent, "pin" when the account signs in with its PIN. */
+  mode: "otp" | "pin";
+};
+
 export type OtpVerifyResponse = Session & {
-  account?: { pinSetupRequired: boolean; phone?: string; clinicId?: string; clinicRole?: string };
+  account?: ClinicAccount;
 };
 
 export type ListPatientsArgs = {
@@ -34,7 +39,7 @@ export const api = createApi({
   baseQuery: apiClient,
   tagTypes: ["Me", "Patients"],
   endpoints: (build) => ({
-    sendOtp: build.mutation<unknown, OtpSendRequest>({
+    sendOtp: build.mutation<OtpSendResponse, OtpSendRequest>({
       query: (body) => ({
         url: authEndpoints.sendOtp,
         method: "POST",
@@ -51,7 +56,7 @@ export const api = createApi({
     pin: build.mutation<OtpVerifyResponse, PinSignInRequest>({
       query: (body) => ({ url: authEndpoints.pin, method: "POST", body }),
     }),
-    setPin: build.mutation<unknown, PinSetRequest>({
+    setPin: build.mutation<ClinicAccount, PinSetRequest>({
       query: (body) => ({ url: authEndpoints.setPin, method: "POST", body }),
     }),
     signOut: build.mutation<unknown, SignOutRequest>({

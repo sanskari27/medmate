@@ -9,4 +9,4 @@ export type {
   PatientSort,
   PatientStatus,
 } from "./clinic.types";
-export type { ProblemDetail, Session, SignStep } from "./auth.types";
+export type { ProblemDetail, ClinicAccount, Session, SignStep } from "./auth.types";

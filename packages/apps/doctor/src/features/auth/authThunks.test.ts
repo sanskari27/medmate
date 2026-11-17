@@ -20,11 +20,21 @@ describe("auth thunks", () => {
   it("sendOtp advances the step to otp", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => json({})),
+      vi.fn(async () => json({ mode: "otp" })),
     );
     const store = createAppStore();
     await store.dispatch(sendOtp({ phone: "123" }));
     expect(store.getState().auth.step).toBe("otp");
+  });
+
+  it("sendOtp moves to the pin step when the account signs in with its PIN", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ mode: "pin" })),
+    );
+    const store = createAppStore();
+    await store.dispatch(sendOtp({ phone: "123" }));
+    expect(store.getState().auth.step).toBe("pin");
   });
 
   it("successful verifyOtp stores the session", async () => {
@@ -40,12 +50,15 @@ describe("auth thunks", () => {
   it("successful PIN sign-in stores the session", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => json({})),
+      vi.fn(async () => json({ id: "account-1", accountType: "clinic", pinSetupRequired: false })),
     );
     const store = createAppStore();
     store.dispatch({ type: "auth/sessionStarted", payload: { session, pinReset: false } });
     await store.dispatch(setPin({ pin: "1234" }));
-    expect(store.getState().auth.session).toEqual(session);
+    expect(store.getState().auth.session).toEqual({
+      ...session,
+      account: { id: "account-1", accountType: "clinic", pinSetupRequired: false },
+    });
   });
 
   it("signOut clears the session and returns step to phone", async () => {

@@ -96,4 +96,18 @@ describe("AppRouter", () => {
     renderAt("/patients");
     await waitFor(() => expect(screen.getByText("Anjali Menon")).toBeInTheDocument());
   });
+
+  it("sends an account that has not set a PIN to the PIN setup screen", async () => {
+    writeSession(
+      {
+        ...session,
+        account: { id: "account-1", accountType: "clinic", pinSetupRequired: true },
+      },
+      false,
+      "pin-setup",
+    );
+    renderAt("/");
+    await waitFor(() => expect(screen.getByText(/create your login pin/i)).toBeInTheDocument());
+    expect(screen.queryByText(/your patients/i)).not.toBeInTheDocument();
+  });
 });
