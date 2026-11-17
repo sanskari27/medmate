@@ -1,0 +1,16 @@
+name: doctor
+kind: react
+quality:
+  typecheck: true
+  lint: true
+  format: true
+  test: true
+routing:
+  records:
+    - zone: nammamedmate.com
+      hosts:
+        - doctor.nammamedmate.com
+build:
+  env:
+    VITE_SITE_URL: https://doctor.nammamedmate.com
+    VITE_API_BASE_URL: https://api.nammamedmate.com

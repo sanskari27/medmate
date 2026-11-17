@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #1b3d29;
+  --color-green: #2f7d52;
+  --color-green-700: #256b46;
+  --color-gold: #d9a648;
+  --color-gold-ink: #855b0c;
+  --color-gold-50: #fdf8ea;
+  --color-gold-100: #faedc9;
+  --color-mint: #8fd4a8;
+  --color-mint-300: #bde5cb;
+  --color-mint-200: #d9f0e1;
+  --color-mint-100: #e9f6ee;
+  --color-mint-50: #f4fbf6;
+  --color-ink: #14201a;
+  --color-ink-2: #3b4842;
+  --color-muted: #65726b;
+  --color-faint: #9aa59f;
+  --color-line: #e7ece9;
+  --color-line-2: #d5ddd8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f8f6;
+  --color-surface-3: #edf2ef;
+  --color-red: #c2392d;
+  --color-red-bg: #fcece9;
+  --color-blue: #2a5db0;
+  --color-blue-bg: #eaf1fb;
+
+  --radius-card: 18px;
+  --radius-16: 16px;
+  --radius-14: 14px;
+  --radius-control: 12px;
+  --radius-pill: 999px;
+
+  --shadow-2: 0 4px 14px #14201a14;
+  --shadow-3: 0 12px 32px #14201a29;
+
+  --font-sans: Outfit, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.i {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
