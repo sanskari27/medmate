@@ -25,4 +25,9 @@ no secrets, and `VITE_API_BASE_URL` points it at the clinic API.
 
 Locally: `make doctor-app` serves it on http://127.0.0.1:3206, proxying
 `/auth` to medmate-server on :8080, `/sms-mock` to :8090 and `/clinic-api` to
-the clinic API on :8091.
+the clinic API on :8091. A local run sends the same one-time code every time,
+`12345`, so a developer does not have to read it out of the SMS mock; the code
+is shown on the code screen as well. The clinic's demo accounts are
+`9845012345` (owner), `9886244120` (nurse), `9900122331` (front desk),
+`9986041277` (doctor) and `9876500011` (receptionist, no grants). An account
+that has no PIN yet is asked to choose one the first time it signs in.

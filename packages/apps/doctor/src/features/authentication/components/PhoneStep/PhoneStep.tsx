@@ -31,9 +31,7 @@ export function PhoneStep({ onPhone }: PhoneStepProps) {
       className="grid w-full max-w-[440px] place-items-center gap-6"
     >
       <h2 className="text-[22px] font-bold text-ink tracking-[-0.02em]">Log in to continue</h2>
-      <p className="mt-1 text-[13.5px] text-muted">
-        We will send a 6-digit code to your mobile number.
-      </p>
+      <p className="mt-1 text-[13.5px] text-muted">We will send a code to your mobile number.</p>
       <div className="w-full flex flex-col gap-2">
         <label htmlFor="phone" className="text-[13px] text-ink-2">
           Mobile number

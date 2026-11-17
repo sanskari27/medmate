@@ -76,7 +76,7 @@ describe("DoctorAuth", () => {
 
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
     expect(fetch).toHaveBeenCalled();
-    expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument();
+    expect(queries.getByLabelText("OTP code")).toBeInTheDocument();
   });
 
   it("asks the identity service for a sign-in code", async () => {
@@ -114,7 +114,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
+    fireEvent.change(queries.getByLabelText("OTP code"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -141,7 +141,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
+    fireEvent.change(queries.getByLabelText("OTP code"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -168,7 +168,7 @@ describe("DoctorAuth", () => {
     fireEvent.submit(container.querySelector("form")!);
     await waitFor(() => expect(store.getState().auth.step).toBe("otp"));
 
-    fireEvent.change(queries.getByLabelText("6-digit OTP"), {
+    fireEvent.change(queries.getByLabelText("OTP code"), {
       target: { value: "000000" },
     });
     fireEvent.submit(container.querySelector("form")!);
@@ -196,7 +196,7 @@ describe("DoctorAuth", () => {
       target: { value: "9845012345" },
     });
     fireEvent.submit(container.querySelector("form")!);
-    await waitFor(() => expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument());
+    await waitFor(() => expect(queries.getByLabelText("OTP code")).toBeInTheDocument());
 
     await waitFor(() => expect(queries.getByText(/Demo OTP/i)).toBeInTheDocument());
     await waitFor(() => expect(queries.getByText(/123456/i)).toBeInTheDocument());
@@ -218,7 +218,7 @@ describe("DoctorAuth", () => {
         target: { value: "9845012345" },
       });
       fireEvent.submit(container.querySelector("form")!);
-      await waitFor(() => expect(queries.getByLabelText("6-digit OTP")).toBeInTheDocument());
+      await waitFor(() => expect(queries.getByLabelText("OTP code")).toBeInTheDocument());
 
       expect(queries.queryByText(/Demo OTP/i)).not.toBeInTheDocument();
     } finally {

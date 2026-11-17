@@ -13,6 +13,10 @@ medmate:
     secret: local-dev-jwt-secret-local-dev-jwt-32
     access-seconds: 900
     refresh-seconds: 2592000
+  # A local run sends the same code every time, so a developer does not have to
+  # read it out of the SMS mock. Every other environment sends a random one.
+  otp:
+    fixed-code: "12345"
   admin-bootstrap-token: local-bootstrap
   sms:
     base-url: http://127.0.0.1:8090

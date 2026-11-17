@@ -162,6 +162,20 @@ public class AuthService {
                 : "PIN can be set after the pharmacy is approved";
     }
 
+    /**
+     * The code to send.
+     *
+     * A local run can pin the code so that a developer does not have to read it
+     * out of the SMS mock. Every other environment sends a random code.
+     */
+    private String otpCode() {
+        String fixed = properties.otp() == null ? null : properties.otp().fixedCode();
+        if (fixed == null || fixed.isBlank()) {
+            return Secrets.otpCode();
+        }
+        return fixed.trim();
+    }
+
     public SessionIssuer.SessionResponse refresh(String refreshToken) {
         IdentityStore.RefreshRow row = refreshRow(refreshToken);
         accounts.revokeRefresh(Secrets.sha256(refreshToken));
@@ -233,7 +247,7 @@ public class AuthService {
         if (!shouldDeliver(purpose, type, existing)) {
             return new OtpSendResponse("otp");
         }
-        String code = Secrets.otpCode();
+        String code = otpCode();
         Instant now = clock.instant();
         accounts.upsertOtp(phone, type, purpose, OtpMachine.issue(Secrets.sha256(code), now));
         try {

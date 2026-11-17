@@ -38,17 +38,17 @@ export function OtpStep({ phone }: OtpStepProps) {
     >
       <h2 className="text-[22px] font-bold text-ink tracking-[-0.02em]">Enter the OTP</h2>
       <p className="mt-1 text-[13.5px] text-muted">
-        We sent a 6-digit code to <span className="font-bold">{phone}</span>.
+        We sent a code to <span className="font-bold">{phone}</span>.
       </p>
       <div className="w-full flex flex-col gap-2">
         <label htmlFor="otp" className="text-[13px] text-ink-2">
-          6-digit OTP
+          OTP code
         </label>
         <Input
           id="otp"
           className="text-center font-mono text-[22px] font-extrabold tracking-[0.28em]"
           inputMode="numeric"
-          maxLength={6}
+          maxLength={8}
           value={otp}
           onChange={(event) => {
             form.setValue("otp", event.target.value.replace(/\D/g, ""));
@@ -75,7 +75,7 @@ export function OtpStep({ phone }: OtpStepProps) {
         size="lg"
         type="submit"
         className="mt-[22px] w-full"
-        disabled={otp.replace(/\D/g, "").length !== 6}
+        disabled={otp.replace(/\D/g, "").length < 4}
       >
         <Icon name="check" size={16} /> Verify &amp; log in
       </Button>

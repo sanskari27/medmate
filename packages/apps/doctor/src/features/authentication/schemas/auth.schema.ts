@@ -9,7 +9,7 @@ export const loginFieldsSchema = z.object({
 export type LoginFields = z.infer<typeof loginFieldsSchema>;
 
 const phoneInnerSchema = z.string().regex(/^\d{10}$/, "Enter a 10-digit mobile number");
-const otpInnerSchema = z.string().regex(/^\d{6}$/, "Enter the 6-digit OTP");
+const otpInnerSchema = z.string().regex(/^\d{4,8}$/, "Enter the code");
 const pinInnerSchema = z.string().regex(/^\d{4}$/, "Enter the 4-digit PIN");
 
 export const phoneSchema = z.object({
