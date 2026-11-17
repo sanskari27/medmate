@@ -4,13 +4,17 @@ import { useAppSelector } from "@/app/store/hooks";
 import { useGetMeQuery, useListPatientsQuery } from "@/services/api/api";
 import { problemMessage } from "@/services/api";
 import { useNavigate } from "react-router-dom";
-import { buildLandingSummary, filterParams, money } from "@/features/landing/service/landingSummary";
+import { filterParams, usePatientCounts } from "@/features/patients";
+import { buildLandingSummary, money } from "@/features/landing/service/landingSummary";
 import type { ClinicPatient } from "@/types";
+
+const LANDING_PAGE_SIZE = 100;
 
 export function LandingPage() {
   const { session } = useAppSelector((state) => state.auth);
   const me = useGetMeQuery(undefined, { skip: !session });
-  const patients = useListPatientsQuery({ size: 100, sort: "name" }, { skip: !session });
+  const counts = usePatientCounts();
+  const patients = useListPatientsQuery({ size: LANDING_PAGE_SIZE, sort: "name" }, { skip: !session });
   const navigate = useNavigate();
 
   if (me.isLoading) {
@@ -31,8 +35,9 @@ export function LandingPage() {
 
   const { role, grants, clinicName } = me.data;
   const canSeeMoney = grants.includes("clinic:billing:read");
+  const canSeeClinical = grants.includes("clinic:patients:read_clinical");
   const items = (patients.data?.items ?? []) as ClinicPatient[];
-  const summary = buildLandingSummary(role, items, grants);
+  const summary = buildLandingSummary(role, counts, grants);
 
   return (
     <Box className="mx-auto max-w-[1680px]">
@@ -104,7 +109,7 @@ export function LandingPage() {
                       </TextComponent>
                     </Box>
                     <Box className="flex items-center gap-3">
-                      {patient.conditions ? (
+                      {canSeeClinical && patient.conditions ? (
                         <span className="chip">{patient.conditions}</span>
                       ) : null}
                       {canSeeMoney && patient.due ? (

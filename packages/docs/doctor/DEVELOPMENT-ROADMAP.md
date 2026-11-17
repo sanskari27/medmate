@@ -46,7 +46,11 @@ automatically, now carried by the status dropdown and the sheet's protection.
 ## 2. Current status
 
 <!-- ROADMAP:PROGRESS:BEGIN -->
-<!-- Status of this build. The Google Sheet is the live tracker; this table is the repo copy. -->
+<!-- Status of this build.
+     Completed       = built and verified in this repository
+     Dev in Progress = real work exists in the live Netlify demo, not yet ported here
+     Not Started     = nothing built anywhere yet
+     The Google Sheet is the live tracker; this table is the repo copy. -->
 | ID | Story | Status |
 |---|---|---|
 | F-101 | As a staff member, I want to sign in with my mobile number and a PIN, so that my actions are recorded against my name. | Completed |
@@ -54,28 +58,28 @@ automatically, now carried by the status dropdown and the sheet's protection.
 | F-103 | As a front desk receptionist, I want patient records to hide clinical details, so that I cannot open anything that is not mine to see. | Completed |
 | F-104 | As a clinic administrator, I want clinical fields removed from patient and queue lists, so that my access matches my role. | Completed |
 | F-105 | As a clinic owner, I want every sign-in, record open and payment logged, so that I can prove who did what. | Not Started |
-| F-106 | As a clinic owner, I want shared tablets to lock when left unattended, so that patient data is never left open. | Dev in Progress |
+| F-106 | As a clinic owner, I want shared tablets to lock when left unattended, so that patient data is never left open. | Not Started |
 | F-107 | As a clinic owner, I want one person retrying to never lock out the rest of the clinic, so that the front desk always keeps working. | Completed |
-| F-108 | As a doctor, I want to take over a patient assigned to a colleague, so that I am never blocked mid-consultation. | Completed |
+| F-108 | As a doctor, I want to take over a patient assigned to a colleague, so that I am never blocked mid-consultation. | Dev in Progress |
 | F-109 | As a salaried doctor, I want to see only my own patients and earnings, so that other doctors records stay private. | Completed |
-| F-201 | As a receptionist, I want to turn any tablet into a patient check-in kiosk, so that patients check in without queueing at my desk. | Dev in Progress |
+| F-201 | As a receptionist, I want to turn any tablet into a patient check-in kiosk, so that patients check in without queueing at my desk. | Not Started |
 | F-202 | As a patient, I want to use the kiosk in my own language, so that I can check in without needing help. | Not Started |
 | F-203 | As a patient, I want to confirm my mobile with a code, so that my check-in is linked to the right record. | Not Started |
 | F-204 | As a patient, I want to enter my name, age, sex and allergies once at the kiosk, so that nobody has to type it again. | Not Started |
-| F-205 | As a patient, I want to see the doctors who are actually in clinic now, so that I join the right queue. | Completed |
-| F-206 | As a patient, I want to see the fee and get a token before paying, so that I can queue now and pay at the desk. | Not Started |
+| F-205 | As a patient, I want to see the doctors who are actually in clinic now, so that I join the right queue. | Dev in Progress |
+| F-206 | As a patient, I want to see the fee and get a token before paying, so that I can queue now and pay at the desk. | Dev in Progress |
 | F-207 | As a patient, I want to check in by scanning a code with my phone, so that I do not have to touch the screen. | Not Started |
 | F-208 | As a patient, I want the kiosk to keep what I typed if I pause, so that I do not have to start again. | Not Started |
 | F-209 | As a patient using a screen reader, I want the kiosk fully operable without a mouse, so that I can check in independently. | Not Started |
-| F-210 | As a patient, I want to book a doctor online without making an account, so that booking takes a minute. | Not Started |
-| F-211 | As a clinic, I want the public booking API to reveal only my own clinic, so that other clinics data is never exposed. | Not Started |
+| F-210 | As a patient, I want to book a doctor online without making an account, so that booking takes a minute. | Dev in Progress |
+| F-211 | As a clinic, I want the public booking API to reveal only my own clinic, so that other clinics data is never exposed. | Dev in Progress |
 | F-212 | As a patient, I want to link my health ID and see exactly what is shared, so that my records travel safely. | Not Started |
 | F-213 | As a patient, I want to see my appointments, reports and dues on my phone, so that I stop calling the clinic. | Not Started |
 | F-214 | As a receptionist, I want duplicate patient records flagged and mergeable, so that a patient does not end up with two histories. | Not Started |
 | F-301 | As a doctor, I want my queue ordered by urgency and wait time, so that the sickest patient is seen first. | Dev in Progress |
-| F-302 | As a nurse, I want to record vitals once at the station, so that the doctor sees them without asking. | Not Started |
+| F-302 | As a nurse, I want to record vitals once at the station, so that the doctor sees them without asking. | Dev in Progress |
 | F-303 | As a doctor, I want emergency and red-flag patients surfaced immediately, so that I do not miss a critical case. | Dev in Progress |
-| F-304 | As a nurse, I want to route a patient to the right doctor, so that they are seen by someone equipped for their problem. | Not Started |
+| F-304 | As a nurse, I want to route a patient to the right doctor, so that they are seen by someone equipped for their problem. | Dev in Progress |
 | F-305 | As a doctor, I want the patient key facts before I type anything, so that I can start the consult in seconds. | Dev in Progress |
 | F-306 | As a doctor, I want one request for the whole clinical brief, so that the summary loads instantly. | Not Started |
 | F-307 | As a doctor, I want a seven-step consultation form, so that I record a complete visit in one flow. | Not Started |
@@ -85,7 +89,7 @@ automatically, now carried by the status dropdown and the sheet's protection.
 | F-311 | As a doctor, I want to be warned about allergies and drug interactions before signing, so that I cannot prescribe something harmful. | Not Started |
 | F-312 | As a doctor, I want to order tests from the consultation, so that the lab gets the order without a phone call. | Not Started |
 | F-313 | As a doctor, I want my common advice lines remembered, so that writing advice takes one tap. | Not Started |
-| F-314 | As a doctor, I want to book the follow-up inside the consultation, so that the patient leaves with a date. | Not Started |
+| F-314 | As a doctor, I want to book the follow-up inside the consultation, so that the patient leaves with a date. | Dev in Progress |
 | F-315 | As a doctor, I want to save a repeated protocol and re-apply it, so that common visits take less typing. | Not Started |
 | F-316 | As a doctor, I want to sign prescriptions digitally, so that they are legally valid and reach the patient instantly. | Not Started |
 | F-317 | As a hospital or lab, I want records as standard FHIR data, so that any compliant system can read them. | Not Started |
@@ -106,7 +110,7 @@ automatically, now carried by the status dropdown and the sheet's protection.
 | F-409 | As a clinic owner, I want return-visit reminders and a waitlist, so that slots fill and no-shows fall. | Not Started |
 | F-410 | As a clinic owner, I want to sell treatment packages paid in instalments, so that chronic patients stay with us. | Not Started |
 | F-411 | As a clinic, I want to bill a TPA or corporate account separately from the patient, so that we can win corporate panels. | Not Started |
-| F-501 | As a clinic owner, I want reports on money, patients and waiting times, so that I know how the day is going. | Not Started |
+| F-501 | As a clinic owner, I want reports on money, patients and waiting times, so that I know how the day is going. | Dev in Progress |
 | F-502 | As a clinic owner, I want the app to tell me what needs attention, so that I act instead of reading dashboards. | Not Started |
 | F-503 | As a clinic owner, I want to download everything about my clinic, so that I am never trapped if I leave. | Not Started |
 | F-504 | As an owner, I want to add doctors by their government ID and set their fees and room, so that the system stays accurate. | Not Started |
@@ -119,7 +123,7 @@ automatically, now carried by the status dropdown and the sheet's protection.
 | F-511 | As a clinic, I want the terms and data agreement to be final and accurate, so that my obligations are clear. | Not Started |
 | F-512 | As a clinic owner, I want to export the activity log, so that I can answer a compliance question. | Not Started |
 | F-513 | As a Kannada-speaking nurse, I want the station screens in my language, so that I can work without translating. | Not Started |
-| F-514 | As a receptionist, I want to open the app straight to my desk, so that I do not choose my next action every time. | Not Started |
+| F-514 | As a receptionist, I want to open the app straight to my desk, so that I do not choose my next action every time. | Completed |
 | F-515 | As a doctor, I want to find any patient from anywhere in one keystroke, so that I can retrieve a record instantly. | Not Started |
 | F-516 | As a patient, I want to be told when my prescription is ready, so that I stop waiting in the clinic. | Not Started |
 | F-517 | As a nurse on a slow tablet, I want the app to load fast, so that vitals are never delayed by waiting for pages. | Not Started |

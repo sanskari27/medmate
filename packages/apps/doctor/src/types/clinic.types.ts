@@ -48,11 +48,15 @@ export type Paginated<T> = {
 
 export type PatientSort = "name" | "last-seen";
 
-export type PatientListFilters = {
+/** The filters the patient list owns. */
+export type PatientFilter = {
   q?: string;
   status?: PatientStatus | "all";
   due?: boolean;
   sort?: PatientSort;
+};
+
+export type PatientListFilters = PatientFilter & {
   page?: number;
   size?: number;
 };

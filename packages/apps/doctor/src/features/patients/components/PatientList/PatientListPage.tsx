@@ -1,22 +1,31 @@
-import { useState } from "react";
 import { Box, Button, Heading, Text as TextComponent } from "@/components/ui";
 import { Icon } from "@/components/Icon";
 import { PatientRow } from "../PatientRow";
 import { PatientFilters } from "../PatientFilters";
 import { usePatients } from "../../service/patients.service";
+import { filterFromParams, filterParams } from "../../service/patientQuery";
 import { problemMessage } from "@/services/api";
+import { useSearchParams } from "react-router-dom";
 import type { PatientListFilters } from "@/types";
 
-export function PatientListPage() {
-  const [filters, setFilters] = useState<PatientListFilters>({ page: 1, size: 25, sort: "name" });
-  const { patients, total, page, size, hasClinicalRead, hasBillingRead, isLoading, isError, error, refetch } = usePatients(filters);
+const PAGE_SIZE = 25;
 
-  const handleFilterChange = (newFilters: PatientListFilters) => {
-    setFilters(newFilters);
+export function PatientListPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = filterFromParams(searchParams);
+  const page = Number(searchParams.get("page") ?? "1");
+  const filters: PatientListFilters = {
+    ...filter,
+    sort: filter.sort ?? "name",
+    page,
+    size: PAGE_SIZE,
   };
 
-  const handlePageChange = (newPage: number) => {
-    setFilters({ ...filters, page: newPage });
+  const { patients, total, page: currentPage, size, hasClinicalRead, hasBillingRead, isLoading, isError, error, refetch } =
+    usePatients(filters);
+
+  const applyFilters = (next: PatientListFilters) => {
+    setSearchParams({ ...filterParams(next), page: String(next.page ?? 1) });
   };
 
   const totalPages = Math.ceil(total / size);
@@ -45,7 +54,7 @@ export function PatientListPage() {
         </Heading>
       </Box>
 
-      <PatientFilters filters={filters} onChange={handleFilterChange} total={total} />
+      <PatientFilters filters={filters} onChange={applyFilters} total={total} />
 
       <Box className="overflow-x-auto">
         {patients.length === 0 ? (
@@ -77,15 +86,15 @@ export function PatientListPage() {
       {totalPages > 1 && (
         <Box className="border-t border-line px-5 py-3 flex items-center justify-between">
           <TextComponent className="text-[13px] text-muted">
-            Page {page} of {totalPages}
+            Page {currentPage} of {totalPages}
           </TextComponent>
           <Box className="flex items-center gap-2">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              disabled={page === 1}
-              onClick={() => handlePageChange(page - 1)}
+              disabled={currentPage === 1}
+              onClick={() => applyFilters({ ...filters, page: currentPage - 1 })}
             >
               <Icon name="chev" size={16} className="rotate-180" />
               Previous
@@ -94,8 +103,8 @@ export function PatientListPage() {
               type="button"
               variant="ghost"
               size="sm"
-              disabled={page === totalPages}
-              onClick={() => handlePageChange(page + 1)}
+              disabled={currentPage === totalPages}
+              onClick={() => applyFilters({ ...filters, page: currentPage + 1 })}
             >
               Next
               <Icon name="chev" size={16} />

@@ -1,27 +1,18 @@
 import { useAppSelector } from "@/app/store/hooks";
 import { useGetMeQuery, useListPatientsQuery } from "@/services/api/api";
-import type { ListPatientsArgs } from "@/services/api/api";
+import { patientQuery } from "./patientQuery";
 import type { PatientListFilters } from "@/types";
 
 const MAX_PAGE_SIZE = 100;
 const COUNT_PAGE_SIZE = 1;
 
-function toApiFilters(filters: PatientListFilters): ListPatientsArgs {
-  return {
-    page: filters.page,
-    size: filters.size,
-    q: filters.q,
-    sort: filters.sort,
-    status: filters.status === "all" ? undefined : filters.status,
-    due: filters.due === true ? "true" : filters.due === false ? "false" : undefined,
-  };
-}
-
 /** The patients of the signed-in clinic, with the filters the list screen owns. */
 export function usePatients(filters: PatientListFilters = {}) {
   const { session } = useAppSelector((state) => state.auth);
   const me = useGetMeQuery(undefined, { skip: !session });
-  const query = useListPatientsQuery(toApiFilters(filters), { skip: !session });
+  const query = useListPatientsQuery(patientQuery(filters, filters.page ?? 1, filters.size ?? 25), {
+    skip: !session,
+  });
 
   return {
     patients: query.data?.items ?? [],
@@ -42,7 +33,7 @@ export function usePatients(filters: PatientListFilters = {}) {
  *
  * Every count is the total the patient list reports for that filter, so a
  * clinic with more patients than one page still counts them all. The
- * outstanding amount is the sum of the dues the list returns, which only
+ * outstanding amount is the sum of the dues the list returns, and it only
  * exists for an account holding `clinic:billing:read`.
  */
 export function usePatientCounts() {
@@ -50,18 +41,19 @@ export function usePatientCounts() {
   const me = useGetMeQuery(undefined, { skip: !session });
   const hasBillingRead = me.data?.grants.includes("clinic:billing:read") ?? false;
 
-  const all = useListPatientsQuery({ page: 1, size: COUNT_PAGE_SIZE }, { skip: !session });
-  const waiting = useListPatientsQuery(
-    { page: 1, size: COUNT_PAGE_SIZE, status: "waiting" },
-    { skip: !session },
-  );
+  const all = useListPatientsQuery(patientQuery({}, 1, COUNT_PAGE_SIZE), { skip: !session });
+  const waiting = useListPatientsQuery(patientQuery({ status: "waiting" }, 1, COUNT_PAGE_SIZE), {
+    skip: !session,
+  });
   const withDoctor = useListPatientsQuery(
-    { page: 1, size: COUNT_PAGE_SIZE, status: "with-doctor" },
+    patientQuery({ status: "with-doctor" }, 1, COUNT_PAGE_SIZE),
     { skip: !session },
   );
-  const seen = useListPatientsQuery({ page: 1, size: COUNT_PAGE_SIZE, status: "seen" }, { skip: !session });
+  const seen = useListPatientsQuery(patientQuery({ status: "seen" }, 1, COUNT_PAGE_SIZE), {
+    skip: !session,
+  });
   const owing = useListPatientsQuery(
-    { page: 1, size: MAX_PAGE_SIZE, due: "true" },
+    patientQuery({ due: true }, 1, MAX_PAGE_SIZE),
     { skip: !session || !hasBillingRead },
   );
 
