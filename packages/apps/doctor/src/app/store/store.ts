@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "@/features/auth";
-import { api } from "./api";
+import { api } from "@/services/api/api";
 
 export function createAppStore() {
   return configureStore({

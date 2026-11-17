@@ -33,8 +33,9 @@
   --radius-control: 12px;
   --radius-pill: 999px;
 
-  --shadow-2: 0 4px 14px #14201a14;
-  --shadow-3: 0 12px 32px #14201a29;
+  --sh-2: 0 4px 14px #14201a14;
+  --sh-3: 0 12px 32px #14201a29;
+  --side: 248px;
 
   --font-sans: Outfit, system-ui, sans-serif;
 }
