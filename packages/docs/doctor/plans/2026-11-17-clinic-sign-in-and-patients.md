@@ -48,6 +48,8 @@ Five failure modes the spec implies but no task's own assertions would otherwise
 - Create: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/access/ClinicPermissions.java`
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/access/AccountPrincipal.java`
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/web/SessionIssuer.java`
+- Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/session/AccountDirectory.java`
+- Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/web/AuthController.java`
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/session/AccessTokens.java`
 - Create: `packages/apps/medmate-server/medmate-server-identity/src/main/resources/db/migration/V28__clinic.sql`
 - Test: `packages/apps/medmate-server/medmate-server-identity/src/test/java/com/medmate/server/identity/access/ClinicAccountRulesTest.java`
@@ -63,6 +65,8 @@ Five failure modes the spec implies but no task's own assertions would otherwise
 
 `ClinicTokenTest`: a token issued with a clinic id carries that `clinicId` and `clinicRole` in its claims; a token issued without a clinic id carries neither; a token signed with the wrong secret does not parse.
 
+`ClinicAccountRulesTest` also covers the sign-in path: a phone that holds a clinic account resolves to a principal with that `clinicId` and `clinicRole`, and the account type `clinic` parses from the wire value `clinic`.
+
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `cd packages/apps/medmate-server && ./mvnw -q -pl medmate-server-identity -Dtest='ClinicAccountRulesTest,ClinicTokenTest' test`
@@ -70,7 +74,7 @@ Expected: FAIL to compile, `cannot find symbol ClinicRole`.
 
 - [ ] **Step 3: Implement `ClinicRole`, `ClinicPermissions`, the principal fields, the claims and the migration**
 
-`AccountType` gains `CLINIC`. `ClinicRole` is an enum with the five roles. `ClinicPermissions.KEYS` holds the four grant keys. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`, null for every other account type. `AccessTokens.issue` takes the tenant and writes a `clinicId` claim and a `clinicRole` claim only when the tenant is not null; `parseClaims` reads them back. `V28__clinic.sql` adds nullable `clinic_id` and `clinic_role` to the account table and seeds the six demo accounts with their phones, roles and clinics.
+`AccountType` gains `CLINIC`. `ClinicRole` is an enum with the five roles. `ClinicPermissions.KEYS` holds the four grant keys. `AccountPrincipal` gains `UUID clinicId` and `String clinicRole`, null for every other account type. `AccessTokens.issue` takes the tenant and writes a `clinicId` claim and a `clinicRole` claim only when the tenant is not null; `parseClaims` reads them back. `V28__clinic.sql` adds nullable `clinic_id` and `clinic_role` to the account table and seeds the six demo accounts of the demo clinic, with their phones and roles. `AccountDirectory` fills the two clinic fields on the principal, `AuthController` accepts `accountType: "clinic"`, and `SessionIssuer` passes the tenant into the token.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
@@ -182,6 +186,8 @@ git commit -m "Add clinic grants, patient redaction and the patient list"
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/web/SessionIssuer.java`
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/session/AccountDirectory.java`
 - Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/web/AuthController.java`
+- Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/session/AccountDirectory.java`
+- Modify: `packages/apps/medmate-server/medmate-server-identity/src/main/java/com/medmate/server/identity/web/AuthController.java`
 - Create: `packages/apps/medmate-clinic-api/medmate-clinic-api-app/src/test/java/com/medmate/clinic/ClinicApiIT.java`
 - Create: `bruno/medmate/identity/auth/send-clinic-otp.bru`
 - Create: `bruno/medmate/identity/auth/verify-clinic-otp.bru`
@@ -195,7 +201,7 @@ git commit -m "Add clinic grants, patient redaction and the patient list"
 
 - [ ] **Step 1: Write the failing test**
 
-`ClinicApiIT`: a doctor signs in through `/auth/otp/send` and `/auth/otp/verify` with `accountType: "clinic"` and receives a session whose token carries the clinic id; `GET /clinic/patients` with that token returns the seeded clinic's patients; the same token against a second clinic's registry row returns the second clinic's patients and never the first's; a front desk account receives the same list with the clinical fields absent; an account with no grants receives 403.
+`ClinicApiIT` provisions a second clinic itself - a second database, a second registry row and one patient - and then proves: a doctor signs in through `/auth/otp/send` and `/auth/otp/verify` with `accountType: "clinic"` and receives a session whose token carries the clinic id; `GET /clinic/patients` with that token returns the demo clinic's patients; the same token against the second clinic's registry row returns the second clinic's one patient and never the demo clinic's; a front desk account receives the same list with the clinical fields absent; an account with no grants receives 403; a token from a clinic with no registry row receives 503 `Clinic records are unavailable`.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
@@ -204,7 +210,7 @@ Expected: FAIL, the clinic account cannot be signed in yet.
 
 - [ ] **Step 3: Implement the sign-in path, the seeds and the Bruno requests**
 
-`AuthController` accepts `accountType: "clinic"` and resolves the phone to the clinic account. `AccountDirectory` fills the clinic fields on the principal. `SessionIssuer` passes the tenant into the token. `Makefile` gains `clinic-api`, `clinic-api-verify` and a `db-clinic-local` target that creates the demo clinic database and the registry row. The four Bruno requests follow the shape of the existing identity requests, reusing `examplePhone`.
+The integration test provisions its own databases and registry rows. `Makefile` gains a `db-clinic-local` target that creates the demo clinic database and its registry row, so a developer can run the service against a seeded clinic. The four Bruno requests follow the shape of the existing identity requests, reusing `examplePhone`.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -233,7 +239,7 @@ git commit -m "Sign clinic accounts in and serve two clinics from two databases"
 
 **Interfaces:**
 - Consumes: nothing from later tasks.
-- Produces: `apiBaseUrl()` returning the base URL for RTK Query, and an `api` slice with the clinic endpoints. The Vite dev proxy maps `/auth` to `http://127.0.0.1:8080`, `/sms-mock` to `http://127.0.0.1:8090` and `/clinic-api` to `http://127.0.0.1:8091`.
+- Produces: `apiBaseUrl()` returning the base URL for RTK Query. A Redux `api` slice with the auth endpoints `sendOtp`, `verifyOtp`, `setPin`, `signOut` and the clinic endpoints `getMe` and `listPatients`. A Redux `auth` slice holding `session: { accessToken, refreshToken } | null`, `step: 'phone' | 'otp' | 'pin' | 'pin-setup'` and the thunks `sendOtp`, `verifyOtp`, `setPin`, `signOut`. The Vite dev proxy maps `/auth` to `http://127.0.0.1:8080`, `/sms-mock` to `http://127.0.0.1:8090` and `/clinic-api` to `http://127.0.0.1:8091`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -274,8 +280,8 @@ git commit -m "Add the doctor portal skeleton"
 - Test: `packages/apps/doctor/src/features/authentication/DoctorAuth.test.tsx`
 
 **Interfaces:**
-- Consumes: the RTK Query `api` slice and the Redux auth slice from Task 5.
-- Produces: `authSlice` with `session: { accessToken, refreshToken } | null`, `step: 'phone' | 'otp' | 'pin' | 'pin-setup'`, and the thunks `sendOtp`, `verifyOtp`, `setPin`, `signOut`.
+- Consumes: the RTK Query `api` slice, the Redux auth slice and the thunks from Task 5.
+- Produces: the `authentication` feature - its Zod schemas, its `PhoneStep`, `OtpStep`, `PinStep` and `PinSetup` components, the dev OTP box, and `src/features/authentication/index.ts`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -364,12 +370,12 @@ git commit -m "Add the role landing screen and the patient list"
 
 - [ ] **Step 1: Write the failing check**
 
-`make check` fails until both new applications have a valid `project.yaml`. It is the cheapest way to prove the contract is honoured.
+Extend `scripts/medmate_contract.py` so `validate_projects` also requires `packages/docs/<name>/README.md` for every application. The five existing applications already have one, so only the two new applications fail it.
 
 - [ ] **Step 2: Run the check to verify it fails**
 
 Run: `make check`
-Expected: FAIL, naming the missing or invalid `project.yaml`.
+Expected: FAIL, naming `doctor` and `medmate-clinic-api` as missing their README.
 
 - [ ] **Step 3: Implement the local wiring and the docs**
 
